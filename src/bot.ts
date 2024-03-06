@@ -134,8 +134,8 @@ bot.on('message', async (ctx) => {
                 await handleSettings(ctx);
                 break;
             }
-            case 'buy_X_SOL': await handle_radyum_swap(ctx, ctx.session.buyToken, 'buy', Number(msgTxt)); break;
-            case 'sell_X_TOKEN': await handle_radyum_swap(ctx, ctx.session.sellToken, 'sell', Number(msgTxt)); break;
+            case 'buy_X_SOL': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint,'buy', Number(msgTxt)); break;
+            case 'sell_X_TOKEN': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', Number(msgTxt)); break;
             case 'snipe_X_SOL': await setSnipe(ctx, Number(msgTxt)); break;
             case 'import_wallet': {
                 if (ctx.session.latestCommand === 'import_wallet') {
@@ -314,7 +314,7 @@ bot.on('callback_query', async (ctx: any) => {
                 if (snipeToken == DEFAULT_PUBLIC_KEY) {
                     await bot.api.sendMessage(chatId, "Enter token address to Snipe.");
                 } else {
-                    // await display_token_details(ctx, new PublicKey(snipeToken));
+                    await display_snipe_options(ctx);
                 }
                 break;
             }

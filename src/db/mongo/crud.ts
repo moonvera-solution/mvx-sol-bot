@@ -112,3 +112,5 @@ export async function _dropUser(chatId: Number) {
 // _findSOLPoolByBaseMint(
 //   new PublicKey("DFsahGoY2GT5gUnTcCy6nmHLdoFma2DAtgCuz4uopjfc")
 //   ).then((pool) => {console.log(pool)});
+
+
