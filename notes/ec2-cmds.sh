@@ -1,0 +1,3 @@
+ ps -aef | grep node 
+
+

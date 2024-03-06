@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "Node16",
+    "strict": true,
+    "preserveConstEnums": true,
+    "noEmit": true,
+    "sourceMap": false,
+    "moduleResolution": "Node16",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/**.ts",
+    "**/**/**.ts",
+    "**/**/**/*.ts",
+    "**/*.tsx",
+    ".local/**/*.ts",
+    ".local/simpleSwap.ts",
+    ".local/GeyserSnipper.ts",
+    "./spl-swap.ts",
+    "src/service/**/*.ts",
+    "src/service/*.ts",
+    "src/db/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".vscode"
+  ]
+}

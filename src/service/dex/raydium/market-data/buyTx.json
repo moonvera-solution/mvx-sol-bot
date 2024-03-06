@@ -1,0 +1,23 @@
+{
+    "jsonrpc": "2.0",
+    "method": "accountNotification",
+    "params": {
+        "result": {
+            "context": {
+                "slot": 248649525
+            },
+            "value": {
+                "data": [
+                    "",
+                    "base58"
+                ],
+                "executable": false,
+                "lamports": 239983009,
+                "owner": "11111111111111111111111111111111",
+                "rentEpoch": 18446744073709551615,
+                "space": 0
+            }
+        },
+        "subscription": 9
+    }
+}
