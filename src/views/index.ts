@@ -22,20 +22,9 @@ export async function handleCloseKeyboard(ctx: any) {
 }
 
 export async function display_token_details(ctx: any) {
-    let tokenToUse: PublicKey;
-    const buyToken = new PublicKey(ctx.session.buyToken);
-    const sellToken = new PublicKey(ctx.session.sellToken);
-    if(ctx.session.latestCommand === 'buy') {
-        tokenToUse = buyToken;
-    } else if(ctx.session.latestCommand === 'sell') {
-        tokenToUse = sellToken;
-    } else{
-        throw new Error(`Unsupported command: ${ctx.session.latestCommand}`);
-    }
- 
-  
-    const rayPoolKeys = await getRayPoolKeys(tokenToUse.toBase58());
-    // const poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
+
+
+    const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
 
 
     // const { baseVault, quoteVault, baseDecimals, quoteDecimals, baseMint } = ctx.session.buyTokenData;

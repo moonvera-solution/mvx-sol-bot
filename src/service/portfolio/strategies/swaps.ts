@@ -19,7 +19,7 @@ export async function handle_radyum_swap(
     let userSlippage = session.latestSlippage;
     try {
         const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut));
-        const targetPoolInfo = await getRayPoolKeys(tokenOut.toBase58());
+        const targetPoolInfo = ctx.session.activeTradingPool;
         // console.log('targetPoolInfo', targetPoolInfo);
         const OUTPUT_TOKEN = new RayddiumToken(TOKEN_PROGRAM_ID, tokenOut, userTokenBalanceAndDetails.decimals);
         const walletTokenAccounts = await getWalletTokenAccount(connection, new PublicKey(userWallet.publicKey!));

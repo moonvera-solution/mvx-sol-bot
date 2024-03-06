@@ -20,6 +20,7 @@ import { handleWallets } from './views/util/dbWallet';
 import { getPoolToken_details, quoteToken } from './views/util/dataCalculation';
 import { _getReservers } from './service/dex/raydium/market-data/2_Strategy';
 import { RefreshAllWallets } from './views/refreshData/RefresHandleWallets';
+import { getRayPoolKeys } from './service/dex/raydium/market-data/1_Geyser';
 
 dotenv.config();
 
@@ -166,8 +167,9 @@ bot.on('message', async (ctx) => {
                 case 'sell': {
                     if (PublicKey.isOnCurve(msgTxt!)) {
                         if (msgTxt) {
-                            ctx.session.sellToken = new PublicKey(msgTxt!);
-                            // console.log('buyToken', ctx.session.buyToken);  
+                            ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
+             
+                       
                             await display_token_details(ctx);
                         }
                     } else {
@@ -178,8 +180,9 @@ bot.on('message', async (ctx) => {
             case 'buy': {
                 if (PublicKey.isOnCurve(msgTxt!)) {
                     if (msgTxt) {
-                        ctx.session.buyToken = new PublicKey(msgTxt!);
-                        // console.log('buyToken', ctx.session.buyToken);  
+                        ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
+             
+                       
                         await display_token_details(ctx);
                     }
                 } else {
@@ -286,7 +289,7 @@ bot.on('callback_query', async (ctx: any) => {
                 const sellToken = ctx.session.sellToken;
                 ctx.session.latestCommand = 'sell';
                 if (sellToken != DEFAULT_PUBLIC_KEY) {
-                    // ctx.session.activeTradingPool = await _findSOLPoolByBaseMint(tokenAddress);
+                    ctx.session.activeTradingPool = await getRayPoolKeys(sellToken.toBase58())
                     await display_token_details(ctx);
                 } else {
                     await bot.api.sendMessage(chatId, "Enter the token Address you would like to sell.");
@@ -297,7 +300,8 @@ bot.on('callback_query', async (ctx: any) => {
                 const buyToken = ctx.session.buyToken;
                 ctx.session.latestCommand = 'buy';
                 if (buyToken != DEFAULT_PUBLIC_KEY) {
-                    // ctx.session.activeTradingPool = await _findSOLPoolByBaseMint(tokenAddress);
+                    ctx.session.activeTradingPool = await getRayPoolKeys(buyToken.toBase58())
+
                     await display_token_details(ctx);
                 } else {
                     await ctx.api.sendMessage(chatId, "Enter the token Address you would like to Buy.");
