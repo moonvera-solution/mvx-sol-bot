@@ -34,6 +34,7 @@ export interface ISESSION_DATA {
   snipeToken: PublicKey;
   snipeAmount: number;
   snipeSlippage: number;
+  txTip:number;
 }
 
 export const DefaultPoolInfoData: RAYDIUM_POOL_TYPE = {
@@ -80,7 +81,8 @@ export const DefaultSessionData: ISESSION_DATA = {
   sellToken: DEFAULT_PUBLIC_KEY,
   snipeToken: DEFAULT_PUBLIC_KEY,
   snipeAmount: 0,
-  snipeSlippage: 20
+  snipeSlippage: 20,
+  txTip:5_000
 }
 
 export type RAYDIUM_POOL_TYPE = {

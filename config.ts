@@ -57,7 +57,6 @@ export const DEFAULT_TOKEN = {
   'SOLFI_SOL_V4_POOL': '46MCgSVT6KdBNK9UiBgyhEUPY3VbJRu8aZ3X1MQKxTeV' // AMM ID
 }
 
-
 /**
  * PAIR addr = DtU8TMzfQAFSTjEcRUBAwBrWzkv6a32maR6FiezV8hGd
  * SOLFI addr = FvVDc6gZmYho6DLLuJ3ptHS6rxb797Cxf1insiUnu2BL

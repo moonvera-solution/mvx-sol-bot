@@ -21,7 +21,8 @@ import {
     TransactionMessage,
     sendAndConfirmTransaction,
     LAMPORTS_PER_SOL,
-    TransactionInstruction
+    TransactionInstruction,
+    Commitment
 } from '@solana/web3.js';
 
 import {
@@ -39,8 +40,6 @@ import bs58 from 'bs58';
 import fs from "fs";
 import path from "path";
 
-import { connect } from 'http2';
-
 export async function sendTx(
     connection: Connection,
     payer: Keypair | Signer,
@@ -50,10 +49,13 @@ export async function sendTx(
     const txids: string[] = [];
     for (const iTx of txs) {
         if (iTx instanceof VersionedTransaction) {
+            console.log("sending versioned");
             iTx.sign([payer]);
             let ixId = await connection.sendTransaction(iTx, options)
             txids.push(ixId);
+            
         } else {
+            console.log("sending versioned");
             txids.push(await connection.sendTransaction(iTx, [payer], options));
         }
     }
@@ -83,7 +85,6 @@ export async function buildTx(innerSimpleV0Transaction: InnerSimpleV0Transaction
 }
 
 export async function buildAndSendTx(keypair: Keypair, innerSimpleV0Transaction: InnerSimpleV0Transaction[], options?: SendOptions) {
-
     const willSendTx: (VersionedTransaction | Transaction)[] = await buildSimpleTransaction({
         connection,
         makeTxVersion,
@@ -412,7 +413,7 @@ export async function buildTransaction({
 
     const tx = new VersionedTransaction(messageV0);
 
-    signers.forEach(s => tx.sign([s]));
+    // signers.forEach(s => tx.sign([s]));
 
     return tx;
 }
