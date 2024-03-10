@@ -22,7 +22,7 @@ import {
 } from "@solana/web3.js";
 
 import { getUserTokenBalanceAndDetails } from '../../../feeds';
-import { Keypair, VersionedTransaction, TransactionMessage, PublicKey } from '@solana/web3.js';
+import { Keypair, VersionedTransaction, TransactionMessage, PublicKey, SystemProgram } from '@solana/web3.js';
 import base58 from "bs58";
 import {
   connection,
@@ -79,7 +79,29 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     amountOut: minAmountOut,
     fixedSide: 'in',
     makeTxVersion,
+    computeBudgetConfig: {
+      units: 600_000,
+      microLamports: 900000
+  }
   })
+  // const validatorLead = await connection.getSlotLeader();
+
+  //   // Create the transfer instruaction
+  //   const transferIx = SystemProgram.transfer({
+  //       fromPubkey: input.wallet.publicKey,
+  //       toPubkey: new PublicKey(validatorLead),
+  //       lamports: 5000, // 5_000 || 6_000
+  //   });
+  //   innerTransactions[0].instructions.push(transferIx);
+
+  const mvxFeeInx = SystemProgram.transfer({
+    fromPubkey: input.wallet.publicKey,
+    toPubkey: new PublicKey('MvXfSe3TeEwsEi731Udae7ecReLQPgrNuKWZzX6RB41'),
+    lamports: 5000, // 5_000 || 6_000
+  });
+  innerTransactions[0].instructions.push(mvxFeeInx);
+
+
 
   console.log('amountOut:', amountOut.toFixed(), '  minAmountOut: ', minAmountOut.toFixed());
   return { txids: await buildAndSendTx(input.wallet, innerTransactions, input.commitment) }

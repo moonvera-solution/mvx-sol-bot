@@ -26,7 +26,9 @@ export interface ISESSION_DATA {
   portfolio: PORTFOLIO_TYPE,
   activeWalletIndex: number | 0,
   activeTradingPool: RAYDIUM_POOL_TYPE;
+  tokenRayPoolInfo: Record<string, RAYDIUM_POOL_TYPE>;
   latestCommand: string;
+  currentMode: string;
   latestSlippage: number
   metadataMessageId: number;
   buyToken: PublicKey; // New field to store metadata message ID
@@ -34,6 +36,9 @@ export interface ISESSION_DATA {
   snipeToken: PublicKey;
   snipeAmount: number;
   snipeSlippage: number;
+  buyTokenHistory: PublicKey[];
+  sellTokenHistory: PublicKey[];
+  tokenHistory: PublicKey[];
 }
 
 export const DefaultPoolInfoData: RAYDIUM_POOL_TYPE = {
@@ -71,9 +76,14 @@ export const DefaultSessionData: ISESSION_DATA = {
     wallets: [],
     positions: []
   },
+  tokenHistory: [],
+  tokenRayPoolInfo: {},
+  buyTokenHistory: [],
+  sellTokenHistory: [],
   activeWalletIndex: 0,
   activeTradingPool: DefaultPoolInfoData,
   latestCommand: '',
+  currentMode: '',
   latestSlippage: 5,
   metadataMessageId: 0,
   buyToken: DEFAULT_PUBLIC_KEY,

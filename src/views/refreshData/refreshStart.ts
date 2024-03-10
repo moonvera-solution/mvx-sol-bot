@@ -29,21 +29,24 @@ export async function handleRefreshStart(ctx: any) {
      const balanceInUSD = (balanceInSOL * (details).toFixed(2));
 
     // Update the welcome message with the new SOL price
-    const updatedWelcomeMessage = ` 🌕 Welcome to Moonvera trading bot. A limit order feature is supported for advanced traders.\n` +
-    `${solPriceMessage} \n\n` +
-    `Your Wallet:  ` +
-    `<code><b>${publicKeyString}</b></code>\n` +
-    `Balance: ` +
-    `<b>${balanceInSOL.toFixed(4)}</b> $SOL | <b>${balanceInUSD.toFixed(2)}</b> $USD\n\n`+
-    '🆘 It is highly recommended to export your private key and import it into a wallet like Phantom';
-    // Define the inline keyboard options
+    const updatedWelcomeMessage = ` 🌟 Welcome to SOLFI bot - A Solana Trading Bot! 🌟\n` +
+        `To start trading, you can just type the token address you want to trade.\n\n` +
+        `A wallet has been created for you. You can import your own wallet by clicking on the "Import Wallet" button below.\n\n` +
+        `${solPriceMessage} \n\n` +
+        `Your Wallet:  ` +
+        `<code><b>${publicKeyString}</b></code>\n` +
+        `Balance: ` +
+        `<b>${balanceInSOL.toFixed(4)}</b> $SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> $USD\n\n` +
+        '🆘 It is highly recommended to export your private key and import it into a wallet like Phantom';
+
+ // Define the inline keyboard options
     const options = {
         reply_markup: JSON.stringify({
             inline_keyboard: [
                 [
-                    { text: '🌎 Website', url: 'https://solscifi.com/' },
-                    { text: '𝚇', url: 'https://twitter.com/Solfi_SciFi' },
-                    { text: '🧑🏽‍💻 Telegram', url: 'https://t.me/solscifi' }
+                    // { text: '🌎 Website', url: 'https://solscifi.com/' },
+                    // { text: '𝚇', url: 'https://twitter.com/Solfi_SciFi' },
+                    // { text: '🧑🏽‍💻 Telegram', url: 'https://t.me/solscifi' }
                 ],
                 [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
                 [{ text: '🎯 Turbo Snipe', callback_data: 'snipe' }],

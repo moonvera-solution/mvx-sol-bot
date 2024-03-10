@@ -4,7 +4,7 @@ import { getSolanaDetails } from '../../api';
 import { getSolBalance } from '../util';
 
 export async function handleSettings(ctx:any) {
-    await RefreshAllWallets(ctx);
+    // await RefreshAllWallets(ctx);
     const selectedWallet = ctx.session.activeWalletIndex;
     const userWallet = ctx.session.portfolio.wallets[selectedWallet];
     const chatId = ctx.chat.id;

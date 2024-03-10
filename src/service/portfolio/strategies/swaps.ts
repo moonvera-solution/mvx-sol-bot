@@ -20,7 +20,7 @@ export async function handle_radyum_swap(
     try {
         const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut));
         const targetPoolInfo = ctx.session.activeTradingPool.id;
-        // console.log('targetPoolInfo', targetPoolInfo);
+        console.log('targetPoolInfo', targetPoolInfo);
         const OUTPUT_TOKEN = new RayddiumToken(TOKEN_PROGRAM_ID, tokenOut, userTokenBalanceAndDetails.decimals);
         const walletTokenAccounts = await getWalletTokenAccount(connection, new PublicKey(userWallet.publicKey!));
         let userSolBalance = await getSolBalance(userWallet.publicKey);
