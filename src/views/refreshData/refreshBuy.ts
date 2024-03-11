@@ -53,13 +53,13 @@ export async function refreshTokenDetails(ctx: any) {
                 `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
                 `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
                 `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
-                `🏪 Market Cap: <b>${formattedmac} $USD</b>\n` +
-                `💵 Token Price: <b> ${tokenPriceUSD} $USD</b> | <b> ${tokenPriceSOL} $SOL</b> \n\n` +
-                // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  $USD\n` + 
+                `🏪 Market Cap: <b>${formattedmac} USD</b>\n` +
+                `💵 Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
+                // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
                 `price Impact (5.0 SOL) : <b>${priceImpact}%</b>\n\n` +
 
-                `🪙 Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} $USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} $SOL </b> \n` +
-                `🛄 Wallet Balance: <b>${balanceInSOL.toFixed(3)} $SOL</b> | <b>${balanceInUSD} $USD</b>\n ` ;
+                `🪙 Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
+                `🛄 Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n ` ;
             
             // Define buy mode inline keyboard
             options = {
@@ -80,13 +80,13 @@ export async function refreshTokenDetails(ctx: any) {
                 `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
                 `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
                 `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n`+
-                `🏪 Market Cap: <b>${formattedmac} $USD</b>\n` +
-                `💵 Token Price: <b> ${tokenPriceUSD} $USD</b> | <b> ${tokenPriceSOL} $SOL</b> \n\n` +
-                // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  $USD\n` + 
+                `🏪 Market Cap: <b>${formattedmac} USD</b>\n` +
+                `💵 Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
+                // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
                 `price Impact (5.0 SOL) : <b>${priceImpact}%</b>\n\n` +
 
-                `🪙 Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} $USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} $SOL </b> \n` +
-                `🛄 Wallet Balance: <b>${balanceInSOL.toFixed(3)} $SOL</b> | <b>${balanceInUSD} $USD</b>\n ` ;
+                `🪙 Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
+                `🛄 Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n ` ;
             
             // Handle sell mode and define inline keyboard
             options = {

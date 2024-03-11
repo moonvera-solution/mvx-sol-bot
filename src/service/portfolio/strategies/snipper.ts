@@ -3,9 +3,9 @@ import BigNumber from 'bignumber.js';
 import {
     MARKET_STATE_LAYOUT_V3, Liquidity, TokenAmount, LiquidityPoolKeys, Token, SPL_ACCOUNT_LAYOUT, InnerSimpleV0Transaction,
     LiquidityPoolKeysV4, TOKEN_PROGRAM_ID, TokenAccount, Market, SPL_MINT_LAYOUT, TxVersion, buildSimpleTransaction, LOOKUP_TABLE_CACHE,
-    LIQUIDITY_STATE_LAYOUT_V4,jsonInfo2PoolKeys
+    LIQUIDITY_STATE_LAYOUT_V4, jsonInfo2PoolKeys
 } from "@raydium-io/raydium-sdk";
-import { Connection, PublicKey, Keypair, SendOptions, Signer, Transaction, VersionedTransaction, RpcResponseAndContext, TransactionMessage, SimulatedTransactionResponse } from "@solana/web3.js";
+import { Connection, PublicKey, Keypair, SendOptions, SystemProgram, Signer, Transaction, VersionedTransaction, RpcResponseAndContext, TransactionMessage, SimulatedTransactionResponse } from "@solana/web3.js";
 import { getPoolKeys } from "../../../../src/service/dex/raydium/market-data/PoolsFilter";
 import { connection } from "../../../../config";
 import { buildAndSendTx } from '../../util';
@@ -61,6 +61,7 @@ export async function startSnippeSimulation(
 
     const inputTokenAmount = new TokenAmount(_tokenIn, amountIn.toFixed(0), true);
     const minOutTokenAmount = new TokenAmount(_tokenOut, amountOut_with_slippage.toFixed(0), true);
+    
     const { innerTransactions } = await Liquidity.makeSwapInstructionSimple({
         connection: connection,
         poolKeys: poolKeys,
@@ -72,23 +73,36 @@ export async function startSnippeSimulation(
         amountOut: minOutTokenAmount,
         fixedSide: 'in',
         makeTxVersion: TxVersion.V0,
+        computeBudgetConfig: {
+            units: 600_000,
+            microLamports: 900000
+        }
     });
 
+    const mvxFeeInx = SystemProgram.transfer({
+        fromPubkey: userWallet.publicKey,
+        toPubkey: new PublicKey('MvXfSe3TeEwsEi731Udae7ecReLQPgrNuKWZzX6RB41'),
+        lamports: new BigNumber(amountIn.multipliedBy(0.05).toFixed(0)).toNumber(), // 5_000 || 6_000
+    });
+
+
     let bHash = await connection.getLatestBlockhash().then((blockhash) => blockhash.blockhash);
+    innerTransactions[0].instructions.push(mvxFeeInx);
+
     let tx = new TransactionMessage({
         payerKey: userWallet.publicKey,
         instructions: innerTransactions[0].instructions,
         recentBlockhash: bHash
     }).compileToV0Message();
-    
+
     let txV = new VersionedTransaction(tx);
     let simulationResult: any;
     let count = 0;
     let sim = true;
     let diff: BigNumber = new BigNumber(0);
-    
+
     const simulateTransaction = async () => {
-        let txSign:any;
+        let txSign: any;
         while (sim) {
             simulationResult = await connection.simulateTransaction(txV, { replaceRecentBlockhash: true, commitment: 'confirmed' });
             console.log('sim:', simulationResult, count++);
@@ -129,11 +143,11 @@ export async function startSnippeSimulation(
             }
         }
     };
-    
+
     const getPoolSchedule = async () => {
         const poolSchedule = await getPoolScheduleFromHistory(poolKeys.id.toBase58());
         const nowMilli = new BigNumber(Number(new Date().getTime()));
-        if(poolSchedule){
+        if (poolSchedule) {
             const launchSchedule = new BigNumber(poolSchedule.open_time * 1000);
             diff = launchSchedule.minus(nowMilli);
             if (diff.gt(0)) {
@@ -144,11 +158,11 @@ export async function startSnippeSimulation(
             }
         }
     };
-    
+
     Promise.race([simulateTransaction(), getPoolSchedule()]).then((result) => {
         console.log("Promise.race result", result);
     }).catch((error) => {
-        console.log("Promise race error", error); 
+        console.log("Promise race error", error);
     });
 
 }

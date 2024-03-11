@@ -7,16 +7,18 @@ import {ISESSION_DATA} from '../../util/types';
 import {getUserTokenBalanceAndDetails} from '../../feeds';
 import bs58 from 'bs58';
 import { getRayPoolKeys } from '../../../service/dex/raydium/market-data/1_Geyser';
+import BigNumber from 'bignumber.js';
 
 export async function handle_radyum_swap(
     ctx:any,
     tokenOut: PublicKey,
-    side: String,
+    side: 'buy' | 'sell',
     swapAmountIn:any) {
     const chatId = ctx.chat.id;
     const session : ISESSION_DATA = ctx.session;
     const userWallet = session.portfolio.wallets[session.activeWalletIndex];
     let userSlippage = session.latestSlippage;
+    let mvxFee = new BigNumber(0);
     try {
         const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut));
         const targetPoolInfo = ctx.session.activeTradingPool.id;
@@ -35,6 +37,7 @@ export async function handle_radyum_swap(
             tokenIn = DEFAULT_TOKEN.WSOL;
             outputToken = OUTPUT_TOKEN;
             swapAmountIn = swapAmountIn * Math.pow(10, 9);
+            mvxFee = new BigNumber(swapAmountIn).times(0.05);
             await ctx.api.sendMessage(chatId, `💸 Buying ${originalBuyAmt} SOL of ${userTokenBalanceAndDetails.userTokenSymbol}`);
         } else {
             if (userTokenBalance == 0) {
@@ -57,6 +60,8 @@ export async function handle_radyum_swap(
 
         if (targetPoolInfo) {
             raydium_amm_swap({
+                side,
+                mvxFee,
                 outputToken,
                 targetPool: targetPoolInfo,
                 inputTokenAmount,
