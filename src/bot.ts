@@ -226,8 +226,12 @@ bot.on('message', async (ctx) => {
                                 poolInfo = await getRayPoolKeys(msgTxt);
                                 ctx.session.tokenRayPoolInfo[msgTxt] = poolInfo;
                               }                  
-                              console.log('poolInfo', poolInfo);
-                              ctx.session.sellToken = new PublicKey(poolInfo.baseMint);
+                              console.log('poolInfo baseMint:', poolInfo);
+                              
+                              // why do we need these next 2
+                              ctx.session.sellToken = poolInfo.baseMint;
+                              ctx.session.activeTradingPool = poolInfo;
+
                               await display_token_details(ctx);
                         }
                         if (!ctx.session.tokenHistory) {
@@ -382,9 +386,8 @@ bot.on('callback_query', async (ctx: any) => {
                 ctx.session.latestCommand = 'sell';
             
                 // Use the buyToken as sellToken if it's already set and valid
-                const tokenToSell = ctx.session.buyToken && ctx.session.buyToken != DEFAULT_PUBLIC_KEY ? 
-                                    ctx.session.buyToken : 
-                                    ctx.session.sellToken;
+                const tokenToSell = ctx.session.sellToken != DEFAULT_PUBLIC_KEY ? 
+                                    ctx.session.sellToken : undefined;
             
                 if (tokenToSell) {
                     const tokenString = tokenToSell.toBase58();

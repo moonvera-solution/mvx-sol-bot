@@ -36,7 +36,7 @@ export async function handleRefreshStart(ctx: any) {
         `Your Wallet:  ` +
         `<code><b>${publicKeyString}</b></code>\n` +
         `Balance: ` +
-        `<b>${balanceInSOL.toFixed(4)}</b> $SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> $USD\n\n` +
+        `<b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> USD\n\n` +
         '🆘 It is highly recommended to export your private key and import it into a wallet like Phantom';
 
  // Define the inline keyboard options

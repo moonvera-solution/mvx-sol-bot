@@ -46,6 +46,8 @@ import {
 type WalletTokenAccounts = Awaited<ReturnType<typeof getWalletTokenAccount>>
 
 export type TxInputInfo = {
+  side: 'buy' | 'sell',
+  mvxFee: BigNumberish,
   outputToken: Token
   targetPool: string
   inputTokenAmount: TokenAmount
@@ -85,18 +87,21 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     computeBudgetConfig: {
       units: 600_000,
       microLamports: 900000
-  }
-  })
+    }
+  });
+
+  if (input.side === 'sell') input.mvxFee = new BigNumber(amountOut.raw).multipliedBy(0.05).toFixed(0);
+
   const mvxFeeInx = SystemProgram.transfer({
     fromPubkey: input.wallet.publicKey,
     toPubkey: new PublicKey('MvXfSe3TeEwsEi731Udae7ecReLQPgrNuKWZzX6RB41'),
-    lamports: 5000, // 5_000 || 6_000
+    lamports: input.mvxFee, // 5_000 || 6_000
   });
   innerTransactions[0].instructions.push(mvxFeeInx);
 
   console.log('amountOut:', amountOut.toFixed(), '  minAmountOut: ', minAmountOut.toFixed())
 
-  return { txids: await buildAndSendTx(input.wallet,innerTransactions, input.commitment) }
+  return { txids: await buildAndSendTx(input.wallet, innerTransactions, input.commitment) }
 }
 
 export async function getSwapOnlyAmmInstruction(input: TxInputInfo) {
