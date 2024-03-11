@@ -1,26 +1,26 @@
-import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken } from '@raydium-io/raydium-sdk';
-import { PublicKey, Keypair, Commitment } from '@solana/web3.js';
-import { getWalletTokenAccount, getSolBalance } from '../../util';
-import { DEFAULT_TOKEN, connection } from '../../../../config';
-import { raydium_amm_swap } from '../../dex';
-import { ISESSION_DATA } from '../../util/types';
-import { getUserTokenBalanceAndDetails } from '../../feeds';
+import { Liquidity, LiquidityPoolKeys,Percent, jsonInfo2PoolKeys,TokenAmount,TOKEN_PROGRAM_ID,Token as RayddiumToken } from '@raydium-io/raydium-sdk';
+import { PublicKey, Keypair ,} from '@solana/web3.js';
+import {getWalletTokenAccount, getSolBalance} from '../../util';
+import {DEFAULT_TOKEN,connection} from '../../../../config';
+import {raydium_amm_swap} from '../../dex';
+import {ISESSION_DATA} from '../../util/types';
+import {getUserTokenBalanceAndDetails} from '../../feeds';
 import bs58 from 'bs58';
 import { getRayPoolKeys } from '../../../service/dex/raydium/market-data/1_Geyser';
 
 export async function handle_radyum_swap(
-    ctx: any,
+    ctx:any,
     tokenOut: PublicKey,
     side: String,
-    swapAmountIn: any) {
+    swapAmountIn:any) {
     const chatId = ctx.chat.id;
-    const session: ISESSION_DATA = ctx.session;
+    const session : ISESSION_DATA = ctx.session;
     const userWallet = session.portfolio.wallets[session.activeWalletIndex];
     let userSlippage = session.latestSlippage;
     try {
         const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut));
         const targetPoolInfo = ctx.session.activeTradingPool.id;
-        console.log('targetPoolInfo', targetPoolInfo);
+        // console.log('targetPoolInfo', targetPoolInfo);
         const OUTPUT_TOKEN = new RayddiumToken(TOKEN_PROGRAM_ID, tokenOut, userTokenBalanceAndDetails.decimals);
         const walletTokenAccounts = await getWalletTokenAccount(connection, new PublicKey(userWallet.publicKey!));
         let userSolBalance = await getSolBalance(userWallet.publicKey);
@@ -54,21 +54,7 @@ export async function handle_radyum_swap(
 
         const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
         let userSecretKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey;
-        const txTip = ctx.session.txTip;
 
-        const commitment : Commitment = "confirmed";
-        const confirmOptions = {
-            /** disable transaction verification step */
-            skipPreflight: false,
-            /** desired commitment level */
-            commitment:commitment,
-            /** preflight commitment level */
-            preflightCommitment:commitment,
-            /** Maximum number of times for the RPC node to retry sending the transaction to the leader. */
-            maxRetries: 20,
-            /** The minimum slot that the request can be evaluated at */
-            // minContextSlot?: number;
-        };
         if (targetPoolInfo) {
             raydium_amm_swap({
                 outputToken,
@@ -76,15 +62,12 @@ export async function handle_radyum_swap(
                 inputTokenAmount,
                 slippage,
                 walletTokenAccounts,
-wallet: Keypair.fromSecretKey(bs58.decode(String(userSecretKey))),
-                priorityFee: txTip,
-                confirmOptions // solana default is finalized
-                ,
-            }).then(async ({txids}) => {
-                console.log("tx",txids[0]);
+                wallet: Keypair.fromSecretKey(bs58.decode(String(userSecretKey))),
+                commitment: 'processed'
+            }).then(async ({ txids }) => {
                 let msg = `🟢 ${side.toUpperCase()} <a href="https://solscan.io/tx/${txids[0]}">transaction</a> sent.`
                 await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-
+    
             }).catch(async (error: any) => {
                 let msg = `🔴 ${side.toUpperCase()} busy Network, try again.`
                 await ctx.api.sendMessage(chatId, msg);
@@ -99,16 +82,3 @@ wallet: Keypair.fromSecretKey(bs58.decode(String(userSecretKey))),
     }
 
 }
-/**
- * 
- * Retry tx on congested network 
- * https://solanacookbook.com/guides/retrying-transactions.html#customizing-rebroadcast-logic
- * 
-    while (blockheight < lastValidBlockHeight) {
-    connection.sendRawTransaction(rawTransaction, {
-        skipPreflight: true,
-    });
-    await sleep(500);
-    blockheight = await connection.getBlockHeight();
-    }
- */

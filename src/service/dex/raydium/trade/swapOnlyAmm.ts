@@ -52,58 +52,25 @@ export type TxInputInfo = {
   slippage: Percent
   walletTokenAccounts: WalletTokenAccounts
   wallet: Keypair,
-  priorityFee: number,
-  confirmOptions: ConfirmOptions
+  commitment: any
 }
 
 export async function swapOnlyAmm(input: TxInputInfo) {
-  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
-  /*                         POOL KEYs                          */
-  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+  // -------- pre-action: get pool info --------
   const targetPoolInfo = await formatAmmKeysById(input.targetPool)
   assert(targetPoolInfo, 'cannot find the target pool')
-  const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys;
-  const versionnedBundle: VersionedTransaction[] = [];
-  const tradeSigner: Keypair[] = [input.wallet];
+  const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys
 
-  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
-  /*                       SWAP QUOTE                           */
-  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
-
+  // -------- step 1: coumpute amount out --------
   const { amountOut, minAmountOut } = Liquidity.computeAmountOut({
     poolKeys: poolKeys,
     poolInfo: await Liquidity.fetchInfo({ connection, poolKeys }),
     amountIn: input.inputTokenAmount,
     currencyOut: input.outputToken,
     slippage: input.slippage,
-  });
+  })
 
-  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
-  /*                      PRIORITY FEES                         */
-  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
-
-  const priorityFeeInx = SystemProgram.transfer({
-    fromPubkey: input.wallet.publicKey,
-    toPubkey: new PublicKey(await connection.getSlotLeader()),
-    lamports: input.priorityFee, // 5_000 || 6_000
-  });
-
-  const pfInx = new TransactionMessage({
-    payerKey: input.wallet.publicKey,
-    recentBlockhash: await connection.getLatestBlockhash().then(res => res.blockhash),
-    instructions: [priorityFeeInx]
-  }).compileToV0Message();
-
-  const pfInxFees = await connection.getFeeForMessage(pfInx);
-  console.log(`Estimated SOL mvxFeeInxMsg cost: ${pfInxFees.value} lamports`);
-
-  const versionedTipTx = new VersionedTransaction(pfInx);
-  // versionedTipTx.sign(tradeSigner);
-  versionnedBundle.push(versionedTipTx);
-
-  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
-  /*                       SWAP Inx                             */
-  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+  // -------- step 2: create instructions by SDK function --------
   const { innerTransactions } = await Liquidity.makeSwapInstructionSimple({
     connection,
     poolKeys,
@@ -120,16 +87,6 @@ export async function swapOnlyAmm(input: TxInputInfo) {
       microLamports: 900000
   }
   })
-  // const validatorLead = await connection.getSlotLeader();
-
-  //   // Create the transfer instruaction
-  //   const transferIx = SystemProgram.transfer({
-  //       fromPubkey: input.wallet.publicKey,
-  //       toPubkey: new PublicKey(validatorLead),
-  //       lamports: 5000, // 5_000 || 6_000
-  //   });
-  //   innerTransactions[0].instructions.push(transferIx);
-
   const mvxFeeInx = SystemProgram.transfer({
     fromPubkey: input.wallet.publicKey,
     toPubkey: new PublicKey('MvXfSe3TeEwsEi731Udae7ecReLQPgrNuKWZzX6RB41'),
@@ -137,13 +94,9 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   });
   innerTransactions[0].instructions.push(mvxFeeInx);
 
+  console.log('amountOut:', amountOut.toFixed(), '  minAmountOut: ', minAmountOut.toFixed())
 
-
-  console.log('amountOut:', amountOut.toFixed(), '  minAmountOut: ', minAmountOut.toFixed());
-
-  return { txids: await sendTx(connection, input.wallet, versionnedBundle, input.confirmOptions) };
-  // return await sendAndConfirmTransaction(connection, transaction, [signer], input.commitment);
-  // return { txids: await buildAndSendTx(input.wallet, innerTransactions, input.confirmOptions) }
+  return { txids: await buildAndSendTx(input.wallet,innerTransactions, input.commitment) }
 }
 
 export async function getSwapOnlyAmmInstruction(input: TxInputInfo) {
@@ -180,56 +133,56 @@ export async function getSwapOnlyAmmInstruction(input: TxInputInfo) {
 }
 
 
-async function _stopLoss() {
-  /*
-    base AA3CTyqn3EFYDxiayChLWXdYompiwRJeLqZG589PSvpB
-    quote So11111111111111111111111111111111111111112
-    poolId EmiVJ4eqEWKsa5jjWt3DnPJqyv6mpggiZamDxPyXw4dC
-    decimals 9
-  */
+// async function _stopLoss() {
+//   /*
+//     base AA3CTyqn3EFYDxiayChLWXdYompiwRJeLqZG589PSvpB
+//     quote So11111111111111111111111111111111111111112
+//     poolId EmiVJ4eqEWKsa5jjWt3DnPJqyv6mpggiZamDxPyXw4dC
+//     decimals 9
+//   */
 
 
-  const SHITCOIN = new PublicKey('AA3CTyqn3EFYDxiayChLWXdYompiwRJeLqZG589PSvpB');
-  const SHITCOIN_POOL = new PublicKey('EmiVJ4eqEWKsa5jjWt3DnPJqyv6mpggiZamDxPyXw4dC');
-  const SHITCOIN_DECIMALS = 9;
-  const SHITCOIN_AMOUNT = 3970523064630041;
+//   const SHITCOIN = new PublicKey('AA3CTyqn3EFYDxiayChLWXdYompiwRJeLqZG589PSvpB');
+//   const SHITCOIN_POOL = new PublicKey('EmiVJ4eqEWKsa5jjWt3DnPJqyv6mpggiZamDxPyXw4dC');
+//   const SHITCOIN_DECIMALS = 9;
+//   const SHITCOIN_AMOUNT = 3970523064630041;
 
-  const userWallet = Keypair.fromSecretKey(base58.decode(String('2jaFhsbZMy8n7HzMAKrVYADqi5cYhKca7fWpet1gKGtb8X4EW7k1ZqpX7Qdr5NAaV4wTEK6L2mHvEFNaPg7sFR9L')));
-  const inputToken = new Token(TOKEN_PROGRAM_ID, SHITCOIN, SHITCOIN_DECIMALS, '', '');
-  let { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(userWallet.publicKey, SHITCOIN);
+//   const userWallet = Keypair.fromSecretKey(base58.decode(String('2jaFhsbZMy8n7HzMAKrVYADqi5cYhKca7fWpet1gKGtb8X4EW7k1ZqpX7Qdr5NAaV4wTEK6L2mHvEFNaPg7sFR9L')));
+//   const inputToken = new Token(TOKEN_PROGRAM_ID, SHITCOIN, SHITCOIN_DECIMALS, '', '');
+//   let { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(userWallet.publicKey, SHITCOIN);
 
-  const outputToken = DEFAULT_TOKEN.WSOL // RAY
-  const inputTokenAmount = new TokenAmount(inputToken, SHITCOIN_AMOUNT, true)
-  const slippage = new Percent(20, 100)
-  const walletTokenAccounts = await getWalletTokenAccount(connection, userWallet.publicKey)
-  const commitment: Commitment = "processed";
+//   const outputToken = DEFAULT_TOKEN.WSOL // RAY
+//   const inputTokenAmount = new TokenAmount(inputToken, SHITCOIN_AMOUNT, true)
+//   const slippage = new Percent(20, 100)
+//   const walletTokenAccounts = await getWalletTokenAccount(connection, userWallet.publicKey)
+//   const commitment: Commitment = "processed";
 
-  const confirmOptions = {
-    /** disable transaction verification step */
-    skipPreflight: false,
-    /** desired commitment level */
-    commitment: commitment,
-    /** preflight commitment level */
-    preflightCommitment: commitment,
-    /** Maximum number of times for the RPC node to retry sending the transaction to the leader. */
-    maxRetries: 10,
-    /** The minimum slot that the request can be evaluated at */
-    // minContextSlot?: number;
-  };
-  swapOnlyAmm({
-    outputToken: outputToken,
-    targetPool: SHITCOIN_POOL.toBase58(),
-    inputTokenAmount: inputTokenAmount,
-    slippage: slippage,
-    walletTokenAccounts: walletTokenAccounts,
-    wallet: userWallet,
-    priorityFee: 5_000,
-    confirmOptions
-  }).then((txid) => {
-    /** continue with txids */
-    console.log("tx: ", txid);
-  })
-}
+//   const confirmOptions = {
+//     /** disable transaction verification step */
+//     skipPreflight: false,
+//     /** desired commitment level */
+//     commitment: commitment,
+//     /** preflight commitment level */
+//     preflightCommitment: commitment,
+//     /** Maximum number of times for the RPC node to retry sending the transaction to the leader. */
+//     maxRetries: 10,
+//     /** The minimum slot that the request can be evaluated at */
+//     // minContextSlot?: number;
+//   };
+//   swapOnlyAmm({
+//     outputToken: outputToken,
+//     targetPool: SHITCOIN_POOL.toBase58(),
+//     inputTokenAmount: inputTokenAmount,
+//     slippage: slippage,
+//     walletTokenAccounts: walletTokenAccounts,
+//     wallet: userWallet,
+//     priorityFee: 5_000,
+//     confirmOptions
+//   }).then((txid) => {
+//     /** continue with txids */
+//     console.log("tx: ", txid);
+//   })
+// }
 
 // _stopLoss();
 
