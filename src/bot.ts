@@ -103,15 +103,14 @@ bot.command("start", async (ctx: any) => {
     }
 
     // Combine the welcome message, SOL price message, and instruction to create a wallet
-    const welcomeMessage = ` 🌟 Welcome to SOLFI bot - A Solana Trading Bot! 🌟\n` +
-        `To start trading, you can just type the token address you want to trade.\n\n` +
-        `A wallet has been created for you. You can import your own wallet by clicking on the "Import Wallet" button below.\n\n` +
-        `${solPriceMessage} \n\n` +
-        `Your Wallet:  ` +
-        `<code><b>${publicKeyString}</b></code>\n` +
-        `Balance: ` +
-        `<b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> USD\n\n` +
-        '🆘 It is highly recommended to export your private key and import it into a wallet like Phantom';
+    const welcomeMessage = `✨ Welcome to <b>MVXBOT</b> - Your Advanced Trading Companion! ✨\n` +
+    `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
+    `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
+    `We're always working to bring you new features - stay tuned!\n\n` +
+    `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
+    `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> USD\n\n` +
+    `🖐🏼 For security, we recommend exporting your private key and using it with a wallet like Phantom.`;
+
 
 
     // Set the options for th e inline keyboard with social links
