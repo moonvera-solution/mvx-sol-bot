@@ -10,7 +10,7 @@ export async function handleRefreshStart(ctx: any) {
     
     if (details) {
         const solData = details.toFixed(2);
-        solPriceMessage = `\n\$SOL Price: <b>${solData}</b> $USD`;
+        solPriceMessage = `\n\SOL Price: <b>${solData}</b> USD`;
     } else {
         solPriceMessage = '\nError fetching current SOL price.';
     }
@@ -95,7 +95,7 @@ export async function handleRereshWallet(ctx: any){
     const updatedWelcomeMessage = `Your Wallet:  ` +
         `<code>${publicKeyString}</code>\n` +
         `Balance: ` +
-        `<b>${balanceInSOL.toFixed(3)}</b> $SOL | <b>${balanceInUSD}</b> $USD\n`;
+        `<b>${balanceInSOL.toFixed(3)}</b> SOL | <b>${balanceInUSD}</b> USD\n`;
 
     // Inline keyboard options
     const options: any = {

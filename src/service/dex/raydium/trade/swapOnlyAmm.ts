@@ -19,25 +19,32 @@ import {
   Connection, SendOptions,
   Signer,
   Transaction,
+  sendAndConfirmTransaction,
+  Commitment,
+  SystemProgram,
+  ConfirmOptions
 } from "@solana/web3.js";
 
 import { getUserTokenBalanceAndDetails } from '../../../feeds';
-import { Keypair, VersionedTransaction, TransactionMessage, PublicKey, SystemProgram } from '@solana/web3.js';
+import { Keypair, VersionedTransaction, TransactionMessage, PublicKey } from '@solana/web3.js';
 import base58 from "bs58";
 import {
   connection,
   DEFAULT_TOKEN,
   makeTxVersion
 } from '../../../../../config';
+
 import { formatAmmKeysById } from '../raydium-utils/formatAmmKeysById';
 
 import {
   buildAndSendTx,
   getWalletTokenAccount,
   buildTx,
+  sendTx,
 } from '../../../util';
 
 type WalletTokenAccounts = Awaited<ReturnType<typeof getWalletTokenAccount>>
+
 export type TxInputInfo = {
   outputToken: Token
   targetPool: string
@@ -45,29 +52,58 @@ export type TxInputInfo = {
   slippage: Percent
   walletTokenAccounts: WalletTokenAccounts
   wallet: Keypair,
-  commitment: any
+  priorityFee: number,
+  confirmOptions: ConfirmOptions
 }
 
 export async function swapOnlyAmm(input: TxInputInfo) {
-  // -------- pre-action: get pool info --------
-  
-
+  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+  /*                         POOL KEYs                          */
+  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
   const targetPoolInfo = await formatAmmKeysById(input.targetPool)
- 
   assert(targetPoolInfo, 'cannot find the target pool')
-  const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys
-  console.log('swapONlyamm::poolKeys:', poolKeys);
+  const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys;
+  const versionnedBundle: VersionedTransaction[] = [];
+  const tradeSigner: Keypair[] = [input.wallet];
 
-  // -------- step 1: coumpute amount out --------
+  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+  /*                       SWAP QUOTE                           */
+  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
   const { amountOut, minAmountOut } = Liquidity.computeAmountOut({
     poolKeys: poolKeys,
     poolInfo: await Liquidity.fetchInfo({ connection, poolKeys }),
     amountIn: input.inputTokenAmount,
     currencyOut: input.outputToken,
     slippage: input.slippage,
-  })
+  });
 
-  // -------- step 2: create instructions by SDK function --------
+  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+  /*                      PRIORITY FEES                         */
+  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
+  const priorityFeeInx = SystemProgram.transfer({
+    fromPubkey: input.wallet.publicKey,
+    toPubkey: new PublicKey(await connection.getSlotLeader()),
+    lamports: input.priorityFee, // 5_000 || 6_000
+  });
+
+  const pfInx = new TransactionMessage({
+    payerKey: input.wallet.publicKey,
+    recentBlockhash: await connection.getLatestBlockhash().then(res => res.blockhash),
+    instructions: [priorityFeeInx]
+  }).compileToV0Message();
+
+  const pfInxFees = await connection.getFeeForMessage(pfInx);
+  console.log(`Estimated SOL mvxFeeInxMsg cost: ${pfInxFees.value} lamports`);
+
+  const versionedTipTx = new VersionedTransaction(pfInx);
+  // versionedTipTx.sign(tradeSigner);
+  versionnedBundle.push(versionedTipTx);
+
+  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+  /*                       SWAP Inx                             */
+  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
   const { innerTransactions } = await Liquidity.makeSwapInstructionSimple({
     connection,
     poolKeys,
@@ -104,7 +140,10 @@ export async function swapOnlyAmm(input: TxInputInfo) {
 
 
   console.log('amountOut:', amountOut.toFixed(), '  minAmountOut: ', minAmountOut.toFixed());
-  return { txids: await buildAndSendTx(input.wallet, innerTransactions, input.commitment) }
+
+  return { txids: await sendTx(connection, input.wallet, versionnedBundle, input.confirmOptions) };
+  // return await sendAndConfirmTransaction(connection, transaction, [signer], input.commitment);
+  // return { txids: await buildAndSendTx(input.wallet, innerTransactions, input.confirmOptions) }
 }
 
 export async function getSwapOnlyAmmInstruction(input: TxInputInfo) {
@@ -142,12 +181,12 @@ export async function getSwapOnlyAmmInstruction(input: TxInputInfo) {
 
 
 async function _stopLoss() {
-/*
-  base AA3CTyqn3EFYDxiayChLWXdYompiwRJeLqZG589PSvpB
-  quote So11111111111111111111111111111111111111112
-  poolId EmiVJ4eqEWKsa5jjWt3DnPJqyv6mpggiZamDxPyXw4dC
-  decimals 9
-*/
+  /*
+    base AA3CTyqn3EFYDxiayChLWXdYompiwRJeLqZG589PSvpB
+    quote So11111111111111111111111111111111111111112
+    poolId EmiVJ4eqEWKsa5jjWt3DnPJqyv6mpggiZamDxPyXw4dC
+    decimals 9
+  */
 
 
   const SHITCOIN = new PublicKey('AA3CTyqn3EFYDxiayChLWXdYompiwRJeLqZG589PSvpB');
@@ -163,7 +202,20 @@ async function _stopLoss() {
   const inputTokenAmount = new TokenAmount(inputToken, SHITCOIN_AMOUNT, true)
   const slippage = new Percent(20, 100)
   const walletTokenAccounts = await getWalletTokenAccount(connection, userWallet.publicKey)
+  const commitment: Commitment = "processed";
 
+  const confirmOptions = {
+    /** disable transaction verification step */
+    skipPreflight: false,
+    /** desired commitment level */
+    commitment: commitment,
+    /** preflight commitment level */
+    preflightCommitment: commitment,
+    /** Maximum number of times for the RPC node to retry sending the transaction to the leader. */
+    maxRetries: 10,
+    /** The minimum slot that the request can be evaluated at */
+    // minContextSlot?: number;
+  };
   swapOnlyAmm({
     outputToken: outputToken,
     targetPool: SHITCOIN_POOL.toBase58(),
@@ -171,10 +223,11 @@ async function _stopLoss() {
     slippage: slippage,
     walletTokenAccounts: walletTokenAccounts,
     wallet: userWallet,
-    commitment: 'processed'
-  }).then(({ txids }) => {
+    priorityFee: 5_000,
+    confirmOptions
+  }).then((txid) => {
     /** continue with txids */
-    console.log("tx: ", txids[0]);
+    console.log("tx: ", txid);
   })
 }
 

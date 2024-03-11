@@ -97,7 +97,7 @@ bot.command("start", async (ctx: any) => {
     // solana price 
     if (details) {
         const solData = details.toFixed(2);
-        solPriceMessage = `\n\$SOL Price: <b>${solData}</b> $USD`;
+        solPriceMessage = `\n\SOL Price: <b>${solData}</b> USD`;
     } else {
         solPriceMessage = '\nError fetching current SOL price.';
     }
@@ -110,7 +110,7 @@ bot.command("start", async (ctx: any) => {
         `Your Wallet:  ` +
         `<code><b>${publicKeyString}</b></code>\n` +
         `Balance: ` +
-        `<b>${balanceInSOL.toFixed(4)}</b> $SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> $USD\n\n` +
+        `<b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> USD\n\n` +
         '🆘 It is highly recommended to export your private key and import it into a wallet like Phantom';
 
 

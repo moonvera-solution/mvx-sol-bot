@@ -18,12 +18,12 @@
 //         `🏭 Creator Percentage: <b>${(Number(creatorPerecent) * 100).toFixed(2)} %</b>\n` +
 //         `👥 Top 10 Holders: <b>${(Number(topHolders) * 100).toFixed(2)} %</b>\n` +
 //         `🏭 Total Supply: <b>${formattedTotalSupply}</b>\n` +
-//         // `🎱 Pooled SOL: <b>${(Number(formattedpooledSol)).toFixed(3)}</b> $SOL \n`+
+//         // `🎱 Pooled SOL: <b>${(Number(formattedpooledSol)).toFixed(3)}</b> SOL \n`+
 //         `👤 Renounced: ${renounced}\n` +
 //         `🔣 Mutable info: ${metadata}\n` +
-//         `💵 Token Price:<b> ${Number(tokenInfo.price).toFixed(decimals)}</b> $USD\n` +
-//         `💹 Market Cap: <b>${formattedmac}</b> $USD\n` +
-//         `💧 Liquidity: <b>${(formattedLiquidity)}</b>  $USD\n` +
+//         `💵 Token Price:<b> ${Number(tokenInfo.price).toFixed(decimals)}</b> USD\n` +
+//         `💹 Market Cap: <b>${formattedmac}</b> USD\n` +
+//         `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` +
 //         `🎱 LpBurnt: <b>${(lpBurnt)}</b>`;
 //     let options: Telegrambot.api.sendMessageOptions | undefined;
 //     options = {

@@ -29,7 +29,7 @@ export async function handleSettings(ctx:any) {
     const walletInfoMessage = `Your Wallet:  ` +
         `<code>${publicKeyString}</code>\n` +
         `Balance: ` +
-        `<b>${balanceInSOL.toFixed(3)}</b> $SOL | <b>${balanceInUSD}</b> $USD\n`;
+        `<b>${balanceInSOL.toFixed(3)}</b> SOL | <b>${balanceInUSD}</b> USD\n`;
 
     // Inline keyboard options
     const options: any = {
