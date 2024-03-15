@@ -116,11 +116,11 @@ bot.command("start", async (ctx: any) => {
     const options: any = {
         reply_markup: JSON.stringify({
             inline_keyboard: [
-                [
-                    { text: '🌎 Website', url: 'https://moonvera.io/' },
-                    { text: '𝚇', url: 'https://twitter.com/moonvera_' }
+                // [
+                //     { text: '🌎 Website', url: 'https://moonvera.io/' },
+                //     { text: '𝚇', url: 'https://twitter.com/moonvera_' }
                    
-                ],
+                // ],
                 [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
                 [{ text: '☑️ Rug Check', callback_data: 'rug_check' }],
                 [{ text: '🎯 Turbo Snipe', callback_data: 'snipe' }],
