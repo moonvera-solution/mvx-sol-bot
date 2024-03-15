@@ -1,12 +1,15 @@
 import { PublicKey} from '@metaplex-foundation/js';
-import { getLiquityFromOwner, getTokenMetadata, getUserTokenBalanceAndDetails } from '../service/feeds';
-import { quoteToken } from './util/dataCalculation';
-import { getSolanaDetails } from '../api';
-import { formatNumberToKOrM, getSolBalance } from '../service/util';
+import { getLiquityFromOwner, getTokenMetadata, getUserTokenBalanceAndDetails } from '../../service/feeds';
+import TelegramBot from 'node-telegram-bot-api';
+import { quoteToken } from '../util/dataCalculation';
+import { getSolanaDetails } from '../../api';
+import { formatNumberToKOrM, getSolBalance } from '../../service/util';
+import axios from 'axios';
 import { Connection } from '@solana/web3.js';
+import { LIQUIDITY_STATE_LAYOUT_V4, publicKey } from '@raydium-io/raydium-sdk';
 const connection_only = new Connection('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'); // TRITON
 
-export async function display_rugCheck(ctx: any) {
+export async function Refresh_rugCheck(ctx: any) {
     const chatId = ctx.chat.id;
     const session = ctx.session;
     const token = session.rugCheckToken;
@@ -16,9 +19,8 @@ export async function display_rugCheck(ctx: any) {
     const baseDecimals = rugPool.baseDecimals;
     const quoteDecimals = rugPool.quoteDecimals;
     const baseMint = rugPool.baseMint;
-    ctx.session.snipeToken = baseMint;
-    ctx.session.buyToken = baseMint;
     const lpMint = rugPool.lpMint;
+    console.log('lpMint', lpMint);  
     const solprice = await getSolanaDetails();
     const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint });
     const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
@@ -54,7 +56,7 @@ export async function display_rugCheck(ctx: any) {
     const islpBurnt = lpSupply > 0 ? "❌ No" : "✅ Yes";
     const getCreatorPercentage = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint));
     const creatorPercentage = (Number(getCreatorPercentage.userTokenBalance) / Number(baseTokenSupply) * 100).toFixed(2);
-
+    try {
     let messageText = `<b>------ ${tokenData.name} (${tokenData.symbol}) ------</b>\n` +
     `Contract: <code>${token}</code>\n\n` +
     `<b>Links:</b>\n` +
@@ -88,6 +90,9 @@ export async function display_rugCheck(ctx: any) {
             ]
         }
     };
-    await ctx.api.sendMessage(chatId, messageText, options);
-
+    await ctx.editMessageText(messageText, options);
+} catch (error: any) {
+    console.error('Error in Refresh_rugCheck:', error.message);
+    throw error;
+}
 }

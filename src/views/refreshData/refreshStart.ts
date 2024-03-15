@@ -29,38 +29,36 @@ export async function handleRefreshStart(ctx: any) {
      const balanceInUSD = (balanceInSOL * (details).toFixed(2));
 
     // Update the welcome message with the new SOL price
-    const updatedWelcomeMessage = ` 🌟 Welcome to SOLFI bot - A Solana Trading Bot! 🌟\n` +
-        `To start trading, you can just type the token address you want to trade.\n\n` +
-        `A wallet has been created for you. You can import your own wallet by clicking on the "Import Wallet" button below.\n\n` +
-        `${solPriceMessage} \n\n` +
-        `Your Wallet:  ` +
-        `<code><b>${publicKeyString}</b></code>\n` +
-        `Balance: ` +
-        `<b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> USD\n\n` +
-        '🆘 It is highly recommended to export your private key and import it into a wallet like Phantom';
+    const welcomeMessage = `✨ Welcome to <b>MVXBOT</b> - Your Advanced Trading Companion! ✨\n` +
+    `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
+    `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
+    `We're always working to bring you new features - stay tuned!\n\n` +
+    `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
+    `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> USD\n\n` +
+    `🖐🏼 For security, we recommend exporting your private key and keeping it secure`;
 
  // Define the inline keyboard options
-    const options = {
-        reply_markup: JSON.stringify({
-            inline_keyboard: [
-                [
-                    // { text: '🌎 Website', url: 'https://solscifi.com/' },
-                    // { text: '𝚇', url: 'https://twitter.com/Solfi_SciFi' },
-                    // { text: '🧑🏽‍💻 Telegram', url: 'https://t.me/solscifi' }
-                ],
-                [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
-                [{ text: '🎯 Turbo Snipe', callback_data: 'snipe' }],
-                [{ text: '💱 Buy', callback_data: 'buy' }, { text: 'Sell 📈', callback_data: 'sell' }],
-                // [{ text: 'ℹ️ Help', callback_data: 'help' }, { text: 'Refer Friends', callback_data: 'refer_friends' }],
-                // [{ text: '🚦 Rug Check', callback_data: 'rug_check' },{ text: 'Limit orders', callback_data: 'limit_order' }]
-                [ { text: 'Refresh', callback_data: 'refresh_start' }]
+ const options: any = {
+    reply_markup: JSON.stringify({
+        inline_keyboard: [
+            [
+                { text: '🌎 Website', url: 'https://moonvera.io/' },
+                { text: '𝚇', url: 'https://twitter.com/moonvera_' }
+               
             ],
-        }),
-        parse_mode: 'HTML'
-    };
+            [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
+            [{ text: '☑️ Rug Check', callback_data: 'rug_check' }],
+            [{ text: '🎯 Turbo Snipe', callback_data: 'snipe' }],
+            [{ text: '💱 Buy', callback_data: 'buy' }, { text: 'Sell 📈', callback_data: 'sell' }],
+            [{ text: 'ℹ️ Help', callback_data: 'help' }, { text: 'Refer Friends', callback_data: 'refer_friends' }],
+            [ { text: 'Refresh', callback_data: 'refresh_start' }]
+        ],
+    }),
+    parse_mode: 'HTML'
+};
     // Edit the existing message with the updated information and the inline keyboard
     try {
-        await ctx.editMessageText(updatedWelcomeMessage, options);
+        await ctx.editMessageText(welcomeMessage, options);
     } catch (error) {
         console.error("Error updating message: ", error);
     }
@@ -102,10 +100,8 @@ export async function handleRereshWallet(ctx: any){
         reply_markup: JSON.stringify({
             inline_keyboard: [
                 [{ text: 'Get Private Key', callback_data: 'get_private_key' }, { text: `✏ Slippage (${ctx.session.latestSlippage}%)`, callback_data: 'set_slippage' }],
-                [{ text: '🔂 Refresh', callback_data: 'refresh_wallet' },
-                    { text: 'Reset Wallet', callback_data: 'generate_new_wallet' }
-                    
-                ],
+                [{ text: '🔂 Refresh', callback_data: 'refresh_wallet' }, { text: 'Reset Wallet', callback_data: 'confirm_reset_wallet' }],
+                [{ text: '↗️ Send SOL', callback_data: 'send_sol' }],
                 [{ text: 'Close', callback_data: 'closing' }]
             ]
         }),

@@ -36,10 +36,8 @@ export async function handleSettings(ctx:any) {
         reply_markup: JSON.stringify({
             inline_keyboard: [
                 [{ text: 'Get Private Key', callback_data: 'get_private_key' }, { text: `✏ Slippage (${ctx.session.latestSlippage}%)`, callback_data: 'set_slippage' }],
-                [{ text: '🔂 Refresh', callback_data: 'refresh_wallet' },
-                    { text: 'Reset Wallet', callback_data: 'confirm_reset_wallet' }
-                    
-                ],
+                [{ text: '🔂 Refresh', callback_data: 'refresh_wallet' }, { text: 'Reset Wallet', callback_data: 'confirm_reset_wallet' }],
+                [{ text: '↗️ Send SOL', callback_data: 'send_sol' }],
                 [{ text: 'Close', callback_data: 'closing' }]
             ]
         }),

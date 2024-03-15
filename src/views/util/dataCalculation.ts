@@ -20,7 +20,7 @@ export async function getPoolToken_details(tokenBaseVault: PublicKey, tokenQuote
     }
 }
 
-export async function quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply }: { baseVault: PublicKey, quoteVault: PublicKey, baseDecimals: number, quoteDecimals: number, baseSupply: PublicKey }): Promise<{ price: BigNumber, marketCap: BigNumber, liquidity: number, priceImpact: number }> {
+export async function quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply }: { baseVault: PublicKey, quoteVault: PublicKey, baseDecimals: number, quoteDecimals: number, baseSupply: PublicKey }): Promise<{ price: BigNumber, marketCap: BigNumber, liquidity: number, priceImpact: number, priceImpact_1: number }> {
     let { baseTokenVaultSupply, quoteTokenVaultSupply, baseTokenSupply} = await getPoolToken_details(baseVault, quoteVault, baseSupply);
     if (quoteDecimals < baseDecimals) {
         baseTokenVaultSupply = new BigNumber(baseTokenVaultSupply.toNumber() * Math.pow(10, quoteDecimals - baseDecimals));
@@ -31,29 +31,28 @@ export async function quoteToken({ baseVault, quoteVault, baseDecimals, quoteDec
     const marketCap: BigNumber = price.times(baseTokenSupply.dividedBy(Math.pow(10, baseDecimals)));
     // price impact calculation
     const tradeAmount_SOL = new BigNumber(5).times(Math.pow(10, baseDecimals)); // 5 SOL in lamports
+    const tradeAmount_SOL_1 = new BigNumber(1).times(Math.pow(10, baseDecimals)); // 1 SOL in lamports
     const newQuoteVaultSupply = quoteTokenVaultSupply.plus(tradeAmount_SOL);
+    const newQuoteVaultSupply_1 = quoteTokenVaultSupply.plus(tradeAmount_SOL_1);
     const newBaseVaultSupply = baseTokenVaultSupply.times(quoteTokenVaultSupply).div(newQuoteVaultSupply);
+    const newBaseVaultSupply_1 = baseTokenVaultSupply.times(quoteTokenVaultSupply).div(newQuoteVaultSupply_1);
     const tokenReceived = (baseTokenVaultSupply.minus(newBaseVaultSupply));
- // Result in percentage
-    // console.log('baseTokenVaultSupply', baseTokenVaultSupply.toNumber());
-    // console.log('quoteTokenVaultSupply', quoteTokenVaultSupply.toNumber());
-    // console.log ('baseTokenSupply', baseTokenSupply.toNumber());
-    // console.log('price', price.toNumber());
-    // console.log('newQuoteVaultSupply', newQuoteVaultSupply.toNumber());
-    // console.log('newBaseVaultSupply', newBaseVaultSupply.toNumber());
-    // console.log('tokenReceived', tokenReceived.toNumber());
+    const tokenReceived_1 = (baseTokenVaultSupply.minus(newBaseVaultSupply_1));
+ 
 
     const newPrice = new BigNumber(tradeAmount_SOL.toNumber() / tokenReceived.toNumber());
+    const newPrice_1 = new BigNumber(tradeAmount_SOL_1.toNumber() / tokenReceived_1.toNumber());
     // console.log('newprice', newPrice.toNumber() );
 
     const priceImpact = newPrice.minus(price).div(price).times(100).toNumber();
+    const priceImpact_1 = newPrice_1.minus(price).div(price).times(100).toNumber();
     // console.log('priceImpact', priceImpact);
   // liquid
     const liquidityInfo: BigNumber = quoteTokenVaultSupply;
     const liquidity = liquidityInfo.toNumber() * Math.pow(10, -baseDecimals);
     // console.log('liquidity', liquidity);
     
-    return { price, marketCap, liquidity, priceImpact };
+    return { price, marketCap, liquidity, priceImpact, priceImpact_1 };
 } 
 
 

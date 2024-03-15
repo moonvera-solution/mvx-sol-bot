@@ -39,6 +39,10 @@ export interface ISESSION_DATA {
   buyTokenHistory: PublicKey[];
   sellTokenHistory: PublicKey[];
   tokenHistory: PublicKey[];
+  rugCheckToken: PublicKey;
+  recipientAddress: PublicKey;
+  solAmount: number;
+  
 }
 
 export const DefaultPoolInfoData: RAYDIUM_POOL_TYPE = {
@@ -76,6 +80,9 @@ export const DefaultSessionData: ISESSION_DATA = {
     wallets: [],
     positions: []
   },
+  rugCheckToken: DEFAULT_PUBLIC_KEY,
+  solAmount: 0,
+  recipientAddress: DEFAULT_PUBLIC_KEY,
   tokenHistory: [],
   tokenRayPoolInfo: {},
   buyTokenHistory: [],

@@ -10,12 +10,15 @@ import { getPoolKeys } from "../../../../src/service/dex/raydium/market-data/Poo
 import { connection } from "../../../../config";
 import { buildAndSendTx } from '../../util';
 
-import { amount } from "@metaplex-foundation/js";
+import { amount, token } from "@metaplex-foundation/js";
 const log = (k: any, v: any) => console.log(k, v);
 import base58 from 'bs58';
 import { getRayPoolKeys, getPoolScheduleFromHistory } from "../../dex/raydium/market-data/1_Geyser";
+import { getTokenMetadata } from "../../feeds";
 
 export async function setSnipe(ctx: any, amountIn: any) {
+    // Returns either the time to wait or indicates pool is already open
+
     console.log('Snipe set ...');
     const snipeToken = new PublicKey(ctx.session.snipeToken);
     const rayPoolKeys = await getRayPoolKeys(snipeToken.toBase58());
@@ -24,9 +27,15 @@ export async function setSnipe(ctx: any, amountIn: any) {
     const snipeSlippage = ctx.session.snipeSlippage;
     const currentWalletIdx = ctx.session.activeWalletIndex;
     const currentWallet = ctx.session.portfolio.wallets[currentWalletIdx];
+    const {
+        birdeyeURL,
+        dextoolsURL,
+        dexscreenerURL,
+        tokenData,
+    } = await getTokenMetadata(ctx, snipeToken.toBase58());
     console.log('currentWallet', currentWallet);
     const userKeypair = await Keypair.fromSecretKey(base58.decode(String(currentWallet.secretKey)));
-    ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一    ${amountIn} TKN`);
+    ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一    ${amountIn} $${tokenData.symbol} Snipe set...`);
 
     // Start the simulation without waiting for it to complete
     const simulationPromise = startSnippeSimulation(ctx, poolKeys, userKeypair, amountInLamports, snipeSlippage);
@@ -74,7 +83,7 @@ export async function startSnippeSimulation(
         fixedSide: 'in',
         makeTxVersion: TxVersion.V0,
         computeBudgetConfig: {
-            units: 600_000,
+            units: 500_000,
             microLamports: 900000
         }
     });
@@ -166,6 +175,23 @@ export async function startSnippeSimulation(
     });
 
 }
+
+// const getPoolSchedule = async (ctx: any, poolKeys: any) => {
+//     const poolSchedule = await getPoolScheduleFromHistory(poolKeys.id.toBase58());
+//     const nowMilli = new BigNumber(Number(new Date().getTime()));
+//     const chatId = ctx.chat.id;
+
+//     let diff: BigNumber = new BigNumber(0);
+//     if (poolSchedule) {
+//         const launchSchedule = new BigNumber(poolSchedule.open_time * 1000);
+//         diff = launchSchedule.minus(nowMilli);
+//         if (diff.gt(0)) {
+//             ctx.bot.sendMessage(chatId, `Pool opening in ${formatLaunchCountDown(diff.toNumber())}`);
+//             console.log("Pool opening in", launchSchedule.toNumber(), "seconds...");
+//             return diff;
+//         }
+//     }
+// };
 
 async function sleep(ms: any) {
     console.log("Sleeping for", ms.div(1000).toNumber());

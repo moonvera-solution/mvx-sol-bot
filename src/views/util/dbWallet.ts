@@ -49,7 +49,7 @@ export async function handleWallets(ctx: any) {
         parse_mode: 'HTML'
     };
 
-    await ctx.api.sendMessage(chatId, "Select a trading Wallet:", options);
+    await ctx.api.sendMessage(chatId, "Please select a wallet to configure or for sending SOL:", options);
 }
 
 

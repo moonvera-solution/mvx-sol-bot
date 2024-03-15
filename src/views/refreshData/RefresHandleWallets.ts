@@ -46,5 +46,5 @@ export async function RefreshAllWallets(ctx: any){
         },
         parse_mode: 'HTML'
     };
-    await ctx.editMessageText("Select a trading wallet:", options);
+    await ctx.editMessageText("Please select a wallet to configure or for sending SOL:", options);
 }

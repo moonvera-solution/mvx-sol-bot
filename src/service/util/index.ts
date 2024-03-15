@@ -5,7 +5,7 @@ import {
     SPL_ACCOUNT_LAYOUT,
     TOKEN_PROGRAM_ID,
     TokenAccount,
-    LiquidityPoolKeys, Liquidity, TokenAmount, Token, Percent
+    LiquidityPoolKeys, Liquidity, TokenAmount, Token, Percent, publicKey
 } from '@raydium-io/raydium-sdk';
 import { Metaplex } from "@metaplex-foundation/js";
 import axios from 'axios';
@@ -22,7 +22,8 @@ import {
     sendAndConfirmTransaction,
     LAMPORTS_PER_SOL,
     TransactionInstruction,
-    Commitment
+    Commitment,
+    SystemProgram
 } from '@solana/web3.js';
 
 import {
@@ -530,6 +531,41 @@ export async function formatNumberToKOrM(number: number) {
     return null;
 }
 
+export async function sendSol(ctx: any, recipientAddress: PublicKey, solAmount: number) {
+    const chatId = ctx.chat.id;
+    const session = ctx.session;
+    const userWallet = session.portfolio.wallets[session.activeWalletIndex];
+    const userSecretKey = userWallet.secretKey; // User's secret key
+    const userPublicKey = userWallet.publicKey; // User's public key
+    const amount = solAmount * LAMPORTS_PER_SOL; // Convert SOL to lamports
+    // Create a transaction
+    const transaction = new Transaction().add(
+        SystemProgram.transfer({
+            fromPubkey: new PublicKey(userPublicKey),
+            toPubkey: recipientAddress,
+            lamports: amount,
+        })
+    );
+    // Create a Keypair from the secret key
+    const senderKeypair = Keypair.fromSecretKey(bs58.decode(String(userSecretKey)))
+    console.log("senderKeypair", senderKeypair)
+    try {
+        // Sign and send the transaction
+        const signature = await sendAndConfirmTransaction(
+            connection,
+            transaction,
+            [senderKeypair],
+            { commitment: 'processed' }
+        );
+
+const solscanUrl = `https://solscan.io/tx/${signature}`;
+
+await ctx.api.sendMessage(chatId, `💸 Sent ${solAmount} SOL to ${recipientAddress.toBase58()}.\nView on Solscan: ${solscanUrl}`);
+    } catch (error) {
+        console.error("Transaction Error:", error);
+        await ctx.api.sendMessage(chatId, "Transaction failed. Please try again later.");
+    }
+}
 
 async function getTokenDescription(tokenUri: string) {
     try {

@@ -91,3 +91,24 @@ export async function getUserTokenBalanceAndDetails(userWallet: PublicKey, token
     }
 }
 
+export async function getLiquityFromOwner(userWallet: PublicKey, tokenAddress: PublicKey) : Promise<any> {
+    let userBalance = 0;
+    try {
+        const mintAddress = (tokenAddress instanceof PublicKey) ? tokenAddress : new PublicKey(tokenAddress);
+        const walletPublicKey = (userWallet instanceof PublicKey) ? userWallet : new PublicKey(userWallet);
+        let tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(walletPublicKey, {
+            mint: mintAddress,
+            programId: TOKEN_PROGRAM_ID
+        });
+        userBalance = tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.uiAmount;
+        let userBalanceTest:number = userBalance ? userBalance : 0;
+        return {
+            userTokenBalance: userBalanceTest,
+          
+        }
+    
+    } catch (error) {
+        console.error("Error in getUserTokenBalanceAndDetails: ", error);
+        throw error;
+    }
+}

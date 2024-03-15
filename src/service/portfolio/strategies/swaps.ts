@@ -8,6 +8,7 @@ import {getUserTokenBalanceAndDetails} from '../../feeds';
 import bs58 from 'bs58';
 import { getRayPoolKeys } from '../../../service/dex/raydium/market-data/1_Geyser';
 import BigNumber from 'bignumber.js';
+import { display_token_details } from '../../../views';
 
 export async function handle_radyum_swap(
     ctx:any,
@@ -70,9 +71,23 @@ export async function handle_radyum_swap(
                 wallet: Keypair.fromSecretKey(bs58.decode(String(userSecretKey))),
                 commitment: 'processed'
             }).then(async ({ txids }) => {
-                let msg = `🟢 ${side.toUpperCase()} <a href="https://solscan.io/tx/${txids[0]}">transaction</a> sent.`
+                let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processed successfully. <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>.`
                 await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-    
+                
+                const isConfirmed = await waitForConfirmation(txids[0]);
+                console.log('isConfirmed', isConfirmed);
+                if (isConfirmed) {
+                    let confirmedMsg = `✅ <b>Transaction ${side.toUpperCase()} Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`
+                    await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
+                    if (side === 'buy') {
+                        ctx.session.latestCommand = 'sell';
+                        await display_token_details(ctx); // Trigger the function to display sell options
+                    } else if (side === 'sell') {
+                        ctx.session.latestCommand = 'buy';
+                        await display_token_details(ctx); // Trigger the function to display buy options
+                    }
+                }
+
             }).catch(async (error: any) => {
                 let msg = `🔴 ${side.toUpperCase()} busy Network, try again.`
                 await ctx.api.sendMessage(chatId, msg);
@@ -87,3 +102,69 @@ export async function handle_radyum_swap(
     }
 
 }
+
+async function waitForConfirmation(txid: string): Promise<boolean> {
+    let isConfirmed = false;
+    const maxAttempts = 100;
+    let attempts = 0;
+
+    while (!isConfirmed && attempts < maxAttempts) {
+        attempts++;
+        console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
+        
+        const status = await getTransactionStatus(txid);
+        console.log('Transaction status:', status);
+        
+        if (status === 'confirmed' || status === 'finalized') {
+            console.log('Transaction is confirmed.');
+            isConfirmed = true;
+        } else {
+            console.log('Waiting for confirmation...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+    }
+
+    if (!isConfirmed) {
+        console.log('Transaction could not be confirmed within the max attempts.');
+    }
+
+    return isConfirmed;
+}
+
+
+const fetch = require('node-fetch'); // Make sure to have 'node-fetch' installed
+
+async function getTransactionStatus(txid: string) {
+    const method = 'getSignatureStatuses';
+    const solanaRpcUrl = 'https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'; // Replace with your RPC URL
+    const body = JSON.stringify({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": method,
+        "params": [
+            [txid],
+            { "searchTransactionHistory": true }
+        ]
+    });
+
+    try {
+        const response = await fetch(solanaRpcUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: body
+        });
+
+        const data = await response.json();
+
+        // Check if the transaction is confirmed
+        if (data.result && data.result.value && data.result.value[0]) {
+            return data.result.value[0].confirmationStatus;
+        } else {
+            return 'unconfirmed'; // or some other default status
+        }
+    } catch (error) {
+        console.error("Error fetching transaction status:", error);
+        return false;
+    }
+}
+
