@@ -33,9 +33,7 @@ const app = express();
 type MyContext = Context & SessionFlavor<ISESSION_DATA>;
 export const bot = new Bot<MyContext>(process.env.TELEGRAM_BOT_TOKEN!);
 bot.use(session({
-    initial: () => (DefaultSessionData),
-    
-   
+    initial: () => JSON.parse(JSON.stringify(DefaultSessionData))
 }));
 // Set the webhook
 // const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
