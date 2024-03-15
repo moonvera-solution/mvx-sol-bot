@@ -1,7 +1,7 @@
 import { Liquidity, LiquidityPoolKeys,Percent, jsonInfo2PoolKeys,TokenAmount,TOKEN_PROGRAM_ID,Token as RayddiumToken } from '@raydium-io/raydium-sdk';
 import { PublicKey, Keypair ,} from '@solana/web3.js';
 import {getWalletTokenAccount, getSolBalance} from '../../util';
-import {DEFAULT_TOKEN,connection} from '../../../../config';
+import {DEFAULT_TOKEN,MVXBOT_FEES,connection} from '../../../../config';
 import {raydium_amm_swap} from '../../dex';
 import {ISESSION_DATA} from '../../util/types';
 import {getUserTokenBalanceAndDetails} from '../../feeds';
@@ -38,7 +38,7 @@ export async function handle_radyum_swap(
             tokenIn = DEFAULT_TOKEN.WSOL;
             outputToken = OUTPUT_TOKEN;
             swapAmountIn = swapAmountIn * Math.pow(10, 9);
-            mvxFee = new BigNumber(swapAmountIn).times(0.05);
+            mvxFee = new BigNumber(swapAmountIn).times(MVXBOT_FEES);
             await ctx.api.sendMessage(chatId, `💸 Buying ${originalBuyAmt} SOL of ${userTokenBalanceAndDetails.userTokenSymbol}`);
         } else {
             if (userTokenBalance == 0) {

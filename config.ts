@@ -17,6 +17,7 @@ import {
   PublicKey,
 } from '@solana/web3.js';
 import bs58 from 'bs58';
+import BigNumber from 'bignumber.js';
 
 // ONLY FOR SWAP TESTING
 export const secretKey = bs58.decode(process.env.TEST_WALLET_PK!);
@@ -57,6 +58,7 @@ export const DEFAULT_TOKEN = {
   'SOLFI_SOL_V4_POOL': '46MCgSVT6KdBNK9UiBgyhEUPY3VbJRu8aZ3X1MQKxTeV' // AMM ID
 }
 
+export const MVXBOT_FEES = BigNumber(0.005) //it has to be divided by 100 here
 /**
  * PAIR addr = DtU8TMzfQAFSTjEcRUBAwBrWzkv6a32maR6FiezV8hGd
  * SOLFI addr = FvVDc6gZmYho6DLLuJ3ptHS6rxb797Cxf1insiUnu2BL

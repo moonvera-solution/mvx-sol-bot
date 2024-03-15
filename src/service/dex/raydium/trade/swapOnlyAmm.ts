@@ -1,67 +1,84 @@
-const WebSocket = require('ws');
-import assert from 'assert';
+const WebSocket = require("ws");
+import assert from "assert";
 
 import {
   jsonInfo2PoolKeys,
   Liquidity,
   LiquidityPoolKeys,
   Percent,
-  Token, TOKEN_PROGRAM_ID,
+  Token,
+  TOKEN_PROGRAM_ID,
   TokenAmount,
-} from '@raydium-io/raydium-sdk';
-import {
-  MARKET_STATE_LAYOUT_V3, SPL_ACCOUNT_LAYOUT, InnerSimpleV0Transaction, buildTransaction,
-  LiquidityPoolKeysV4, TokenAccount, BigNumberish,
-  Market, SPL_MINT_LAYOUT, TxVersion, buildSimpleTransaction, LOOKUP_TABLE_CACHE,
 } from "@raydium-io/raydium-sdk";
-import BigNumber from 'bignumber.js';
 import {
-  Connection, SendOptions,
+  MARKET_STATE_LAYOUT_V3,
+  SPL_ACCOUNT_LAYOUT,
+  InnerSimpleV0Transaction,
+  buildTransaction,
+  LiquidityPoolKeysV4,
+  TokenAccount,
+  BigNumberish,
+  Market,
+  SPL_MINT_LAYOUT,
+  TxVersion,
+  buildSimpleTransaction,
+  LOOKUP_TABLE_CACHE,
+} from "@raydium-io/raydium-sdk";
+import BigNumber from "bignumber.js";
+import {
+  Connection,
+  SendOptions,
   Signer,
   Transaction,
   sendAndConfirmTransaction,
   Commitment,
   SystemProgram,
-  ConfirmOptions
+  ConfirmOptions,
 } from "@solana/web3.js";
 
-import { getUserTokenBalanceAndDetails } from '../../../feeds';
-import { Keypair, VersionedTransaction, TransactionMessage, PublicKey } from '@solana/web3.js';
+import { getUserTokenBalanceAndDetails } from "../../../feeds";
+import {
+  Keypair,
+  VersionedTransaction,
+  TransactionMessage,
+  PublicKey,
+} from "@solana/web3.js";
 import base58 from "bs58";
 import {
   connection,
   DEFAULT_TOKEN,
-  makeTxVersion
-} from '../../../../../config';
+  makeTxVersion,
+  MVXBOT_FEES,
+} from "../../../../../config";
 
-import { formatAmmKeysById } from '../raydium-utils/formatAmmKeysById';
+import { formatAmmKeysById } from "../raydium-utils/formatAmmKeysById";
 
 import {
   buildAndSendTx,
   getWalletTokenAccount,
   buildTx,
   sendTx,
-} from '../../../util';
+} from "../../../util";
 
-type WalletTokenAccounts = Awaited<ReturnType<typeof getWalletTokenAccount>>
+type WalletTokenAccounts = Awaited<ReturnType<typeof getWalletTokenAccount>>;
 
 export type TxInputInfo = {
-  side: 'buy' | 'sell',
-  mvxFee: BigNumberish,
-  outputToken: Token
-  targetPool: string
-  inputTokenAmount: TokenAmount
-  slippage: Percent
-  walletTokenAccounts: WalletTokenAccounts
-  wallet: Keypair,
-  commitment: any
-}
+  side: "buy" | "sell";
+  mvxFee: BigNumberish;
+  outputToken: Token;
+  targetPool: string;
+  inputTokenAmount: TokenAmount;
+  slippage: Percent;
+  walletTokenAccounts: WalletTokenAccounts;
+  wallet: Keypair;
+  commitment: any;
+};
 
 export async function swapOnlyAmm(input: TxInputInfo) {
   // -------- pre-action: get pool info --------
-  const targetPoolInfo = await formatAmmKeysById(input.targetPool)
-  assert(targetPoolInfo, 'cannot find the target pool')
-  const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys
+  const targetPoolInfo = await formatAmmKeysById(input.targetPool);
+  assert(targetPoolInfo, "cannot find the target pool");
+  const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys;
 
   // -------- step 1: coumpute amount out --------
   const { amountOut, minAmountOut } = Liquidity.computeAmountOut({
@@ -70,7 +87,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     amountIn: input.inputTokenAmount,
     currencyOut: input.outputToken,
     slippage: input.slippage,
-  })
+  });
 
   // -------- step 2: create instructions by SDK function --------
   const { innerTransactions } = await Liquidity.makeSwapInstructionSimple({
@@ -82,33 +99,45 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     },
     amountIn: input.inputTokenAmount,
     amountOut: minAmountOut,
-    fixedSide: 'in',
+    fixedSide: "in",
     makeTxVersion,
     computeBudgetConfig: {
       units: 600_000,
-      microLamports: 900000
-    }
+      microLamports: 900000,
+    },
   });
 
-  if (input.side === 'sell') input.mvxFee = new BigNumber(amountOut.raw).multipliedBy(0.05).toFixed(0);
+  if (MVXBOT_FEES.gt(0)) {
+    if (input.side === "sell") input.mvxFee = new BigNumber(amountOut.raw).multipliedBy(MVXBOT_FEES).toFixed(0);
+    const mvxFeeInx = SystemProgram.transfer({
+      fromPubkey: input.wallet.publicKey,
+      toPubkey: new PublicKey("37UKEEEfeotv2SRvursNBp7VfRvKkywkQchYUgTREcEc"),
+      lamports: input.mvxFee, // 5_000 || 6_000
+    });
 
-  // const mvxFeeInx = SystemProgram.transfer({
-  //   fromPubkey: input.wallet.publicKey,
-  //   toPubkey: new PublicKey('MvXfSe3TeEwsEi731Udae7ecReLQPgrNuKWZzX6RB41'),
-  //   lamports: input.mvxFee, // 5_000 || 6_000
-  // });
-  // innerTransactions[0].instructions.push(mvxFeeInx);
+    innerTransactions[0].instructions.push(mvxFeeInx);
+  }
+  console.log(
+    "amountOut:",
+    amountOut.toFixed(),
+    "  minAmountOut: ",
+    minAmountOut.toFixed()
+  );
 
-  console.log('amountOut:', amountOut.toFixed(), '  minAmountOut: ', minAmountOut.toFixed())
-
-  return { txids: await buildAndSendTx(input.wallet, innerTransactions, input.commitment) }
+  return {
+    txids: await buildAndSendTx(
+      input.wallet,
+      innerTransactions,
+      input.commitment
+    ),
+  };
 }
 
 export async function getSwapOnlyAmmInstruction(input: TxInputInfo) {
   // -------- pre-action: get pool info --------
-  const targetPoolInfo = await formatAmmKeysById(input.targetPool)
-  assert(targetPoolInfo, 'cannot find the target pool')
-  const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys
+  const targetPoolInfo = await formatAmmKeysById(input.targetPool);
+  assert(targetPoolInfo, "cannot find the target pool");
+  const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys;
 
   // -------- step 1: coumpute amount out --------
   const { amountOut, minAmountOut } = Liquidity.computeAmountOut({
@@ -117,7 +146,7 @@ export async function getSwapOnlyAmmInstruction(input: TxInputInfo) {
     amountIn: input.inputTokenAmount,
     currencyOut: input.outputToken,
     slippage: input.slippage,
-  })
+  });
 
   // -------- step 2: create instructions by SDK function --------
   const { innerTransactions } = await Liquidity.makeSwapInstructionSimple({
@@ -129,14 +158,18 @@ export async function getSwapOnlyAmmInstruction(input: TxInputInfo) {
     },
     amountIn: input.inputTokenAmount,
     amountOut: minAmountOut,
-    fixedSide: 'in',
+    fixedSide: "in",
     makeTxVersion,
   });
-  console.log('amountOut:', amountOut.toFixed(), '  minAmountOut: ', minAmountOut.toFixed())
+  console.log(
+    "amountOut:",
+    amountOut.toFixed(),
+    "  minAmountOut: ",
+    minAmountOut.toFixed()
+  );
 
   return innerTransactions;
 }
-
 
 // async function _stopLoss() {
 //   /*
@@ -145,7 +178,6 @@ export async function getSwapOnlyAmmInstruction(input: TxInputInfo) {
 //     poolId EmiVJ4eqEWKsa5jjWt3DnPJqyv6mpggiZamDxPyXw4dC
 //     decimals 9
 //   */
-
 
 //   const SHITCOIN = new PublicKey('AA3CTyqn3EFYDxiayChLWXdYompiwRJeLqZG589PSvpB');
 //   const SHITCOIN_POOL = new PublicKey('EmiVJ4eqEWKsa5jjWt3DnPJqyv6mpggiZamDxPyXw4dC');
@@ -190,4 +222,3 @@ export async function getSwapOnlyAmmInstruction(input: TxInputInfo) {
 // }
 
 // _stopLoss();
-
