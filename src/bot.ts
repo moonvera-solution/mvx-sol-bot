@@ -141,6 +141,32 @@ bot.command("ctx", async (ctx) => {
     console.log('ctx', ctx.msg.message_id)
 });
 
+bot.command('help', async (ctx) => {
+    await sendHelpMessage(ctx);
+
+});
+bot.command('rugchecking', async (ctx) => {
+    await ctx.api.sendMessage(ctx.chat.id, "Please provide the token address for a rug pull analysis.");
+    ctx.session.latestCommand = 'rug_check';
+    
+})
+bot.command('buy', async (ctx) => {
+    ctx.session.latestCommand = 'buy';
+    await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to Buy.");
+
+});
+bot.command('sell', async (ctx) => {
+    ctx.session.latestCommand = 'sell';
+    await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to sell.");
+}); 
+bot.command('snipe', async (ctx) => {
+    ctx.session.latestCommand = 'snipe';
+    await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to snipe.");
+
+});
+bot.command('settings', async (ctx) => {
+    await handleSettings(ctx);
+});
 // bot.command("createwallet", async (ctx) => {
 //     const chatId = ctx.chat.id;
 //     try {
