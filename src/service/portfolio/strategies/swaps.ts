@@ -77,16 +77,34 @@ export async function handle_radyum_swap(
                 const isConfirmed = await waitForConfirmation(txids[0]);
                 console.log('isConfirmed', isConfirmed);
                 if (isConfirmed) {
-                    let confirmedMsg = `✅ <b>Transaction ${side.toUpperCase()} Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`
-                    await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
-                    if (side === 'buy') {
-                        ctx.session.latestCommand = 'sell';
-                        await display_token_details(ctx); // Trigger the function to display sell options
-                    } else if (side === 'sell') {
-                        ctx.session.latestCommand = 'buy';
-                        await display_token_details(ctx); // Trigger the function to display buy options
+                    const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
+                    const txAmount = JSON.parse(JSON.stringify(txxs!.meta!.innerInstructions![0].instructions));
+                    let extractAmount;
+                    if (Array.isArray(txAmount)) {
+                        txAmount.forEach((tx) => {
+                            if (tx.parsed.info.authority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1') {
+                                extractAmount = tx.parsed.info.amount;
+                            }
+                        });
                     }
+                
+                    let confirmedMsg;
+                    if (extractAmount) {
+                        const solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
+                        const tokenAmount = swapAmountIn / Math.pow(10, userTokenBalanceAndDetails.decimals);
+                
+                        if (side === 'sell') {
+                            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${tokenAmount.toFixed(3)} <b>${userTokenBalanceAndDetails.userTokenSymbol}</b> for ${solAmount} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
+                        } else { // Assuming 'buy'
+                            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${solAmount.toFixed(3)} <b>${userTokenBalanceAndDetails.userTokenSymbol}</b> for ${tokenAmount} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
+                        }
+                    } else {
+                        confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
+                    }
+                
+                    await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
                 }
+                
 
             }).catch(async (error: any) => {
                 let msg = `🔴 ${side.toUpperCase()} busy Network, try again.`
