@@ -19,7 +19,9 @@ export const DefaultPortfolioData: PORTFOLIO_TYPE = {
     publicKey: DEFAULT_PUBLIC_KEY,
     secretKey: DEFAULT_PUBLIC_KEY
   }],
-  positions: []
+  positions: [
+    
+  ]
 }
 
 export interface ISESSION_DATA {

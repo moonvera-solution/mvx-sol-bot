@@ -16,12 +16,18 @@ const UserPortfolioSchema = new Schema<PORTFOLIO_TYPE>({
   chatId: { type: Number, unique: true },
   wallets: [
     {
-      walletId: { type: String, unique: true },
-      publicKey: String,
-      secretKey: String,
-    },
-  ],
-  positions: [],
+      "walletId": { type: String, unique: true },
+      "publicKey": String,
+      "secretKey": String,
+    }
+  ], 
+  "positions": [
+       {
+      "walletId": { type: String, unique: true },
+      "publicKey": String,
+      "secretKey": String,
+    }
+  ]
 });
 
 const PoolInfoSchema = new Schema<RAYDIUM_POOL_TYPE>({

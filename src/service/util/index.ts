@@ -50,13 +50,13 @@ export async function sendTx(
     const txids: string[] = [];
     for (const iTx of txs) {
         if (iTx instanceof VersionedTransaction) {
-            console.log("sending versioned");
+            console.log("Sending VersionedTxn");
             iTx.sign([payer]);
-            let ixId = await connection.sendTransaction(iTx, options)
-            txids.push(ixId);
+            // let ixId = await connection.sendTransaction(iTx, options)
+            // txids.push(ixId);
             
         } else {
-            console.log("sending versioned");
+            console.log("Sending Transaction");
             txids.push(await connection.sendTransaction(iTx, [payer], options));
         }
     }
