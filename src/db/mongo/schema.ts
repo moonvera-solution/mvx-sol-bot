@@ -1,9 +1,6 @@
-import mongoose from "mongoose";
-import {
-  PORTFOLIO_TYPE,
-  RAYDIUM_POOL_TYPE,
-  REFERRAL_TYPE,
-} from "../../service/util/types";
+import mongoose from 'mongoose';
+import {PORTFOLIO_TYPE,RAYDIUM_POOL_TYPE} from '../../service/util/types';
+import { PublicKey } from '@metaplex-foundation/js';
 
 const Schema = mongoose.Schema;
 const WalletSchema = new Schema({
