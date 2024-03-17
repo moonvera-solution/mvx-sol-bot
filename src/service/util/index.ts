@@ -560,7 +560,7 @@ export async function sendSol(ctx: any, recipientAddress: PublicKey, solAmount: 
 
 const solscanUrl = `https://solscan.io/tx/${signature}`;
 
-await ctx.api.sendMessage(chatId, `💸 Sent ${solAmount} SOL to ${recipientAddress.toBase58()}.\nView on Solscan: ${solscanUrl}`);
+await ctx.api.sendMessage(chatId, `💸 Sent ${solAmount} SOL to ${recipientAddress.toBase58()}.\nView on Solscan: ${solscanUrl}`,{ parse_mode: 'HTML', disable_web_page_preview: true });
     } catch (error) {
         console.error("Transaction Error:", error);
         await ctx.api.sendMessage(chatId, "Transaction failed. Please try again later.");
