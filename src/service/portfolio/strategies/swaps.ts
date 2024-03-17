@@ -87,7 +87,9 @@ export async function handle_radyum_swap(
                                 extractAmount = tx.parsed.info.amount;
                             }
                         });
-                    }
+                    
+                    // const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
+                    // console.log('txs:::', JSON.parse(JSON.stringify(txxs!.meta)));
                 
                     let confirmedMsg;
                     if (extractAmount) {
