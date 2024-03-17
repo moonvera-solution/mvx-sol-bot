@@ -59,7 +59,7 @@ const ReferralSchema = new Schema<REFERRAL_TYPE>({
   earnings: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
   numberOfReferrals: { type: Number, default: 0 },
-  commissionPercentage: {type: Number, required: true, default: 0, // Default value can be set as per your business logic
+  commissionPercentage: {type: Number, required: true, default: 0, 
   },
 });
 
