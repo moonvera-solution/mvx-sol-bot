@@ -15,20 +15,20 @@ import { connection } from '../../../../../config';
 
 export async function formatAmmKeysById(id: string): Promise<ApiPoolInfoV4> {
  
-  const account = await connection.getAccountInfo(new PublicKey(id), 'processed')
+  const account = await connection.getAccountInfo(new PublicKey(id), 'processed');
  
-  if (account === null) throw Error(' get id info error ')
-  const info = LIQUIDITY_STATE_LAYOUT_V4.decode(account.data)
+  if (account === null) throw Error(' get id info error ');
+  const info = LIQUIDITY_STATE_LAYOUT_V4.decode(account.data);
   
   const marketId = info.marketId
 
-  const marketAccount = await connection.getAccountInfo(marketId)
+  const marketAccount = await connection.getAccountInfo(marketId);
 
-  if (marketAccount === null) throw Error(' get market info error')
-  const marketInfo = MARKET_STATE_LAYOUT_V3.decode(marketAccount.data)
+  if (marketAccount === null) throw Error(' get market info error');
+  const marketInfo = MARKET_STATE_LAYOUT_V3.decode(marketAccount.data);
 
   const lpMint = info.lpMint
-  const lpMintAccount = await connection.getAccountInfo(lpMint)
+  const lpMintAccount = await connection.getAccountInfo(lpMint, "processed")
   if (lpMintAccount === null) throw Error(' get lp mint info error')
   const lpMintInfo = SPL_MINT_LAYOUT.decode(lpMintAccount.data);
   const authority = Liquidity.getAssociatedAuthority({ programId: account.owner }).publicKey.toString();

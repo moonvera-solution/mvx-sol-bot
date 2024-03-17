@@ -10,9 +10,9 @@ import BigNumber from 'bignumber.js';
 import { PublicKey, Connection, Keypair } from "@solana/web3.js";
 const log = (k: any, v: any) => console.log(k, v);
 
-const URL_ONE = 'https://moonvera-ams.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41';
-const URL_TWO = 'https://moonvera.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41';
-const connection = new Connection(URL_ONE);
+const NODE_URL = 'https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41';
+
+const connection = new Connection(NODE_URL);
 
 const AMOUNT_IN = new BigNumber(40000000); // 20 USD
 const SLIPPAGE_PERCENT = new BigNumber(20);
@@ -266,8 +266,7 @@ interface SwapParams {
     amountOut: BigNumber
 }
 async function test() {
-    const URL_TWO = 'https://moonvera.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41';
- const connection = new Connection(URL_ONE);
+ const connection = new Connection(NODE_URL);
  const userWallet = Keypair.fromSecretKey(base58.decode(String('2jaFhsbZMy8n7HzMAKrVYADqi5cYhKca7fWpet1gKGtb8X4EW7k1ZqpX7Qdr5NAaV4wTEK6L2mHvEFNaPg7sFR9L')));
 
     const tx = "2pcoYrf4QUXzdZNm3yd1yxBHW7KDCzQcwtPCAwNNQfoFR1pQzYjoNCB2kNboTD6STfNoT914Gex3tiMMmR5ZhS8o";
