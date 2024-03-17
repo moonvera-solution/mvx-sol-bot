@@ -129,3 +129,14 @@ export type RAYDIUM_POOL_TYPE = {
   "marketEventQueue": PublicKey;
   "lookupTableAccount": PublicKey;
 }
+export type REFERRAL_TYPE = {
+  referrerChatId: number;      // Chat ID of the user who made the referral
+  referredChatId: number;      // Chat ID of the user who was referred
+  referralCode: string;        // Unique referral code used for this referral
+  earnings: number;            // Earnings from the referral
+  createdAt?: Date;            // Date when the referral was made
+  numberOfReferrals?: number;  // Number of users referred by the referrer
+  commissionPercentage: number;// Commission percentage for the referral
+};
+
+
