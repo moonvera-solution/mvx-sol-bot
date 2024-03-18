@@ -148,4 +148,15 @@ export type REFERRAL_TYPE = {
   referredUsers: number[];     // List of users referred by the referrer
 };
 
-
+export type USERPOSITION_TYPE = {
+  walletId: string;
+  positions:[
+    {
+      symbol: string;
+      tradeType: string;
+      amountIn: number;
+      amountOut: number | undefined;
+      poolKeys: RAYDIUM_POOL_TYPE
+    }
+  ]
+}

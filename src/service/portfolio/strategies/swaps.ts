@@ -1,29 +1,30 @@
-import { Liquidity, LiquidityPoolKeys,Percent, jsonInfo2PoolKeys,TokenAmount,TOKEN_PROGRAM_ID,Token as RayddiumToken } from '@raydium-io/raydium-sdk';
-import { PublicKey, Keypair ,} from '@solana/web3.js';
-import {getWalletTokenAccount, getSolBalance} from '../../util';
-import {DEFAULT_TOKEN,MVXBOT_FEES,connection} from '../../../../config';
-import {raydium_amm_swap} from '../../dex';
-import {ISESSION_DATA} from '../../util/types';
-import {getUserTokenBalanceAndDetails} from '../../feeds';
+import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken } from '@raydium-io/raydium-sdk';
+import { PublicKey, Keypair, } from '@solana/web3.js';
+import { getWalletTokenAccount, getSolBalance } from '../../util';
+import { DEFAULT_TOKEN, MVXBOT_FEES, connection } from '../../../../config';
+import { raydium_amm_swap } from '../../dex';
+import { ISESSION_DATA } from '../../util/types';
+import { getUserTokenBalanceAndDetails } from '../../feeds';
 import bs58 from 'bs58';
 import { getRayPoolKeys } from '../../../service/dex/raydium/market-data/1_Geyser';
 import BigNumber from 'bignumber.js';
 import { display_token_details } from '../../../views';
+import { safeUserPosition } from "../positions";
 
 export async function handle_radyum_swap(
-    ctx:any,
+    ctx: any,
     tokenOut: PublicKey,
     side: 'buy' | 'sell',
-    swapAmountIn:any) {
+    swapAmountIn: any) {
     const chatId = ctx.chat.id;
-    const session : ISESSION_DATA = ctx.session;
+    const session: ISESSION_DATA = ctx.session;
     const userWallet = session.portfolio.wallets[session.activeWalletIndex];
     let userSlippage = session.latestSlippage;
     let mvxFee = new BigNumber(0);
     try {
         const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut));
-        const targetPoolInfo = ctx.session.activeTradingPool.id;
-        // console.log('targetPoolInfo', targetPoolInfo);
+        const poolKeys = ctx.session.activeTradingPool;
+
         const OUTPUT_TOKEN = new RayddiumToken(TOKEN_PROGRAM_ID, tokenOut, userTokenBalanceAndDetails.decimals);
         const walletTokenAccounts = await getWalletTokenAccount(connection, new PublicKey(userWallet.publicKey!));
         let userSolBalance = await getSolBalance(userWallet.publicKey);
@@ -55,23 +56,23 @@ export async function handle_radyum_swap(
         const inputTokenAmount = new TokenAmount(tokenIn, Number(swapAmountIn));
         const slippage = new Percent(Math.ceil(userSlippage * 100), 10_000);
         const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
-        let userSecretKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey;
-        if (targetPoolInfo) {
+
+        if (poolKeys) {
             raydium_amm_swap({
                 side,
                 mvxFee,
                 outputToken,
-                targetPool: targetPoolInfo,
+                targetPool: poolKeys.id, // ammId
                 inputTokenAmount,
                 slippage,
                 walletTokenAccounts,
-                wallet: Keypair.fromSecretKey(bs58.decode(String(userSecretKey))),
+                wallet: Keypair.fromSecretKey(bs58.decode(String(userWallet.secretKey))),
                 commitment: 'processed'
             }).then(async ({ txids }) => {
-                let msg = `🟢 <b>${side.toUpperCase()} Tx </b> Sent successfully. <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>.`
+                let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processed successfully. <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>.`
                 await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
                 const isConfirmed = await waitForConfirmation(txids[0]);
-
+                console.log('isConfirmed', isConfirmed);
                 if (isConfirmed) {
                     const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
                     const txAmount = JSON.parse(JSON.stringify(txxs!.meta!.innerInstructions![0].instructions));
@@ -83,22 +84,33 @@ export async function handle_radyum_swap(
                             }
                         });
                     }
+
                     let confirmedMsg;
+                    let solAmount;
+                    let tokenAmount;
+
                     if (extractAmount) {
-                        const solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
-                        const tokenAmount = swapAmountIn / Math.pow(10, userTokenBalanceAndDetails.decimals);
-                
-                        if (side === 'sell') {
-                            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${tokenAmount.toFixed(3)} <b>${userTokenBalanceAndDetails.userTokenSymbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
-                        } else { // Assuming 'buy'
-                            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${solAmount.toFixed(3)} <b>${userTokenBalanceAndDetails.userTokenSymbol}</b> for ${tokenAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
-                        }
+                        solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
+                        tokenAmount = swapAmountIn / Math.pow(10, userTokenBalanceAndDetails.decimals);
+                        const _side = side === 'sell' ? 'sold' : 'bought';
+                        confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You ${_side} ${tokenAmount.toFixed(3)} <b>${userTokenBalanceAndDetails.userTokenSymbol}</b> for ${solAmount} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
                     } else {
                         confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
                     }
-                
+
+                    safeUserPosition(
+                        userWallet.publicKey.toString(), {
+                        symbol: userTokenBalanceAndDetails.userTokenSymbol,
+                        tradeType: `ray_swap_${side}`,
+                        amountIn: swapAmountIn,
+                        amountOut: side === 'sell' ? tokenAmount && tokenAmount : solAmount && solAmount,
+                        poolKeys: poolKeys
+                    });
+
                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
                 }
+
+
             }).catch(async (error: any) => {
     let msg = `🔴 ${side.toUpperCase()} Swap failed, please try again.`;
                 await ctx.api.sendMessage(chatId, msg);
@@ -122,10 +134,10 @@ async function waitForConfirmation(txid: string): Promise<boolean> {
     while (!isConfirmed && attempts < maxAttempts) {
         attempts++;
         console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
-        
+
         const status = await getTransactionStatus(txid);
         console.log('Transaction status:', status);
-        
+
         if (status === 'confirmed' || status === 'finalized') {
             console.log('Transaction is confirmed.');
             isConfirmed = true;

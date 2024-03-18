@@ -113,18 +113,12 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   //   if (input.side === "sell") input.mvxFee = new BigNumber(amountOut.raw).multipliedBy(MVXBOT_FEES).toFixed(0);
   //   const mvxFeeInx = SystemProgram.transfer({
   //     fromPubkey: input.wallet.publicKey,
-  //     toPubkey: new PublicKey("37UKEEEfeotv2SRvursNBp7VfRvKkywkQchYUgTREcEc"),
+  //     toPubkey: new PublicKey("MVXhzk6mafv4zngNVkEov4YJkGtNa1uDQFq2fRmTRni"),
   //     lamports: input.mvxFee, // 5_000 || 6_000
   //   });
-
   //   innerTransactions[0].instructions.push(mvxFeeInx);
   // }
-  console.log(
-    "amountOut:",
-    amountOut.toFixed(),
-    "  minAmountOut: ",
-    minAmountOut.toFixed()
-  );
+  console.log("amountOut:",amountOut.toFixed(),"minAmountOut: ",minAmountOut.toFixed());
 
   return {
     txids: await buildAndSendTx(

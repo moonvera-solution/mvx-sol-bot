@@ -27,12 +27,7 @@ export async function setSnipe(ctx: any, amountIn: any) {
     const snipeSlippage = ctx.session.snipeSlippage;
     const currentWalletIdx = ctx.session.activeWalletIndex;
     const currentWallet = ctx.session.portfolio.wallets[currentWalletIdx];
-    const {
-        birdeyeURL,
-        dextoolsURL,
-        dexscreenerURL,
-        tokenData,
-    } = await getTokenMetadata(ctx, snipeToken.toBase58());
+    const {tokenData} = await getTokenMetadata(ctx, snipeToken.toBase58());
     console.log('currentWallet', currentWallet);
     const userKeypair = await Keypair.fromSecretKey(base58.decode(String(currentWallet.secretKey)));
     ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一    ${amountIn} $${tokenData.symbol} Snipper set.`);

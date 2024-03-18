@@ -1,15 +1,36 @@
 import { connection } from "../../../config";
 import { getRayPoolKeys } from "../dex/raydium/market-data/1_Geyser";
 import { _getReservers } from '../../service/dex/raydium/market-data/2_Strategy';
+import { RAYDIUM_POOL_TYPE } from '../util/types';
 import { Keypair, PublicKey, SendOptions, Signer, GetProgramAccountsFilter } from '@solana/web3.js';
+import { UserPositions } from '../../db';
 type Commitment = 'processed' | 'confirmed' | 'finalized' | 'recent' | 'single' | 'singleGossip' | 'root' | 'max';
 
 
+export async function safeUserPosition(walletId: String, newPosition:
+    {
+        symbol: string;
+        tradeType: string;
+        amountIn: number;
+        amountOut: number | undefined;
+        poolKeys: RAYDIUM_POOL_TYPE
+    }) {
+    try {
+        await UserPositions.findOneAndUpdate(
+            { walletId: walletId },
+            { $push: { positions: newPosition } },
+            { upsert: true, new: true }
+        );
+    } catch (err) {
+        console.error(err);
+    }
+}
 
-const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
-const portfolios: any = [];
 
 async function getPositionsFromRaydium(wallet: string) {
+    const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+    const portfolios: any = [];
+
     const filters: GetProgramAccountsFilter[] = [{ dataSize: 80 }, { memcmp: { offset: 32, bytes: wallet, }, }];
     const accounts = await connection.getParsedProgramAccounts(TOKEN_PROGRAM_ID, { filters: filters });
     console.log(`Found ${accounts.length} token account(s) for wallet ${wallet}.`);
@@ -37,6 +58,8 @@ async function getPositionsFromRaydium(wallet: string) {
 }
 
 export async function getTokensFromWallet(wallet: string) {
+    const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+    const portfolios: any = [];
     const filters: GetProgramAccountsFilter[] = [{ dataSize: 165 }, { memcmp: { offset: 32, bytes: wallet, }, }];
     const accounts = await connection.getParsedProgramAccounts(TOKEN_PROGRAM_ID, { filters: filters });
     console.log(`Found ${accounts.length} token account(s) for wallet ${wallet}.`);
@@ -46,7 +69,7 @@ export async function getTokensFromWallet(wallet: string) {
         const mintAddress: string = parsedAccountInfo["parsed"]["info"]["mint"];
         const tokenBalance: number = parsedAccountInfo["parsed"]["info"]["tokenAmount"]["amount"];
 
-        tokenBalance > 0 && portfolios.push({mintAddress,tokenBalance });
+        tokenBalance > 0 && portfolios.push({ mintAddress, tokenBalance });
     }
     return portfolios.sort((a: any, b: any) => b.tokenBalance - a.tokenBalance).slice(0, 30);
 

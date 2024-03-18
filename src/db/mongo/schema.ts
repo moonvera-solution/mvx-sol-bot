@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import {PORTFOLIO_TYPE,RAYDIUM_POOL_TYPE} from '../../service/util/types';
+import {PORTFOLIO_TYPE,RAYDIUM_POOL_TYPE,USERPOSITION_TYPE,REFERRAL_TYPE} from '../../service/util/types';
 import { PublicKey } from '@metaplex-foundation/js';
 
 const Schema = mongoose.Schema;
@@ -13,13 +13,6 @@ const UserPortfolioSchema = new Schema<PORTFOLIO_TYPE>({
   chatId: { type: Number, unique: true },
   wallets: [
     {
-      "walletId": { type: String, unique: true },
-      "publicKey": String,
-      "secretKey": String,
-    }
-  ], 
-  "positions": [
-       {
       "walletId": { type: String, unique: true },
       "publicKey": String,
       "secretKey": String,
@@ -55,6 +48,7 @@ const PoolInfoSchema = new Schema<RAYDIUM_POOL_TYPE>({
   marketEventQueue: String,
   lookupTableAccount: String,
 });
+
 const ReferralSchema = new Schema<REFERRAL_TYPE>({
   generatorChatId: { type: Number, required: true },
   generatorWallet: { type: String, required: true },  
@@ -67,6 +61,23 @@ const ReferralSchema = new Schema<REFERRAL_TYPE>({
 
 });
 
+const UserPositionSchema = new Schema<USERPOSITION_TYPE>({
+  walletId: { type: String, unique: true },
+  positions: [
+    {
+      symbol: { type: String, required: true },
+      tradeType: { type: String, required: true },
+      amountIn: { type: Number, required: true },
+      amountOut: { type: Number, default: 0 },
+      poolKeys: { type: PoolInfoSchema, required: true }
+    }
+  ]
+});
+
+export const UserPositions = mongoose.model<USERPOSITION_TYPE>(
+  "UserPositions",
+  UserPositionSchema
+);
 
 export const Referrals = mongoose.model<REFERRAL_TYPE>(
   "Referrals",

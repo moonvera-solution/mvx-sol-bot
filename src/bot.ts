@@ -8,7 +8,7 @@ import { Keypair, PublicKey } from '@solana/web3.js';
 import { _initDbConnection, _findSOLPoolByBaseMint } from "./db/mongo/crud";
 import { handleSettings } from './service/settings';
 import { getSolanaDetails } from './api';
-
+import { ApiPoolInfoV4 } from "@raydium-io/raydium-sdk";
 import { setSnipe } from './service/portfolio/strategies/snipper';
 // import {rugCheck} from './service/rugCheck';
 import { display_token_details, display_snipe_options, handleCloseKeyboard } from './views';
@@ -198,7 +198,7 @@ bot.command('help', async (ctx) => {
 bot.command('rugchecking', async (ctx) => {
     await ctx.api.sendMessage(ctx.chat.id, "Please provide the token address for a rug pull analysis.");
     ctx.session.latestCommand = 'rug_check';
-    
+
 })
 bot.command('buy', async (ctx) => {
     ctx.session.latestCommand = 'buy';
@@ -208,7 +208,7 @@ bot.command('buy', async (ctx) => {
 bot.command('sell', async (ctx) => {
     ctx.session.latestCommand = 'sell';
     await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to sell.");
-}); 
+});
 bot.command('snipe', async (ctx) => {
     ctx.session.latestCommand = 'snipe';
     await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to snipe.");
@@ -327,71 +327,18 @@ bot.on('message', async (ctx) => {
                 break;
 
             }
-
-
-            case 'sell': {
-                if (PublicKey.isOnCurve(msgTxt!)) {
-
-                    if (msgTxt) {
-                        let poolInfo = ctx.session.tokenRayPoolInfo[msgTxt];
-                        if (!poolInfo) {
-                            // If not, fetch and store it
-                            // poolInfo = await getRayPoolKeys(msgTxt);
-                            ctx.session.tokenRayPoolInfo[msgTxt] = poolInfo;
-                        }
-                        // why do we need these next 2
-                        ctx.session.activeTradingPool = poolInfo;
-                        ctx.session.sellToken = new PublicKey(poolInfo.baseMint);
-                        ctx.session.buyToken = ctx.session.sellToken;
-
-                        await display_token_details(ctx);
-                    }
-                    if (!ctx.session.tokenHistory) {
-                        ctx.session.tokenHistory = [];
-                    }
-                    if (ctx.session.sellToken && ctx.session.tokenHistory.indexOf(ctx.session.sellToken) === -1) {
-                        ctx.session.tokenHistory.push(ctx.session.sellToken);
-                        // Keep only the last 5 tokens
-                        if (ctx.session.tokenHistory.length > 5) {
-                            ctx.session.tokenHistory.shift();
-                        }
-                    }
-                } else {
-                    ctx.api.sendMessage(chatId, "Invalid address");
-                }
-                break;
-            }
+            case 'sell':
             case 'buy': {
-                if (PublicKey.isOnCurve(msgTxt!)) {
-                    if (msgTxt) {
-                        let poolInfo = ctx.session.tokenRayPoolInfo[msgTxt];
-                        if (!poolInfo) {
-                            // If not, fetch and store it
-                            // poolInfo = await getRayPoolKeys(msgTxt);
-                            ctx.session.tokenRayPoolInfo[msgTxt] = poolInfo;
-                        }
-                        //   console.log('poolInfo', poolInfo);
-                        ctx.session.activeTradingPool = poolInfo;
-                        ctx.session.buyToken = new PublicKey(poolInfo.baseMint);
-                        ctx.session.sellToken = ctx.session.buyToken;
-
-
-                        await display_token_details(ctx);
-
+                if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
+                    let poolInfo = ctx.session.tokenRayPoolInfo[msgTxt] ?? await getRayPoolKeys(msgTxt);
+                    ctx.session.activeTradingPool = poolInfo;
+                    ctx.session.tokenRayPoolInfo[msgTxt] = poolInfo;
+                    if (!ctx.session.tokenHistory) ctx.session.tokenHistory = [];
+                    if (ctx.session.tokenHistory.indexOf(poolInfo.baseMint) === -1) {
+                        ctx.session.tokenHistory.push(poolInfo.baseMint);
+                        if (ctx.session.tokenHistory.length > 5) ctx.session.tokenHistory.shift();
                     }
-                    if (!ctx.session.tokenHistory) {
-                        ctx.session.tokenHistory = [];
-                    }
-
-                    if (ctx.session.buyToken && ctx.session.tokenHistory.indexOf(ctx.session.buyToken) === -1) {
-                        ctx.session.tokenHistory.push(ctx.session.buyToken);
-                        // Keep only the last 5 tokens
-                        if (ctx.session.tokenHistory.length > 5) {
-                            ctx.session.tokenHistory.shift();
-                        }
-                    }
-                    // console.log('buyTokenHistor', ctx.session.buyTokenHistory)
-
+                    await display_token_details(ctx);
                 } else {
                     ctx.api.sendMessage(chatId, "Invalid address");
                 }
@@ -470,8 +417,8 @@ bot.on('callback_query', async (ctx: any) => {
 
     try {
         const match = data.match(JUPITER_SWAP_PATTERN);
-        if(match){
-            const swap = { baseMint: match[1], amount: parseInt(match[2])};
+        if (match) {
+            const swap = { baseMint: match[1], amount: parseInt(match[2]) };
             console.log("JUPITER_SWAP", swap);
             await handleJupiterSell(ctx, swap.baseMint, swap.amount);
         }
@@ -762,7 +709,7 @@ bot.on('callback_query', async (ctx: any) => {
                 ctx.api.sendMessage(chatId, "Please enter amount to snipe.");
                 break;
             }
-            case 'display_spl_positions': await display_spl_positions(ctx); break;
+            case 'display_spl_positions': await display_spl_positions(); break;
         }
         ctx.api.answerCallbackQuery(ctx.callbackQuery.id);
     } catch (e: any) {
