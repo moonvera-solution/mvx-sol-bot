@@ -24,6 +24,8 @@ import { getRayPoolKeys } from './service/dex/raydium/market-data/1_Geyser';
 import { sendHelpMessage, sendReferMessage } from './views/util/helpMessage';
 import { display_rugCheck } from './views/rugCheck';
 import { Refresh_rugCheck } from './views/refreshData/refreshRug';
+import { _generateReferralLink, _getReferralData } from '../src/db/mongo/crud';
+import { Referrals } from './db/mongo/schema';
 
 dotenv.config();
 const http = require('http');
@@ -59,17 +61,69 @@ bot.use(session({
 // });
 
 
+const allowedUsernames = ['tech_01010']; // without the @
 
 bot.start();
 // /********** INIT DB CONNECTION ***** */
 _initDbConnection();
 
+// bot.command('refer_friends', async (ctx) => {
+//     const chatId = ctx.chat.id;
+//     const referralLink = generateReferralLink(ctx); // Implement this function
+//     ctx.api.sendMessage(chatId, `Share this link with your friends to invite them: ${referralLink}`);
+// });
+
 
 bot.command("start", async (ctx: any) => {
     const chatId = ctx.chat.id;
+    const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
+
+    let isNewUser = false;
+
+    let referralCode = null;
+    // Check if there's additional text with the /start command
+    if (ctx.message.text.includes(' ')) {
+        referralCode = ctx.message.text.split(' ')[1];
+    }
+    // if user already exists
+    if (portfolio === DefaultPortfolioData) {
+        // User is new
+        isNewUser = true;
+    }
+   
+    if (referralCode) {
+        const referralRecord = await Referrals.findOne({ referralCode: referralCode });
+     
+        if (referralRecord && referralRecord.generatorChatId !== chatId) {
+            if (!referralRecord.referredUsers.includes(chatId)) {
+                // Add the user's chatId to the referredUsers array
+                referralRecord.referredUsers.push(chatId);
+
+                // Increment the referral count
+                referralRecord.numberOfReferrals! += 1;
+                await referralRecord.save();
+                ctx.session.generatorWallet = referralRecord.generatorWallet;
+                ctx.session.referralCommision = referralRecord.commissionPercentage;
+                // Optional: Notify the user that they have been referred successfully
+                await ctx.reply("Welcome! You have been referred successfully.");
+            } else{
+                ctx.session.generatorWallet = referralRecord.generatorWallet;
+                ctx.session.referralCommision = referralRecord.commissionPercentage;
+            }
+        } else {
+            // Handle invalid referral code
+            await ctx.api.sendMessage(chatId, "Invalid referral link. Please check your link or contact support.");
+            // return;
+        }
+    } else if(isNewUser){
+        // New user without a referral code
+        await ctx.api.sendMessage(chatId, "Welcome to MVXBOT! Please start the bot using a referral link.");
+        return;
+    }
+
+    //-------Start bot with wallet---------------------------
     ctx.session.latestCommand = "start";
     let userWallet: Keypair | null = null;
-    const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
     if (portfolio !== DefaultPortfolioData) {
         ctx.session.portfolio = portfolio;
     } else {
@@ -167,15 +221,7 @@ bot.command('snipe', async (ctx) => {
 bot.command('settings', async (ctx) => {
     await handleSettings(ctx);
 });
-// bot.command("createwallet", async (ctx) => {
-//     const chatId = ctx.chat.id;
-//     try {
-//         createNewWallet(ctx);
-//     } catch (error: any) {
-//         console.error('Error creating Solana wallet:', error.message);
-//         await bot.api.sendMessage(chatId, 'Error creating wallet. Please try again.');
-//     }
-// });
+
 
 bot.on('message', async (ctx) => {
     // console.log('latestCommand-----', ctx.session.latestCommand);
@@ -383,6 +429,37 @@ bot.on('message', async (ctx) => {
                 }
                 break;
             }
+            case 'refer_friends': {
+                ctx.session.awaitingWalletAddress = false; // Reset the flag
+                const walletAddress = ctx.message.text;
+        
+                // Generate the referral link with the wallet address
+                if(walletAddress){
+                    const recipientAddress =  new PublicKey(walletAddress)        
+                    const referralLink = await _generateReferralLink(ctx, recipientAddress);
+                    const referralData = await _getReferralData(ctx); // Fetch referral data
+        
+                    let responseMessage = `<b>Referral Program Details</b>\n\n` +
+                    `🔗 <b>Your Referral Link:</b> ${referralLink}\n\n` +
+                    `👥 <b>Referrals Count:</b> ${referralData?.count}\n` +
+                    `💰 <b>Total Earnings:</b> ${referralData?.totalEarnings.toFixed(2)} SOL/Token ($${referralData?.totalEarnings.toFixed(2)}) | 0.00 TOKEN ($${referralData?.totalEarnings.toFixed(2)})\n` +
+                    `Rewards are credited instantly to your SOL balance.\n\n` +
+                    `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals in the first month, 25% in the second month, and 12% on an ongoing basis.\n\n` +
+                    `<i>Note: Rewards are updated in real-time and reflect your active contributions to the referral program.</i>`;
+                    const options: any = {
+                        reply_markup: JSON.stringify({
+                            inline_keyboard: [
+
+                                [ { text: 'Close', callback_data: 'closing' }]
+                            ],
+                        }),
+                        parse_mode: 'HTML'
+                    };
+                           
+                    await ctx.api.sendMessage(chatId, responseMessage,options);
+                }
+               
+            }
             
         }
     } catch (e: any) {
@@ -396,10 +473,47 @@ bot.on('callback_query', async (ctx: any) => {
     const chatId = ctx.chat.id;
     const data = ctx.callbackQuery.data;
     try {
-        switch (data) { // make sure theres a "break" after each statement...
+        switch (data) { 
             case 'refer_friends': {
-                await sendReferMessage(ctx);
+                const chatId = ctx.chat.id;
+                const username = ctx.from.username;
+            
+                // Check if the user is allowed to access the referral program
+                if (allowedUsernames.includes(username)) {
+                    ctx.session.latestCommand = 'refer_friends';
+                    let existingReferral = await Referrals.findOne({ generatorChatId: chatId });
+            
+                    if (!existingReferral) {
+                        // No existing referral found, ask for the wallet address
+                        await ctx.api.sendMessage(chatId, "Please provide the wallet address of the person you want to refer.");
+                    } else {
+                        // Existing referral found, display referral data
+                        const referralData = await _getReferralData(ctx); // Fetch referral data
+                        let responseMessage = `<b>Referral Program Details</b>\n\n` +
+                            `🔗 <b>Your Referral Link:</b> ${referralData?.referralLink}\n\n` +
+                            `👥 <b>Referrals Count:</b> ${referralData?.count}\n` +
+                            `💰 <b>Total Earnings:</b> ${referralData?.totalEarnings.toFixed(2)} SOL ($${referralData?.totalEarnings.toFixed(2)}) | 0.00 TOKEN ($${referralData?.totalEarnings.toFixed(2)}) \n` +
+                            `Rewards are credited instantly to your SOL/TOKEN balance.\n\n` +
+                            `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals in the first month, 25% in the second month, and 12% on an ongoing basis.\n\n` +
+                            `<i>Note: Rewards are updated in real-time and reflect your active contributions to the referral program.</i>`;
+            
+                        const options = {
+                            reply_markup: JSON.stringify({
+                                inline_keyboard: [
+                                    [{ text: 'Close', callback_data: 'closing' }]
+                                ],
+                            }),
+                            parse_mode: 'HTML'
+                        };
+                        await ctx.api.sendMessage(chatId, responseMessage, options);
+                    }
+                } else {
+                    // User is not allowed to access the referral program
+                    await ctx.api.sendMessage(chatId, "Access to the referral program is currently restricted. Please wait for future updates.");
+                }
+                break;
             }
+            
             case 'refresh_start': await handleRefreshStart(ctx);
                 break;
             case 'refrech_rug_check': await Refresh_rugCheck(ctx); break;

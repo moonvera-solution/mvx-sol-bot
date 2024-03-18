@@ -548,7 +548,6 @@ export async function sendSol(ctx: any, recipientAddress: PublicKey, solAmount: 
     );
     // Create a Keypair from the secret key
     const senderKeypair = Keypair.fromSecretKey(bs58.decode(String(userSecretKey)))
-    console.log("senderKeypair", senderKeypair)
     try {
         // Sign and send the transaction
         const signature = await sendAndConfirmTransaction(

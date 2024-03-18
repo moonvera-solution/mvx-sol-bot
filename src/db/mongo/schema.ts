@@ -53,15 +53,17 @@ const PoolInfoSchema = new Schema<RAYDIUM_POOL_TYPE>({
   lookupTableAccount: String,
 });
 const ReferralSchema = new Schema<REFERRAL_TYPE>({
-  referrerChatId: { type: Number, required: true },
-  referredChatId: { type: Number, required: true },
+  generatorChatId: { type: Number, required: true },
+  generatorWallet: { type: String, required: true },  
   referralCode: { type: String, required: true },
   earnings: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
   numberOfReferrals: { type: Number, default: 0 },
-  commissionPercentage: {type: Number, required: true, default: 0, 
-  },
+  commissionPercentage: { type: Number, required: true, default: 0 },
+  referredUsers: [{ type: Number }]
+
 });
+
 
 export const Referrals = mongoose.model<REFERRAL_TYPE>(
   "Referrals",

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import {
   Raydium_official_pools,
-  Raydium_unOfficial_pools, Portfolios } from './schema';
+  Raydium_unOfficial_pools, Portfolios, Referrals } from './schema';
 import axios from 'axios';
 import dotenv from 'dotenv';
 import { PublicKey } from "@metaplex-foundation/js";
@@ -106,6 +106,79 @@ export async function _dropUser(chatId: Number) {
     return false;
   }
 }
+
+async function generateUniqueReferralCode() {
+  let unique = false;
+  let referralCode;
+  while (!unique) {
+      referralCode = Math.random().toString(36).substring(2, 15);
+      const existingCode = await Referrals.findOne({ referralCode: referralCode });
+      if (!existingCode) {
+          unique = true;
+      }
+  }
+  return referralCode;
+}
+
+export async function _generateReferralLink(ctx: any, walletAddress: PublicKey) {
+  const chatId = ctx.chat.id;
+  let referralCode;
+  let referralLink;
+
+  try {
+      let existingReferral = await Referrals.findOne({ generatorChatId: chatId });
+
+      if (!existingReferral) {
+          referralCode = await generateUniqueReferralCode();
+          const newReferral = new Referrals({
+              generatorChatId: chatId,
+              generatorWallet: walletAddress, // Use the provided wallet address by user
+              referralCode: referralCode,
+              earnings: 0,
+              numberOfReferrals: 0,
+              commissionPercentage: 35,
+              referredUsers: [],
+              });
+          await newReferral.save();
+      } else {
+          referralCode = existingReferral.referralCode;
+      }
+
+      referralLink = `https://t.me/stbbot_dev_bot?start=${referralCode}`;
+  } catch (error) {
+      console.error('Error in _generateReferralLink:', error);
+      throw new Error('Unable to process referral link.');
+  }
+
+  return referralLink;
+}
+
+
+
+export async function _getReferralData(ctx: any) {
+ const chatId = ctx.chat.id;
+  try {
+      // Fetch the referral record for this user
+      const referralRecord = await Referrals.findOne({ generatorChatId: chatId });
+
+      if (!referralRecord) {
+          return null;
+      }
+
+      // Return the data from the found referral record
+      return {
+          referralCode: referralRecord.referralCode,
+          referralLink: `https://t.me/stbbot_dev_bot?start=${referralRecord.referralCode}`,
+          numberOfReferrals: referralRecord.numberOfReferrals,
+          totalEarnings: referralRecord.earnings,
+          commissionPercentage: referralRecord.commissionPercentage,
+          count: referralRecord.numberOfReferrals,
+          };
+  } catch (error) {
+      console.error('Error fetching referral data:', error);
+      return null; // handle the error 
+}
+
 
 
 // _initDbConnection()

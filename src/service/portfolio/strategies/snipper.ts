@@ -83,15 +83,15 @@ export async function startSnippeSimulation(
         fixedSide: 'in',
         makeTxVersion: TxVersion.V0,
         computeBudgetConfig: {
-            units: 700_000,
-            microLamports: 900000
+            units: 900_000,
+            microLamports: 79920000
         }
     });
 
     const mvxFeeInx = SystemProgram.transfer({
         fromPubkey: userWallet.publicKey,
         toPubkey: new PublicKey('MvXfSe3TeEwsEi731Udae7ecReLQPgrNuKWZzX6RB41'),
-        lamports: new BigNumber(amountIn.multipliedBy(0.05).toFixed(0)).toNumber(), // 5_000 || 6_000
+        lamports: new BigNumber(amountIn.multipliedBy(0.0005).toFixed(0)).toNumber(), // 5_000 || 6_000
     });
 
 

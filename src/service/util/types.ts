@@ -42,6 +42,9 @@ export interface ISESSION_DATA {
   rugCheckToken: PublicKey;
   recipientAddress: PublicKey;
   solAmount: number;
+  awaitingWalletAddress: boolean;
+  generatorWallet: PublicKey;
+  referralCommision: number;
   
 }
 
@@ -80,6 +83,9 @@ export const DefaultSessionData: ISESSION_DATA = {
     wallets: [],
     positions: []
   },
+  referralCommision: 0,
+  awaitingWalletAddress: false,
+  generatorWallet: DEFAULT_PUBLIC_KEY,
   rugCheckToken: DEFAULT_PUBLIC_KEY,
   solAmount: 0,
   recipientAddress: DEFAULT_PUBLIC_KEY,
@@ -130,13 +136,14 @@ export type RAYDIUM_POOL_TYPE = {
   "lookupTableAccount": PublicKey;
 }
 export type REFERRAL_TYPE = {
-  referrerChatId: number;      // Chat ID of the user who made the referral
-  referredChatId: number;      // Chat ID of the user who was referred
-  referralCode: string;        // Unique referral code used for this referral
+  generatorChatId: number;
+  generatorWallet: string;    // Wallet of the referrer
+  referralCode: string;        
   earnings: number;            // Earnings from the referral
   createdAt?: Date;            // Date when the referral was made
   numberOfReferrals?: number;  // Number of users referred by the referrer
-  commissionPercentage: number;// Commission percentage for the referral
+  commissionPercentage: number; // Commission percentage for the referral
+  referredUsers: number[];     // List of users referred by the referrer
 };
 
 

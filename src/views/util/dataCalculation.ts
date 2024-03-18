@@ -55,4 +55,16 @@ export async function quoteToken({ baseVault, quoteVault, baseDecimals, quoteDec
     return { price, marketCap, liquidity, priceImpact, priceImpact_1 };
 } 
 
+export async function getpool_Priority(tokenBaseVault: PublicKey, tokenQuoteVault: PublicKey, baseMint: PublicKey): Promise<{ baseTokenVaultSupply: BigNumber, quoteTokenVaultSupply: BigNumber, baseTokenSupply: BigNumber}> {
+    // const priority: any = await connection_only.getRecentPrioritizationFees(new PublicKey(baseMint));
+    const baseVault: any = await connection_only.getParsedAccountInfo(new PublicKey(tokenBaseVault), "processed");
+    const quoteVault: any = await connection_only.getParsedAccountInfo(new PublicKey(tokenQuoteVault), "processed");
+    const baseSupply: any = await connection_only.getParsedAccountInfo(new PublicKey(baseMint), "processed");
+  
+    return {
+        baseTokenVaultSupply: new BigNumber(baseVault.value?.data.parsed.info.tokenAmount.amount),
+        quoteTokenVaultSupply: new BigNumber(quoteVault.value?.data.parsed.info.tokenAmount.amount),
+        baseTokenSupply: new BigNumber(baseSupply.value?.data.parsed.info.supply),
+    }
+}
 

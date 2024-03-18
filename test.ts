@@ -37,3 +37,19 @@ const mintAddress = 'FvVDc6gZmYho6DLLuJ3ptHS6rxb797Cxf1insiUnu2BL';
 // getTokenBalance(walletAddress, mintAddress)
 //     .then(balance => console.log('Token Balance:', balance))
 //     .catch(error => console.error('Error:', error));
+
+
+async function getRecentTransactionFees() {
+    const connection = new Connection("https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41"); // Change the cluster if needed
+
+    try {
+        const recentBlockhash = await connection.getRecentBlockhash('confirmed');
+        console.log("Base Fee:", recentBlockhash.feeCalculator.lamportsPerSignature);
+        return recentBlockhash.feeCalculator.lamportsPerSignature;
+    } catch (error) {
+        console.error("Error fetching recent transaction fees:", error);
+        return null;
+    }
+}
+
+getRecentTransactionFees().then(fee => console.log("Recent Transaction Fee (in lamports):", fee));

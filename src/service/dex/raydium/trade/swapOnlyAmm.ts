@@ -49,6 +49,7 @@ import {
   DEFAULT_TOKEN,
   makeTxVersion,
   MVXBOT_FEES,
+  MVXBOT_REFERRAL_COMMISSION
 } from "../../../../../config";
 
 import { formatAmmKeysById } from "../raydium-utils/formatAmmKeysById";
@@ -65,6 +66,7 @@ type WalletTokenAccounts = Awaited<ReturnType<typeof getWalletTokenAccount>>;
 export type TxInputInfo = {
   side: "buy" | "sell";
   mvxFee: BigNumberish;
+  // mvxReferral: BigNumberish;
   outputToken: Token;
   targetPool: string;
   inputTokenAmount: TokenAmount;
@@ -102,8 +104,8 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     fixedSide: "in",
     makeTxVersion,
     computeBudgetConfig: {
-      units: 600_000,
-      microLamports: 900000,
+      units: 700_000,
+      microLamports: 9920000,
     },
   });
 
