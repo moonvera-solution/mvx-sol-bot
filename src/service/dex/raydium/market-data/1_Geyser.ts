@@ -5,6 +5,7 @@ import url from 'url';
 import {
   LIQUIDITY_STATE_LAYOUT_V4,
   MARKET_STATE_LAYOUT_V3,
+  ApiPoolInfoV4
 } from "@raydium-io/raydium-sdk";
 
 const NODE_URL = 'https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41';
@@ -185,8 +186,8 @@ function getScheduleFromInx(ammId: string) {
     });
 }
 
-export async function getRayPoolKeys(shitcoin: string) {
-  const commitment = "confirmed"
+export async function getRayPoolKeys(shitcoin: string): Promise<ApiPoolInfoV4>  {
+  const commitment = "confirmed";
   const connection = new Connection('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41', commitment);
   const AMMV4 = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8');
   const baseMint = new PublicKey(shitcoin);
@@ -213,11 +214,13 @@ export async function getRayPoolKeys(shitcoin: string) {
     }
   );
 
-  const ammId = accounts[0].pubkey;
+  let ammId;
   let keys:any;
   while (keys == undefined) {
-    keys = await formatAmmKeysById(ammId.toString());
+    ammId = accounts && accounts[0] && accounts[0].pubkey;
+    keys = ammId && await formatAmmKeysById(ammId.toString());
   }
+  console.log('keys', keys.baseMint);
   return keys;
 }
 // getRayPoolKeys('E83N1Lj9ebLyDKe5unwtzVrUzUaFKpXBdn6tYUyTVEwJ').then((res) => { console.log('res',res)});

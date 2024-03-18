@@ -1,0 +1,55 @@
+import { connection } from "../../../config";
+import { getRayPoolKeys } from "../dex/raydium/market-data/1_Geyser";
+import { _getReservers } from '../../service/dex/raydium/market-data/2_Strategy';
+import { Keypair, PublicKey, SendOptions, Signer, GetProgramAccountsFilter } from '@solana/web3.js';
+type Commitment = 'processed' | 'confirmed' | 'finalized' | 'recent' | 'single' | 'singleGossip' | 'root' | 'max';
+
+
+
+const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+const portfolios: any = [];
+
+async function getPositionsFromRaydium(wallet: string) {
+    const filters: GetProgramAccountsFilter[] = [{ dataSize: 80 }, { memcmp: { offset: 32, bytes: wallet, }, }];
+    const accounts = await connection.getParsedProgramAccounts(TOKEN_PROGRAM_ID, { filters: filters });
+    console.log(`Found ${accounts.length} token account(s) for wallet ${wallet}.`);
+
+    for (const [i, account] of accounts.entries()) {
+        const parsedAccountInfo: any = account.account.data;
+        const mintAddress: string = parsedAccountInfo["parsed"]["info"]["mint"];
+        const tokenBalance: number = parsedAccountInfo["parsed"]["info"]["tokenAmount"]["amount"];
+        console.log("adding", i);
+
+        const keys = await getRayPoolKeys(mintAddress);
+        console.log("adding", i, keys);
+        console.log("time", (new Date()).toLocaleString());
+        // await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log("time", (new Date()).toLocaleString());
+
+        if (keys.authority == "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1") {
+            const { quoteTokenVaultSupply } = await _getReservers(new PublicKey(keys.baseVault), new PublicKey(keys.quoteVault));
+            if (quoteTokenVaultSupply.toNumber() > tokenBalance) {
+                portfolios.push({ baseMint: mintAddress, balance: tokenBalance });
+            }
+        }
+    }
+    return portfolios.sort((a: any, b: any) => b.balance - a.balance).slice(0, 10);
+}
+
+export async function getTokensFromWallet(wallet: string) {
+    const filters: GetProgramAccountsFilter[] = [{ dataSize: 165 }, { memcmp: { offset: 32, bytes: wallet, }, }];
+    const accounts = await connection.getParsedProgramAccounts(TOKEN_PROGRAM_ID, { filters: filters });
+    console.log(`Found ${accounts.length} token account(s) for wallet ${wallet}.`);
+
+    for (const [i, account] of accounts.entries()) {
+        const parsedAccountInfo: any = account.account.data;
+        const mintAddress: string = parsedAccountInfo["parsed"]["info"]["mint"];
+        const tokenBalance: number = parsedAccountInfo["parsed"]["info"]["tokenAmount"]["amount"];
+
+        tokenBalance > 0 && portfolios.push({mintAddress,tokenBalance });
+    }
+    return portfolios.sort((a: any, b: any) => b.tokenBalance - a.tokenBalance).slice(0, 30);
+
+}
+
+

@@ -1,9 +1,6 @@
-import mongoose from "mongoose";
-import {
-  PORTFOLIO_TYPE,
-  RAYDIUM_POOL_TYPE,
-  REFERRAL_TYPE,
-} from "../../service/util/types";
+import mongoose from 'mongoose';
+import {PORTFOLIO_TYPE,RAYDIUM_POOL_TYPE} from '../../service/util/types';
+import { PublicKey } from '@metaplex-foundation/js';
 
 const Schema = mongoose.Schema;
 const WalletSchema = new Schema({
@@ -16,12 +13,18 @@ const UserPortfolioSchema = new Schema<PORTFOLIO_TYPE>({
   chatId: { type: Number, unique: true },
   wallets: [
     {
-      walletId: { type: String, unique: true },
-      publicKey: String,
-      secretKey: String,
-    },
-  ],
-  positions: [],
+      "walletId": { type: String, unique: true },
+      "publicKey": String,
+      "secretKey": String,
+    }
+  ], 
+  "positions": [
+       {
+      "walletId": { type: String, unique: true },
+      "publicKey": String,
+      "secretKey": String,
+    }
+  ]
 });
 
 const PoolInfoSchema = new Schema<RAYDIUM_POOL_TYPE>({

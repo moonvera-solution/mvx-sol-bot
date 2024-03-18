@@ -68,10 +68,10 @@ export async function handle_radyum_swap(
                 wallet: Keypair.fromSecretKey(bs58.decode(String(userSecretKey))),
                 commitment: 'processed'
             }).then(async ({ txids }) => {
-                let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processed successfully. <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>.`
+                let msg = `🟢 <b>${side.toUpperCase()} Tx </b> Sent successfully. <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>.`
                 await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
                 const isConfirmed = await waitForConfirmation(txids[0]);
-                console.log('isConfirmed', isConfirmed);
+
                 if (isConfirmed) {
                     const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
                     const txAmount = JSON.parse(JSON.stringify(txxs!.meta!.innerInstructions![0].instructions));

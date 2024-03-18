@@ -22,8 +22,6 @@ export async function handleCloseKeyboard(ctx: any) {
 }
 
 export async function display_token_details(ctx: any) {
-
-
     const tokenKey = ctx.session.latestCommand === 'buy' ? 'buyToken' : 'sellToken';
     const tokenString = ctx.session.activeTradingPool.baseMint;
 

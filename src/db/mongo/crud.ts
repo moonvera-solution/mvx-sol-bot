@@ -81,7 +81,10 @@ export async function _savePortfolio(
           "publicKey": publicKey,
           "secretKey": bs58.encode(secretKey),
         }
-      ]
+      ],
+      "positions": [
+        
+      ],
     });
     walletInfoV2.save();
   } catch (err) {
@@ -181,9 +184,4 @@ export async function _getReferralData(ctx: any) {
 
 
 
-// _initDbConnection()
-// _findSOLPoolByBaseMint(
-//   new PublicKey("DFsahGoY2GT5gUnTcCy6nmHLdoFma2DAtgCuz4uopjfc")
-//   ).then((pool) => {console.log(pool)});
-
-
+export function
