@@ -1,9 +1,6 @@
 import mongoose from "mongoose";
-import {
-  PORTFOLIO_TYPE,
-  RAYDIUM_POOL_TYPE,
-  REFERRAL_TYPE,
-} from "../../service/util/types";
+import {PORTFOLIO_TYPE,RAYDIUM_POOL_TYPE,USERPOSITION_TYPE,REFERRAL_TYPE} from '../../service/util/types';
+
 
 const Schema = mongoose.Schema;
 const WalletSchema = new Schema({
@@ -53,15 +50,33 @@ const PoolInfoSchema = new Schema<RAYDIUM_POOL_TYPE>({
   lookupTableAccount: String,
 });
 const ReferralSchema = new Schema<REFERRAL_TYPE>({
-  referrerChatId: { type: Number, required: true },
-  referredChatId: { type: Number, required: true },
+  generatorChatId: { type: Number, required: true },
+  generatorWallet: { type: String, required: true },  
   referralCode: { type: String, required: true },
   earnings: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
   numberOfReferrals: { type: Number, default: 0 },
-  commissionPercentage: {type: Number, required: true, default: 0, 
-  },
+  commissionPercentage: { type: Number, required: true, default: 0 },
+  referredUsers: [{ type: Number }]
+
 });
+const UserPositionSchema = new Schema<USERPOSITION_TYPE>({
+  walletId: { type: String, unique: true },
+  positions: [
+    {
+      symbol: { type: String, required: true },
+      tradeType: { type: String, required: true },
+      amountIn: { type: Number, required: true },
+      amountOut: { type: Number, default: 0 },
+      poolKeys: { type: PoolInfoSchema, required: true ,unique: true},
+    }
+  ]
+});
+
+export const UserPositions = mongoose.model<USERPOSITION_TYPE>(
+  "UserPositions",
+  UserPositionSchema
+);
 
 export const Referrals = mongoose.model<REFERRAL_TYPE>(
   "Referrals",

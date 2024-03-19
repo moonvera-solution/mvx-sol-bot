@@ -52,9 +52,8 @@ export async function sendTx(
         if (iTx instanceof VersionedTransaction) {
             console.log("sending versioned");
             iTx.sign([payer]);
-            let ixId = await connection.sendTransaction(iTx, options)
+            let ixId = await connection.sendRawTransaction(iTx.serialize(),options);
             txids.push(ixId);
-            
         } else {
             console.log("sending versioned");
             txids.push(await connection.sendTransaction(iTx, [payer], options));
