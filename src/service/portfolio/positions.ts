@@ -8,7 +8,7 @@ type Commitment = 'processed' | 'confirmed' | 'finalized' | 'recent' | 'single' 
 
 
 
-export async function safeUserPosition(walletId: String, newPosition:
+export async function saveUserPosition(walletId: String, newPosition:
     {
         baseMint: string;
         symbol: string;

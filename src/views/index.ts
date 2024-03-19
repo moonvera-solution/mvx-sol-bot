@@ -6,8 +6,9 @@ import { getSolanaDetails } from '../api';
 import { formatNumberToKOrM, getSolBalance } from '../service/util';
 import { RAYDIUM_POOL_TYPE } from '../service/util/types';
 import { getRayPoolKeys } from '../service/dex/raydium/market-data/1_Geyser';
-import {jsonInfo2PoolKeys, Liquidity, LiquidityPoolKeys} from '@raydium-io/raydium-sdk';
 import { connection } from '../../config';
+import {jsonInfo2PoolKeys,Liquidity, LiquidityPoolKeys,SPL_ACCOUNT_LAYOUT,TOKEN_PROGRAM_ID,TokenAccount} from '@raydium-io/raydium-sdk';
+import { Keypair, Connection } from '@solana/web3.js';
 
 
 export async function handleCloseKeyboard(ctx: any) {

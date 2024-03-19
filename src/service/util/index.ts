@@ -580,3 +580,64 @@ export function isValidBase58(str: any) {
     const base58Regex = /^[1-9A-HJ-NP-Za-km-z]+$/;
     return base58Regex.test(str);
 }
+
+export async function waitForConfirmation(txid: string): Promise<boolean> {
+    let isConfirmed = false;
+    const maxAttempts = 1000;
+    let attempts = 0;
+
+    while (!isConfirmed && attempts < maxAttempts) {
+        attempts++;
+        console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
+
+        const status = await getTransactionStatus(txid);
+        console.log('Transaction status:', status);
+
+        if (status === 'confirmed' || status === 'finalized') {
+            console.log('Transaction is confirmed.');
+            isConfirmed = true;
+        } else {
+            console.log('Waiting for confirmation...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+    }
+
+    if (!isConfirmed) {
+        console.log('Transaction could not be confirmed within the max attempts.');
+    }
+
+    return isConfirmed;
+}
+
+export async function getTransactionStatus(txid: string) {
+    const method = 'getSignatureStatuses';
+    const solanaRpcUrl = 'https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'; // Replace with your RPC URL
+    const body = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": method,
+        "params": [
+            [txid],
+            { "searchTransactionHistory": true }
+        ]
+    };
+
+    try {
+        const response = await axios.post(solanaRpcUrl, body, {
+            headers: { 'Content-Type': 'application/json' },
+        });
+        
+        const data = response.data;
+        console.log('Transaction status data:', data);
+        // Check if the transaction is confirmed
+        if (data.result && data.result.value && data.result.value[0]) {
+            return data.result.value[0].confirmationStatus;
+        } else {
+            return 'unconfirmed'; // or some other default status
+        }
+    } catch (error) {
+        console.error("Error fetching transaction status:", error);
+        return false;
+    }
+}
+

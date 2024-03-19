@@ -1,11 +1,11 @@
 import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken } from '@raydium-io/raydium-sdk';
 import { PublicKey, Keypair, } from '@solana/web3.js';
-import { getWalletTokenAccount, getSolBalance } from '../../util';
+import { getWalletTokenAccount, getSolBalance,waitForConfirmation } from '../../util';
 import { DEFAULT_TOKEN, MVXBOT_FEES, connection } from '../../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
 import { display_token_details } from '../../../views';
 import { ISESSION_DATA } from '../../util/types';
-import { safeUserPosition } from "../positions";
+import { saveUserPosition } from "../positions";
 import { raydium_amm_swap } from '../../dex';
 import BigNumber from 'bignumber.js';
 import axios from 'axios';
@@ -101,16 +101,16 @@ export async function handle_radyum_swap(
                     }
 
                     if (side.includes('buy')) {
-                        safeUserPosition(
+                        saveUserPosition(
                             userWallet.publicKey.toString(), {
                             baseMint: poolKeys.baseMint,
                             symbol: _symbol,
                             tradeType: `ray_swap_${side}`,
                             amountIn: swapAmountIn,
-                            amountOut: extractAmount ?? tokenAmount,
+                            amountOut: extractAmount && tokenAmount,
                         });
                     }
-
+                    ctx.session.latestCommand = side;
                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
                 }
 
@@ -129,64 +129,3 @@ export async function handle_radyum_swap(
     }
 
 }
-
-async function waitForConfirmation(txid: string): Promise<boolean> {
-    let isConfirmed = false;
-    const maxAttempts = 1000;
-    let attempts = 0;
-
-    while (!isConfirmed && attempts < maxAttempts) {
-        attempts++;
-        console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
-
-        const status = await getTransactionStatus(txid);
-        console.log('Transaction status:', status);
-
-        if (status === 'confirmed' || status === 'finalized') {
-            console.log('Transaction is confirmed.');
-            isConfirmed = true;
-        } else {
-            console.log('Waiting for confirmation...');
-            await new Promise(resolve => setTimeout(resolve, 500));
-        }
-    }
-
-    if (!isConfirmed) {
-        console.log('Transaction could not be confirmed within the max attempts.');
-    }
-
-    return isConfirmed;
-}
-
-async function getTransactionStatus(txid: string) {
-    const method = 'getSignatureStatuses';
-    const solanaRpcUrl = 'https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'; // Replace with your RPC URL
-    const body = {
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": method,
-        "params": [
-            [txid],
-            { "searchTransactionHistory": true }
-        ]
-    };
-
-    try {
-        const response = await axios.post(solanaRpcUrl, body, {
-            headers: { 'Content-Type': 'application/json' },
-        });
-        
-        const data = response.data;
-        console.log('Transaction status data:', data);
-        // Check if the transaction is confirmed
-        if (data.result && data.result.value && data.result.value[0]) {
-            return data.result.value[0].confirmationStatus;
-        } else {
-            return 'unconfirmed'; // or some other default status
-        }
-    } catch (error) {
-        console.error("Error fetching transaction status:", error);
-        return false;
-    }
-}
-

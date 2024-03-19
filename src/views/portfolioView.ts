@@ -12,8 +12,12 @@ export async function display_spl_positions(
     ctx: any,
 ) {
     _initDbConnection();
-    const userWallet = 'cVsN11LTUjictK1sUMsxdT5J2PKxZcJ858RXKNVuuZ4'// session.portfolio.wallets[session.activeWalletIndex];
+    const userWallet =  ctx.session.portfolio.wallets[ctx.session.activeWalletIndex].publicKey;
+    console.log("userWallet:: ",userWallet);
+    
     const userPosition: any = await UserPositions.find({ walletId: userWallet });
+    console.log("userPosition:: ",userPosition);
+    
     let messageText = `You might wanna sell all these shitcoins.`;
     let buttons: any = [];
     let dynamicCallback;
@@ -29,10 +33,10 @@ export async function display_spl_positions(
                 programId: TOKEN_PROGRAM_ID
             });
             let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
-            // console.log('userBalance: ', userBalance);
-
             dynamicCallback = `_p:${token}`;
 
+            // TODO: add delete position from db if balance is 0
+            
             if (userBalance.gt(0)) { // else none to sell
                 buttons.push(
                     [
@@ -52,7 +56,7 @@ export async function display_spl_positions(
             inline_keyboard: buttons
         },
     };
-    console.log('button: ', buttons)
+    console.log("buttons:: ",buttons);
     ctx.api.sendMessage(ctx.chat.id, messageText, options);
 }
 
