@@ -85,7 +85,7 @@ async function radiumPools() {
 
 // radiumPools();
 
- async function firstTest(){
+async function firstTest() {
   const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
   const MY_TOKEN_MINT_ADDRESS = "FvVDc6gZmYho6DLLuJ3ptHS6rxb797Cxf1insiUnu2BL";
   const connection = new Connection('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41', 'processed');
@@ -213,9 +213,10 @@ export async function getRayPoolKeys(shitcoin: string) {
     }
   );
 
-  const ammId = accounts[0].pubkey;
-  let keys:any;
-  while (keys == undefined) {
+  const ammId = accounts && accounts[0] && accounts[0].pubkey;
+  let keys: any = null;
+  // ammid exists and keys still null
+  while (ammId && keys == undefined) {
     keys = await formatAmmKeysById(ammId.toString());
   }
   return keys;
@@ -230,20 +231,20 @@ export async function getRayPoolKeys(shitcoin: string) {
 
  */
 
-  // if using baseMint theres risk of not finding 
-  export async function getPoolScheduleFromHistory(ammId: string) { 
-    let transactionList = await connection.getSignaturesForAddress(new PublicKey(ammId), { limit: 1000 }, 'confirmed');
-    let signatureList = transactionList.map(transaction => transaction.signature);
-  
-    for await (const sig of signatureList) {
-      const txs = await connection.getParsedTransaction(sig, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
-      if (txs!.meta!.logMessages) {
-        const poolSchedule = getPoolParams(txs!.meta!.logMessages);
-        if (poolSchedule) {
-          console.log('poolSchedule:: ', poolSchedule);
-          return poolSchedule;
-        }
+// if using baseMint theres risk of not finding 
+export async function getPoolScheduleFromHistory(ammId: string) {
+  let transactionList = await connection.getSignaturesForAddress(new PublicKey(ammId), { limit: 1000 }, 'confirmed');
+  let signatureList = transactionList.map(transaction => transaction.signature);
+
+  for await (const sig of signatureList) {
+    const txs = await connection.getParsedTransaction(sig, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
+    if (txs!.meta!.logMessages) {
+      const poolSchedule = getPoolParams(txs!.meta!.logMessages);
+      if (poolSchedule) {
+        console.log('poolSchedule:: ', poolSchedule);
+        return poolSchedule;
       }
     }
   }
+}
 

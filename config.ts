@@ -61,7 +61,9 @@ export const DEFAULT_TOKEN = {
 export const MVXBOT_FEES = BigNumber(0.008) // this is %
 export const TIP_VALIDATOR = 80000 // this is %
 
-
+export const SNIPE_SIMULATION_COUNT_LIMIT = 2000;
+export const DEFAULT_PRIORITY_FEE_UNITS = 500_000;
+export const DEFAULT_PRIORITY_FEE_MICRO_LAMPORTS =  100_000;
 export const  WALLET_MVX= 'MvXfSe3TeEwsEi731Udae7ecReLQPgrNuKWZzX6RB41';
 /**
  * PAIR addr = DtU8TMzfQAFSTjEcRUBAwBrWzkv6a32maR6FiezV8hGd

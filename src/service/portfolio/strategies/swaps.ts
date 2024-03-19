@@ -37,8 +37,8 @@ export async function handle_radyum_swap(
         if (side == 'buy') {
             let originalBuyAmt = swapAmountIn;
             let amountUse = new BigNumber(originalBuyAmt);
-            if (userSolBalance == 0 || userSolBalance < swapAmountIn) {
-                await ctx.api.sendMessage(chatId, `Insufficient balance. Your balance is ${userSolBalance} SOL`);
+            if (userSolBalance < swapAmountIn) {
+                await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
                 return;
             }
             tokenIn = DEFAULT_TOKEN.WSOL;
@@ -61,7 +61,7 @@ export async function handle_radyum_swap(
             await ctx.api.sendMessage(chatId, `💸 Buying ${originalBuyAmt} SOL of ${userTokenBalanceAndDetails.userTokenSymbol}`);
         } else {
             if (userTokenBalance == 0) {
-                await ctx.api.sendMessage(chatId, `Insufficient balance. Your balance is ${userTokenBalance} ${userTokenBalanceAndDetails.userTokenSymbol}`);
+                await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userTokenBalance} ${userTokenBalanceAndDetails.userTokenSymbol}`);
                 return;
             }
             let percent = swapAmountIn;

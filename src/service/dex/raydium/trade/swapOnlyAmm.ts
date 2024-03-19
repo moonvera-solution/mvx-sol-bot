@@ -1,52 +1,24 @@
-const WebSocket = require("ws");
-import assert from "assert";
 
+import assert from "assert";
 import {
   jsonInfo2PoolKeys,
   Liquidity,
   LiquidityPoolKeys,
   Percent,
   Token,
-  TOKEN_PROGRAM_ID,
   TokenAmount,
-} from "@raydium-io/raydium-sdk";
-import {
-  MARKET_STATE_LAYOUT_V3,
-  SPL_ACCOUNT_LAYOUT,
-  InnerSimpleV0Transaction,
-  buildTransaction,
-  LiquidityPoolKeysV4,
-  TokenAccount,
-  BigNumberish,
-  Market,
-  SPL_MINT_LAYOUT,
-  TxVersion,
-  buildSimpleTransaction,
-  LOOKUP_TABLE_CACHE,
 } from "@raydium-io/raydium-sdk";
 import BigNumber from "bignumber.js";
 import {
-  Connection,
-  SendOptions,
-  Signer,
-  Transaction,
-  sendAndConfirmTransaction,
-  Commitment,
   SystemProgram,
-  ConfirmOptions,
 } from "@solana/web3.js";
-
-import { getUserTokenBalanceAndDetails } from "../../../feeds";
 import {
   Keypair,
-  VersionedTransaction,
-  TransactionMessage,
   PublicKey,
 } from "@solana/web3.js";
 import base58 from "bs58";
 import {
   connection,
-  DEFAULT_TOKEN,
   makeTxVersion,
   MVXBOT_FEES,
   TIP_VALIDATOR,
@@ -81,7 +53,6 @@ export type TxInputInfo = {
 
 export async function swapOnlyAmm(input: TxInputInfo) {
  
-
   // -------- pre-action: get pool info --------
   const targetPoolInfo = await formatAmmKeysById(input.targetPool);
   assert(targetPoolInfo, "cannot find the target pool");
@@ -94,6 +65,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     currencyOut: input.outputToken,
     slippage: input.slippage,
   });
+
   // -------- step 2: create instructions by SDK function --------
   const { innerTransactions } = await Liquidity.makeSwapInstructionSimple({
     connection,
@@ -111,8 +83,6 @@ export async function swapOnlyAmm(input: TxInputInfo) {
       microLamports: 20000000,
     },
   });
-
-
 
   const validatorLead = await connection.getSlotLeader();
 
@@ -151,8 +121,6 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   // In case there is no referral  
   else {
     if (input.side === "sell"){
-
-
       const bot_fee = new BigNumber(amountOut.raw).multipliedBy(MVXBOT_FEES);
       input.mvxFee = new BigNumber(Math.ceil(Number(bot_fee)));
     }
