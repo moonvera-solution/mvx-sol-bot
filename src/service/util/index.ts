@@ -591,10 +591,10 @@ export async function waitForConfirmation(txid: string): Promise<boolean> {
         console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
 
         const status = await getTransactionStatus(txid);
-        console.log('Transaction status:', status);
+        // console.log('Transaction status:', status);
 
         if (status === 'confirmed' || status === 'finalized') {
-            console.log('Transaction is confirmed.');
+            // console.log('Transaction is confirmed.');
             isConfirmed = true;
         } else {
             console.log('Waiting for confirmation...');

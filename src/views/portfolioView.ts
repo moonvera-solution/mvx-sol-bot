@@ -1,4 +1,3 @@
-
 import { USERPOSITION_TYPE } from '@/service/util/types';
 import { UserPositions, _initDbConnection } from '../db';
 import { connection, wallet } from '../../config';
@@ -11,7 +10,6 @@ import { SPL_ACCOUNT_LAYOUT, TOKEN_PROGRAM_ID } from '@raydium-io/raydium-sdk';
 export async function display_spl_positions(
     ctx: any,
 ) {
-    _initDbConnection();
     const userWallet =  ctx.session.portfolio.wallets[ctx.session.activeWalletIndex].publicKey;
     console.log("userWallet:: ",userWallet);
     

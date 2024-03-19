@@ -418,9 +418,7 @@ bot.on('callback_query', async (ctx: any) => {
     try {
         const match = data.match(positionCallbackPattern);
         if (match) {
-            console.log('baseMint',match[1]);
             ctx.session.activeTradingPool = await getRayPoolKeys(match[1]);
-            console.log('ctx.session.activeTradingPool : :',ctx.session.activeTradingPool );
             await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', '100');
         }
         switch (data) { // make sure theres a "break" after each statement...
@@ -435,7 +433,7 @@ bot.on('callback_query', async (ctx: any) => {
             
                     if (!existingReferral) {
                         // No existing referral found, ask for the wallet address
-                        await ctx.api.sendMessage(chatId, "Please provide the wallet address of the person you want to refer.");
+                        await ctx.api.sendMessage(chatId, "Please provide the wallet address to receive referral rewards.");
                     } else {
                         // Existing referral found, display referral data
                         const referralData = await _getReferralData(ctx); // Fetch referral data

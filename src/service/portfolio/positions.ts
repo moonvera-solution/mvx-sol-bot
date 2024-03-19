@@ -19,15 +19,18 @@ export async function saveUserPosition(walletId: String, newPosition:
     try {
         const userPosition = await UserPositions.findOne({ walletId: walletId });
         if (userPosition) {
-            const existingPosition = userPosition.positions.find(
+            const existingPositionIndex = userPosition.positions.findIndex(
                 position => position.baseMint === newPosition.baseMint
             );
-            if (!existingPosition) {
+            if (existingPositionIndex === -1) {
                 await UserPositions.findOneAndUpdate(
                     { walletId: walletId },
                     { $push: { positions: newPosition } },
                     { upsert: true, new: true }
                 );
+            } else {
+                userPosition.positions[existingPositionIndex] = newPosition;
+                await userPosition.save();
             }
         } else {
             await UserPositions.findOneAndUpdate(
