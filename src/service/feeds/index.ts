@@ -10,6 +10,7 @@ import {
 import { Metaplex } from "@metaplex-foundation/js";
 
 export async function getTokenMetadata(ctx: any, tokenAddress: string): Promise<any> {
+    console.log('tokenAddress',tokenAddress)
     // console.log('ctx.session',ctx.session)
     // const tokenAddress = ctx.session.portfolio.activeTradingPool.baseMint;
     const chatId = ctx.chat.id;

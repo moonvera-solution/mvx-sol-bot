@@ -18,11 +18,14 @@ import { getTokenMetadata } from "../../feeds";
 
 export async function setSnipe(ctx: any, amountIn: any) {
     // Returns either the time to wait or indicates pool is already open
-
+    
     console.log('Snipe set ...');
-    const snipeToken = new PublicKey(ctx.session.snipeToken);
+    const snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
+    console.log('snipeToken', snipeToken.toBase58());
     const rayPoolKeys = await getRayPoolKeys(snipeToken.toBase58());
     const poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
+    let liqInfo = await Liquidity.fetchInfo({connection, poolKeys});
+    console.log('liqInfo', liqInfo.startTime.toNumber());
     const amountInLamports = new BigNumber(Number.parseFloat(amountIn)).times(1e9);
     const snipeSlippage = ctx.session.snipeSlippage;
     const currentWalletIdx = ctx.session.activeWalletIndex;
@@ -38,7 +41,8 @@ export async function setSnipe(ctx: any, amountIn: any) {
     ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一    ${amountIn} $${tokenData.symbol} Snipe set...`);
 
     // Start the simulation without waiting for it to complete
-    const simulationPromise = startSnippeSimulation(ctx, poolKeys, userKeypair, amountInLamports, snipeSlippage);
+    const poolStartTime = liqInfo.startTime.toNumber();
+    const simulationPromise = startSnippeSimulation(ctx, poolKeys, userKeypair, amountInLamports, snipeSlippage, poolStartTime);
 
     simulationPromise.catch((error) => {
         console.log("Error setting snipper", error);
@@ -58,7 +62,8 @@ export async function startSnippeSimulation(
     poolKeys: any,
     userWallet: Keypair,
     amountIn: BigNumber,
-    snipeSlippage: number
+    snipeSlippage: number,
+    poolStartTime: number
 ) {
     const chatId = ctx.chat.id;
     const walletTokenAccounts = await _getWalletTokenAccount(connection, userWallet.publicKey);
@@ -84,7 +89,7 @@ export async function startSnippeSimulation(
         makeTxVersion: TxVersion.V0,
         computeBudgetConfig: {
             units: 700_000,
-            microLamports: 900000
+            microLamports: 9000000
         }
     });
 
@@ -108,7 +113,7 @@ export async function startSnippeSimulation(
     let simulationResult: any;
     let count = 0;
     let sim = true;
-    let diff: BigNumber = new BigNumber(0);
+    let diff = new BigNumber(poolStartTime).minus(new BigNumber(new Date().getTime()));
 
     const simulateTransaction = async () => {
         let txSign: any;
@@ -153,22 +158,22 @@ export async function startSnippeSimulation(
         }
     };
 
-    const getPoolSchedule = async () => {
-        const poolSchedule = await getPoolScheduleFromHistory(poolKeys.id.toBase58());
-        const nowMilli = new BigNumber(Number(new Date().getTime()));
-        if (poolSchedule) {
-            const launchSchedule = new BigNumber(poolSchedule.open_time * 1000);
-            diff = launchSchedule.minus(nowMilli);
-            if (diff.gt(0)) {
-                ctx.bot.sendMessage(chatId, `Pool opening in ${formatLaunchCountDown(diff.toNumber())}`);
-                console.log("Pool opening in", launchSchedule.toNumber(), "seconds...");
-                sim = false; // This will break the while loop in simulateTransaction
-                return diff;
-            }
-        }
-    };
+    // const getPoolSchedule = async () => {
+    //     const poolSchedule = await getPoolScheduleFromHistory(poolKeys.id.toBase58());
+    //     const nowMilli = new BigNumber(Number(new Date().getTime()));
+    //     if (poolSchedule) {
+    //         const launchSchedule = new BigNumber(poolSchedule.open_time * 1000);
+    //         diff = launchSchedule.minus(nowMilli);
+    //         if (diff.gt(0)) {
+    //             ctx.bot.sendMessage(chatId, `Pool opening in ${formatLaunchCountDown(diff.toNumber())}`);
+    //             console.log("Pool opening in", launchSchedule.toNumber(), "seconds...");
+    //             sim = false; // This will break the while loop in simulateTransaction
+    //             return diff;
+    //         }
+    //     }
+    // };
 
-    Promise.race([simulateTransaction(), getPoolSchedule()]).then((result) => {
+    Promise.race([simulateTransaction()]).then((result) => {
         console.log("Promise.race result", result);
     }).catch((error) => {
         console.log("Promise race error", error);

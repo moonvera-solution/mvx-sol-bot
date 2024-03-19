@@ -175,9 +175,9 @@ async function getTransactionStatus(txid: string) {
         const response = await axios.post(solanaRpcUrl, body, {
             headers: { 'Content-Type': 'application/json' },
         });
-
+        
         const data = response.data;
-
+        console.log('Transaction status data:', data);
         // Check if the transaction is confirmed
         if (data.result && data.result.value && data.result.value[0]) {
             return data.result.value[0].confirmationStatus;

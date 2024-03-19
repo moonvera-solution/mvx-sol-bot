@@ -47,6 +47,7 @@ export interface ISESSION_DATA {
   awaitingWalletAddress: boolean;
   generatorWallet: PublicKey;
   referralCommision: number;
+  poolTime: number;
   
 }
 
@@ -106,6 +107,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   snipeToken: DEFAULT_PUBLIC_KEY,
   snipeAmount: 0,
   snipeSlippage: 20,
+  poolTime: 0,
   // txTip:5_000
 }
 
