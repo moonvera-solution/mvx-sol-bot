@@ -48,6 +48,10 @@ export interface ISESSION_DATA {
   generatorWallet: PublicKey;
   referralCommision: number;
   poolTime: number;
+  priorityFees: {
+    units: number;
+    microLamports: number;
+};
   
 }
 
@@ -108,6 +112,10 @@ export const DefaultSessionData: ISESSION_DATA = {
   snipeAmount: 0,
   snipeSlippage: 20,
   poolTime: 0,
+  priorityFees: {
+    units: 500_000,
+    microLamports: 1000_000
+  }
   // txTip:5_000
 }
 

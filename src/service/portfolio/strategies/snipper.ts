@@ -17,8 +17,10 @@ import { getRayPoolKeys, getPoolScheduleFromHistory } from "../../dex/raydium/ma
 import { getTokenMetadata } from "../../feeds";
 import { waitForConfirmation } from '../../util';
 
+
 export async function setSnipe(ctx: any, amountIn: any) {
     // Returns either the time to wait or indicates pool is already open
+    console.log('ctx.session.priorityFees', ctx.session.priorityFees);
 
     console.log('Snipe set ...');
     const snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
@@ -90,11 +92,12 @@ export async function startSnippeSimulation(
         fixedSide: 'in',
         makeTxVersion: TxVersion.V0,
         computeBudgetConfig: {
-            units: 700_000,
-            microLamports: 90000000
+            units: ctx.session.priorityFees.units,
+            microLamports: ctx.session.priorityFees.microLamports
         }
     });
-
+//0.005  0.01 0.05 0.1 0.2
+//low   medium high very high extreme
     const mvxFeeInx = SystemProgram.transfer({
         fromPubkey: userWallet.publicKey,
         toPubkey: new PublicKey('MvXfSe3TeEwsEi731Udae7ecReLQPgrNuKWZzX6RB41'),
@@ -151,7 +154,7 @@ export async function startSnippeSimulation(
                                 if (extractAmount) {
                                     solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
                                     tokenAmount = amountIn.div(Math.pow(10, tokenData.decimals));
-                                    confirmedMsg = `✅ <b>Snipe Tx Confirmed:</b> You bought ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
+                                    confirmedMsg = `✅ <b>Snipe Tx Confirmed:</b> You sniped ${solAmount.toFixed(3)} <b>${_symbol}</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
                                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
 
                                     saveUserPosition(

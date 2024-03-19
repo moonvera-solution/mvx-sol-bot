@@ -712,6 +712,48 @@ bot.on('callback_query', async (ctx: any) => {
                 break;
             }
             case 'display_spl_positions': await display_spl_positions(ctx); break;
+            case 'priority_low':
+                ctx.session.priorityFees = {
+                    units: 500_000,
+                    microLamports: 10000_000
+                };
+                ctx.api.sendMessage(chatId, "Priority set to low");
+                break;
+            case 'priority_medium':
+                ctx.session.priorityFees = {
+                    units: 500_000,
+                    microLamports: 20000_000
+                };
+                ctx.api.sendMessage(chatId, "Priority set to medium");
+                break;
+            case 'priority_high':{
+                ctx.session.priorityFees = {
+                    units: 700_000,
+                    microLamports: 99000000
+                };
+                ctx.api.sendMessage(chatId, "Priority set to high");
+                break;
+            
+            }
+            case 'priority_ver_high':{
+                ctx.session.priorityFees = {
+                    units: 1000000,
+                    microLamports: 100000000
+                };
+                ctx.api.sendMessage(chatId, "Priority set to very high");
+                break;
+            
+            }
+            case 'priority_extreme':{
+                ctx.session.priorityFees = {
+                    units: 1000000,
+                    microLamports: 200000000
+                };
+                ctx.api.sendMessage(chatId, "Priority set to extreme");
+                break;
+            
+            
+            }
         }
         ctx.api.answerCallbackQuery(ctx.callbackQuery.id);
     } catch (e: any) {

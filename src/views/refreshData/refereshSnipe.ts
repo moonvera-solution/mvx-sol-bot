@@ -72,6 +72,13 @@ export async function refreshSnipeDetails(ctx: any) {
                 `Pool Status: <b>${poolStatusMessage}</b>\n\n` +
                 `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
                 `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n ` ;
+                const priorityButtons = [
+                    [{ text: 'Low Priority', callback_data: 'priority_low' }],
+                    [{ text: 'Medium Priority', callback_data: 'priority_medium' }],
+                    [{ text: 'High Priority', callback_data: 'priority_high' }],
+                    [{ text: 'Very High Priority', callback_data: 'priority_very_high' }],
+                    [{ text: 'Extreme Priority', callback_data: 'priority_extreme' }]
+                ];
                 options = {
                     parse_mode: 'HTML',
                     disable_web_page_preview: true,
@@ -82,8 +89,8 @@ export async function refreshSnipeDetails(ctx: any) {
                             [{ text: '🎯 X SOL', callback_data: 'snipe_X_SOL' }, { text: '🎯 0.1 SOL', callback_data: 'snipe_0.1_SOL' }, { text: '🎯 0.2 SOL', callback_data: 'snipe_0.2_SOL' }],
                             [{ text: '🎯 0.5 SOL', callback_data: 'snipe_0.5_SOL' }, { text: '🎯 1 SOL', callback_data: 'snipe_1_SOL' }, { text: '🎯 5 SOL', callback_data: 'snipe_5_SOL' }],
                             [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' },{ text: 'Selling Mode 💸', callback_data: 'sell' }],
-                            [{ text: 'Close', callback_data: 'closing' }]]
-                           
+                            ...priorityButtons,
+                            [{ text: '❌ Close sniping mode ❌', callback_data: 'closing' }]]
                     },
                 };
 
