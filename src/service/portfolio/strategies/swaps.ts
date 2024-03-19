@@ -89,12 +89,13 @@ export async function handle_radyum_swap(
                     let confirmedMsg;
                     let solAmount;
                     let tokenAmount;
+                    const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
 
                     if (extractAmount) {
                         solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
                         tokenAmount = swapAmountIn / Math.pow(10, userTokenBalanceAndDetails.decimals);
                         const _side = side === 'sell' ? 'sold' : 'bought';
-                        confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You ${_side} ${tokenAmount.toFixed(3)} <b>${userTokenBalanceAndDetails.userTokenSymbol}</b> for ${solAmount} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
+                        confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You ${_side} ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
                     } else {
                         confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
                     }
@@ -102,11 +103,11 @@ export async function handle_radyum_swap(
                     if (side.includes('buy')) {
                         safeUserPosition(
                             userWallet.publicKey.toString(), {
-                            symbol: userTokenBalanceAndDetails.userTokenSymbol,
+                            baseMint: poolKeys.baseMint,
+                            symbol: _symbol,
                             tradeType: `ray_swap_${side}`,
                             amountIn: swapAmountIn,
                             amountOut: extractAmount ?? tokenAmount,
-                            poolKeys: poolKeys
                         });
                     }
 

@@ -65,7 +65,7 @@ export async function sendTx(
 export async function getWalletTokenAccount(connection: Connection, wallet: PublicKey): Promise<TokenAccount[]> {
     const walletTokenAccount = await connection.getTokenAccountsByOwner(wallet, {
         programId: TOKEN_PROGRAM_ID,
-    });
+    },'processed');
     return walletTokenAccount.value.map((i) => ({
         pubkey: i.pubkey,
         programId: i.account.owner,

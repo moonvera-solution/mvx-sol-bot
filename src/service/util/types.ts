@@ -152,11 +152,10 @@ export type USERPOSITION_TYPE = {
   walletId: string;
   positions:[
     {
+      baseMint: string;
       symbol: string;
       tradeType: string;
       amountIn: number;
-      amountOut: number | undefined;
-      poolKeys: RAYDIUM_POOL_TYPE
-    }
+      amountOut: number | undefined;    }
   ]
 }

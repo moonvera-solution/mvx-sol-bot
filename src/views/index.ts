@@ -6,7 +6,8 @@ import { getSolanaDetails } from '../api';
 import { formatNumberToKOrM, getSolBalance } from '../service/util';
 import { RAYDIUM_POOL_TYPE } from '../service/util/types';
 import { getRayPoolKeys } from '../service/dex/raydium/market-data/1_Geyser';
-import {jsonInfo2PoolKeys, LiquidityPoolKeys} from '@raydium-io/raydium-sdk';
+import {jsonInfo2PoolKeys, LiquidityPoolKeys,SPL_ACCOUNT_LAYOUT,TOKEN_PROGRAM_ID,TokenAccount} from '@raydium-io/raydium-sdk';
+import { Keypair, Connection } from '@solana/web3.js';
 
 
 export async function handleCloseKeyboard(ctx: any) {
@@ -202,4 +203,15 @@ export async function display_snipe_options(ctx: any) {
             },
         });
 
+}
+
+async function getWalletTokenAccount(connection: Connection, wallet: PublicKey): Promise<TokenAccount[]> {
+    const walletTokenAccount = await connection.getTokenAccountsByOwner(wallet, {
+        programId: TOKEN_PROGRAM_ID,
+    }, 'processed');
+    return walletTokenAccount.value.map((i) => ({
+        pubkey: i.pubkey,
+        programId: i.account.owner,
+        accountInfo: SPL_ACCOUNT_LAYOUT.decode(i.account.data),
+    }));
 }
