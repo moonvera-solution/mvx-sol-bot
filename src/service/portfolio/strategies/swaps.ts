@@ -94,8 +94,12 @@ export async function handle_radyum_swap(
                     if (extractAmount) {
                         solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
                         tokenAmount = swapAmountIn / Math.pow(10, userTokenBalanceAndDetails.decimals);
-                        const _side = side === 'sell' ? 'sold' : 'bought';
-                        confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You ${_side} ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
+                        if(side === 'sell') {
+                            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
+                        }else{
+                            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${solAmount.toFixed(3)} <b>${_symbol}</b> for ${tokenAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
+                        }
+                        
                     } else {
                         confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
                     }

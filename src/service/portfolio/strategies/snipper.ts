@@ -151,7 +151,7 @@ export async function startSnippeSimulation(
                                 if (extractAmount) {
                                     solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
                                     tokenAmount = amountIn.div(Math.pow(10, tokenData.decimals));
-                                    confirmedMsg = `✅ <b>Snipe Tx Confirmed:</b> You bought ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
+                                    confirmedMsg = `✅ <b>Snipe Tx Confirmed:</b> You bought ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
                                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
 
                                     saveUserPosition(
