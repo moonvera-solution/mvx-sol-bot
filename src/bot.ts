@@ -413,14 +413,15 @@ bot.on('callback_query', async (ctx: any) => {
     const chatId = ctx.chat.id;
     const data = ctx.callbackQuery.data;
     console.log("callback_query", data);
-    const JUPITER_SWAP_PATTERN = /^(\w+):(\d+)$/;
+    const positionCallbackPattern = /_p:(\S+)/;
 
     try {
-        const match = data.match(JUPITER_SWAP_PATTERN);
+        const match = data.match(positionCallbackPattern);
         if (match) {
-            const swap = { baseMint: match[1], amount: parseInt(match[2]) };
-            console.log("JUPITER_SWAP", swap);
-            // await handleJupiterSell(ctx, swap.baseMint, swap.amount);
+            console.log('baseMint',match[1]);
+            ctx.session.activeTradingPool = await getRayPoolKeys(match[1]);
+            console.log('ctx.session.activeTradingPool : :',ctx.session.activeTradingPool );
+            await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', '100');
         }
         switch (data) { // make sure theres a "break" after each statement...
             case 'refer_friends': {

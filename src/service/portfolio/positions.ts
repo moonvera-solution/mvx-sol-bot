@@ -7,38 +7,20 @@ import { UserPositions } from '../../db';
 type Commitment = 'processed' | 'confirmed' | 'finalized' | 'recent' | 'single' | 'singleGossip' | 'root' | 'max';
 
 
-// export async function safeUserPosition(walletId: String, newPosition:
-//     {
-//         symbol: string;
-//         tradeType: string;
-//         amountIn: number;
-//         amountOut: number | undefined;
-//         poolKeys: RAYDIUM_POOL_TYPE
-//     }) {
-//     try {
-//         await UserPositions.findOneAndUpdate(
-//             { walletId: walletId },
-//             { $push: { positions: newPosition } },
-//             { upsert: true, new: true }
-//         );
-//     } catch (err) {
-//         console.error(err);
-//     }
-// }
 
-export async function safeUserPosition(walletId: String, newPosition:
+export async function saveUserPosition(walletId: String, newPosition:
     {
+        baseMint: string;
         symbol: string;
         tradeType: string;
         amountIn: number;
         amountOut: number | undefined;
-        poolKeys: RAYDIUM_POOL_TYPE
     }) {
     try {
         const userPosition = await UserPositions.findOne({ walletId: walletId });
         if (userPosition) {
             const existingPosition = userPosition.positions.find(
-                position => position.poolKeys.id === newPosition.poolKeys.id
+                position => position.baseMint === newPosition.baseMint
             );
             if (!existingPosition) {
                 await UserPositions.findOneAndUpdate(

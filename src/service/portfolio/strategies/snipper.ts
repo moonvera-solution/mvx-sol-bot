@@ -9,22 +9,23 @@ import { Connection, PublicKey, Keypair, SendOptions, SystemProgram, Signer, Tra
 import { getPoolKeys } from "../../../../src/service/dex/raydium/market-data/PoolsFilter";
 import { connection } from "../../../../config";
 import { buildAndSendTx } from '../../util';
-
+import { saveUserPosition } from '../positions';
 import { amount, token } from "@metaplex-foundation/js";
 const log = (k: any, v: any) => console.log(k, v);
 import base58 from 'bs58';
 import { getRayPoolKeys, getPoolScheduleFromHistory } from "../../dex/raydium/market-data/1_Geyser";
 import { getTokenMetadata } from "../../feeds";
+import { waitForConfirmation } from '../../util';
 
 export async function setSnipe(ctx: any, amountIn: any) {
     // Returns either the time to wait or indicates pool is already open
-    
+
     console.log('Snipe set ...');
     const snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
     console.log('snipeToken', snipeToken.toBase58());
     const rayPoolKeys = await getRayPoolKeys(snipeToken.toBase58());
     const poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
-    let liqInfo = await Liquidity.fetchInfo({connection, poolKeys});
+    let liqInfo = await Liquidity.fetchInfo({ connection, poolKeys });
     console.log('liqInfo', liqInfo.startTime.toNumber());
     const amountInLamports = new BigNumber(Number.parseFloat(amountIn)).times(1e9);
     const snipeSlippage = ctx.session.snipeSlippage;
@@ -42,7 +43,7 @@ export async function setSnipe(ctx: any, amountIn: any) {
 
     // Start the simulation without waiting for it to complete
     const poolStartTime = liqInfo.startTime.toNumber();
-    const simulationPromise = startSnippeSimulation(ctx, poolKeys, userKeypair, amountInLamports, snipeSlippage, poolStartTime);
+    const simulationPromise = startSnippeSimulation(ctx, poolKeys, userKeypair, amountInLamports, snipeSlippage, poolStartTime, tokenData);
 
     simulationPromise.catch((error) => {
         console.log("Error setting snipper", error);
@@ -63,7 +64,8 @@ export async function startSnippeSimulation(
     userWallet: Keypair,
     amountIn: BigNumber,
     snipeSlippage: number,
-    poolStartTime: number
+    poolStartTime: number,
+    tokenData: any
 ) {
     const chatId = ctx.chat.id;
     const walletTokenAccounts = await _getWalletTokenAccount(connection, userWallet.publicKey);
@@ -75,7 +77,7 @@ export async function startSnippeSimulation(
 
     const inputTokenAmount = new TokenAmount(_tokenIn, amountIn.toFixed(0), true);
     const minOutTokenAmount = new TokenAmount(_tokenOut, amountOut_with_slippage.toFixed(0), true);
-    
+
     const { innerTransactions } = await Liquidity.makeSwapInstructionSimple({
         connection: connection,
         poolKeys: poolKeys,
@@ -122,56 +124,57 @@ export async function startSnippeSimulation(
             console.log('sim:', simulationResult, count++);
             if (simulationResult.value.err == null) {
                 sim = false;
-                if (diff.gt(0)) {
-                    console.log("Scheduling snipe ", diff.toNumber(), "seconds...");
-                    setTimeout(() => {
-                        buildAndSendTx(userWallet, innerTransactions, { preflightCommitment: 'processed' })
-                            .then(async (txids) => {
-                                let msg = `🟢 SNIPE <a href="https://solscan.io/tx/${txids[0]}">transaction</a> sent.`
-                                await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-                                txSign = txids[0];
-                                return txSign
-                            }).catch(async (error: any) => {
-                                let msg = `🔴 SNIPE busy Network, try again.`;
-                                await ctx.api.sendMessage(chatId, msg); console.info('error', error);
-                                return error;
-                            });
-                    }, diff.toNumber());
-                } else {
-                    console.log("here ", diff.toNumber(), "seconds...");
-                    setTimeout(() => {
-                        buildAndSendTx(userWallet, innerTransactions, { preflightCommitment: 'processed' })
-                            .then(async (txids) => {
-                                let msg = `🟢 SNIPE <a href="https://solscan.io/tx/${txids[0]}">transaction</a> sent.`
-                                await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-                                txSign = txids[0];
-                                return txSign
-                            }).catch(async (error: any) => {
-                                let msg = `🔴 SNIPE busy Network, try again.`;
-                                await ctx.api.sendMessage(chatId, msg); console.info('error', error);
-                                return error;
-                            });
-                    }, diff.toNumber());
-                }
-                break;  // exit the loop if the simulation is successful
+                setTimeout(() => {
+                    buildAndSendTx(userWallet, innerTransactions, { preflightCommitment: 'processed' })
+                        .then(async (txids) => {
+                            let msg = `🟢 SNIPE <a href="https://solscan.io/tx/${txids[0]}">transaction</a> sent.`
+                            await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
+                            txSign = txids[0];
+                            const isConfirmed = await waitForConfirmation(txids[0]);
+
+                            if (isConfirmed) {
+                                const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
+                                const txAmount = JSON.parse(JSON.stringify(txxs!.meta!.innerInstructions![0].instructions));
+                                let extractAmount;
+                                if (Array.isArray(txAmount)) {
+                                    txAmount.forEach((tx) => {
+                                        if (tx.parsed.info.authority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1') {
+                                            extractAmount = tx.parsed.info.amount;
+                                        }
+                                    });
+                                }
+                                let confirmedMsg;
+                                let solAmount;
+                                let tokenAmount;
+                                const _symbol = tokenData.symbol;
+
+                                if (extractAmount) {
+                                    solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
+                                    tokenAmount = amountIn.div(Math.pow(10, tokenData.decimals));
+                                    confirmedMsg = `✅ <b>Snipe Tx Confirmed:</b> You bought ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
+                                    await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
+
+                                    saveUserPosition(
+                                        userWallet.publicKey.toString(), {
+                                        baseMint: poolKeys.baseMint,
+                                        symbol: tokenData.symbol,
+                                        tradeType: `ray_swap_buy`,
+                                        amountIn: amountIn.toNumber(),
+                                        amountOut: amountOut.toNumber()
+                                    });
+                                }
+                            }
+
+                            return txSign
+                        }).catch(async (error: any) => {
+                            let msg = `🔴 SNIPE busy Network, try again.`;
+                            await ctx.api.sendMessage(chatId, msg); console.info('error', error);
+                            return error;
+                        });
+                }, diff.toNumber());
             }
         }
     };
-
-    // const getPoolSchedule = async () => {
-    //     const poolSchedule = await getPoolScheduleFromHistory(poolKeys.id.toBase58());
-    //     const nowMilli = new BigNumber(Number(new Date().getTime()));
-    //     if (poolSchedule) {
-    //         const launchSchedule = new BigNumber(poolSchedule.open_time * 1000);
-    //         diff = launchSchedule.minus(nowMilli);
-    //         if (diff.gt(0)) {
-    //             ctx.bot.sendMessage(chatId, `Pool opening in ${formatLaunchCountDown(diff.toNumber())}`);
-    //             console.log("Pool opening in", launchSchedule.toNumber(), "seconds...");
-    //             sim = false; // This will break the while loop in simulateTransaction
-    //             return diff;
-    //         }
-    //     }
-    // };
 
     Promise.race([simulateTransaction()]).then((result) => {
         console.log("Promise.race result", result);
