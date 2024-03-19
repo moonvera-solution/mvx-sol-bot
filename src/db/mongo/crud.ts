@@ -146,7 +146,7 @@ export async function _generateReferralLink(ctx: any, walletAddress: PublicKey) 
       referralCode = existingReferral.referralCode;
     }
 
-    referralLink = `https://t.me/stbbot_dev_bot?start=${referralCode}`;
+    referralLink = `https://t.me/MVXBOT_bot?start=${referralCode}`;
   } catch (error) {
     console.error('Error in _generateReferralLink:', error);
     throw new Error('Unable to process referral link.');

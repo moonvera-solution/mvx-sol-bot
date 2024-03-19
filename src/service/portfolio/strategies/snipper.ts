@@ -91,7 +91,7 @@ export async function startSnippeSimulation(
         makeTxVersion: TxVersion.V0,
         computeBudgetConfig: {
             units: 700_000,
-            microLamports: 9000000
+            microLamports: 90000000
         }
     });
 
