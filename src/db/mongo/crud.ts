@@ -19,8 +19,8 @@ const SOL_TOKEN = "So11111111111111111111111111111111111111112";
 
 
 // https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/getting-started.html
-async function anon() {
-  const secret_name = "mvx-bot-db";
+export async function anon() :Promise<any> {
+  const secret_name = "mvx-bot-db"
   const client = new SecretsManagerClient({
     region: "ca-central-1",
   });
@@ -39,9 +39,8 @@ async function anon() {
     // https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
     throw error;
   }
-
-  const secret = response.SecretString;
-  console.log("secret", secret);
+  console.log("secret", response.SecretString);
+  return response.SecretString;
 }
 
 // anon().then(() => {
@@ -55,15 +54,16 @@ async function anon() {
  */
 export async function _initDbConnection() {
   // const db =  await mongoose.connect(local_url, { useNewUrlParser: true, useUnifiedTopology: true });
+  const _anon = isProd ? await anon() : null;
   mongoose.connect(local_url, {
     /** Set to false to [disable buffering](http://mongoosejs.com/docs/faq.html#callback_never_executes) on all models associated with this connection. */
     /** The name of the database you want to use. If not provided, Mongoose uses the database name from connection string. */
     dbName: 'test',
     /** username for authentication, equivalent to `options.auth.user`. Maintained for backwards compatibility. */
-    user: isProd ? ec2_user : user,
+    user: isProd ? _anon.user : user,
     autoIndex: true,
     /** password for authentication, equivalent to `options.auth.password`. Maintained for backwards compatibility. */
-    pass: isProd ? ec2_password : password,
+    pass: isProd ? _anon.pw : password,
   });
   const db = mongoose.connection;
   db.on('error', console.error.bind(console, 'ERR connection error:'));
