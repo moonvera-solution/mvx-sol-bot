@@ -27,6 +27,7 @@ import { Refresh_rugCheck } from './views/refreshData/refreshRug';
 import { _generateReferralLink, _getReferralData } from '../src/db/mongo/crud';
 import { Referrals } from './db/mongo/schema';
 import { display_spl_positions } from './views/portfolioView';
+import { refreshSnipeDetails } from './views/refreshData/refereshSnipe';
 // import { handleJupiterSell } from './service/dex/jupiter/trade/swaps';
 dotenv.config();
 const http = require('http');
@@ -346,6 +347,7 @@ bot.on('message', async (ctx) => {
                 if (PublicKey.isOnCurve(msgTxt!)) {
                     if (msgTxt) {
                         // ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
+                        ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt);
                         ctx.session.snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
 
                         // Synchronize buyToken and sellToken with snipeToken
@@ -500,6 +502,7 @@ bot.on('callback_query', async (ctx: any) => {
             case 'show_wallets': await handleWallets(ctx); break;
             case 'refresh_trade': await refreshTokenDetails(ctx); break;
             case 'delete_wallet': await resetWallet(ctx); break;
+            case 'refresh_snipe': await refreshSnipeDetails(ctx); break;
             case 'import_wallet': {
                 ctx.session.latestCommand = 'import_wallet';
                 const allowed = await checkWalletsLength(ctx);

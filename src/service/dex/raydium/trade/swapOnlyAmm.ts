@@ -103,7 +103,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     makeTxVersion,
     computeBudgetConfig: {
       units: 600_000,
-      microLamports: 900000,
+      microLamports: 9900000,
     },
   });
 
