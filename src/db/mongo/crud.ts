@@ -173,7 +173,7 @@ export async function _generateReferralLink(ctx: any, walletAddress: PublicKey) 
     }
     //MVXBOT_bot for live prod
     referralLink = `https://t.me/stbbot_dev_bot?start=${referralCode}`;
-  } catch (error) {
+  } catch (error:any) {
     console.error('Error in _generateReferralLink:', error);
     throw new Error('Unable to process referral link.');
   }
