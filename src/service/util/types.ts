@@ -1,6 +1,6 @@
 import { PublicKey } from '@solana/web3.js';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
-
+import {DEFAULT_PRIORITY_FEE_UNITS,DEFAULT_PRIORITY_FEE_MICRO_LAMPORTS} from '../../../config';
 // DB MODELS
 export type PORTFOLIO_TYPE = {
   chatId: number,
@@ -38,6 +38,7 @@ export interface ISESSION_DATA {
   snipeToken: PublicKey;
   snipeAmount: number;
   snipeSlippage: number;
+  snipeStatus:boolean;
   buyTokenHistory: PublicKey[];
   sellTokenHistory: PublicKey[];
   tokenHistory: PublicKey[];
@@ -109,12 +110,13 @@ export const DefaultSessionData: ISESSION_DATA = {
   buyToken: DEFAULT_PUBLIC_KEY,
   sellToken: DEFAULT_PUBLIC_KEY,
   snipeToken: DEFAULT_PUBLIC_KEY,
+  snipeStatus:true,
   snipeAmount: 0,
   snipeSlippage: 20,
   poolTime: 0,
   priorityFees: {
-    units: 500_000,
-    microLamports: 1000_000
+    units: DEFAULT_PRIORITY_FEE_UNITS,
+    microLamports :DEFAULT_PRIORITY_FEE_MICRO_LAMPORTS
   }
   // txTip:5_000
 }
