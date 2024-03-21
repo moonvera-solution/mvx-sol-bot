@@ -44,9 +44,9 @@ async function anon() {
   console.log("secret", secret);
 }
 
-anon().then(() => {
-  console.log("done");
-});
+// anon().then(() => {
+//   console.log("done");
+// });
 
 
 // Your code goes here
