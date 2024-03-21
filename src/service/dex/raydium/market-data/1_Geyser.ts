@@ -11,73 +11,73 @@ const NODE_URL = 'https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c
 const headers = { headers: { 'Content-Type': 'application/json', } };
 import { clusterApiUrl, Connection, PublicKey, GetProgramAccountsResponse } from "@solana/web3.js";
 import { formatAmmKeysById } from '../raydium-utils/formatAmmKeysById';
-const wss = new WebSocketServer({ port: 8085 });
-const clients = new Map();
+// const wss = new WebSocketServer({ port: 8085 });
+// const clients = new Map();
 
-async function subNewAmmPool(rpcUrl: string, rpcToken: string) {
-  const createPoolFeeAccount = '7YttLkHDoNj9wyDur5pM1ejNaAvT9X4eqaYcHQqtj2G5'; // only mainnet, dev pls use 3XMrhbv989VxAMi3DErLV9eJht1pHppW5LbKxe9fkEFR
-  const client = new Client(rpcUrl, rpcToken);
-  const rpcConnInfo = await client.subscribe();
+// async function subNewAmmPool(rpcUrl: string, rpcToken: string) {
+//   const createPoolFeeAccount = '7YttLkHDoNj9wyDur5pM1ejNaAvT9X4eqaYcHQqtj2G5'; // only mainnet, dev pls use 3XMrhbv989VxAMi3DErLV9eJht1pHppW5LbKxe9fkEFR
+//   const client = new Client(rpcUrl, rpcToken);
+//   const rpcConnInfo = await client.subscribe();
 
-  let request = 0;
-  wss.on('connection', (ws: any, req: any) => {
-    const id = new url.URL(req.url, `ws://${req.headers.host}`).searchParams.get('id');
-    clients.set(id, ws);
+//   let request = 0;
+//   wss.on('connection', (ws: any, req: any) => {
+//     const id = new url.URL(req.url, `ws://${req.headers.host}`).searchParams.get('id');
+//     clients.set(id, ws);
 
-    ws.on('close', () => {
-      clients.delete(id);
-    });
-  });
+//     ws.on('close', () => {
+//       clients.delete(id);
+//     });
+//   });
 
-  rpcConnInfo.on("data", data => {
-    request++
-    const [id, client] = clients.entries().next().value || [];
+//   rpcConnInfo.on("data", data => {
+//     request++
+//     const [id, client] = clients.entries().next().value || [];
 
-    if (client && client.readyState === WebSocket.OPEN) {
-      console.log(id, " handle request ", request)
-      // client.send(data);
-      client.send(JSON.stringify(data, null, 2));
-      clients.delete(id);
-    } else {
-      console.log("No client for request ", request);
-    }
-  });
+//     if (client && client.readyState === WebSocket.OPEN) {
+//       console.log(id, " handle request ", request)
+//       // client.send(data);
+//       client.send(JSON.stringify(data, null, 2));
+//       clients.delete(id);
+//     } else {
+//       console.log("No client for request ", request);
+//     }
+//   });
 
-  await new Promise<void>((resolve, reject) => {
-    if (rpcConnInfo === undefined) throw Error('rpc conn error')
-    rpcConnInfo.write({
-      slots: {},
-      accounts: {},
-      transactions: {
-        transactionsSubKey: {
-          accountInclude: [createPoolFeeAccount],
-          accountExclude: [],
-          accountRequired: []
-        }
-      },
-      blocks: {},
-      blocksMeta: {},
-      accountsDataSlice: [],
-      entry: {},
-      commitment: 1
-    }, (err: Error) => {
-      if (err === null || err === undefined) {
-        resolve();
-      } else {
-        reject(err);
-      }
-    });
-  }).catch((reason) => {
-    console.error(reason);
-    throw reason;
-  });
-}
+//   await new Promise<void>((resolve, reject) => {
+//     if (rpcConnInfo === undefined) throw Error('rpc conn error')
+//     rpcConnInfo.write({
+//       slots: {},
+//       accounts: {},
+//       transactions: {
+//         transactionsSubKey: {
+//           accountInclude: [createPoolFeeAccount],
+//           accountExclude: [],
+//           accountRequired: []
+//         }
+//       },
+//       blocks: {},
+//       blocksMeta: {},
+//       accountsDataSlice: [],
+//       entry: {},
+//       commitment: 1
+//     }, (err: Error) => {
+//       if (err === null || err === undefined) {
+//         resolve();
+//       } else {
+//         reject(err);
+//       }
+//     });
+//   }).catch((reason) => {
+//     console.error(reason);
+//     throw reason;
+//   });
+// }
 async function radiumPools() {
   try {
-    subNewAmmPool(
-      'https://moonvera-pit.rpcpool.com',
-      '6eb499c8-2570-43ab-bad8-fdf1c63b2b41'
-    );
+    // subNewAmmPool(
+    //   'https://moonvera-pit.rpcpool.com',
+    //   '6eb499c8-2570-43ab-bad8-fdf1c63b2b41'
+    // );
   } catch (e: any) {
     console.error("Error: ", e.message);
   }
