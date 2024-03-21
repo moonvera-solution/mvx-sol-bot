@@ -7,20 +7,49 @@ import dotenv from 'dotenv';
 import { PublicKey } from "@metaplex-foundation/js";
 import bs58 from "bs58";
 import { RAYDIUM_POOL_TYPE, DEFAULT_PUBLIC_KEY, DefaultPoolInfoData } from '../../service/util/types';
-
+import { SecretsManagerClient, GetSecretValueCommand, } from "@aws-sdk/client-secrets-manager";
 dotenv.config();
 const user = encodeURIComponent(process.env.DB_USER!);
 const password = encodeURIComponent(process.env.DB_PASSWORD!);
 const ec2_user = encodeURIComponent(process.env.EC2_CRON_USER!);
 const ec2_password = encodeURIComponent(process.env.EC2_DB_PASSWORD!);
-
 const isProd = process.env.NODE_ENV == 'PROD';
-
-const authMechanism = 'SCRAM-SHA-1';
-
 const local_url = `mongodb://127.0.0.1:27017/test`;
+const SOL_TOKEN = "So11111111111111111111111111111111111111112";
 
 
+// https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/getting-started.html
+async function anon() {
+  const secret_name = "mvx-bot-db";
+  const client = new SecretsManagerClient({
+    region: "ca-central-1",
+  });
+
+  let response;
+
+  try {
+    response = await client.send(
+      new GetSecretValueCommand({
+        SecretId: secret_name,
+        VersionStage: "AWSCURRENT", // VersionStage defaults to AWSCURRENT if unspecified
+      })
+    );
+  } catch (error) {
+    // For a list of exceptions thrown, see
+    // https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+    throw error;
+  }
+
+  const secret = response.SecretString;
+  console.log("secret", secret);
+}
+
+anon().then(() => {
+  console.log("done");
+});
+
+
+// Your code goes here
 /**
  * All DB functions are prefized with an underscore (_)
  */
@@ -43,8 +72,6 @@ export async function _initDbConnection() {
     console.log("Connected to DB");
   });
 }
-
-const SOL_TOKEN = "So11111111111111111111111111111111111111112";
 
 export async function _findSOLPoolByBaseMint(baseMintValue: PublicKey): Promise<RAYDIUM_POOL_TYPE> {
   try {
@@ -154,8 +181,6 @@ export async function _generateReferralLink(ctx: any, walletAddress: PublicKey) 
 
   return referralLink;
 }
-
-
 
 export async function _getReferralData(ctx: any) {
   const chatId = ctx.chat.id;

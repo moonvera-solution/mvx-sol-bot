@@ -234,6 +234,6 @@ async function _runCron() {
     // await cleanDb()
     setInterval(_runCronJob, 5 * 60 * 1000); // then every 5 min
 }
-_runCron();
+// _runCron();
 
 

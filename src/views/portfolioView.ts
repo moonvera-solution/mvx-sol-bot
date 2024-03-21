@@ -1,5 +1,5 @@
 import { USERPOSITION_TYPE } from '@/service/util/types';
-import { UserPositions, _initDbConnection } from '../db';
+import { UserPositions } from '../db';
 import { connection, wallet } from '../../config';
 import { ISESSION_DATA } from '../service/util/types';
 import { PublicKey } from '@metaplex-foundation/js';
@@ -31,7 +31,14 @@ export async function display_spl_positions(
             const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
             let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
 
-            if (!userBalance.gt(0)) continue;
+            if (!userBalance.gt(0)) {
+                await UserPositions.updateOne(
+                    { walletId: userWallet },
+                    { $pull: { positions: { baseMint: token } } }
+                );
+                continue;
+            }
+            
             let poolKeys = await getRayPoolKeys(token);
 
             const tokenInfo = await quoteToken({
