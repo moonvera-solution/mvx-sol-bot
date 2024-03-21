@@ -19,7 +19,7 @@ const SOL_TOKEN = "So11111111111111111111111111111111111111112";
 
 
 // https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/getting-started.html
-async function anon() {
+export async function anon() {
   const secret_name = "mvx-bot-db";
   const client = new SecretsManagerClient({
     region: "ca-central-1",
@@ -43,10 +43,6 @@ async function anon() {
   const secret = response.SecretString;
   console.log("secret", secret);
 }
-
-// anon().then(() => {
-//   console.log("done");
-// });
 
 
 // Your code goes here

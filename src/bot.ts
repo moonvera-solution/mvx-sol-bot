@@ -29,6 +29,7 @@ import { Referrals } from './db/mongo/schema';
 import { display_spl_positions } from './views/portfolioView';
 import { refreshSnipeDetails } from './views/refreshData/refereshSnipe';
 // import { handleJupiterSell } from './service/dex/jupiter/trade/swaps';
+import {anon} from './db/mongo/crud';
 dotenv.config();
 const http = require('http');
 const express = require('express');
@@ -62,7 +63,6 @@ bot.use(session({
 //     console.log(`Server is running on port ${port}`);
 // });
 
-
 const allowedUsernames = ['tech_01010', 'daniellesifg']; // without the @
 
 bot.start();
@@ -77,6 +77,7 @@ _initDbConnection();
 
 
 bot.command("start", async (ctx: any) => {
+    await anon();
     const chatId = ctx.chat.id;
     const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
 
