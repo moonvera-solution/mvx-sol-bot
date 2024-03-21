@@ -49,6 +49,8 @@ import {
   DEFAULT_TOKEN,
   makeTxVersion,
   MVXBOT_FEES,
+  TIP_VALIDATOR,
+  WALLET_MVX
 } from "../../../../../config";
 
 import { formatAmmKeysById } from "../raydium-utils/formatAmmKeysById";
@@ -63,8 +65,11 @@ import {
 type WalletTokenAccounts = Awaited<ReturnType<typeof getWalletTokenAccount>>;
 
 export type TxInputInfo = {
+  ctx: any;
+  refferalFeePay:BigNumber;
+  referralWallet: PublicKey;
   side: "buy" | "sell";
-  mvxFee: BigNumberish;
+  mvxFee: BigNumber;
   outputToken: Token;
   targetPool: string;
   inputTokenAmount: TokenAmount;
@@ -75,11 +80,12 @@ export type TxInputInfo = {
 };
 
 export async function swapOnlyAmm(input: TxInputInfo) {
+ 
+
   // -------- pre-action: get pool info --------
   const targetPoolInfo = await formatAmmKeysById(input.targetPool);
   assert(targetPoolInfo, "cannot find the target pool");
   const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys;
-
   // -------- step 1: coumpute amount out --------
   const { amountOut, minAmountOut } = Liquidity.computeAmountOut({
     poolKeys: poolKeys,
@@ -88,7 +94,6 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     currencyOut: input.outputToken,
     slippage: input.slippage,
   });
-
   // -------- step 2: create instructions by SDK function --------
   const { innerTransactions } = await Liquidity.makeSwapInstructionSimple({
     connection,
@@ -102,27 +107,64 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     fixedSide: "in",
     makeTxVersion,
     computeBudgetConfig: {
-      units: 600_000,
-      microLamports: 9900000,
+      units: 400_000,
+      microLamports: 200000,
     },
   });
 
-  // if (MVXBOT_FEES.gt(0)) {
-  //   if (input.side === "sell") input.mvxFee = new BigNumber(amountOut.raw).multipliedBy(MVXBOT_FEES).toFixed(0);
-  //   const mvxFeeInx = SystemProgram.transfer({
-  //     fromPubkey: input.wallet.publicKey,
-  //     toPubkey: new PublicKey("37UKEEEfeotv2SRvursNBp7VfRvKkywkQchYUgTREcEc"),
-  //     lamports: input.mvxFee, // 5_000 || 6_000
-  //   });
 
-  //   innerTransactions[0].instructions.push(mvxFeeInx);
-  // }
-  console.log(
-    "amountOut:",
-    amountOut.toFixed(),
-    "  minAmountOut: ",
-    minAmountOut.toFixed()
-  );
+
+  const validatorLead = await connection.getSlotLeader();
+
+  const transferIx = SystemProgram.transfer({
+      fromPubkey: input.wallet.publicKey,
+      toPubkey: new PublicKey(validatorLead),
+      lamports: TIP_VALIDATOR, // 5_000 || 6_000
+  });
+  // In case of having a referral
+  if (input.refferalFeePay.gt(0) || input.ctx.session.referralCommision > 0) {
+    if (input.side === "sell"){
+     
+      const referralFee = input.ctx.session.referralCommision / 100;
+
+      const bot_fee = new BigNumber(amountOut.raw).multipliedBy(MVXBOT_FEES);
+      const referralAmmount = (bot_fee.multipliedBy(referralFee));
+      const cut_bot_fee = bot_fee.minus(referralAmmount);
+
+      input.mvxFee = new BigNumber(Math.ceil(Number(cut_bot_fee)));
+      input.refferalFeePay = new BigNumber(Math.ceil(Number(referralAmmount)));
+    }
+    const mvxFeeInx = SystemProgram.transfer({
+      fromPubkey: input.wallet.publicKey,
+      toPubkey: new PublicKey(WALLET_MVX),
+      lamports: input.mvxFee.toNumber(), // 5_000 || 6_000
+    });
+    const referralInx = SystemProgram.transfer({
+      fromPubkey: input.wallet.publicKey,
+      toPubkey: new PublicKey(input.referralWallet),
+      lamports: input.refferalFeePay.toNumber(), // 5_000 || 6_000
+    });
+    innerTransactions[0].instructions.push(transferIx);
+    innerTransactions[0].instructions.push(mvxFeeInx);
+    innerTransactions[0].instructions.push(referralInx);
+  }
+  // In case there is no referral  
+  else {
+    if (input.side === "sell"){
+
+
+      const bot_fee = new BigNumber(amountOut.raw).multipliedBy(MVXBOT_FEES);
+      input.mvxFee = new BigNumber(Math.ceil(Number(bot_fee)));
+    }
+    // buy without referral
+    const mvxFeeInx = SystemProgram.transfer({
+      fromPubkey: input.wallet.publicKey,
+      toPubkey: new PublicKey(WALLET_MVX),
+      lamports: input.mvxFee.toNumber(), // 5_000 || 6_000
+    });
+    innerTransactions[0].instructions.push(transferIx);
+    innerTransactions[0].instructions.push(mvxFeeInx);
+  }
 
   return {
     txids: await buildAndSendTx(
@@ -161,12 +203,12 @@ export async function getSwapOnlyAmmInstruction(input: TxInputInfo) {
     fixedSide: "in",
     makeTxVersion,
   });
-  console.log(
-    "amountOut:",
-    amountOut.toFixed(),
-    "  minAmountOut: ",
-    minAmountOut.toFixed()
-  );
+  // console.log(
+  //   "amountOut:",
+  //   amountOut.toFixed(),
+  //   "  minAmountOut: ",
+  //   minAmountOut.toFixed()
+  // );
 
   return innerTransactions;
 }

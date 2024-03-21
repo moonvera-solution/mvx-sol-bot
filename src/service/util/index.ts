@@ -588,13 +588,13 @@ export async function waitForConfirmation(txid: string): Promise<boolean> {
 
     while (!isConfirmed && attempts < maxAttempts) {
         attempts++;
-        console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
+        // console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
 
         const status = await getTransactionStatus(txid);
-        console.log('Transaction status:', status);
+        // console.log('Transaction status:', status);
 
         if (status === 'confirmed' || status === 'finalized') {
-            console.log('Transaction is confirmed.');
+            // console.log('Transaction is confirmed.');
             isConfirmed = true;
         } else {
             console.log('Waiting for confirmation...');
@@ -603,7 +603,7 @@ export async function waitForConfirmation(txid: string): Promise<boolean> {
     }
 
     if (!isConfirmed) {
-        console.log('Transaction could not be confirmed within the max attempts.');
+        console.error('Transaction could not be confirmed within the max attempts.');
     }
 
     return isConfirmed;
@@ -628,7 +628,7 @@ export async function getTransactionStatus(txid: string) {
         });
         
         const data = response.data;
-        console.log('Transaction status data:', data);
+        // console.log('Transaction status data:', data);
         // Check if the transaction is confirmed
         if (data.result && data.result.value && data.result.value[0]) {
             return data.result.value[0].confirmationStatus;

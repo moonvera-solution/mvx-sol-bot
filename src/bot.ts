@@ -8,7 +8,7 @@ import { Keypair, PublicKey } from '@solana/web3.js';
 import { _initDbConnection, _findSOLPoolByBaseMint } from "./db/mongo/crud";
 import { handleSettings } from './service/settings';
 import { getSolanaDetails } from './api';
-import { ApiPoolInfoV4 } from "@raydium-io/raydium-sdk";
+import { ApiPoolInfoV4, publicKey } from "@raydium-io/raydium-sdk";
 import { setSnipe } from './service/portfolio/strategies/snipper';
 // import {rugCheck} from './service/rugCheck';
 import { display_token_details, display_snipe_options, handleCloseKeyboard } from './views';
@@ -63,7 +63,7 @@ bot.use(session({
 // });
 
 
-const allowedUsernames = ['tech_01010']; // without the @
+const allowedUsernames = ['tech_01010', 'daniellesifg']; // without the @
 
 bot.start();
 // /********** INIT DB CONNECTION ***** */
@@ -95,7 +95,7 @@ bot.command("start", async (ctx: any) => {
    
     if (referralCode) {
         const referralRecord = await Referrals.findOne({ referralCode: referralCode });
-     
+        console.log('referralRecord', referralRecord);
         if (referralRecord && referralRecord.generatorChatId !== chatId) {
             if (!referralRecord.referredUsers.includes(chatId)) {
                 // Add the user's chatId to the referredUsers array
@@ -104,8 +104,9 @@ bot.command("start", async (ctx: any) => {
                 // Increment the referral count
                 referralRecord.numberOfReferrals! += 1;
                 await referralRecord.save();
-                ctx.session.generatorWallet = referralRecord.generatorWallet;
+                ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
                 ctx.session.referralCommision = referralRecord.commissionPercentage;
+                console.log('ctx.session.referralCommision', ctx.session.referralCommision);
                 // Optional: Notify the user that they have been referred successfully
                 await ctx.reply("Welcome! You have been referred successfully.");
             } else{
@@ -202,15 +203,40 @@ bot.command('rugchecking', async (ctx) => {
 
 })
 bot.command('buy', async (ctx) => {
+    const chatId = ctx.chat.id;
+    const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+    if(referralRecord){
+        console.log('referralRecord', referralRecord.commissionPercentage);
+        ctx.session.referralCommision = referralRecord.commissionPercentage;
+        ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
+
+    }
     ctx.session.latestCommand = 'buy';
     await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to Buy.");
 
 });
 bot.command('sell', async (ctx) => {
+    const chatId = ctx.chat.id;
+    const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+    if(referralRecord){
+        console.log('referralRecord', referralRecord.commissionPercentage);
+        ctx.session.referralCommision = referralRecord.commissionPercentage;
+        ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
+
+    }
     ctx.session.latestCommand = 'sell';
     await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to sell.");
 });
 bot.command('snipe', async (ctx) => {
+    const chatId = ctx.chat.id;
+    const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+    if(referralRecord){
+        console.log('referralRecord', referralRecord.commissionPercentage);
+        ctx.session.referralCommision = referralRecord.commissionPercentage;
+        ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
+
+    }
+
     ctx.session.latestCommand = 'snipe';
     await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to snipe.");
 
@@ -382,7 +408,7 @@ bot.on('message', async (ctx) => {
                     let responseMessage = `<b>Referral Program Details</b>\n\n` +
                     `🔗 <b>Your Referral Link:</b> ${referralLink}\n\n` +
                     `👥 <b>Referrals Count:</b> ${referralData?.count}\n` +
-                    `💰 <b>Total Earnings:</b> ${referralData?.totalEarnings.toFixed(2)} SOL/Token ($${referralData?.totalEarnings.toFixed(2)}) | 0.00 TOKEN ($${referralData?.totalEarnings.toFixed(2)})\n` +
+                    `💰 <b>Total Earnings:</b> ${referralData?.totalEarnings.toFixed(6)} SOL/Token ($${referralData?.totalEarnings.toFixed(2)}) | 0.00 TOKEN ($${referralData?.totalEarnings.toFixed(2)})\n` +
                     `Rewards are credited instantly to your SOL balance.\n\n` +
                     `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals in the first month, 25% in the second month, and 12% on an ongoing basis.\n\n` +
                     `<i>Note: Rewards are updated in real-time and reflect your active contributions to the referral program.</i>`;
@@ -543,6 +569,14 @@ bot.on('callback_query', async (ctx: any) => {
 
             case 'sell': {
                 ctx.session.latestCommand = 'sell';
+                const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+                if(referralRecord){
+                    // console.log('referralRecord', referralRecord.commissionPercentage);
+                    ctx.session.referralCommision = referralRecord.commissionPercentage;
+                    ctx.session.generatorWallet = referralRecord.generatorWallet;
+                    // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
+                    // console.log('ctx.session.generatorWallet', ctx.session.generatorWallet);
+                }
 
                 let tokenToSell = ctx.session.sellToken instanceof PublicKey ? ctx.session.sellToken : undefined;
 
@@ -575,6 +609,14 @@ bot.on('callback_query', async (ctx: any) => {
 
             case 'buy': {
                 ctx.session.latestCommand = 'buy';
+                const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+                if(referralRecord){
+                    // console.log('referralRecord', referralRecord.commissionPercentage);
+                    ctx.session.referralCommision = referralRecord.commissionPercentage;
+                    ctx.session.generatorWallet = referralRecord.generatorWallet;
+                    // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
+                    console.log('ctx.session.generatorWallet', ctx.session.generatorWallet);
+                }
 
                 let tokenToBuy = ctx.session.buyToken instanceof PublicKey ? ctx.session.buyToken : undefined;
 
@@ -604,6 +646,14 @@ bot.on('callback_query', async (ctx: any) => {
                 break;
             }
             case 'snipe': {
+                const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+                if(referralRecord){
+                    // console.log('referralRecord', referralRecord.commissionPercentage);
+                    ctx.session.referralCommision = referralRecord.commissionPercentage;
+                    ctx.session.generatorWallet = referralRecord.generatorWallet;
+                    // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
+                    console.log('ctx.session.generatorWallet', ctx.session.generatorWallet);
+                }
                 const snipeToken = ctx.session.snipeToken;
                 ctx.session.latestCommand = 'snipe';
                 if (snipeToken == DEFAULT_PUBLIC_KEY) {

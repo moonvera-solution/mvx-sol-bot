@@ -145,7 +145,7 @@ export async function _generateReferralLink(ctx: any, walletAddress: PublicKey) 
     } else {
       referralCode = existingReferral.referralCode;
     }
-
+    //MVXBOT_bot for live prod
     referralLink = `https://t.me/stbbot_dev_bot?start=${referralCode}`;
   } catch (error) {
     console.error('Error in _generateReferralLink:', error);

@@ -7,7 +7,7 @@ import {
 } from "@raydium-io/raydium-sdk";
 import { Connection, PublicKey, Keypair, SendOptions, SystemProgram, Signer, Transaction, VersionedTransaction, RpcResponseAndContext, TransactionMessage, SimulatedTransactionResponse } from "@solana/web3.js";
 import { getPoolKeys } from "../../../../src/service/dex/raydium/market-data/PoolsFilter";
-import { connection } from "../../../../config";
+import { connection, MVXBOT_FEES, TIP_VALIDATOR, WALLET_MVX} from "../../../../config";
 import { buildAndSendTx } from '../../util';
 import { saveUserPosition } from '../positions';
 import { amount, token } from "@metaplex-foundation/js";
@@ -20,15 +20,15 @@ import { waitForConfirmation } from '../../util';
 
 export async function setSnipe(ctx: any, amountIn: any) {
     // Returns either the time to wait or indicates pool is already open
-    console.log('ctx.session.priorityFees', ctx.session.priorityFees);
+    // console.log('ctx.session.priorityFees', ctx.session.priorityFees);
 
     console.log('Snipe set ...');
     const snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
-    console.log('snipeToken', snipeToken.toBase58());
+    // console.log('snipeToken', snipeToken.toBase58());
     const rayPoolKeys = await getRayPoolKeys(snipeToken.toBase58());
     const poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
     let liqInfo = await Liquidity.fetchInfo({ connection, poolKeys });
-    console.log('liqInfo', liqInfo.startTime.toNumber());
+    // console.log('liqInfo', liqInfo.startTime.toNumber());
     const amountInLamports = new BigNumber(Number.parseFloat(amountIn)).times(1e9);
     const snipeSlippage = ctx.session.snipeSlippage;
     const currentWalletIdx = ctx.session.activeWalletIndex;
@@ -39,7 +39,7 @@ export async function setSnipe(ctx: any, amountIn: any) {
         dexscreenerURL,
         tokenData,
     } = await getTokenMetadata(ctx, snipeToken.toBase58());
-    console.log('currentWallet', currentWallet);
+    // console.log('currentWallet', currentWallet);
     const userKeypair = await Keypair.fromSecretKey(base58.decode(String(currentWallet.secretKey)));
     ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一    ${amountIn} $${tokenData.symbol} Snipe set...`);
 
@@ -79,6 +79,7 @@ export async function startSnippeSimulation(
 
     const inputTokenAmount = new TokenAmount(_tokenIn, amountIn.toFixed(0), true);
     const minOutTokenAmount = new TokenAmount(_tokenOut, amountOut_with_slippage.toFixed(0), true);
+  
 
     const { innerTransactions } = await Liquidity.makeSwapInstructionSimple({
         connection: connection,
@@ -98,22 +99,70 @@ export async function startSnippeSimulation(
     });
 //0.005  0.01 0.05 0.1 0.2
 //low   medium high very high extreme
-    const mvxFeeInx = SystemProgram.transfer({
+//MVXBOT_FEES
+//mvxFeeInx is the amount of fees to be paid to the bot, it is calculated as a percentage of the amountIn
+// we need to calculate the referral fee and send it to the referral wallet
+//the fees sent to the referral wallet is calculated as a percentage of the mvxFeeInx
+//referralFee
+const referralWallet = ctx.session.generatorWallet;
+const referralFee = ctx.session.referralCommision / 100;
+const bot_fee = new BigNumber(amountIn.multipliedBy(MVXBOT_FEES).toFixed(0)).toNumber();
+const referralAmmount = new BigNumber(bot_fee * (referralFee)).toNumber();
+const cut_bot_fee = (bot_fee - referralAmmount);
+
+let mvxFeeInx: any = null;
+let referralInx: any = null;
+
+    // Tippimg the validator
+    const validatorLead = await connection.getSlotLeader();
+
+    const transferIx = SystemProgram.transfer({
         fromPubkey: userWallet.publicKey,
-        toPubkey: new PublicKey('MvXfSe3TeEwsEi731Udae7ecReLQPgrNuKWZzX6RB41'),
-        lamports: new BigNumber(amountIn.multipliedBy(0.05).toFixed(0)).toNumber(), // 5_000 || 6_000
+        toPubkey: new PublicKey(validatorLead),
+        lamports: TIP_VALIDATOR, // 5_000 || 6_000
     });
 
+    innerTransactions[0].instructions.push(transferIx);
+    if(referralFee > 0){
+        mvxFeeInx = SystemProgram.transfer({
+            fromPubkey: userWallet.publicKey,
+            toPubkey: new PublicKey(WALLET_MVX),
+            lamports: cut_bot_fee, 
+            });
+        referralInx = SystemProgram.transfer({
+                fromPubkey: userWallet.publicKey,
+                toPubkey: new PublicKey(referralWallet),
+                lamports: referralAmmount,
+            });
+        innerTransactions[0].instructions.push(mvxFeeInx);
+        innerTransactions[0].instructions.push(referralInx);
+        // console.log('len', innerTransactions[0].instructions.length);
+        // console.log('innerTransactions', innerTransactions[0].instructions);
+
+
+    } else{
+        mvxFeeInx = SystemProgram.transfer({
+            fromPubkey: userWallet.publicKey,
+            toPubkey: new PublicKey(WALLET_MVX),
+            lamports: bot_fee, // 5_000 || 6_000
+        });
+        innerTransactions[0].instructions.push(mvxFeeInx);
+
+    }
+   
+
+    // Create the transfer instruaction
+    
 
     let bHash = await connection.getLatestBlockhash().then((blockhash) => blockhash.blockhash);
-    innerTransactions[0].instructions.push(mvxFeeInx);
+    // innerTransactions[0].instructions.push(mvxFeeInx);
 
     let tx = new TransactionMessage({
         payerKey: userWallet.publicKey,
-        instructions: innerTransactions[0].instructions,
+        instructions: innerTransactions[0].instructions, 
         recentBlockhash: bHash
     }).compileToV0Message();
-
+    
     let txV = new VersionedTransaction(tx);
     let simulationResult: any;
     let count = 0;
@@ -177,13 +226,14 @@ export async function startSnippeSimulation(
                 }, diff.toNumber());
             }
         }
-    };
+    }
 
     Promise.race([simulateTransaction()]).then((result) => {
         console.log("Promise.race result", result);
     }).catch((error) => {
         console.log("Promise race error", error);
     });
+    
 
 }
 

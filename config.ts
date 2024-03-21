@@ -58,7 +58,11 @@ export const DEFAULT_TOKEN = {
   'SOLFI_SOL_V4_POOL': '46MCgSVT6KdBNK9UiBgyhEUPY3VbJRu8aZ3X1MQKxTeV' // AMM ID
 }
 
-export const MVXBOT_FEES = BigNumber(0.005) //it has to be divided by 100 here
+export const MVXBOT_FEES = BigNumber(0.008) // this is %
+export const TIP_VALIDATOR = 80000 // this is %
+
+
+export const  WALLET_MVX= 'MvXfSe3TeEwsEi731Udae7ecReLQPgrNuKWZzX6RB41';
 /**
  * PAIR addr = DtU8TMzfQAFSTjEcRUBAwBrWzkv6a32maR6FiezV8hGd
  * SOLFI addr = FvVDc6gZmYho6DLLuJ3ptHS6rxb797Cxf1insiUnu2BL

@@ -1,4 +1,4 @@
-import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken } from '@raydium-io/raydium-sdk';
+import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken, publicKey } from '@raydium-io/raydium-sdk';
 import { PublicKey, Keypair, } from '@solana/web3.js';
 import { getWalletTokenAccount, getSolBalance,waitForConfirmation } from '../../util';
 import { DEFAULT_TOKEN, MVXBOT_FEES, connection } from '../../../../config';
@@ -22,6 +22,9 @@ export async function handle_radyum_swap(
     const userWallet = session.portfolio.wallets[session.activeWalletIndex];
     let userSlippage = session.latestSlippage;
     let mvxFee = new BigNumber(0);
+    let refferalFeePay = new BigNumber(0);
+    const referralWallet = ctx.session.generatorWallet;
+
     try {
         const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut));
         const poolKeys = ctx.session.activeTradingPool;
@@ -33,6 +36,7 @@ export async function handle_radyum_swap(
         let tokenIn, outputToken;
         if (side == 'buy') {
             let originalBuyAmt = swapAmountIn;
+            let amountUse = new BigNumber(originalBuyAmt);
             if (userSolBalance == 0 || userSolBalance < swapAmountIn) {
                 await ctx.api.sendMessage(chatId, `Insufficient balance. Your balance is ${userSolBalance} SOL`);
                 return;
@@ -40,7 +44,20 @@ export async function handle_radyum_swap(
             tokenIn = DEFAULT_TOKEN.WSOL;
             outputToken = OUTPUT_TOKEN;
             swapAmountIn = swapAmountIn * Math.pow(10, 9);
-            mvxFee = new BigNumber(swapAmountIn).times(MVXBOT_FEES);
+             // ------------ MVXBOT_FEES  and referral ------------
+             const referralFee = ctx.session.referralCommision / 100;
+             const bot_fee = new BigNumber(amountUse.multipliedBy(MVXBOT_FEES));
+             const referralAmmount = (bot_fee.multipliedBy(referralFee));
+             const cut_bot_fee = bot_fee.minus(referralAmmount);
+
+             if(referralFee > 0){
+                mvxFee = new BigNumber(cut_bot_fee.multipliedBy(1e9));
+                refferalFeePay = new BigNumber(referralAmmount).multipliedBy(1e9);
+             } else{
+                mvxFee = new BigNumber(bot_fee).multipliedBy(1e9);
+             }
+
+            // mvxFee = new BigNumber(swapAmountIn).times(MVXBOT_FEES);
             await ctx.api.sendMessage(chatId, `💸 Buying ${originalBuyAmt} SOL of ${userTokenBalanceAndDetails.userTokenSymbol}`);
         } else {
             if (userTokenBalance == 0) {
@@ -60,8 +77,11 @@ export async function handle_radyum_swap(
 
         if (poolKeys) {
             raydium_amm_swap({
+                ctx,
                 side,
                 mvxFee,
+                refferalFeePay,
+                referralWallet,
                 outputToken,
                 targetPool: poolKeys.id, // ammId
                 inputTokenAmount,
