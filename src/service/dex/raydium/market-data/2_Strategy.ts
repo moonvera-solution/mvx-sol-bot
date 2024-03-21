@@ -10,7 +10,7 @@ import BigNumber from 'bignumber.js';
 import { PublicKey, Connection, Keypair } from "@solana/web3.js";
 const log = (k: any, v: any) => console.log(k, v);
 
-const URL_ONE = 'https://moonvera-ams.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41';
+const URL_ONE = 'https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41';
 const URL_TWO = 'https://moonvera.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41';
 const connection = new Connection(URL_ONE);
 

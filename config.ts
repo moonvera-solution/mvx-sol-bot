@@ -59,7 +59,7 @@ export const DEFAULT_TOKEN = {
 }
 
 export const MVXBOT_FEES = BigNumber(0.008) // this is %
-export const TIP_VALIDATOR = 80000 // this is %
+export const TIP_VALIDATOR = 800000 // this is %
 
 
 export const  WALLET_MVX= 'MvXfSe3TeEwsEi731Udae7ecReLQPgrNuKWZzX6RB41';

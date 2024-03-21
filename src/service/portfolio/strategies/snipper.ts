@@ -116,13 +116,7 @@ let referralInx: any = null;
     // Tippimg the validator
     const validatorLead = await connection.getSlotLeader();
 
-    const transferIx = SystemProgram.transfer({
-        fromPubkey: userWallet.publicKey,
-        toPubkey: new PublicKey(validatorLead),
-        lamports: TIP_VALIDATOR, // 5_000 || 6_000
-    });
-
-    innerTransactions[0].instructions.push(transferIx);
+    
     if(referralFee > 0){
         mvxFeeInx = SystemProgram.transfer({
             fromPubkey: userWallet.publicKey,
@@ -146,7 +140,7 @@ let referralInx: any = null;
             toPubkey: new PublicKey(WALLET_MVX),
             lamports: bot_fee, // 5_000 || 6_000
         });
-        innerTransactions[0].instructions.push(mvxFeeInx);
+        // innerTransactions[0].instructions.push(mvxFeeInx);
 
     }
    

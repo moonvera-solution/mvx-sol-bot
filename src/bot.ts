@@ -762,7 +762,7 @@ bot.on('callback_query', async (ctx: any) => {
             case 'display_spl_positions': await display_spl_positions(ctx); break;
             case 'priority_low':
                 ctx.session.priorityFees = {
-                    units: 500_000,
+                    units: 1000_000,
                     microLamports: 10000_000
                 };
                 ctx.api.sendMessage(chatId, "Priority set to low");
@@ -795,7 +795,7 @@ bot.on('callback_query', async (ctx: any) => {
             case 'priority_extreme':{
                 ctx.session.priorityFees = {
                     units: 1000000,
-                    microLamports: 200000000
+                    microLamports: 550000000
                 };
                 ctx.api.sendMessage(chatId, "Priority set to extreme");
                 break;
