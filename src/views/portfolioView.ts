@@ -95,7 +95,7 @@ function formatSubscriptNumber(num:any) {
     const trimmedDecimalPart = decimalPart.replace(/0+$/, '');
     console.log("trimmedDecimalPart:: ",trimmedDecimalPart);
     // Map the number of trailing zeros to a subscript character
-    const subscriptNumbers = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'];
+    const subscriptNumbers = ['₀', '₁', '₂', '₃', '₄', '₅','₆', '₇', '₈', '₉'];
     const subscript = trailingZeros > 0 ? subscriptNumbers[trailingZeros] : '';
     console.log("subscript:: ",subscript);
 

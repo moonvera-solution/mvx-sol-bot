@@ -38,6 +38,7 @@ export interface ISESSION_DATA {
   snipeToken: PublicKey;
   snipeAmount: number;
   snipeSlippage: number;
+  snipeStatus:boolean;
   buyTokenHistory: PublicKey[];
   sellTokenHistory: PublicKey[];
   tokenHistory: PublicKey[];
@@ -109,6 +110,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   buyToken: DEFAULT_PUBLIC_KEY,
   sellToken: DEFAULT_PUBLIC_KEY,
   snipeToken: DEFAULT_PUBLIC_KEY,
+  snipeStatus:true,
   snipeAmount: 0,
   snipeSlippage: 20,
   poolTime: 0,

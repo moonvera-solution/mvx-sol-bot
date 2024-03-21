@@ -495,7 +495,6 @@ bot.on('callback_query', async (ctx: any) => {
                 }
                 break;
             }
-
             case 'refresh_start': await handleRefreshStart(ctx);
                 break;
             case 'refrech_rug_check': await Refresh_rugCheck(ctx); break;
@@ -572,7 +571,6 @@ bot.on('callback_query', async (ctx: any) => {
                 ctx.api.sendMessage(chatId, "Please provide the token address for a rug pull analysis.");
                 break;
             }
-
             case 'sell': {
                 ctx.session.latestCommand = 'sell';
                 const referralRecord = await Referrals.findOne({ referredUsers: chatId });
@@ -612,7 +610,6 @@ bot.on('callback_query', async (ctx: any) => {
                 }
                 break;
             }
-
             case 'buy': {
                 ctx.session.latestCommand = 'buy';
                 const referralRecord = await Referrals.findOne({ referredUsers: chatId });
@@ -667,6 +664,10 @@ bot.on('callback_query', async (ctx: any) => {
                 } else {
                     await display_snipe_options(ctx);
                 }
+                break;
+            }
+            case 'cancel_snipe':{
+                ctx.session.snipeStatus = false;
                 break;
             }
             case 'set_slippage': {

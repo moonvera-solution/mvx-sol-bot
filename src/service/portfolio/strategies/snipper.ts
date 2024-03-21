@@ -7,7 +7,7 @@ import {
 } from "@raydium-io/raydium-sdk";
 import { Connection, PublicKey, Keypair, SendOptions, SystemProgram, Signer, Transaction, VersionedTransaction, RpcResponseAndContext, TransactionMessage, SimulatedTransactionResponse } from "@solana/web3.js";
 import { getPoolKeys } from "../../../../src/service/dex/raydium/market-data/PoolsFilter";
-import { connection, MVXBOT_FEES, TIP_VALIDATOR, WALLET_MVX ,SNIPE_SIMULATION_COUNT_LIMIT} from "../../../../config";
+import { connection, MVXBOT_FEES, TIP_VALIDATOR, WALLET_MVX, SNIPE_SIMULATION_COUNT_LIMIT } from "../../../../config";
 import { buildAndSendTx } from '../../util';
 import { saveUserPosition } from '../positions';
 import { amount, token } from "@metaplex-foundation/js";
@@ -15,7 +15,7 @@ const log = (k: any, v: any) => console.log(k, v);
 import base58 from 'bs58';
 import { getRayPoolKeys, getPoolScheduleFromHistory } from "../../dex/raydium/market-data/1_Geyser";
 import { getTokenMetadata } from "../../feeds";
-import { waitForConfirmation,getSolBalance } from '../../util';
+import { waitForConfirmation, getSolBalance } from '../../util';
 
 
 export async function setSnipe(ctx: any, amountIn: any) {
@@ -34,7 +34,17 @@ export async function setSnipe(ctx: any, amountIn: any) {
     const { tokenData } = await getTokenMetadata(ctx, snipeToken.toBase58());
 
     const userKeypair = await Keypair.fromSecretKey(base58.decode(String(currentWallet.secretKey)));
-    ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一    ${amountIn} $${tokenData.symbol} Snipe set...`);
+    await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一   ${amountIn} $${tokenData.symbol} Snipe set...`);
+    await ctx.api.sendMessage(ctx.chat.id, 'find how to delete this fucking message',
+        {
+            parse_mode: 'HTML',
+            disable_web_page_preview: true,
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: '❌ Cancel Snipe ', callback_data: 'cancel_snipe' }],
+                ]
+            },
+        });
 
     // Start the simulation without waiting for it to complete
     const poolStartTime = liqInfo.startTime.toNumber();
@@ -102,7 +112,7 @@ export async function startSnippeSimulation(
     //referralFee
     const referralWallet = ctx.session.generatorWallet;
     const referralFee = ctx.session.referralCommision / 100;
-    
+
     console.log('referralWallet', referralWallet);
     console.log('referralFee', referralFee);
 
@@ -173,7 +183,8 @@ export async function startSnippeSimulation(
 
     const simulateTransaction = async () => {
         let txSign: any;
-        while (sim && count < SNIPE_SIMULATION_COUNT_LIMIT) {
+        let snipeStatus:boolean = ctx.session.snipeStatus;
+        while (sim && snipeStatus && count < SNIPE_SIMULATION_COUNT_LIMIT) {
             count++
             simulationResult = await connection.simulateTransaction(txV, { replaceRecentBlockhash: true, commitment: 'confirmed' });
             const regex = /Error: exceeds desired slippage limit/;
@@ -235,7 +246,7 @@ export async function startSnippeSimulation(
                 }, diff.toNumber());
             }
         }
-        if(count == SNIPE_SIMULATION_COUNT_LIMIT){
+        if (count == SNIPE_SIMULATION_COUNT_LIMIT) {
             await ctx.api.sendMessage(chatId, `🔴 Snipe fail, busy Network, try again.`);
             console.info('error');
             return;
