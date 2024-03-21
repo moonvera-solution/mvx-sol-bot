@@ -34,7 +34,7 @@ async function anon() {
         VersionStage: "AWSCURRENT", // VersionStage defaults to AWSCURRENT if unspecified
       })
     );
-  } catch (error) {
+  } catch (error:any) {
     // For a list of exceptions thrown, see
     // https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
     throw error;
@@ -55,7 +55,6 @@ async function anon() {
  */
 export async function _initDbConnection() {
   // const db =  await mongoose.connect(local_url, { useNewUrlParser: true, useUnifiedTopology: true });
-
   mongoose.connect(local_url, {
     /** Set to false to [disable buffering](http://mongoosejs.com/docs/faq.html#callback_never_executes) on all models associated with this connection. */
     /** The name of the database you want to use. If not provided, Mongoose uses the database name from connection string. */
@@ -201,7 +200,7 @@ export async function _getReferralData(ctx: any) {
       commissionPercentage: referralRecord.commissionPercentage,
       count: referralRecord.numberOfReferrals,
     };
-  } catch (error) {
+  } catch (error:any) {
     console.error('Error fetching referral data:', error);
     return null; // handle the error 
   }
