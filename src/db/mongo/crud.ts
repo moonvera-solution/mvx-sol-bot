@@ -42,12 +42,6 @@ export async function anon() :Promise<any> {
   return response.SecretString;
 }
 
-// anon().then(() => {
-//   console.log("done");
-// });
-
-
-// Your code goes here
 /**
  * All DB functions are prefized with an underscore (_)
  */
