@@ -10,7 +10,7 @@ import { raydium_amm_swap } from '../../dex';
 import BigNumber from 'bignumber.js';
 import axios from 'axios';
 import bs58 from 'bs58';
-import { Referrals } from '../../../db/mongo/schema';
+import { Referrals, UserPositions } from '../../../db/mongo/schema';
 
 
 export async function handle_radyum_swap(
@@ -25,6 +25,7 @@ export async function handle_radyum_swap(
     let mvxFee = new BigNumber(0);
     let refferalFeePay = new BigNumber(0);
     const referralWallet = ctx.session.generatorWallet;
+  
 
     try {
         const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut));
@@ -35,6 +36,19 @@ export async function handle_radyum_swap(
         let userTokenBalance = userTokenBalanceAndDetails.userTokenBalance;
         let tokenIn, outputToken;
         const referralFee = ctx.session.referralCommision / 100;
+        // ------- check user balanace in DB --------
+        const userPosition = await UserPositions.findOne({ walletId: userWallet.publicKey });
+        let oldPositionSol: number = 0;
+        let oldPositionToken: number = 0;
+        if (userPosition) {
+            const existingPositionIndex = userPosition.positions.findIndex(
+                position => position.baseMint === tokenOut.toString()
+            );
+         if(userPosition.positions[existingPositionIndex]){
+            oldPositionSol = userPosition?.positions[existingPositionIndex].amountIn
+            oldPositionToken = userPosition?.positions[existingPositionIndex].amountOut!
+         }
+        } 
         if (side == 'buy') {
             let originalBuyAmt = swapAmountIn;
             let amountUse = new BigNumber(originalBuyAmt);
@@ -152,10 +166,11 @@ export async function handle_radyum_swap(
                         saveUserPosition(
                             userWallet.publicKey.toString(), {
                             baseMint: poolKeys.baseMint,
+                            name: userTokenBalanceAndDetails.userTokenName,
                             symbol: _symbol,
                             tradeType: `ray_swap_${side}`,
-                            amountIn: swapAmountIn,
-                            amountOut: extractAmount && tokenAmount,
+                            amountIn: oldPositionSol? oldPositionSol + swapAmountIn : swapAmountIn,
+                            amountOut:  oldPositionToken? oldPositionToken + Number(extractAmount) : extractAmount,
                         });
                     }
                     ctx.session.latestCommand = side;

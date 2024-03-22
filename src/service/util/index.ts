@@ -583,7 +583,7 @@ export function isValidBase58(str: any) {
 
 export async function waitForConfirmation(txid: string): Promise<boolean> {
     let isConfirmed = false;
-    const maxAttempts = 200;
+    const maxAttempts = 500;
     let attempts = 0;
 
     while (!isConfirmed && attempts < maxAttempts) {

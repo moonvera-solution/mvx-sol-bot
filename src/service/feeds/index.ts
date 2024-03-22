@@ -83,7 +83,8 @@ export async function getUserTokenBalanceAndDetails(userWallet: PublicKey, token
         return {
             userTokenBalance: userBalanceTest,
             decimals: tokenD.mint.currency.decimals,
-            userTokenSymbol: tokenD.mint.currency.symbol
+            userTokenSymbol: tokenD.mint.currency.symbol,
+            userTokenName: tokenD.name
         }
     
     } catch (error) {

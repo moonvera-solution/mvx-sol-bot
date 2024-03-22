@@ -16,7 +16,7 @@ import base58 from 'bs58';
 import { getRayPoolKeys, getPoolScheduleFromHistory } from "../../dex/raydium/market-data/1_Geyser";
 import { getTokenMetadata } from "../../feeds";
 import { waitForConfirmation, getSolBalance } from '../../util';
-import { Referrals } from "../../../db/mongo/schema";
+import { Referrals, UserPositions } from "../../../db/mongo/schema";
 
 
 export async function setSnipe(ctx: any, amountIn: any) {
@@ -90,11 +90,23 @@ export async function startSnippeSimulation(
     const computeBudgetMicroLamports = ctx.session.priorityFees.microLamports;
     const totalComputeBudget = computeBudgetMicroLamports * (computeBudgetUnits / 1e6);
     // console.log('totalComputeBudget', totalComputeBudget);
+      // ------- check user balanace in DB --------
+      const userPosition = await UserPositions.findOne({ walletId: userWallet.publicKey });
+      let oldPositionSol: number = 0;
+      let oldPositionToken: number = 0;
+      if (userPosition) {
+          const existingPositionIndex = userPosition.positions.findIndex(
+              position => position.baseMint === _tokenOut.toString()
+          );
+       if(userPosition.positions[existingPositionIndex]){
+          oldPositionSol = userPosition?.positions[existingPositionIndex].amountIn
+          oldPositionToken = userPosition?.positions[existingPositionIndex].amountOut!
+       }
+      } 
     
     //-------------- Update Earnings referal on Db ----------------
     const referralRecord = await Referrals.findOne({ referredUsers: chatId });
     let actualEarnings = referralRecord?.earnings;
-
     const { innerTransactions } = await Liquidity.makeSwapInstructionSimple({
         connection: connection,
         poolKeys: poolKeys,
@@ -215,6 +227,7 @@ export async function startSnippeSimulation(
                             const isConfirmed = await waitForConfirmation(txids[0]);
 
                             if (isConfirmed) {
+                                // console.log('isConfirmed', isConfirmed);
                                 const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
                                 const txAmount = JSON.parse(JSON.stringify(txxs!.meta!.innerInstructions![0].instructions));
                                 let extractAmount;
@@ -239,10 +252,11 @@ export async function startSnippeSimulation(
                                     saveUserPosition(
                                         userWallet.publicKey.toString(), {
                                         baseMint: poolKeys.baseMint,
+                                        name: tokenData.name,
                                         symbol: tokenData.symbol,
                                         tradeType: `ray_swap_buy`,
-                                        amountIn: amountIn.toNumber(),
-                                        amountOut: amountOut.toNumber()
+                                        amountIn: oldPositionSol? oldPositionSol + amountIn.toNumber(): amountIn.toNumber(),
+                                        amountOut: oldPositionToken? oldPositionToken + Number(extractAmount) : Number(extractAmount)
                                     });
 
              

@@ -44,7 +44,7 @@ bot.use(session({
 // Set the webhook
 const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
 // console.log('botToken', botToken);
-const webhookUrl = `https://8d44-74-56-136-237.ngrok-free.app`; 
+const webhookUrl = `https://4335-74-56-136-237.ngrok-free.app`; 
 bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
   .then(() => console.log("Webhook set successfully"))
   .catch(err => console.error("Error setting webhook:", err)
@@ -97,7 +97,7 @@ bot.command("start", async (ctx: any) => {
 
     if (referralCode) {
         const referralRecord = await Referrals.findOne({ referralCode: referralCode });
-        console.log('referralRecord', referralRecord);
+        // console.log('referralRecord', referralRecord);
         if (referralRecord && referralRecord.generatorChatId !== chatId) {
             if (!referralRecord.referredUsers.includes(chatId)) {
                 // Add the user's chatId to the referredUsers array
@@ -425,7 +425,7 @@ bot.on('message', async (ctx) => {
                         `Rewards are credited instantly to your SOL balance.\n\n` +
                         `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals in the first month, 25% in the second month, and 12% on an ongoing basis.\n\n` +
                         `Your total earnings have been sent to your referral wallet <b>${recipientAddress}</b>.\n\n` +
-                        `<i>Note: Rewards are updated in real-time and reflect your active contributions to the referral program.</i>`;
+                        `<i>Note: Rewards are updated and sent in real-time and reflect your active contributions to the referral program.</i>`;
                     const options: any = {
                         reply_markup: JSON.stringify({
                             inline_keyboard: [
@@ -491,7 +491,7 @@ bot.on('callback_query', async (ctx: any) => {
                         `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals in the first month, 25% in the second month, and 12% on an ongoing basis.\n\n` +
                         `<i>Your total earnings have been sent to your referral wallet.</i>\n\n` +
                         `<code><b>${referralData?.referralWallet}</b></code>\n\n` +
-                        `<i>Note: Rewards are updated in real-time and reflect your active contributions to the referral program.</i>`; // Fetch referral data
+                        `<i>Note: Rewards are updated and sent in real-time and reflect your active contributions to the referral program.</i>`; // Fetch referral data
                         
                         const options = {
                             reply_markup: JSON.stringify({

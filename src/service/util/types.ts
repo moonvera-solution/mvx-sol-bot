@@ -165,9 +165,11 @@ export type USERPOSITION_TYPE = {
   positions:[
     {
       baseMint: string;
+      name: string;
       symbol: string;
       tradeType: string;
       amountIn: number;
-      amountOut: number | undefined;    }
+      amountOut: number | undefined;  
+    }
   ]
 }

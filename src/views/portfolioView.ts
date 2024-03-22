@@ -14,13 +14,13 @@ export async function display_spl_positions(
 ) {
     const userWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex].publicKey;
     const userPosition: any = await UserPositions.find({ walletId: userWallet });
-    console.log("userPosition:: ", userPosition[0].positions.length);
+
     
-    let messageText = userPosition[0].positions.length == 0 ? `No positions found.` : `Current positions: `;
-    let buttons: any = [];
+    let messageParts = [];
     let dynamicCallback;
     const solprice = await getSolanaDetails();
     
+    let messageText = userPosition[0].positions.length == 0 ? `No positions found.` : `Current positions:`;
 
     if (userPosition && userPosition[0].positions) {
         for (let index in userPosition[0].positions) {
@@ -30,7 +30,7 @@ export async function display_spl_positions(
 
             const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
             let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
-
+            console.log("userBalance:: ", userBalance.toNumber());
             if (!userBalance.gt(0)) {
                 await UserPositions.updateOne(
                     { walletId: userWallet },
@@ -50,65 +50,68 @@ export async function display_spl_positions(
             });
 
             const tokenPriceSOL = tokenInfo.price;
-            console.log("tokenPriceSOL:: ", tokenPriceSOL.toNumber());
+            // console.log("tokenPriceSOL:: ", tokenPriceSOL.toNumber());
 
             const tokenPriceUSD = tokenInfo.price.times(solprice);
-            console.log("tokenPriceUSD:: ", tokenPriceUSD.toNumber());
+            // console.log("tokenPriceUSD:: ", tokenPriceUSD.toNumber());
 
             const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
 
             let quoteUSD = await formatSubscriptNumber(tokenPriceUSD);
             let quoteSOL = await formatSubscriptNumber(tokenPriceSOL);
             let usrBalance = await formatSubscriptNumber(displayUserBalance);
+            // console.log("subNumberformatted:: ", tokenPriceSOL);
+            let positionDetails = `Position ${parseInt(index) + 1}:\n` +
+            `Token: ${pos.name} (${pos.symbol})\n` +
+            `Token Balance: ${userBalance.div} <b>${pos.symbol}</b> | ${quoteUSD} <b>USD</b> | ${quoteSOL} <b>SOL</b>\n` +
+            `Initial: ${pos.amountIn / 1e9} <b>SOL</b> | ${(pos.amountIn / 1e9 * solprice).toFixed(2)} <b>USD </b>\n` +
+            `Current: ${pos.amountIn / 1e9} <b>SOL</b> | ${pos.amountIn / 1e9} <b>USD </b>\n` +
+            `Profit: ${0} <b>SOL</b> | ${0}%\n `;
 
-            console.log("subNumberformatted:: ", tokenPriceSOL);
-            dynamicCallback = `_p:${token}`;
-            buttons.push(
-                [
-                    { text: `${pos.symbol}`, callback_data: '_' },
-                    // { text: `${usrBalance}`, callback_data: '_' },
-                    { text: `${quoteSOL} SOL`, callback_data: '_' },
-                    { text: `${pos.amountIn - Number(quoteSOL) / 1e9} SOL`, callback_data: '_' },
-                    { text: `Sell 100%`, callback_data: dynamicCallback }
-                ]
-            )
+                    let dynamicCallback = `_p:${token}`;
+                    let sellButton = [
+                    [{ text: `💰 Sell 100%`, callback_data: dynamicCallback }]
+                    ];
+
+                    messageParts.push({ text: positionDetails, buttons: sellButton, parse_mode: 'HTML'});
         }
     };
 
-    let options = {
-        parse_mode: 'HTML',
-        disable_web_page_preview: true,
-        reply_markup: {
-            inline_keyboard: buttons
-        },
-    };
-    // console.log("buttons:: ",buttons);
-    ctx.api.sendMessage(ctx.chat.id, messageText, options);
+    for (let part of messageParts) {
+        let options = {
+            parse_mode: 'HTML',
+            disable_web_page_preview: true,
+            reply_markup: {
+                inline_keyboard: part.buttons
+            },
+        };
+        await ctx.api.sendMessage(ctx.chat.id, part.text, options);
+    }
 }
 
 async function formatSubscriptNumber(num: any) {
-    console.log("num:: ", num);
+    // console.log("num:: ", num);
     // Convert the number to a BigNumber and then to a fixed string
     const fixedString = new BigNumber(num).toFixed();
-    console.log("fixedString:: ", fixedString);
+    // console.log("fixedString:: ", fixedString);
 
     // Split the string into the integer and decimal parts
     const [integerPart, decimalPart] = fixedString.split('.');
-    console.log("integerPart:: ", integerPart);
-    console.log("decimalPart:: ", decimalPart);
+    // console.log("integerPart:: ", integerPart);
+    // console.log("decimalPart:: ", decimalPart);
 
     // Count the number of trailing zeros in the decimal part
     if (decimalPart) {
         const trailingZeros = (decimalPart.match(/^0*/) || [''])[0].length;
 
-        console.log("trailingZeros:: ", trailingZeros);
+        // console.log("trailingZeros:: ", trailingZeros);
         // Remove the trailing zeros
         const trimmedDecimalPart = decimalPart.replace(/0+/, '');
-        console.log("trimmedDecimalPart:: ", trimmedDecimalPart);
+        // console.log("trimmedDecimalPart:: ", trimmedDecimalPart);
         // Map the number of trailing zeros to a subscript character
         const subscriptNumbers = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'];
         const subscript = trailingZeros > 1 ? subscriptNumbers[trailingZeros - 1] : '';
-        console.log("subscript:: ", subscript);
+        // console.log("subscript:: ", subscript);
         const oneZeroFix = subscript != '' ? subscript == '₀' ? '0' : `0${subscript}` : ''
 
         // Return the formatted string

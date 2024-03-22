@@ -11,6 +11,7 @@ type Commitment = 'processed' | 'confirmed' | 'finalized' | 'recent' | 'single' 
 export async function saveUserPosition(walletId: String, newPosition:
     {
         baseMint: string;
+        name: string;
         symbol: string;
         tradeType: string;
         amountIn: number;
