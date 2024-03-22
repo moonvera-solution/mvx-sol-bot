@@ -39,7 +39,6 @@ export async function anon() :Promise<any> {
     // https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
     throw error;
   }
-  console.log("secret", response.SecretString);
   return response.SecretString;
 }
 
