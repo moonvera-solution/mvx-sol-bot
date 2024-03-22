@@ -28,6 +28,7 @@ import { _generateReferralLink, _getReferralData } from '../src/db/mongo/crud';
 import { Referrals } from './db/mongo/schema';
 import { display_spl_positions } from './views/portfolioView';
 import { refreshSnipeDetails } from './views/refreshData/refereshSnipe';
+import { sol } from '@metaplex-foundation/js';
 // import { handleJupiterSell } from './service/dex/jupiter/trade/swaps';
 dotenv.config();
 const http = require('http');
@@ -40,32 +41,32 @@ bot.use(session({
     initial: () => JSON.parse(JSON.stringify(DefaultSessionData))
 }));
 // Set the webhook
-// const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
-// // console.log('botToken', botToken);
-// const webhookUrl = `https://61b2-74-56-136-237.ngrok-free.app`; 
-// bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
-//   .then(() => console.log("Webhook set successfully"))
-//   .catch(err => console.error("Error setting webhook:", err)
-// );
-// const handleUpdate = webhookCallback(bot, 'express');
+const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
+// console.log('botToken', botToken);
+const webhookUrl = `https://8d44-74-56-136-237.ngrok-free.app`; 
+bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
+  .then(() => console.log("Webhook set successfully"))
+  .catch(err => console.error("Error setting webhook:", err)
+);
+const handleUpdate = webhookCallback(bot, 'express');
 // // Create the HTTP server and define request handling logic
-// app.use(express.json()); // for parsing application/json
+app.use(express.json()); // for parsing application/json
 
-// app.post(`/bot${botToken}`, handleUpdate);
+app.post(`/bot${botToken}`, handleUpdate);
 
-// app.get('/', (req: any, res: any) => {
-//   res.send('Hello from ngrok server!');
-// });
-// // const server = createServer(bot);
-// const port = process.env.PORT || 3000; 
-// app.listen(port, () => {
-//     console.log(`Server is running on port ${port}`);
-// });
+app.get('/', (req: any, res: any) => {
+  res.send('Hello from ngrok server!');
+});
+// const server = createServer(bot);
+const port = process.env.PORT || 3000; 
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
 
 
 const allowedUsernames = ['tech_01010', 'daniellesifg']; // without the @
 
-bot.start();
+// bot.start();
 // /********** INIT DB CONNECTION ***** */
 _initDbConnection();
 
@@ -106,7 +107,8 @@ bot.command("start", async (ctx: any) => {
                 await referralRecord.save();
                 ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
                 ctx.session.referralCommision = referralRecord.commissionPercentage;
-                console.log('ctx.session.referralCommision', ctx.session.referralCommision);
+                // ctx.session.referralEarnings = referralRecord.earnings;
+                // console.log('referralRecord', referralRecord.earnings);
                 // Optional: Notify the user that they have been referred successfully
                 await ctx.reply("Welcome! You have been referred successfully.");
             } else {
@@ -412,13 +414,16 @@ bot.on('message', async (ctx) => {
                     const recipientAddress = new PublicKey(walletAddress)
                     const referralLink = await _generateReferralLink(ctx, recipientAddress);
                     const referralData = await _getReferralData(ctx); // Fetch referral data
-
+                    const referEarningSol = (Number(referralData?.totalEarnings) / 1e9) .toFixed(6);
+                    const details = await getSolanaDetails();
+                    const referEarningDollar = (Number(referEarningSol) * details).toFixed(2) ;
                     let responseMessage = `<b>Referral Program Details</b>\n\n` +
                         `🔗 <b>Your Referral Link:</b> ${referralLink}\n\n` +
                         `👥 <b>Referrals Count:</b> ${referralData?.count}\n` +
-                        `💰 <b>Total Earnings:</b> ${referralData?.totalEarnings.toFixed(6)} SOL/Token ($${referralData?.totalEarnings.toFixed(2)}) | 0.00 TOKEN ($${referralData?.totalEarnings.toFixed(2)})\n` +
+                        `💰 <b>Total Earnings:</b> ${referEarningSol} SOL/Token ($${referEarningDollar}) | 0.00 TOKEN\n` +
                         `Rewards are credited instantly to your SOL balance.\n\n` +
                         `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals in the first month, 25% in the second month, and 12% on an ongoing basis.\n\n` +
+                        `Your total earnings have been sent to your referral wallet <b>${recipientAddress}</b>.\n\n` +
                         `<i>Note: Rewards are updated in real-time and reflect your active contributions to the referral program.</i>`;
                     const options: any = {
                         reply_markup: JSON.stringify({
@@ -427,7 +432,9 @@ bot.on('message', async (ctx) => {
                                 [{ text: 'Close', callback_data: 'closing' }]
                             ],
                         }),
-                        parse_mode: 'HTML'
+                        parse_mode: 'HTML',
+                        disable_web_page_preview: false,
+
                     };
 
                     await ctx.api.sendMessage(chatId, responseMessage, options);
@@ -470,22 +477,30 @@ bot.on('callback_query', async (ctx: any) => {
                         await ctx.api.sendMessage(chatId, "Please provide the wallet address to receive referral rewards.");
                     } else {
                         // Existing referral found, display referral data
-                        const referralData = await _getReferralData(ctx); // Fetch referral data
+                        const referralData = await _getReferralData(ctx);
+                        const referralLink = referralData?.referralLink;
+                        const referEarningSol = (Number(referralData?.totalEarnings) / 1e9) .toFixed(6);
+                        const details = await getSolanaDetails();
+                        const referEarningDollar = (Number(referEarningSol) * details).toFixed(6) ;
                         let responseMessage = `<b>Referral Program Details</b>\n\n` +
-                            `🔗 <b>Your Referral Link:</b> ${referralData?.referralLink}\n\n` +
-                            `👥 <b>Referrals Count:</b> ${referralData?.count}\n` +
-                            `💰 <b>Total Earnings:</b> ${referralData?.totalEarnings.toFixed(2)} SOL ($${referralData?.totalEarnings.toFixed(2)}) | 0.00 TOKEN ($${referralData?.totalEarnings.toFixed(2)}) \n` +
-                            `Rewards are credited instantly to your SOL/TOKEN balance.\n\n` +
-                            `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals in the first month, 25% in the second month, and 12% on an ongoing basis.\n\n` +
-                            `<i>Note: Rewards are updated in real-time and reflect your active contributions to the referral program.</i>`;
-
+                        `🔗 <b>Your Referral Link:</b> ${referralLink}\n\n` +
+                        `👥 <b>Referrals Count:</b> ${referralData?.count}\n` +
+                        `💰 <b>Total Earnings:</b> ${referEarningSol} SOL/Token ($${referEarningDollar}) | 0.00 TOKEN \n` +
+                        `Rewards are credited instantly to your SOL balance.\n\n` +
+                        `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals in the first month, 25% in the second month, and 12% on an ongoing basis.\n\n` +
+                        `<i>Your total earnings have been sent to your referral wallet.</i>\n\n` +
+                        `<code><b>${referralData?.referralWallet}</b></code>\n\n` +
+                        `<i>Note: Rewards are updated in real-time and reflect your active contributions to the referral program.</i>`; // Fetch referral data
+                        
                         const options = {
                             reply_markup: JSON.stringify({
                                 inline_keyboard: [
                                     [{ text: 'Close', callback_data: 'closing' }]
                                 ],
                             }),
-                            parse_mode: 'HTML'
+                            parse_mode: 'HTML',
+                            disable_web_page_preview: false,
+
                         };
                         await ctx.api.sendMessage(chatId, responseMessage, options);
                     }
@@ -655,7 +670,7 @@ bot.on('callback_query', async (ctx: any) => {
                     ctx.session.referralCommision = referralRecord.commissionPercentage;
                     ctx.session.generatorWallet = referralRecord.generatorWallet;
                     // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
-                    console.log('ctx.session.generatorWallet', ctx.session.generatorWallet);
+                    // console.log('ctx.session.generatorWallet', ctx.session.generatorWallet);
                 }
                 const snipeToken = ctx.session.snipeToken;
                 ctx.session.latestCommand = 'snipe';
@@ -668,7 +683,7 @@ bot.on('callback_query', async (ctx: any) => {
             }
             case 'cancel_snipe':{
                 ctx.session.snipeStatus = false;
-                
+
                 break;
             }
             case 'set_slippage': {

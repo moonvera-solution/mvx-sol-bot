@@ -79,18 +79,18 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     fixedSide: "in",
     makeTxVersion,
     computeBudgetConfig: {
-      units: 800_000,
-      microLamports: 2000000,
+      units: 500_000,
+      microLamports: 200000,
     },
   });
 
-  const validatorLead = await connection.getSlotLeader();
+  // const validatorLead = await connection.getSlotLeader();
 
-  const transferIx = SystemProgram.transfer({
-      fromPubkey: input.wallet.publicKey,
-      toPubkey: new PublicKey(validatorLead),
-      lamports: TIP_VALIDATOR, // 5_000 || 6_000
-  });
+  // const transferIx = SystemProgram.transfer({
+  //     fromPubkey: input.wallet.publicKey,
+  //     toPubkey: new PublicKey(validatorLead),
+  //     lamports: TIP_VALIDATOR, // 5_000 || 6_000
+  // });
   // In case of having a referral
   if (input.refferalFeePay.gt(0) || input.ctx.session.referralCommision > 0) {
     if (input.side === "sell"){
@@ -131,7 +131,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
       lamports: input.mvxFee.toNumber(), // 5_000 || 6_000
     });
     // innerTransactions[0].instructions.push(transferIx);
-    // innerTransactions[0].instructions.push(mvxFeeInx);
+    innerTransactions[0].instructions.push(mvxFeeInx);
   }
 
   return {

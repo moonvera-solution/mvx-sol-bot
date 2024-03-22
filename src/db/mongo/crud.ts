@@ -175,6 +175,7 @@ export async function _getReferralData(ctx: any) {
       totalEarnings: referralRecord.earnings,
       commissionPercentage: referralRecord.commissionPercentage,
       count: referralRecord.numberOfReferrals,
+      referralWallet: referralRecord.generatorWallet,
     };
   } catch (error) {
     console.error('Error fetching referral data:', error);

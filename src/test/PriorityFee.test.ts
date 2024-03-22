@@ -3,7 +3,7 @@ import { PublicKey } from "@solana/web3.js";
 import {
   PriotitizationFeeLevels,
 //   getMaxPrioritizationFeeByPercentile,
-  getMeanPrioritizationFeeByPercentile,
+//   getMeanPrioritizationFeeByPercentile,
   getMedianPrioritizationFeeByPercentile,
   getMinPrioritizationFeeByPercentile,
   getRecentPrioritizationFeesByPercentile,
@@ -31,10 +31,43 @@ const getMaxPrioritizationFeeByPercentile = async (
         
     console.log('recentPrioritizationFees', recentPrioritizationFees);
     const maxPriorityFee = recentPrioritizationFees[0].prioritizationFee;
-    console.log('maxPriorityFee', maxPriorityFee);
+    // console.log('maxPriorityFee', maxPriorityFee);
     
     return maxPriorityFee;
 };
+
+ const getMeanPrioritizationFeeByPercentile = async (
+    connection: Connection,
+    config: GetRecentPrioritizationFeesByPercentileConfig,
+    slotsToReturn?: number
+  ): Promise<number> => {
+    const recentPrioritizationFees =
+      await getRecentPrioritizationFeesByPercentile(
+        connection,
+        config,
+        slotsToReturn
+      );
+  
+    const mean = Math.ceil(
+      recentPrioritizationFees.reduce(
+        (acc, fee) => acc + fee.prioritizationFee,
+        0
+      ) / recentPrioritizationFees.length
+    );
+  
+    return mean;
+  };
+
+  async function runMean() {
+    const result = await getMeanPrioritizationFeeByPercentile(connection, {
+        lockedWritableAccounts: [
+            new PublicKey("9Ttyez3xiruyj6cqaR495hbBkJU6SUWdV6AmQ9MvbyyS"),
+        ],
+        percentile: PriotitizationFeeLevels.MAX,
+        fallback: false,
+    });
+    console.log('result_Mean', result);
+  }
 
 async function run() {
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
@@ -44,7 +77,7 @@ async function run() {
         percentile: PriotitizationFeeLevels.MAX,
         fallback: false,
     });
-    console.log('result', result);
+    console.log('result_Max', result);
 }
-
+runMean();
 run();

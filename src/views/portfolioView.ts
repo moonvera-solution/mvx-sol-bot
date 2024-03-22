@@ -15,12 +15,12 @@ export async function display_spl_positions(
     const userWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex].publicKey;
     const userPosition: any = await UserPositions.find({ walletId: userWallet });
     console.log("userPosition:: ", userPosition[0].positions.length);
-
-    let messageText = `Current positions.`;
+    
+    let messageText = userPosition[0].positions.length == 0 ? `No positions found.` : `Current positions: `;
     let buttons: any = [];
     let dynamicCallback;
     const solprice = await getSolanaDetails();
-
+    
 
     if (userPosition && userPosition[0].positions) {
         for (let index in userPosition[0].positions) {

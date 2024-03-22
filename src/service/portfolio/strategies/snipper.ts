@@ -16,6 +16,7 @@ import base58 from 'bs58';
 import { getRayPoolKeys, getPoolScheduleFromHistory } from "../../dex/raydium/market-data/1_Geyser";
 import { getTokenMetadata } from "../../feeds";
 import { waitForConfirmation, getSolBalance } from '../../util';
+import { Referrals } from "../../../db/mongo/schema";
 
 
 export async function setSnipe(ctx: any, amountIn: any) {
@@ -89,6 +90,10 @@ export async function startSnippeSimulation(
     const computeBudgetMicroLamports = ctx.session.priorityFees.microLamports;
     const totalComputeBudget = computeBudgetMicroLamports * (computeBudgetUnits / 1e6);
     // console.log('totalComputeBudget', totalComputeBudget);
+    
+    //-------------- Update Earnings referal on Db ----------------
+    const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+    let actualEarnings = referralRecord?.earnings;
 
     const { innerTransactions } = await Liquidity.makeSwapInstructionSimple({
         connection: connection,
@@ -116,9 +121,6 @@ export async function startSnippeSimulation(
     const referralWallet = ctx.session.generatorWallet;
     const referralFee = ctx.session.referralCommision / 100;
 
-    // console.log('referralWallet', referralWallet);
-    // console.log('referralFee', referralFee);
-
     const bot_fee = new BigNumber(amountIn.multipliedBy(MVXBOT_FEES).toFixed(0)).toNumber();
     const referralAmmount = new BigNumber(bot_fee * (referralFee)).toNumber();
     const cut_bot_fee = (bot_fee - referralAmmount);
@@ -128,16 +130,16 @@ export async function startSnippeSimulation(
     let minimumBalanceNeeded = 0;
     minimumBalanceNeeded += amountIn.toNumber()
     // Tippimg the validator
-    const validatorLead = await connection.getSlotLeader();
+    // const validatorLead = await connection.getSlotLeader();
 
-    const transferIx = SystemProgram.transfer({
-        fromPubkey: userWallet.publicKey,
-        toPubkey: new PublicKey(validatorLead),
-        lamports: TIP_VALIDATOR, // 5_000 || 6_000
-    });
+    // const transferIx = SystemProgram.transfer({
+    //     fromPubkey: userWallet.publicKey,
+    //     toPubkey: new PublicKey(validatorLead),
+    //     lamports: TIP_VALIDATOR, // 5_000 || 6_000
+    // });
 
-    innerTransactions[0].instructions.push(transferIx);
-    minimumBalanceNeeded += TIP_VALIDATOR;
+    // innerTransactions[0].instructions.push(transferIx);
+    // minimumBalanceNeeded += TIP_VALIDATOR;
 
     if (referralFee > 0) {
         mvxFeeInx = SystemProgram.transfer({
@@ -150,6 +152,7 @@ export async function startSnippeSimulation(
             toPubkey: new PublicKey(referralWallet),
             lamports: referralAmmount,
         });
+       
         innerTransactions[0].instructions.push(mvxFeeInx);
         innerTransactions[0].instructions.push(referralInx);
         minimumBalanceNeeded += cut_bot_fee + referralAmmount;
@@ -162,6 +165,7 @@ export async function startSnippeSimulation(
         innerTransactions[0].instructions.push(mvxFeeInx);
         minimumBalanceNeeded += bot_fee;
     }
+   
 
     const userSolBalance = await getSolBalance(userWallet.publicKey);
     console.log('userSolBalance', userSolBalance);
@@ -240,6 +244,15 @@ export async function startSnippeSimulation(
                                         amountIn: amountIn.toNumber(),
                                         amountOut: amountOut.toNumber()
                                     });
+
+             
+                                    if (referralFee > 0) {
+                                        if (referralRecord) {
+                                            let updateEarnings = actualEarnings! + referralAmmount;
+                                            referralRecord.earnings = Number(updateEarnings.toFixed(0));
+                                            await referralRecord?.save();
+                                        }
+                                    } 
                                 }
                             }
                             return txSign

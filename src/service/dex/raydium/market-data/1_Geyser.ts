@@ -219,6 +219,7 @@ export async function getRayPoolKeys(shitcoin: string) {
   while (ammId && keys == undefined) {
     keys = await formatAmmKeysById(ammId.toString());
   }
+  // console.log('keys:', keys);
   return keys;
 }
 // getRayPoolKeys('E83N1Lj9ebLyDKe5unwtzVrUzUaFKpXBdn6tYUyTVEwJ').then((res) => { console.log('res',res)});
