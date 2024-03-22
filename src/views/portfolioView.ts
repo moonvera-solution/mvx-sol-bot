@@ -116,6 +116,13 @@ async function formatSubscriptNumber(num: any) {
     }
 }
 
+
+/**
+ * In this code, we first convert the number to a string and extract the first 5 digits. 
+ * Then, we round the last digit of these 5 digits. If the last digit is 5 or more, 
+ * it gets rounded up to 10, otherwise it gets rounded down to 0.
+ * Finally, we concatenate the first 4 digits with the rounded last digit and convert the result back to a number.
+ */
 function roundLargeNumber(num: string) {
     let strNum = num.toString();
     let firstFiveDigits = strNum.substring(0, 5);
