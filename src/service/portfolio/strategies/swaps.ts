@@ -124,7 +124,7 @@ export async function handle_radyum_swap(
                         confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
                     }
 
-                    if (side.includes('buy')) {
+                    if (side == 'buy') {
                         saveUserPosition(
                             userWallet.publicKey.toString(), {
                             baseMint: poolKeys.baseMint,
