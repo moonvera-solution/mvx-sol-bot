@@ -40,6 +40,7 @@ export const bot = new Bot<MyContext>(process.env.TELEGRAM_BOT_TOKEN!);
 bot.use(session({
     initial: () => JSON.parse(JSON.stringify(DefaultSessionData))
 }));
+
 // Set the webhook
 const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
 // console.log('botToken', botToken);

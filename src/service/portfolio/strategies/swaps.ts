@@ -148,7 +148,7 @@ export async function handle_radyum_swap(
                         await referralRecord?.save();
                     }
 
-                    if (side.includes('buy')) {
+                    if (side == 'buy') {
                         saveUserPosition(
                             userWallet.publicKey.toString(), {
                             baseMint: poolKeys.baseMint,
@@ -174,4 +174,8 @@ export async function handle_radyum_swap(
         console.error("ERROR on handle_radyum_trade: ", e)
     }
 
+}
+
+async function sortAndRemovePosition(){
+    
 }

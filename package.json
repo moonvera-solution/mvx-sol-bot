@@ -2,7 +2,6 @@
   "name": "solfi-bot",
   "version": "1.0.0",
   "description": "It's Sci-Fi trading bot based on the SOLFI token project",
-
   "scripts": {
     "start": "npx ts-node src/bot.ts",
     "build": "npx ts-node",
@@ -11,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-secrets-manager": "^3.496.0",
+    "@aws-sdk/client-secrets-manager": "^3.535.0",
     "@coral-xyz/anchor": "^0.29.0",
     "@grammyjs/storage-mongodb": "^2.4.1",
     "@jup-ag/limit-order-sdk": "^0.1.10",
