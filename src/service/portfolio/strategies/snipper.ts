@@ -44,7 +44,7 @@ export async function setSnipe(ctx: any, amountIn: any) {
         disable_web_page_preview: true,
         reply_markup: {
             inline_keyboard: [
-                [{ text: '❌ Cancel Snipe ', callback_data: 'cancel_snipe' }],
+                [{ text: 'Cancel Snipe ', callback_data: 'cancel_snipe' }],
             ]
         },
     });

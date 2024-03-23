@@ -1,5 +1,5 @@
 import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken, publicKey } from '@raydium-io/raydium-sdk';
-import { PublicKey, Keypair, } from '@solana/web3.js';
+import { PublicKey, Keypair } from '@solana/web3.js';
 import { getWalletTokenAccount, getSolBalance,waitForConfirmation } from '../../util';
 import { DEFAULT_TOKEN, MVXBOT_FEES, connection } from '../../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
@@ -25,7 +25,6 @@ export async function handle_radyum_swap(
     let mvxFee = new BigNumber(0);
     let refferalFeePay = new BigNumber(0);
     const referralWallet = ctx.session.generatorWallet;
-  
 
     try {
         const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut));
@@ -36,7 +35,10 @@ export async function handle_radyum_swap(
         let userTokenBalance = userTokenBalanceAndDetails.userTokenBalance;
         let tokenIn, outputToken;
         const referralFee = ctx.session.referralCommision / 100;
+
+
         // ------- check user balanace in DB --------
+        
         const userPosition = await UserPositions.findOne({ walletId: userWallet.publicKey });
         let oldPositionSol: number = 0;
         let oldPositionToken: number = 0;
@@ -49,6 +51,8 @@ export async function handle_radyum_swap(
             oldPositionToken = userPosition?.positions[existingPositionIndex].amountOut!
          }
         } 
+
+
         if (side == 'buy') {
             let originalBuyAmt = swapAmountIn;
             let amountUse = new BigNumber(originalBuyAmt);
@@ -163,6 +167,7 @@ export async function handle_radyum_swap(
                     }
 
                     if (side == 'buy') {
+
                         saveUserPosition(
                             userWallet.publicKey.toString(), {
                             baseMint: poolKeys.baseMint,

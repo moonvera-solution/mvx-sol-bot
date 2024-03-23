@@ -41,14 +41,7 @@ export async function display_spl_positions(
 
             let poolKeys = await getRayPoolKeys(token);
 
-            const tokenInfo = await quoteToken({
-                baseVault: poolKeys.baseVault,
-                quoteVault: poolKeys.quoteVault,
-                baseDecimals: poolKeys.baseDecimals,
-                quoteDecimals: poolKeys.quoteDecimals,
-                baseSupply: poolKeys.baseMint
-            });
-
+            const tokenInfo = await quoteToken({baseVault: poolKeys.baseVault,quoteVault: poolKeys.quoteVault,baseDecimals: poolKeys.baseDecimals,quoteDecimals: poolKeys.quoteDecimals,baseSupply: poolKeys.baseMint});
             const tokenPriceSOL = tokenInfo.price;
             // console.log("tokenPriceSOL:: ", tokenPriceSOL.toNumber());
 
@@ -63,10 +56,11 @@ export async function display_spl_positions(
             // console.log("subNumberformatted:: ", tokenPriceSOL);
             let positionDetails = `Position ${parseInt(index) + 1}:\n` +
             `Token: ${pos.name} (${pos.symbol})\n` +
-            `Token Balance: ${userBalance.div} <b>${pos.symbol}</b> | ${quoteUSD} <b>USD</b> | ${quoteSOL} <b>SOL</b>\n` +
+            `Token Balance: ${userBalance} <b>${pos.symbol}</b> | ${quoteUSD} <b>USD</b> | ${quoteSOL} <b>SOL</b>\n` +
+            
             `Initial: ${pos.amountIn / 1e9} <b>SOL</b> | ${(pos.amountIn / 1e9 * solprice).toFixed(2)} <b>USD </b>\n` +
             `Current: ${pos.amountIn / 1e9} <b>SOL</b> | ${pos.amountIn / 1e9} <b>USD </b>\n` +
-            `Profit: ${0} <b>SOL</b> | ${0}%\n `;
+            `Profit: ${tokenPriceSOL.minus(pos.amountIn)} <b>SOL</b> | ${0}%\n `;
 
                     let dynamicCallback = `_p:${token}`;
                     let sellButton = [

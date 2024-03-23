@@ -73,11 +73,11 @@ export async function refreshSnipeDetails(ctx: any) {
                 `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
                 `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n ` ;
                 const priorityButtons = [
-                    [{ text: 'Low Priority', callback_data: 'priority_low' }],
-                    [{ text: 'Medium Priority', callback_data: 'priority_medium' }],
-                    [{ text: 'High Priority', callback_data: 'priority_high' }],
-                    [{ text: 'Very High Priority', callback_data: 'priority_very_high' }],
-                    [{ text: 'Extreme Priority', callback_data: 'priority_extreme' }]
+                    [{ text: 'Priority Fees', callback_data: '-' }],
+                    [{ text: 'Low', callback_data: 'priority_low' },
+                    { text:  'Medium', callback_data: 'priority_medium' },
+                    { text:  'High', callback_data: 'priority_high' },
+                    { text:  'Max', callback_data: 'priority_very_high' }],
                 ];
                 options = {
                     parse_mode: 'HTML',
@@ -90,7 +90,7 @@ export async function refreshSnipeDetails(ctx: any) {
                             [{ text: '🎯 0.5 SOL', callback_data: 'snipe_0.5_SOL' }, { text: '🎯 1 SOL', callback_data: 'snipe_1_SOL' }, { text: '🎯 5 SOL', callback_data: 'snipe_5_SOL' }],
                             [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' },{ text: 'Selling Mode 💸', callback_data: 'sell' }],
                             ...priorityButtons,
-                            [{ text: '❌ Close sniping mode ❌', callback_data: 'closing' }]]
+                            [{ text: 'Calcel Snipe', callback_data: 'closing' }]]
                     },
                 };
 

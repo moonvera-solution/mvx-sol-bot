@@ -1,8 +1,7 @@
 import type { RecentPrioritizationFees } from "@solana/web3.js";
-import {
-  Connection,
-  type GetRecentPrioritizationFeesConfig,
-} from "@solana/web3.js";
+import { Connection, type GetRecentPrioritizationFeesConfig,
+    SystemProgram, TransactionMessage, ComputeBudgetProgram, TransactionInstruction,
+   VersionedTransaction,PublicKey } from "@solana/web3.js";
 
 // easy to use values for user convenience
 export const enum PriotitizationFeeLevels {
@@ -204,3 +203,38 @@ export const getRecentPrioritizationFeesByPercentile = async (
 
   return recentPrioritizationFees;
 };
+
+/*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+/*                      SIMULATE INX 4 UNITS                  */
+/*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+  
+export async function getSimulationUnits(
+  connection: Connection,
+  instructions: TransactionInstruction[],
+  payer: PublicKey
+): Promise<number | undefined> {
+
+  const testInstructions = [
+    ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
+    ...instructions,
+  ];
+
+  const testVersionedTxn = new VersionedTransaction(
+    new TransactionMessage({
+      instructions: testInstructions,
+      payerKey: payer,
+      recentBlockhash: PublicKey.default.toString(),
+    }).compileToV0Message()
+  );
+
+  const simulation = await connection.simulateTransaction(testVersionedTxn, {
+    replaceRecentBlockhash: true,
+    sigVerify: false,
+  });
+
+  if (simulation.value.err) {
+    return undefined;
+  }
+
+  return simulation.value.unitsConsumed;
+}
