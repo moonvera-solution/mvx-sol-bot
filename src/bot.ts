@@ -26,6 +26,8 @@ import { _generateReferralLink, _getReferralData } from '../src/db/mongo/crud';
 import { Referrals } from './db/mongo/schema';
 import { display_spl_positions } from './views/portfolioView';
 import { refreshSnipeDetails } from './views/refreshData/refereshSnipe';
+import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
+
 // import { handleJupiterSell } from './service/dex/jupiter/trade/swaps';
 dotenv.config();
 const http = require('http');
@@ -788,46 +790,22 @@ bot.on('callback_query', async (ctx: any) => {
                 break;
             }
             case 'display_spl_positions': await display_spl_positions(ctx); break;
-            case 'priority_low':
-                ctx.session.priorityFees = {
-                    units: 1000_000,
-                    microLamports: 10000_000
-                };
-                ctx.api.sendMessage(chatId, "Priority set to low");
+            case 'priority_low': {
+                ctx.session.priorityFees = PriotitizationFeeLevels.LOW;
                 break;
-            case 'priority_medium':
-                ctx.session.priorityFees = {
-                    units: 500_000,
-                    microLamports: 20000_000
-                };
-                ctx.api.sendMessage(chatId, "Priority set to medium");
+            }
+            case 'priority_medium': {
+                ctx.session.priorityFees = PriotitizationFeeLevels.MEDIUM;
                 break;
+            }
             case 'priority_high': {
-                ctx.session.priorityFees = {
-                    units: 700_000,
-                    microLamports: 99000000
-                };
-                ctx.api.sendMessage(chatId, "Priority set to high");
+                ctx.session.priorityFees = PriotitizationFeeLevels.HIGH;
                 break;
-
             }
             case 'priority_ver_high': {
-                ctx.session.priorityFees = {
-                    units: 1000000,
-                    microLamports: 100000000
-                };
-                ctx.api.sendMessage(chatId, "Priority set to very high");
-                break;
-
-            }
-            case 'priority_extreme': {
-                ctx.session.priorityFees = {
-                    units: 1000000,
-                    microLamports: 550000000
-                };
-                ctx.api.sendMessage(chatId, "Priority set to extreme");
-                break;
-            }
+                ctx.session.priorityFees = PriotitizationFeeLevels.MAX;
+                break
+            };
         }
         ctx.api.answerCallbackQuery(ctx.callbackQuery.id);
     } catch (e: any) {

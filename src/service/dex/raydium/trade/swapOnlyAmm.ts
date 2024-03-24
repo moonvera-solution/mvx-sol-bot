@@ -56,7 +56,6 @@ export type TxInputInfo = {
 };
 
 
-
 async function getPoolKeys(ammId: string): Promise<LiquidityPoolKeys> {
   const targetPoolInfo = await formatAmmKeysById(ammId);
   assert(targetPoolInfo, "cannot find the target pool");
@@ -64,7 +63,6 @@ async function getPoolKeys(ammId: string): Promise<LiquidityPoolKeys> {
 }
 
 export async function swapOnlyAmm(input: TxInputInfo) {
-
   const poolKeys = await getPoolKeys(input.targetPool);
 
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
@@ -96,9 +94,13 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     // computeBudgetConfig: {
     //   units: 500_000,
     //   microLamports: 200000,
-    // },
+    // }, //            
   });
 
+
+  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+  /*                      TIP VALIDATOR                         */
+  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
   // const validatorLead = await connection.getSlotLeader();
 
@@ -155,9 +157,14 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     innerTransactions[0].instructions.push(mvxFeeInx);
   }
 
-  const maxPriorityFee = await getMaxPrioritizationFeeByPercentile(
-    connection, { percentile: PriotitizationFeeLevels.HIGH, fallback: true } // slotsToReturn?: number
+  const maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
+    lockedWritableAccounts: [
+      new PublicKey(input.inputTokenAmount.token),
+    ], percentile: input.ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
+    fallback: true
+  } // slotsToReturn?: number
   );
+  console.log("maxPriorityFee", maxPriorityFee);
 
   const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee, });
 
@@ -168,11 +175,13 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   ]);
 
   if (units) {
+    console.log("units: ", units);
     units = Math.ceil(units * 1.05); // margin of error
     innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units }));
   }
 
   innerTransactions[0].instructions.push(priorityFeeInstruction);
+  console.log("Inx #", innerTransactions[0].instructions.length);
 
   return {
     txids: await buildAndSendTx(
