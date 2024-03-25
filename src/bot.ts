@@ -44,7 +44,7 @@ bot.use(session({
 // Set the webhook
 const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
 // console.log('botToken', botToken);
-const webhookUrl = 'https://c55d-74-56-136-237.ngrok-free.app'; 
+const webhookUrl = 'https://2b9b-74-56-136-237.ngrok-free.app'; 
 bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
   .then(() => console.log("Webhook set successfully"))
   .catch(err => console.error("Error setting webhook:", err)
