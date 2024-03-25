@@ -91,7 +91,7 @@ export async function startSnippeSimulation(
     const totalComputeBudget = computeBudgetMicroLamports * (computeBudgetUnits / 1e6);
     // console.log('totalComputeBudget', totalComputeBudget);
       // ------- check user balanace in DB --------
-      const userPosition = await UserPositions.findOne({ walletId: userWallet.publicKey });
+      const userPosition = await UserPositions.findOne({positionChatId: chatId, walletId: userWallet.publicKey.toString() });
       let oldPositionSol: number = 0;
       let oldPositionToken: number = 0;
       if (userPosition) {
@@ -250,6 +250,7 @@ export async function startSnippeSimulation(
                                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
 
                                     saveUserPosition(
+                                        ctx,
                                         userWallet.publicKey.toString(), {
                                         baseMint: poolKeys.baseMint,
                                         name: tokenData.name,

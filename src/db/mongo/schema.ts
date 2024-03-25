@@ -61,6 +61,7 @@ const ReferralSchema = new Schema<REFERRAL_TYPE>({
 
 });
 const UserPositionSchema = new Schema<USERPOSITION_TYPE>({
+  positionChatId: { type: Number, unique: true },
   walletId: { type: String, unique: true },
   positions: [
     {

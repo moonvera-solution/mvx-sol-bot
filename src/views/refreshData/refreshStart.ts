@@ -44,14 +44,15 @@ export async function handleRefreshStart(ctx: any) {
             // [
             //     { text: '🌎 Website', url: 'https://moonvera.io/' },
             //     { text: '𝚇', url: 'https://twitter.com/moonvera_' }
-               
+
             // ],
             [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
             [{ text: '☑️ Rug Check', callback_data: 'rug_check' }],
             [{ text: '🎯 Turbo Snipe', callback_data: 'snipe' }],
             [{ text: '💱 Buy', callback_data: 'buy' }, { text: 'Sell 📈', callback_data: 'sell' }],
             [{ text: 'ℹ️ Help', callback_data: 'help' }, { text: 'Refer Friends', callback_data: 'refer_friends' }],
-            [ { text: 'Refresh', callback_data: 'refresh_start' }]
+            [{ text: 'Refresh', callback_data: 'refresh_start' }],
+            [{ text: 'Positions', callback_data: 'display_spl_positions' }],
         ],
     }),
     parse_mode: 'HTML'

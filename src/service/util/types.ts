@@ -53,6 +53,7 @@ export interface ISESSION_DATA {
     units: number;
     microLamports: number;
 };
+positionPool: Array<any>;
   
 }
 
@@ -117,7 +118,8 @@ export const DefaultSessionData: ISESSION_DATA = {
   priorityFees: {
     units: DEFAULT_PRIORITY_FEE_UNITS,
     microLamports :DEFAULT_PRIORITY_FEE_MICRO_LAMPORTS
-  }
+  },
+  positionPool: []
   // txTip:5_000
 }
 
@@ -161,6 +163,7 @@ export type REFERRAL_TYPE = {
 };
 
 export type USERPOSITION_TYPE = {
+  positionChatId: number;
   walletId: string;
   positions:[
     {

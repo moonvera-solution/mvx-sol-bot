@@ -2,35 +2,40 @@ import { USERPOSITION_TYPE } from '@/service/util/types';
 import { UserPositions } from '../db';
 import { connection, wallet } from '../../config';
 import { ISESSION_DATA } from '../service/util/types';
-import { PublicKey } from '@metaplex-foundation/js';
+import { PublicKey, sol } from '@metaplex-foundation/js';
 import BigNumber from 'bignumber.js';
 import { SPL_ACCOUNT_LAYOUT, TOKEN_PROGRAM_ID } from '@raydium-io/raydium-sdk';
 import { getSolanaDetails } from "../api/priceFeeds/coinMarket";
 import { getRayPoolKeys } from '../service/dex/raydium/market-data/1_Geyser';
 import { quoteToken } from './util/dataCalculation';
+import { formatNumberToKOrM } from '../service/util';
 
 export async function display_spl_positions(
     ctx: any,
 ) {
+    const chatId = ctx.chat.id;
     const userWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex].publicKey;
-    const userPosition: any = await UserPositions.find({ walletId: userWallet });
-
+    const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userWallet });
+    // console.log("userPosition:: ", userPosition[0]);
     
     let messageParts = [];
-    let dynamicCallback;
-    const solprice = await getSolanaDetails();
     
-    let messageText = userPosition[0].positions.length == 0 ? `No positions found.` : `Current positions:`;
+    const solprice = await getSolanaDetails();
+    // console.log(userPosition[0]?.positions.length)
+    if( userPosition[0].positions.length == 0) {
+            await ctx.api.sendMessage(ctx.chat.id, "No positions found", { parse_mode: 'HTML' });
+            return;
+    }
 
-    if (userPosition && userPosition[0].positions) {
+    if (userPosition && userPosition[0]?.positions) {
         for (let index in userPosition[0].positions) {
 
             let pos = userPosition[0].positions[index];
             const token = String(pos.baseMint);
-
+            
             const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
             let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
-            console.log("userBalance:: ", userBalance.toNumber());
+            // console.log("userBalance:: ", userBalance.toNumber());
             if (!userBalance.gt(0)) {
                 await UserPositions.updateOne(
                     { walletId: userWallet },
@@ -40,39 +45,46 @@ export async function display_spl_positions(
             }
 
             let poolKeys = await getRayPoolKeys(token);
-
-            const tokenInfo = await quoteToken({
+             ctx.session.positionPool.push(poolKeys);
+             const tokenInfo = await quoteToken({
                 baseVault: poolKeys.baseVault,
                 quoteVault: poolKeys.quoteVault,
                 baseDecimals: poolKeys.baseDecimals,
                 quoteDecimals: poolKeys.quoteDecimals,
                 baseSupply: poolKeys.baseMint
             });
-
-            const tokenPriceSOL = tokenInfo.price;
-            // console.log("tokenPriceSOL:: ", tokenPriceSOL.toNumber());
-
-            const tokenPriceUSD = tokenInfo.price.times(solprice);
-            // console.log("tokenPriceUSD:: ", tokenPriceUSD.toNumber());
-
+            const tokenPriceSOL = tokenInfo.price.toNumber();
+            const tokenPriceUSD = tokenInfo.price.times(solprice).toFixed(2);
             const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
-
-            let quoteUSD = await formatSubscriptNumber(tokenPriceUSD);
-            let quoteSOL = await formatSubscriptNumber(tokenPriceSOL);
-            let usrBalance = await formatSubscriptNumber(displayUserBalance);
-            // console.log("subNumberformatted:: ", tokenPriceSOL);
-            let positionDetails = `Position ${parseInt(index) + 1}:\n` +
-            `Token: ${pos.name} (${pos.symbol})\n` +
-            `Token Balance: ${userBalance.div} <b>${pos.symbol}</b> | ${quoteUSD} <b>USD</b> | ${quoteSOL} <b>SOL</b>\n` +
-            `Initial: ${pos.amountIn / 1e9} <b>SOL</b> | ${(pos.amountIn / 1e9 * solprice).toFixed(2)} <b>USD </b>\n` +
-            `Current: ${pos.amountIn / 1e9} <b>SOL</b> | ${pos.amountIn / 1e9} <b>USD </b>\n` +
-            `Profit: ${0} <b>SOL</b> | ${0}%\n `;
-
+            const userBalanceUSD = (userBalance.dividedBy(1e9)).times(tokenPriceUSD).toFixed(2);
+            const userBalanceSOL = (userBalance.dividedBy(1e9)).times(tokenPriceSOL).toFixed(3);
+            const valueInUSD = (pos.amountOut) / Math.pow(10,poolKeys.baseDecimals) * Number(tokenPriceUSD);
+            const valueInSOL = (pos.amountOut) / Math.pow(10,poolKeys.baseDecimals) * Number(tokenPriceSOL);
+            const initialInUSD = (pos.amountIn / 1e9) * Number(solprice);
+            const initialInSOL = (pos.amountIn / 1e9) ;
+            const profitPercentage = (valueInUSD - (pos.amountIn / 1e9 * solprice)) / (pos.amountIn / 1e9 * solprice) * 100;
+            const profitInUSD = valueInUSD - initialInUSD;
+            const profitInSol = valueInSOL - initialInSOL;
+            const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
+            const formattedmac= await formatNumberToKOrM(marketCap) ?? "NA";
+        
+            
+            let positionDetails = `<b>${pos.name} (${pos.symbol})</b> | <code>${poolKeys.baseMint}</code>\n\n` +
+            `Mcap: ${formattedmac} <b>USD</b>\n\n` +
+            `Capital: ${initialInSOL.toFixed(4)} <b>SOL</b> | ${initialInUSD.toFixed(4)} <b>USD </b>\n` +
+            `Current value: ${valueInSOL.toFixed(4)} <b>SOL</b> | ${valueInUSD.toFixed(4)} <b>USD </b>\n` +
+            `Profit: ${profitInSol.toFixed(4)} <b>SOL</b> | ${profitInUSD.toFixed(4)} <b>USD</b> | ${profitPercentage.toFixed(2)}%\n\n ` +
+            `Token Balance in Wallet: ${Number(userBalance.dividedBy(1e9)).toFixed(2)} <b>${pos.symbol}</b> |${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n`+
+            ``;
+      
                     let dynamicCallback = `_p:${token}`;
                     let sellButton = [
-                    [{ text: `💰 Sell 100%`, callback_data: dynamicCallback }]
+                    [{text: `sell 25%`, callback_data: `sellpos_25_${index}`},
+                    {text: `sell 50%`, callback_data: `sellpos_50_${index}`},
+                    {text: `sell 75%`, callback_data: `sellpos_75_${index}`}, 
+                    {text: `sell 100%`, callback_data: `sellpos_100_${index}`}],
+                    [{text: `buy... ${pos.symbol}`,callback_data: `buypos_x_${index}` },{text: `refresh`, callback_data: dynamicCallback}]
                     ];
-
                     messageParts.push({ text: positionDetails, buttons: sellButton, parse_mode: 'HTML'});
         }
     };
@@ -88,6 +100,8 @@ export async function display_spl_positions(
         await ctx.api.sendMessage(ctx.chat.id, part.text, options);
     }
 }
+
+
 
 async function formatSubscriptNumber(num: any) {
     // console.log("num:: ", num);

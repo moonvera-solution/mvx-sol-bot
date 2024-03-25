@@ -8,7 +8,7 @@ type Commitment = 'processed' | 'confirmed' | 'finalized' | 'recent' | 'single' 
 
 
 
-export async function saveUserPosition(walletId: String, newPosition:
+export async function saveUserPosition(ctx: any, walletId: String, newPosition:
     {
         baseMint: string;
         name: string;
@@ -17,28 +17,35 @@ export async function saveUserPosition(walletId: String, newPosition:
         amountIn: number;
         amountOut: number | undefined;
     }) {
+     const chatId = ctx.chat.id;
+
     try {
-        const userPosition = await UserPositions.findOne({ walletId: walletId });
+        const userPosition = await UserPositions.findOne({positionChatId: chatId, walletId: walletId});
         if (userPosition) {
+            // console.log("userPosition",userPosition);
             const existingPositionIndex = userPosition.positions.findIndex(
                 position => position.baseMint === newPosition.baseMint
             );
+            // console.log("existingPositionIndex",existingPositionIndex);
+
             if (existingPositionIndex === -1) {
-                await UserPositions.findOneAndUpdate(
-                    { walletId: walletId },
-                    { $push: { positions: newPosition } },
-                    { upsert: true, new: true }
-                );
+               
+                userPosition.positions.push(newPosition);
+                await userPosition.save();
             } else {
                 userPosition.positions[existingPositionIndex] = newPosition;
                 await userPosition.save();
             }
         } else {
-            await UserPositions.findOneAndUpdate(
-                { walletId: walletId },
-                { $push: { positions: newPosition } },
-                { upsert: true, new: true }
-            );
+            // console.log("newPosition",newPosition);
+            const savePosition = new UserPositions({
+                positionChatId: chatId,
+                walletId: walletId ,
+                positions: newPosition,
+               
+               });
+            //    console.log("savePosition",savePosition);
+               await savePosition.save();
         }
     } catch (err) {
         console.error(err);

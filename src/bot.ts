@@ -44,7 +44,7 @@ bot.use(session({
 // Set the webhook
 const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
 // console.log('botToken', botToken);
-const webhookUrl = `https://4335-74-56-136-237.ngrok-free.app`; 
+const webhookUrl = 'https://c55d-74-56-136-237.ngrok-free.app'; 
 bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
   .then(() => console.log("Webhook set successfully"))
   .catch(err => console.error("Error setting webhook:", err)
@@ -198,6 +198,10 @@ bot.command("start", async (ctx: any) => {
 
 bot.command('help', async (ctx) => {
     await sendHelpMessage(ctx);
+
+});
+bot.command('positions', async (ctx) => {
+    await display_spl_positions(ctx);
 
 });
 bot.command('rugchecking', async (ctx) => {
@@ -451,19 +455,34 @@ bot.on('message', async (ctx) => {
 
 bot.on('callback_query', async (ctx: any) => {
     // console.log('latestCommand-----', ctx.session.latestCommand);
-
     const chatId = ctx.chat.id;
     const data = ctx.callbackQuery.data;
-    console.log("callback_query", data);
-    const positionCallbackPattern = /_p:(\S+)/;
-
+    // console.log("callback_query", data);
+    const positionCallSell = /^sellpos_\d+_\d+$/;
+    const positionCallBuy = /^buypos_x_\d+$/;
     try {
-        const match = data.match(positionCallbackPattern);
-        if (match) {
-            ctx.session.activeTradingPool = await getRayPoolKeys(match[1]);
-            await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', '100');
+        const matchSell = data.match(positionCallSell);
+        const matchBuy = data.match(positionCallBuy);
+        if (matchSell) {
+            const parts = data.split('_');
+            const sellPercentage = parts[1]; // '25', '50', '75', or '100'
+            const positionIndex = parts[2]; // Position index
+
+            ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
+            await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', sellPercentage);
+            return;
+        }else if (matchBuy){
+            const parts = data.split('_');
+            const positionIndex = parts[2]; // Position index
+            ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
+            ctx.api.sendMessage(chatId, "Please enter SOL amount");
+            ctx.session.latestCommand = 'buy_X_SOL';
+            return;
         }
-        switch (data) { // make sure theres a "break" after each statement...
+
+
+        switch (data) { 
+        
             case 'refer_friends': {
                 const chatId = ctx.chat.id;
                 const username = ctx.from.username;

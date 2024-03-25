@@ -37,10 +37,11 @@ export async function handle_radyum_swap(
         let tokenIn, outputToken;
         const referralFee = ctx.session.referralCommision / 100;
         // ------- check user balanace in DB --------
-        const userPosition = await UserPositions.findOne({ walletId: userWallet.publicKey });
+        const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString()});
         let oldPositionSol: number = 0;
         let oldPositionToken: number = 0;
         if (userPosition) {
+            console.log("userPosition", userPosition);
             const existingPositionIndex = userPosition.positions.findIndex(
                 position => position.baseMint === tokenOut.toString()
             );
@@ -164,6 +165,7 @@ export async function handle_radyum_swap(
 
                     if (side == 'buy') {
                         saveUserPosition(
+                            ctx,
                             userWallet.publicKey.toString(), {
                             baseMint: poolKeys.baseMint,
                             name: userTokenBalanceAndDetails.userTokenName,
@@ -172,6 +174,20 @@ export async function handle_radyum_swap(
                             amountIn: oldPositionSol? oldPositionSol + swapAmountIn : swapAmountIn,
                             amountOut:  oldPositionToken? oldPositionToken + Number(extractAmount) : extractAmount,
                         });
+                       
+                    } else if(side == 'sell'){
+                        if(extractAmount){
+                            saveUserPosition(
+                                ctx,
+                                userWallet.publicKey.toString(), {
+                                baseMint: poolKeys.baseMint,
+                                name: userTokenBalanceAndDetails.userTokenName,
+                                symbol: _symbol,
+                                tradeType: `ray_swap_${side}`,
+                                amountIn: oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol,
+                                amountOut: oldPositionToken > 0 ? oldPositionToken - Number(swapAmountIn) : oldPositionToken,
+                            });
+                        }   
                     }
                     ctx.session.latestCommand = side;
                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
