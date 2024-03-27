@@ -19,7 +19,28 @@ import { waitForConfirmation, getSolBalance } from '../../util';
 import { Referrals, UserPositions } from "../../../db/mongo/schema";
 import { getMaxPrioritizationFeeByPercentile, getSimulationUnits } from "../../../service/fees/priorityFees";
 
-
+export async function snipperON(ctx:any, amount:String){
+    let snipeToken = ctx.session.snipeToken instanceof String ? ctx.session.snipeToken : ctx.session.snipeToken.toBase58();
+    let snipeStatus = ctx.session.snipeStatus = true;
+    await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一 Snipper set for ${amount} SOL, on ${snipeToken}`,
+    {
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: 'Cancel Snipe ', callback_data: 'cancel_snipe' }],
+            ]
+        },
+    });
+    let poolKeys = await getRayPoolKeys(snipeToken);
+    while(!poolKeys && snipeStatus){
+        console.log('Snipe lookup on.');
+        poolKeys = await getRayPoolKeys(snipeToken);
+    }
+    
+    console.log('Snipe lookup end, keys found.');
+    poolKeys && await setSnipe(ctx, amount);
+}
 
 export async function setSnipe(ctx: any, amountIn: any) {
     
@@ -51,7 +72,6 @@ export async function setSnipe(ctx: any, amountIn: any) {
             ]
         },
     });
-  
 
     // Start the simulation without waiting for it to complete
     const poolStartTime = liqInfo.startTime.toNumber();

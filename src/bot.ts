@@ -5,10 +5,10 @@ import { InlineKeyboardMarkup } from 'node-telegram-bot-api';
 import { importWallet, getPortfolio } from './service/portfolio/wallets';
 import { ISESSION_DATA, PORTFOLIO_TYPE, RAYDIUM_POOL_TYPE, DefaultSessionData, DEFAULT_PUBLIC_KEY, DefaultPortfolioData } from './service/util/types';
 import { Keypair, PublicKey } from '@solana/web3.js';
-import { _initDbConnection, _findSOLPoolByBaseMint } from "./db/mongo/crud";
+import { _initDbConnection } from "./db/mongo/crud";
 import { handleSettings } from './service/settings';
 import { getSolanaDetails } from './api';
-import { setSnipe } from './service/portfolio/strategies/snipper';
+import { setSnipe, snipperON } from './service/portfolio/strategies/snipper';
 import { display_token_details, display_snipe_options, handleCloseKeyboard } from './views';
 import dotenv from 'dotenv';
 import { getSolBalance, sendSol } from './service/util';
@@ -42,32 +42,32 @@ bot.use(session({
 }));
 
 // Set the webhook
-const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
-const webhookUrl = 'https://7151-74-56-136-237.ngrok-free.app'; 
-bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
-  .then(() => console.log("Webhook set successfully"))
-  .catch(err => console.error("Error setting webhook:", err)
-);
-const handleUpdate = webhookCallback(bot, 'express');
-// // Create the HTTP server and define request handling logic
-app.use(express.json()); // for parsing application/json
+// const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
+// const webhookUrl = 'https://7151-74-56-136-237.ngrok-free.app'; 
+// bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
+//   .then(() => console.log("Webhook set successfully"))
+//   .catch(err => console.error("Error setting webhook:", err)
+// );
+// const handleUpdate = webhookCallback(bot, 'express');
+// // // Create the HTTP server and define request handling logic
+// app.use(express.json()); // for parsing application/json
 
-app.post(`/bot${botToken}`, handleUpdate);
+// app.post(`/bot${botToken}`, handleUpdate);
 
-app.get('/', (req: any, res: any) => {
-  res.send('Hello from ngrok server!');
-});
-// // const server = createServer(bot);
-const port = process.env.PORT || 3000; 
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
+// app.get('/', (req: any, res: any) => {
+//   res.send('Hello from ngrok server!');
+// });
+// // // const server = createServer(bot);
+// const port = process.env.PORT || 3000; 
+// app.listen(port, () => {
+//     console.log(`Server is running on port ${port}`);
+// });
 
 
 const allowedUsernames = ['tech_01010', 'daniellesifg']; // without the @
 
 // /********** INIT BOT & DB ***** */
-// bot.start();
+bot.start();
 _initDbConnection();
 
 // bot.command('refer_friends', async (ctx) => {
@@ -257,18 +257,17 @@ bot.on('message', async (ctx) => {
                 if (ctx.session.currentMode === 'buy') {
                     ctx.session.latestCommand = 'buy';
                     await display_token_details(ctx);
-
                 } else if (ctx.session.currentMode === 'sell') {
                     ctx.session.latestCommand = 'sell';
                     await display_token_details(ctx);
-                } else if (ctx.session.currentMode === 'snipe') {
-                    ctx.session.latestCommand = 'snipe';
-                    await display_snipe_options(ctx);
-
-                } else {
+                }else{
                     await handleSettings(ctx);
-
                 }
+                break;
+            }
+            case 'set_snipe_slippage':{
+                ctx.session.snipeSlippage = Number(msgTxt);
+                await display_snipe_options(ctx);
                 break;
             }
             case 'rug_check': {
@@ -301,7 +300,13 @@ bot.on('message', async (ctx) => {
                 await handle_radyum_swap(ctx, (ctx.session.activeTradingPool.baseMint), 'buy', Number(msgTxt));
                 break;
             case 'sell_X_TOKEN': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', Number(msgTxt)); break;
-            case 'snipe_X_SOL': await setSnipe(ctx, Number(msgTxt)); break;
+            case 'snipe_X_SOL': {
+                if (msgTxt) {
+                    if (ctx.session.snipperLookup) { snipperON(ctx, msgTxt) }
+                    else { await setSnipe(ctx, msgTxt); }
+                    break;
+                }
+            }
             case 'import_wallet': {
                 if (ctx.session.latestCommand === 'import_wallet') {
                     const walletImportResult = await importWallet(ctx, String(msgTxt));
@@ -378,17 +383,20 @@ bot.on('message', async (ctx) => {
                 break;
             }
             case 'snipe': {
-           
-                    if (PublicKey.isOnCurve(msgTxt!)) {
-                        if (msgTxt) {
-                            // ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
-                            ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt);
-                            if (!ctx.session.activeTradingPool) { ctx.api.sendMessage(chatId, "🔴 Pool not found for this token."); return; }
-                            ctx.session.snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
-                            
-                            // Synchronize buyToken and sellToken with snipeToken
-                            ctx.session.buyToken = ctx.session.snipeToken;
-                            ctx.session.sellToken = ctx.session.snipeToken;
+                if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
+                    // ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
+                    ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt);
+
+                    if (true) { //!ctx.session.activeTradingPool) {
+                        ctx.session.snipperLookup = true;
+                        ctx.session.snipeToken = new PublicKey(msgTxt);
+                        display_snipe_options(ctx, msgTxt);
+                    } else {
+                        ctx.session.snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
+
+                        // Synchronize buyToken and sellToken with snipeToken
+                        ctx.session.buyToken = ctx.session.snipeToken;
+                        ctx.session.sellToken = ctx.session.snipeToken;
 
                         // Add snipeToken to token history and update the current index
                         ctx.session.tokenHistory.unshift(ctx.session.snipeToken);
@@ -400,10 +408,10 @@ bot.on('message', async (ctx) => {
 
                         display_snipe_options(ctx);
                     }
-                 } else {
+                } else {
                     ctx.api.sendMessage(chatId, "Invalid address");
-                 }
-                 break;
+                }
+                break;
             }
             case 'refer_friends': {
                 ctx.session.awaitingWalletAddress = false; // Reset the flag
@@ -466,7 +474,7 @@ bot.on('callback_query', async (ctx: any) => {
             ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
             await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', sellPercentage);
             return;
-        }else if (matchBuy){
+        } else if (matchBuy) {
             const parts = data.split('_');
             const positionIndex = parts[2]; // Position index
             ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
@@ -475,10 +483,7 @@ bot.on('callback_query', async (ctx: any) => {
             return;
         }
 
-
-
-        switch (data) { 
-        
+        switch (data) {
             case 'refer_friends': {
                 const chatId = ctx.chat.id;
                 const username = ctx.from.username;
@@ -526,9 +531,8 @@ bot.on('callback_query', async (ctx: any) => {
                 }
                 break;
             }
-            case 'refresh_start': await handleRefreshStart(ctx);
-                break;
-            case 'refresh_portfolio' : await refresh_spl_positions(ctx);
+            case 'refresh_start': await handleRefreshStart(ctx); break;
+            case 'refresh_portfolio': await refresh_spl_positions(ctx);
             case 'refrech_rug_check': await Refresh_rugCheck(ctx); break;
             case 'select_wallet_0':
                 ctx.session.activeWalletIndex = 0;
@@ -690,11 +694,16 @@ bot.on('callback_query', async (ctx: any) => {
             }
             case 'cancel_snipe': {
                 ctx.session.snipeStatus = false;
-
+                await ctx.api.sendMessage(chatId, "Sniper cancelled.");
                 break;
             }
             case 'set_slippage': {
                 ctx.session.latestCommand = 'set_slippage';
+                ctx.api.sendMessage(chatId, "Please enter slippage % amount");
+                break;
+            }
+            case 'set_snipe_slippage': {
+                ctx.session.latestCommand = 'set_snipe_slippage';
                 ctx.api.sendMessage(chatId, "Please enter slippage % amount");
                 break;
             }
@@ -706,7 +715,7 @@ bot.on('callback_query', async (ctx: any) => {
 
             case 'previous_token': {
                 let history = ctx.session.tokenHistory;
-                let currentToken : PublicKey = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
+                let currentToken: PublicKey = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
                 let currentTokenStr = currentToken instanceof PublicKey ? currentToken.toBase58() : currentToken;
                 let historyStr = history.map((token: any) => token.toBase58());
                 let currentIndex = historyStr.indexOf(currentTokenStr);
@@ -735,7 +744,7 @@ bot.on('callback_query', async (ctx: any) => {
             case 'next_token': {
                 let history = ctx.session.tokenHistory;
                 let currentToken = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
-                let currentTokenStr = currentToken instanceof PublicKey ? currentToken.toBase58():currentToken;
+                let currentTokenStr = currentToken instanceof PublicKey ? currentToken.toBase58() : currentToken;
                 let historyStr = history.map((token: any) => token.toBase58());
                 let currentIndex = historyStr.indexOf(currentTokenStr);
 
@@ -781,21 +790,41 @@ bot.on('callback_query', async (ctx: any) => {
                 ctx.api.sendMessage(chatId, "Please enter amount to sell.");
                 break;
             }
-            case 'snipe_0.1_SOL': await setSnipe(ctx, '0.1'); break;
-            case 'snipe_0.2_SOL': await setSnipe(ctx, '0.2'); break;
-            case 'snipe_0.5_SOL': await setSnipe(ctx, '0.5'); break;
-            case 'snipe_1_SOL': await setSnipe(ctx, '1'); break;
-            case 'snipe_5_SOL': await setSnipe(ctx, '5'); break;
+            case 'snipe_0.1_SOL': {
+                if (ctx.session.snipperLookup) { await snipperON(ctx, '0.1') }
+                else { await setSnipe(ctx, '0.1'); }
+                break;
+            }
+            case 'snipe_0.2_SOL': {
+                if (ctx.session.snipperLookup) { snipperON(ctx, '0.2') }
+                else { await setSnipe(ctx, '0.2'); }
+                break;
+            }
+            case 'snipe_0.5_SOL': {
+                if (ctx.session.snipperLookup) { snipperON(ctx, '0.5') }
+                else { await setSnipe(ctx, '0.5'); }
+                break;
+            }
+            case 'snipe_1_SOL': {
+                if (ctx.session.snipperLookup) { snipperON(ctx, '1') }
+                else { await setSnipe(ctx, '1'); }
+                break;
+            }
+            case 'snipe_5_SOL': {
+                if (ctx.session.snipperLookup) { snipperON(ctx, '5') }
+                else { await setSnipe(ctx, '5'); }
+                break;
+            }
             case 'snipe_X_SOL': {
                 ctx.session.latestCommand = 'snipe_X_SOL';
                 ctx.api.sendMessage(chatId, "Please enter amount to snipe.");
                 break;
             }
-            case 'display_spl_positions': await display_spl_positions(ctx); break;
+            case 'display_spl_positions': {await display_spl_positions(ctx); break;}
             case 'priority_low': {
                 ctx.session.priorityFees = PriotitizationFeeLevels.LOW;
                 priority_Level = 'low';
-                   if(ctx.session.latestCommand === 'snipe'){
+                if (ctx.session.latestCommand === 'snipe') {
                     await refreshSnipeDetails(ctx);
 
                 } else {
@@ -807,20 +836,20 @@ bot.on('callback_query', async (ctx: any) => {
             case 'priority_medium': {
                 ctx.session.priorityFees = PriotitizationFeeLevels.MEDIUM;
                 priority_Level = 'medium';
-                   if(ctx.session.latestCommand === 'snipe'){
+                if (ctx.session.latestCommand === 'snipe') {
                     await refreshSnipeDetails(ctx);
 
                 } else {
                     await refreshTokenDetails(ctx);
                 }
 
-            console.log('ctx.session.priorityFees', ctx.session.priorityFees);
+                console.log('ctx.session.priorityFees', ctx.session.priorityFees);
                 break;
             }
             case 'priority_high': {
                 ctx.session.priorityFees = PriotitizationFeeLevels.HIGH;
                 priority_Level = 'high';
-                if(ctx.session.latestCommand === 'snipe'){
+                if (ctx.session.latestCommand === 'snipe') {
                     await refreshSnipeDetails(ctx);
 
                 } else {
@@ -834,7 +863,7 @@ bot.on('callback_query', async (ctx: any) => {
             case 'priority_max': {
                 ctx.session.priorityFees = PriotitizationFeeLevels.MAX;
                 priority_Level = 'max';
-                if(ctx.session.latestCommand === 'snipe'){
+                if (ctx.session.latestCommand === 'snipe') {
                     await refreshSnipeDetails(ctx);
 
                 } else {

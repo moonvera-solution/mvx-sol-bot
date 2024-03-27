@@ -85,14 +85,14 @@ export const Referrals = mongoose.model<REFERRAL_TYPE>(
   ReferralSchema
 );
 
-export const Raydium_unOfficial_pools = mongoose.model(
-  "Raydium_unOfficial_pools",
-  PoolInfoSchema
-);
-export const Raydium_official_pools = mongoose.model(
-  "Raydium_official_pools",
-  PoolInfoSchema
-);
+// export const Raydium_unOfficial_pools = mongoose.model(
+//   "Raydium_unOfficial_pools",
+//   PoolInfoSchema
+// );
+// export const Raydium_official_pools = mongoose.model(
+//   "Raydium_official_pools",
+//   PoolInfoSchema
+// );
 
 export const WalletKeys = mongoose.model("WalletKeys", WalletSchema);
 export const Portfolios = mongoose.model("Portfolios", UserPortfolioSchema);

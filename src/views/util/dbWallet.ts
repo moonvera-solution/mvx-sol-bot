@@ -49,7 +49,8 @@ export async function handleWallets(ctx: any) {
         parse_mode: 'HTML'
     };
 
-    await ctx.api.sendMessage(chatId, "Please select a wallet to configure or for sending SOL:", options);
+    await ctx.editMessageText("Please select a wallet to configure slippage & sending SOL:", options);
+
 }
 
 
