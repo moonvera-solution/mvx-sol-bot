@@ -174,7 +174,7 @@ function getScheduleFromInx(ammId: string) {
           const res2 = JSON.parse(JSON.stringify(response.data));
           const logs = res2.result.meta.logMessages;
           const poolSchedule = getPoolParams(logs);
-          console.log('poolSchedule:: ', poolSchedule);
+          // console.log('poolSchedule:: ', poolSchedule);
         }).catch((error: any) => {
           console.error(error);
         });
@@ -222,6 +222,8 @@ export async function getRayPoolKeys(shitcoin: string) {
   // console.log('keys:', keys);
   return keys;
 }
+
+
 // getRayPoolKeys('E83N1Lj9ebLyDKe5unwtzVrUzUaFKpXBdn6tYUyTVEwJ').then((res) => { console.log('res',res)});
 /**
  *   console.log(
@@ -242,7 +244,7 @@ export async function getPoolScheduleFromHistory(ammId: string) {
     if (txs!.meta!.logMessages) {
       const poolSchedule = getPoolParams(txs!.meta!.logMessages);
       if (poolSchedule) {
-        console.log('poolSchedule:: ', poolSchedule);
+        // console.log('poolSchedule:: ', poolSchedule);
         return poolSchedule;
       }
     }

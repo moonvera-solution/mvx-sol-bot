@@ -1,6 +1,6 @@
 import { PublicKey } from '@solana/web3.js';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
-import {DEFAULT_PRIORITY_FEE_UNITS,DEFAULT_PRIORITY_FEE_MICRO_LAMPORTS} from '../../../config';
+import { DEFAULT_PRIORITY_FEE_UNITS, DEFAULT_PRIORITY_FEE_MICRO_LAMPORTS } from '../../../config';
 // DB MODELS
 export type PORTFOLIO_TYPE = {
   chatId: number,
@@ -20,7 +20,7 @@ export const DefaultPortfolioData: PORTFOLIO_TYPE = {
     secretKey: DEFAULT_PUBLIC_KEY
   }],
   positions: [
-    
+
   ]
 }
 
@@ -38,7 +38,7 @@ export interface ISESSION_DATA {
   snipeToken: PublicKey;
   snipeAmount: number;
   snipeSlippage: number;
-  snipeStatus:boolean;
+  snipeStatus: boolean;
   buyTokenHistory: PublicKey[];
   sellTokenHistory: PublicKey[];
   tokenHistory: PublicKey[];
@@ -49,12 +49,17 @@ export interface ISESSION_DATA {
   generatorWallet: PublicKey;
   referralCommision: number;
   poolTime: number;
-  priorityFees: {
-    units: number;
-    microLamports: number;
-};
+
 positionPool: Array<any>;
   
+  priorityFees:PriotitizationFeeLevels;
+}
+
+export const enum PriotitizationFeeLevels {
+  LOW = 2500,
+  MEDIUM = 5000,
+  HIGH = 7500,
+  MAX = 10000,
 }
 
 export const DefaultPoolInfoData: RAYDIUM_POOL_TYPE = {
@@ -111,15 +116,12 @@ export const DefaultSessionData: ISESSION_DATA = {
   buyToken: DEFAULT_PUBLIC_KEY,
   sellToken: DEFAULT_PUBLIC_KEY,
   snipeToken: DEFAULT_PUBLIC_KEY,
-  snipeStatus:true,
+  snipeStatus: true,
   snipeAmount: 0,
   snipeSlippage: 20,
   poolTime: 0,
-  priorityFees: {
-    units: DEFAULT_PRIORITY_FEE_UNITS,
-    microLamports :DEFAULT_PRIORITY_FEE_MICRO_LAMPORTS
-  },
-  positionPool: []
+  positionPool: [],
+  priorityFees: PriotitizationFeeLevels.LOW
   // txTip:5_000
 }
 
@@ -154,7 +156,7 @@ export type RAYDIUM_POOL_TYPE = {
 export type REFERRAL_TYPE = {
   generatorChatId: number;
   generatorWallet: string;    // Wallet of the referrer
-  referralCode: string;        
+  referralCode: string;
   earnings: number;            // Earnings from the referral
   createdAt?: Date;            // Date when the referral was made
   numberOfReferrals?: number;  // Number of users referred by the referrer
@@ -165,14 +167,14 @@ export type REFERRAL_TYPE = {
 export type USERPOSITION_TYPE = {
   positionChatId: number;
   walletId: string;
-  positions:[
+  positions: [
     {
       baseMint: string;
       name: string;
       symbol: string;
       tradeType: string;
       amountIn: number;
-      amountOut: number | undefined;  
+      amountOut: number | undefined;
     }
   ]
 }

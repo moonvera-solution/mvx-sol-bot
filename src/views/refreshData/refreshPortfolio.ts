@@ -1,16 +1,16 @@
 import { USERPOSITION_TYPE } from '@/service/util/types';
-import { UserPositions } from '../db';
-import { connection, wallet } from '../../config';
-import { ISESSION_DATA } from '../service/util/types';
+import { UserPositions } from '../..//db';
+import { connection, wallet } from '../../../config';
+import { ISESSION_DATA } from '../../service/util/types';
 import { PublicKey, sol } from '@metaplex-foundation/js';
 import BigNumber from 'bignumber.js';
 import { SPL_ACCOUNT_LAYOUT, TOKEN_PROGRAM_ID } from '@raydium-io/raydium-sdk';
-import { getSolanaDetails } from "../api/priceFeeds/coinMarket";
-import { getRayPoolKeys } from '../service/dex/raydium/market-data/1_Geyser';
-import { quoteToken } from './util/dataCalculation';
-import { formatNumberToKOrM } from '../service/util';
+import { getSolanaDetails } from "../../api/priceFeeds/coinMarket";
+import { getRayPoolKeys } from '../../service/dex/raydium/market-data/1_Geyser';
+import { quoteToken } from './../util/dataCalculation';
+import { formatNumberToKOrM } from '../../service/util';
 
-export async function display_spl_positions(
+export async function refresh_spl_positions(
     ctx: any,
 ) {
     const chatId = ctx.chat.id;
@@ -83,7 +83,7 @@ export async function display_spl_positions(
                     {text: `sell 50%`, callback_data: `sellpos_50_${index}`},
                     {text: `sell 75%`, callback_data: `sellpos_75_${index}`}, 
                     {text: `sell 100%`, callback_data: `sellpos_100_${index}`}],
-                    [{text: `buy... ${pos.symbol}`,callback_data: `buypos_x_${index}` },{text: `refresh`, callback_data: 'refresh_portfolio'}]
+                    [{text: `buy... ${pos.symbol}`,callback_data: `buypos_x_${index}` },{text: `refresh`, callback_data: dynamicCallback}]
                     ];
                     messageParts.push({ text: positionDetails, buttons: sellButton, parse_mode: 'HTML'});
         }
@@ -97,7 +97,7 @@ export async function display_spl_positions(
                 inline_keyboard: part.buttons
             },
         };
-        await ctx.api.sendMessage(ctx.chat.id, part.text, options);
+        await ctx.editMessageText(ctx.chat.id, part.text, options);
     }
 }
 

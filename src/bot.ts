@@ -8,9 +8,7 @@ import { Keypair, PublicKey } from '@solana/web3.js';
 import { _initDbConnection, _findSOLPoolByBaseMint } from "./db/mongo/crud";
 import { handleSettings } from './service/settings';
 import { getSolanaDetails } from './api';
-import { ApiPoolInfoV4, publicKey } from "@raydium-io/raydium-sdk";
 import { setSnipe } from './service/portfolio/strategies/snipper';
-// import {rugCheck} from './service/rugCheck';
 import { display_token_details, display_snipe_options, handleCloseKeyboard } from './views';
 import dotenv from 'dotenv';
 import { getSolBalance, sendSol } from './service/util';
@@ -28,7 +26,9 @@ import { _generateReferralLink, _getReferralData } from '../src/db/mongo/crud';
 import { Referrals } from './db/mongo/schema';
 import { display_spl_positions } from './views/portfolioView';
 import { refreshSnipeDetails } from './views/refreshData/refereshSnipe';
-import { sol } from '@metaplex-foundation/js';
+import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
+import { refresh_spl_positions } from './views/refreshData/refreshPortfolio';
+
 // import { handleJupiterSell } from './service/dex/jupiter/trade/swaps';
 dotenv.config();
 const http = require('http');
@@ -43,8 +43,7 @@ bot.use(session({
 
 // Set the webhook
 const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
-// console.log('botToken', botToken);
-const webhookUrl = 'https://2b9b-74-56-136-237.ngrok-free.app'; 
+const webhookUrl = 'https://7151-74-56-136-237.ngrok-free.app'; 
 bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
   .then(() => console.log("Webhook set successfully"))
   .catch(err => console.error("Error setting webhook:", err)
@@ -58,7 +57,7 @@ app.post(`/bot${botToken}`, handleUpdate);
 app.get('/', (req: any, res: any) => {
   res.send('Hello from ngrok server!');
 });
-// const server = createServer(bot);
+// // const server = createServer(bot);
 const port = process.env.PORT || 3000; 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
@@ -67,8 +66,8 @@ app.listen(port, () => {
 
 const allowedUsernames = ['tech_01010', 'daniellesifg']; // without the @
 
+// /********** INIT BOT & DB ***** */
 // bot.start();
-// /********** INIT DB CONNECTION ***** */
 _initDbConnection();
 
 // bot.command('refer_friends', async (ctx) => {
@@ -81,7 +80,6 @@ _initDbConnection();
 bot.command("start", async (ctx: any) => {
     const chatId = ctx.chat.id;
     const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
-
     let isNewUser = false;
 
     let referralCode = null;
@@ -97,7 +95,6 @@ bot.command("start", async (ctx: any) => {
 
     if (referralCode) {
         const referralRecord = await Referrals.findOne({ referralCode: referralCode });
-        // console.log('referralRecord', referralRecord);
         if (referralRecord && referralRecord.generatorChatId !== chatId) {
             if (!referralRecord.referredUsers.includes(chatId)) {
                 // Add the user's chatId to the referredUsers array
@@ -109,7 +106,6 @@ bot.command("start", async (ctx: any) => {
                 ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
                 ctx.session.referralCommision = referralRecord.commissionPercentage;
                 // ctx.session.referralEarnings = referralRecord.earnings;
-                // console.log('referralRecord', referralRecord.earnings);
                 // Optional: Notify the user that they have been referred successfully
                 await ctx.reply("Welcome! You have been referred successfully.");
             } else {
@@ -213,7 +209,6 @@ bot.command('buy', async (ctx) => {
     const chatId = ctx.chat.id;
     const referralRecord = await Referrals.findOne({ referredUsers: chatId });
     if (referralRecord) {
-        console.log('referralRecord', referralRecord.commissionPercentage);
         ctx.session.referralCommision = referralRecord.commissionPercentage;
         ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
 
@@ -226,7 +221,6 @@ bot.command('sell', async (ctx) => {
     const chatId = ctx.chat.id;
     const referralRecord = await Referrals.findOne({ referredUsers: chatId });
     if (referralRecord) {
-        console.log('referralRecord', referralRecord.commissionPercentage);
         ctx.session.referralCommision = referralRecord.commissionPercentage;
         ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
 
@@ -238,7 +232,6 @@ bot.command('snipe', async (ctx) => {
     const chatId = ctx.chat.id;
     const referralRecord = await Referrals.findOne({ referredUsers: chatId });
     if (referralRecord) {
-        console.log('referralRecord', referralRecord.commissionPercentage);
         ctx.session.referralCommision = referralRecord.commissionPercentage;
         ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
 
@@ -254,7 +247,6 @@ bot.command('settings', async (ctx) => {
 
 
 bot.on('message', async (ctx) => {
-    // console.log('latestCommand-----', ctx.session.latestCommand);
     try {
         const chatId = ctx.chat.id;
         const latestCommand = ctx.session.latestCommand;
@@ -345,7 +337,6 @@ bot.on('message', async (ctx) => {
                 if (ctx.session.latestCommand === 'ask_for_sol_amount') {
                     if (msgTxt) {
                         const solAmount = Number(msgTxt);
-                        console.log('solAmount', solAmount);
                         ctx.session.solAmount = solAmount;
                         ctx.session.latestCommand = 'confirm_send_sol';
                         await ctx.api.sendMessage(chatId, `Send ${solAmount} SOL to ${ctx.session.recipientAddress}`, {
@@ -361,39 +352,43 @@ bot.on('message', async (ctx) => {
             }
             case 'sell':
             case 'buy': {
-                if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
-                    let poolInfo = ctx.session.tokenRayPoolInfo[msgTxt] ?? await getRayPoolKeys(msgTxt);
+                try {
+                    if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
+                        let poolInfo = ctx.session.tokenRayPoolInfo[msgTxt] ?? await getRayPoolKeys(msgTxt);
 
-                    if (!poolInfo) { 
+                        if (!poolInfo) {
+                            ctx.api.sendMessage(chatId, "🔴 Invalid address");
+                            ctx.api.sendMessage(chatId, "🔴 Pool not found for this token."); return;
+                        }
+
+                        ctx.session.activeTradingPool = poolInfo;
+                        ctx.session.tokenRayPoolInfo[msgTxt] = poolInfo;
+                        if (!ctx.session.tokenHistory) ctx.session.tokenHistory = [];
+                        if (ctx.session.tokenHistory.indexOf(poolInfo.baseMint) === -1) {
+                            ctx.session.tokenHistory.push(poolInfo.baseMint);
+                            if (ctx.session.tokenHistory.length > 5) ctx.session.tokenHistory.shift();
+                        }
+                        await display_token_details(ctx);
+                    } else {
                         ctx.api.sendMessage(chatId, "🔴 Invalid address");
-                        ctx.api.sendMessage(chatId, "🔴 Pool not found for this token."); return;
                     }
-
-                    ctx.session.activeTradingPool = poolInfo;
-                    ctx.session.tokenRayPoolInfo[msgTxt] = poolInfo;
-                    if (!ctx.session.tokenHistory) ctx.session.tokenHistory = [];
-                    if (ctx.session.tokenHistory.indexOf(poolInfo.baseMint) === -1) {
-                        ctx.session.tokenHistory.push(poolInfo.baseMint);
-                        if (ctx.session.tokenHistory.length > 5) ctx.session.tokenHistory.shift();
-                    }
-                    await display_token_details(ctx);
-                } else {
+                } catch (e) {
                     ctx.api.sendMessage(chatId, "🔴 Invalid address");
                 }
                 break;
             }
             case 'snipe': {
-                if (PublicKey.isOnCurve(msgTxt!)) {
-                    if (msgTxt) {
-                        // ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
-                        ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt);
-                        if (!ctx.session.activeTradingPool) { ctx.api.sendMessage(chatId, "🔴 Pool not found for this token."); return; }
-
-                        ctx.session.snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
-
-                        // Synchronize buyToken and sellToken with snipeToken
-                        ctx.session.buyToken = ctx.session.snipeToken;
-                        ctx.session.sellToken = ctx.session.snipeToken;
+           
+                    if (PublicKey.isOnCurve(msgTxt!)) {
+                        if (msgTxt) {
+                            // ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
+                            ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt);
+                            if (!ctx.session.activeTradingPool) { ctx.api.sendMessage(chatId, "🔴 Pool not found for this token."); return; }
+                            ctx.session.snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
+                            
+                            // Synchronize buyToken and sellToken with snipeToken
+                            ctx.session.buyToken = ctx.session.snipeToken;
+                            ctx.session.sellToken = ctx.session.snipeToken;
 
                         // Add snipeToken to token history and update the current index
                         ctx.session.tokenHistory.unshift(ctx.session.snipeToken);
@@ -405,10 +400,10 @@ bot.on('message', async (ctx) => {
 
                         display_snipe_options(ctx);
                     }
-                } else {
+                 } else {
                     ctx.api.sendMessage(chatId, "Invalid address");
-                }
-                break;
+                 }
+                 break;
             }
             case 'refer_friends': {
                 ctx.session.awaitingWalletAddress = false; // Reset the flag
@@ -419,9 +414,9 @@ bot.on('message', async (ctx) => {
                     const recipientAddress = new PublicKey(walletAddress)
                     const referralLink = await _generateReferralLink(ctx, recipientAddress);
                     const referralData = await _getReferralData(ctx); // Fetch referral data
-                    const referEarningSol = (Number(referralData?.totalEarnings) / 1e9) .toFixed(6);
+                    const referEarningSol = (Number(referralData?.totalEarnings) / 1e9).toFixed(6);
                     const details = await getSolanaDetails();
-                    const referEarningDollar = (Number(referEarningSol) * details).toFixed(2) ;
+                    const referEarningDollar = (Number(referEarningSol) * details).toFixed(2);
                     let responseMessage = `<b>Referral Program Details</b>\n\n` +
                         `🔗 <b>Your Referral Link:</b> ${referralLink}\n\n` +
                         `👥 <b>Referrals Count:</b> ${referralData?.count}\n` +
@@ -444,7 +439,7 @@ bot.on('message', async (ctx) => {
 
                     await ctx.api.sendMessage(chatId, responseMessage, options);
                 }
-
+                break;
             }
 
         }
@@ -453,8 +448,8 @@ bot.on('message', async (ctx) => {
     }
 });
 
+export let priority_Level = 'low';
 bot.on('callback_query', async (ctx: any) => {
-    // console.log('latestCommand-----', ctx.session.latestCommand);
     const chatId = ctx.chat.id;
     const data = ctx.callbackQuery.data;
     // console.log("callback_query", data);
@@ -481,6 +476,7 @@ bot.on('callback_query', async (ctx: any) => {
         }
 
 
+
         switch (data) { 
         
             case 'refer_friends': {
@@ -499,19 +495,19 @@ bot.on('callback_query', async (ctx: any) => {
                         // Existing referral found, display referral data
                         const referralData = await _getReferralData(ctx);
                         const referralLink = referralData?.referralLink;
-                        const referEarningSol = (Number(referralData?.totalEarnings) / 1e9) .toFixed(6);
+                        const referEarningSol = (Number(referralData?.totalEarnings) / 1e9).toFixed(6);
                         const details = await getSolanaDetails();
-                        const referEarningDollar = (Number(referEarningSol) * details).toFixed(6) ;
+                        const referEarningDollar = (Number(referEarningSol) * details).toFixed(6);
                         let responseMessage = `<b>Referral Program Details</b>\n\n` +
-                        `🔗 <b>Your Referral Link:</b> ${referralLink}\n\n` +
-                        `👥 <b>Referrals Count:</b> ${referralData?.count}\n` +
-                        `💰 <b>Total Earnings:</b> ${referEarningSol} SOL/Token ($${referEarningDollar}) | 0.00 TOKEN \n` +
-                        `Rewards are credited instantly to your SOL balance.\n\n` +
-                        `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals in the first month, 25% in the second month, and 12% on an ongoing basis.\n\n` +
-                        `<i>Your total earnings have been sent to your referral wallet.</i>\n\n` +
-                        `<code><b>${referralData?.referralWallet}</b></code>\n\n` +
-                        `<i>Note: Rewards are updated and sent in real-time and reflect your active contributions to the referral program.</i>`; // Fetch referral data
-                        
+                            `🔗 <b>Your Referral Link:</b> ${referralLink}\n\n` +
+                            `👥 <b>Referrals Count:</b> ${referralData?.count}\n` +
+                            `💰 <b>Total Earnings:</b> ${referEarningSol} SOL/Token ($${referEarningDollar}) | 0.00 TOKEN \n` +
+                            `Rewards are credited instantly to your SOL balance.\n\n` +
+                            `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals in the first month, 25% in the second month, and 12% on an ongoing basis.\n\n` +
+                            `<i>Your total earnings have been sent to your referral wallet.</i>\n\n` +
+                            `<code><b>${referralData?.referralWallet}</b></code>\n\n` +
+                            `<i>Note: Rewards are updated and sent in real-time and reflect your active contributions to the referral program.</i>`; // Fetch referral data
+
                         const options = {
                             reply_markup: JSON.stringify({
                                 inline_keyboard: [
@@ -532,16 +528,15 @@ bot.on('callback_query', async (ctx: any) => {
             }
             case 'refresh_start': await handleRefreshStart(ctx);
                 break;
+            case 'refresh_portfolio' : await refresh_spl_positions(ctx);
             case 'refrech_rug_check': await Refresh_rugCheck(ctx); break;
             case 'select_wallet_0':
-                // console.log(data);
                 ctx.session.activeWalletIndex = 0;
                 await handleSettings(ctx);
                 await RefreshAllWallets(ctx);
 
                 break;
             case 'select_wallet_1':
-                // console.log(data);
                 ctx.session.activeWalletIndex = 1;
                 await handleSettings(ctx);
                 await RefreshAllWallets(ctx);
@@ -610,11 +605,8 @@ bot.on('callback_query', async (ctx: any) => {
                 ctx.session.latestCommand = 'sell';
                 const referralRecord = await Referrals.findOne({ referredUsers: chatId });
                 if (referralRecord) {
-                    // console.log('referralRecord', referralRecord.commissionPercentage);
                     ctx.session.referralCommision = referralRecord.commissionPercentage;
                     ctx.session.generatorWallet = referralRecord.generatorWallet;
-                    // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
-                    // console.log('ctx.session.generatorWallet', ctx.session.generatorWallet);
                 }
 
                 let tokenToSell = ctx.session.sellToken instanceof PublicKey ? ctx.session.sellToken : undefined;
@@ -649,11 +641,9 @@ bot.on('callback_query', async (ctx: any) => {
                 ctx.session.latestCommand = 'buy';
                 const referralRecord = await Referrals.findOne({ referredUsers: chatId });
                 if (referralRecord) {
-                    // console.log('referralRecord', referralRecord.commissionPercentage);
                     ctx.session.referralCommision = referralRecord.commissionPercentage;
                     ctx.session.generatorWallet = referralRecord.generatorWallet;
                     // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
-                    console.log('ctx.session.generatorWallet', ctx.session.generatorWallet);
                 }
 
                 let tokenToBuy = ctx.session.buyToken instanceof PublicKey ? ctx.session.buyToken : undefined;
@@ -686,11 +676,8 @@ bot.on('callback_query', async (ctx: any) => {
             case 'snipe': {
                 const referralRecord = await Referrals.findOne({ referredUsers: chatId });
                 if (referralRecord) {
-                    // console.log('referralRecord', referralRecord.commissionPercentage);
                     ctx.session.referralCommision = referralRecord.commissionPercentage;
                     ctx.session.generatorWallet = referralRecord.generatorWallet;
-                    // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
-                    // console.log('ctx.session.generatorWallet', ctx.session.generatorWallet);
                 }
                 const snipeToken = ctx.session.snipeToken;
                 ctx.session.latestCommand = 'snipe';
@@ -701,7 +688,7 @@ bot.on('callback_query', async (ctx: any) => {
                 }
                 break;
             }
-            case 'cancel_snipe':{
+            case 'cancel_snipe': {
                 ctx.session.snipeStatus = false;
 
                 break;
@@ -805,47 +792,58 @@ bot.on('callback_query', async (ctx: any) => {
                 break;
             }
             case 'display_spl_positions': await display_spl_positions(ctx); break;
-            case 'priority_low':
-                ctx.session.priorityFees = {
-                    units: 1000_000,
-                    microLamports: 10000_000
-                };
-                ctx.api.sendMessage(chatId, "Priority set to low");
+            case 'priority_low': {
+                ctx.session.priorityFees = PriotitizationFeeLevels.LOW;
+                priority_Level = 'low';
+                   if(ctx.session.latestCommand === 'snipe'){
+                    await refreshSnipeDetails(ctx);
+
+                } else {
+                    await refreshTokenDetails(ctx);
+                }
+                console.log('ctx.session.priorityFees', ctx.session.priorityFees);
                 break;
-            case 'priority_medium':
-                ctx.session.priorityFees = {
-                    units: 500_000,
-                    microLamports: 20000_000
-                };
-                ctx.api.sendMessage(chatId, "Priority set to medium");
+            }
+            case 'priority_medium': {
+                ctx.session.priorityFees = PriotitizationFeeLevels.MEDIUM;
+                priority_Level = 'medium';
+                   if(ctx.session.latestCommand === 'snipe'){
+                    await refreshSnipeDetails(ctx);
+
+                } else {
+                    await refreshTokenDetails(ctx);
+                }
+
+            console.log('ctx.session.priorityFees', ctx.session.priorityFees);
                 break;
+            }
             case 'priority_high': {
-                ctx.session.priorityFees = {
-                    units: 700_000,
-                    microLamports: 99000000
-                };
-                ctx.api.sendMessage(chatId, "Priority set to high");
-                break;
+                ctx.session.priorityFees = PriotitizationFeeLevels.HIGH;
+                priority_Level = 'high';
+                if(ctx.session.latestCommand === 'snipe'){
+                    await refreshSnipeDetails(ctx);
 
+                } else {
+                    await refreshTokenDetails(ctx);
+                }
+
+                console.log('ctx.session.priorityFees', ctx.session.priorityFees);
+
+                break;
             }
-            case 'priority_ver_high': {
-                ctx.session.priorityFees = {
-                    units: 1000000,
-                    microLamports: 100000000
-                };
-                ctx.api.sendMessage(chatId, "Priority set to very high");
+            case 'priority_max': {
+                ctx.session.priorityFees = PriotitizationFeeLevels.MAX;
+                priority_Level = 'max';
+                if(ctx.session.latestCommand === 'snipe'){
+                    await refreshSnipeDetails(ctx);
+
+                } else {
+                    await refreshTokenDetails(ctx);
+                }
+
+                console.log('ctx.session.priorityFees', ctx.session.priorityFees);
+
                 break;
-
-            }
-            case 'priority_extreme': {
-                ctx.session.priorityFees = {
-                    units: 1000000,
-                    microLamports: 550000000
-                };
-                ctx.api.sendMessage(chatId, "Priority set to extreme");
-                break;
-
-
             }
         }
         ctx.api.answerCallbackQuery(ctx.callbackQuery.id);

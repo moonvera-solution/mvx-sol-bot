@@ -6,7 +6,8 @@ import { getSolanaDetails } from '../../api/priceFeeds/coinMarket';
 import { quoteToken } from '../util/dataCalculation';
 import { formatNumberToKOrM, getSolBalance } from '../../service/util';
 
-
+import { priority_Level } from '../../bot';
+import { runMin, runMedium, runHigh, runMax } from '../util/getPriority';
 
 export async function refreshSnipeDetails(ctx: any) {
     const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
@@ -43,8 +44,10 @@ export async function refreshSnipeDetails(ctx: any) {
     const solprice = await getSolanaDetails();
   
     const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint });
-    // const formattedLiquidity = await formatNumberToKOrM(tokenInfo.liquidity * solprice * 2 ?? "N/A");
-    const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
+    const lowPriorityFee = await runMin(ctx);
+    const mediumPriorityFee = await runMedium(ctx);
+    const highPriorityFee = await runHigh(ctx);
+    const maxPriorityFee = await runMax(ctx);    const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
     const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(quoteDecimals);
     const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
@@ -54,11 +57,8 @@ export async function refreshSnipeDetails(ctx: any) {
     const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
 
     const balanceInSOL = await getSolBalance(userPublicKey);
-    // console.log('userPublicKey', userPublicKey);
     const balanceInUSD = (balanceInSOL * (solprice)).toFixed(2);
-    // console.log('newpublickey', new PublicKey(userPublicKey));
     const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress);
-    // console.log('userTokenBalance2', userTokenBalance);
     let options: any;
     let messageText: any;
      messageText = `<b>${tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
@@ -70,14 +70,15 @@ export async function refreshSnipeDetails(ctx: any) {
                 // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
                 `price Impact (5.0 SOL) : <b>${priceImpact}%</b> | (1.0 SOL): <b>${priceImpact_1}%</b> \n\n` +
                 `Pool Status: <b>${poolStatusMessage}</b>\n\n` +
+                `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) /1e9).toFixed(7)} <b>SOL</b> \n\n` +
                 `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
                 `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n ` ;
                 const priorityButtons = [
-                    [{ text: 'Low Priority', callback_data: 'priority_low' }],
-                    [{ text: 'Medium Priority', callback_data: 'priority_medium' }],
-                    [{ text: 'High Priority', callback_data: 'priority_high' }],
-                    [{ text: 'Very High Priority', callback_data: 'priority_very_high' }],
-                    [{ text: 'Extreme Priority', callback_data: 'priority_extreme' }]
+                    [{ text: 'Priority Fees', callback_data: '-' }],
+                    [{ text: 'Low', callback_data: 'priority_low' },
+                    { text:  'Medium', callback_data: 'priority_medium' },
+                    { text:  'High', callback_data: 'priority_high' },
+                    { text:  'Max', callback_data: 'priority_very_high' }],
                 ];
                 options = {
                     parse_mode: 'HTML',
@@ -89,8 +90,13 @@ export async function refreshSnipeDetails(ctx: any) {
                             [{ text: '🎯 X SOL', callback_data: 'snipe_X_SOL' }, { text: '🎯 0.1 SOL', callback_data: 'snipe_0.1_SOL' }, { text: '🎯 0.2 SOL', callback_data: 'snipe_0.2_SOL' }],
                             [{ text: '🎯 0.5 SOL', callback_data: 'snipe_0.5_SOL' }, { text: '🎯 1 SOL', callback_data: 'snipe_1_SOL' }, { text: '🎯 5 SOL', callback_data: 'snipe_5_SOL' }],
                             [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' },{ text: 'Selling Mode 💸', callback_data: 'sell' }],
-                            ...priorityButtons,
-                            [{ text: '❌ Close sniping mode ❌', callback_data: 'closing' }]]
+                            [{ text: '📈 Priority fees', callback_data: '_' }],
+                            [ 
+                                { text: `Low ${priority_Level === 'low' ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 'medium' ? '✅' : ''}`, callback_data: 'priority_medium' },
+                                { text: `High ${priority_Level === 'high' ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 'max' ? '✅' : ''}`, callback_data: 'priority_max' }
+                            ],
+                            [{ text: 'Cancel', callback_data: 'closing' }]
+                        ]
                     },
                 };
 

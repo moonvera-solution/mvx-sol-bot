@@ -5,7 +5,7 @@ import {
     LiquidityPoolKeysV4, TOKEN_PROGRAM_ID, TokenAccount, Market, SPL_MINT_LAYOUT, TxVersion, buildSimpleTransaction, LOOKUP_TABLE_CACHE,
     LIQUIDITY_STATE_LAYOUT_V4, jsonInfo2PoolKeys
 } from "@raydium-io/raydium-sdk";
-import { Connection, PublicKey, Keypair, SendOptions, SystemProgram, Signer, Transaction, VersionedTransaction, RpcResponseAndContext, TransactionMessage, SimulatedTransactionResponse } from "@solana/web3.js";
+import { Connection, PublicKey, Keypair, SendOptions, SystemProgram, Signer, Transaction, VersionedTransaction, RpcResponseAndContext, TransactionMessage, SimulatedTransactionResponse, ComputeBudgetProgram } from "@solana/web3.js";
 import { getPoolKeys } from "../../../../src/service/dex/raydium/market-data/PoolsFilter";
 import { connection, MVXBOT_FEES, TIP_VALIDATOR, WALLET_MVX, SNIPE_SIMULATION_COUNT_LIMIT } from "../../../../config";
 import { buildAndSendTx } from '../../util';
@@ -17,6 +17,8 @@ import { getRayPoolKeys, getPoolScheduleFromHistory } from "../../dex/raydium/ma
 import { getTokenMetadata } from "../../feeds";
 import { waitForConfirmation, getSolBalance } from '../../util';
 import { Referrals, UserPositions } from "../../../db/mongo/schema";
+import { getMaxPrioritizationFeeByPercentile, getSimulationUnits } from "../../../service/fees/priorityFees";
+
 
 
 export async function setSnipe(ctx: any, amountIn: any) {
@@ -28,9 +30,10 @@ export async function setSnipe(ctx: any, amountIn: any) {
 
     const poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
     let liqInfo = await Liquidity.fetchInfo({ connection, poolKeys });
+    // console.log('liqInfo', liqInfo);
     // console.log('liqInfo', liqInfo.startTime.toNumber());
     const amountInLamports = new BigNumber(Number.parseFloat(amountIn)).times(1e9);
-    const snipeSlippage = ctx.session.snipeSlippage;
+    const snipeSlippage = ctx.session.latestSlippage;
     const currentWalletIdx = ctx.session.activeWalletIndex;
     const currentWallet = ctx.session.portfolio.wallets[currentWalletIdx];
     const { tokenData } = await getTokenMetadata(ctx, snipeToken.toBase58());
@@ -44,7 +47,7 @@ export async function setSnipe(ctx: any, amountIn: any) {
         disable_web_page_preview: true,
         reply_markup: {
             inline_keyboard: [
-                [{ text: '❌ Cancel Snipe ', callback_data: 'cancel_snipe' }],
+                [{ text: 'Cancel Snipe ', callback_data: 'cancel_snipe' }],
             ]
         },
     });
@@ -83,7 +86,8 @@ export async function startSnippeSimulation(
 
     const amountOut = await _quote({ amountIn: amountIn, baseVault: poolKeys.quoteVault, quoteVault: poolKeys.baseVault });
     const amountOut_with_slippage = new BigNumber(amountOut.minus(amountOut.times(snipeSlippage).div(100)).toFixed(0));
-
+    console.log('amountOut_with_slippage', amountOut_with_slippage);
+    console.log('snipeSlippage', snipeSlippage);    
     const inputTokenAmount = new TokenAmount(_tokenIn, amountIn.toFixed(0), true);
     const minOutTokenAmount = new TokenAmount(_tokenOut, amountOut_with_slippage.toFixed(0), true);
     const computeBudgetUnits = ctx.session.priorityFees.units;
@@ -92,6 +96,7 @@ export async function startSnippeSimulation(
     // console.log('totalComputeBudget', totalComputeBudget);
       // ------- check user balanace in DB --------
       const userPosition = await UserPositions.findOne({positionChatId: chatId, walletId: userWallet.publicKey.toString() });
+      console.log('userPosition', userPosition);
       let oldPositionSol: number = 0;
       let oldPositionToken: number = 0;
       if (userPosition) {
@@ -118,10 +123,10 @@ export async function startSnippeSimulation(
         amountOut: minOutTokenAmount,
         fixedSide: 'in',
         makeTxVersion: TxVersion.V0,
-        computeBudgetConfig: {
-            units: ctx.session.priorityFees.units,
-            microLamports: ctx.session.priorityFees.microLamports
-        }
+        // computeBudgetConfig: {
+        //     units: ctx.session.priorityFees.units,
+        //     microLamports: ctx.session.priorityFees.microLamports
+        // }
     });
     //0.005  0.01 0.05 0.1 0.2
     //low   medium high very high extreme
@@ -180,14 +185,36 @@ export async function startSnippeSimulation(
    
 
     const userSolBalance = await getSolBalance(userWallet.publicKey);
-    console.log('userSolBalance', userSolBalance);
+    // console.log('userSolBalance', userSolBalance);
     minimumBalanceNeeded += totalComputeBudget;
-    console.log('minimumBalanceNeeded', minimumBalanceNeeded);
+    // console.log('minimumBalanceNeeded', minimumBalanceNeeded);
 
     if ((userSolBalance * 1e9) < minimumBalanceNeeded) {
         await ctx.api.sendMessage(chatId, `🔴 Insufficient balance for Turbo Snipping. Your balance is ${userSolBalance} SOL.`);
         return;
     }
+    // console.log('maxPriorityFee', ctx.session.priorityFee);
+    const maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
+        lockedWritableAccounts: [
+          new PublicKey(poolKeys.id.toBase58()),
+        ], percentile: ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
+        fallback: true
+      });
+    const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee, });
+//      // Simulate the transaction and add the compute unit limit instruction to your transaction
+  let [Units, recentBlockhash] = await Promise.all([
+    getSimulationUnits(connection, innerTransactions[0].instructions, userWallet.publicKey),
+    connection.getLatestBlockhash(),
+  ]);
+
+  if (Units) {
+    console.log("units: ", Units);
+    Units = Math.ceil(Units * 2); // margin of error
+    innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Units }));
+  }
+  console.log("maxPriorityFee", maxPriorityFee);
+
+  innerTransactions[0].instructions.push(priorityFeeInstruction);
 
     let tx = new TransactionMessage({
         payerKey: userWallet.publicKey,
@@ -199,7 +226,8 @@ export async function startSnippeSimulation(
     let simulationResult: any;
     let count = 0;
     let sim = true;
-    let diff = new BigNumber(poolStartTime).minus(new BigNumber(new Date().getTime()));
+    let diff_1 = new BigNumber(poolStartTime).minus(new BigNumber(new Date().getTime()));
+    let diff = diff_1.plus(400);
 
     const simulateTransaction = async () => {
         let txSign: any;
@@ -207,9 +235,10 @@ export async function startSnippeSimulation(
         while (sim && snipeStatus && count < SNIPE_SIMULATION_COUNT_LIMIT) {
             count++
             snipeStatus = ctx.session.snipeStatus;
-            simulationResult = await connection.simulateTransaction(txV, { replaceRecentBlockhash: true, commitment: 'confirmed' });
+            simulationResult = await connection.simulateTransaction(txV, { replaceRecentBlockhash: true, commitment: 'processed' });
             const regex = /Error: exceeds desired slippage limit/;
             if (simulationResult.value.logs.find((logMsg: any) => regex.test(logMsg))) {
+                console.log(simulationResult.value.logs)
                 ctx.api.sendMessage(ctx.chat.id, `🔴 Slippage error, try increasing your slippage %.`);
                 return;
             }

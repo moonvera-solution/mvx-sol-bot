@@ -12,6 +12,7 @@
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.535.0",
     "@coral-xyz/anchor": "^0.29.0",
+    "@grammyjs/menu": "^1.2.1",
     "@grammyjs/storage-mongodb": "^2.4.1",
     "@jup-ag/limit-order-sdk": "^0.1.10",
     "@metaplex-foundation/js": "^0.19.5",
@@ -32,7 +33,8 @@
     "bs58": "^5.0.0",
     "dotenv": "^16.3.1",
     "express": "^4.18.3",
-    "grammy": "^1.20.3",
+    "grammy": "^1.21.1",
+    "grammy-inline-menu": "^9.0.0",
     "install": "^0.13.0",
     "jito-ts": "^3.0.0",
     "mongodb": "^6.3.0",
