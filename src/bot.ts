@@ -704,8 +704,8 @@ bot.on('callback_query', async (ctx: any) => {
 
             case 'previous_token': {
                 let history = ctx.session.tokenHistory;
-                let currentToken = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
-                let currentTokenStr = currentToken.toBase58();
+                let currentToken : PublicKey = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
+                let currentTokenStr = currentToken instanceof PublicKey ? currentToken.toBase58() : currentToken;
                 let historyStr = history.map((token: any) => token.toBase58());
                 let currentIndex = historyStr.indexOf(currentTokenStr);
 
@@ -733,7 +733,7 @@ bot.on('callback_query', async (ctx: any) => {
             case 'next_token': {
                 let history = ctx.session.tokenHistory;
                 let currentToken = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
-                let currentTokenStr = currentToken.toBase58();
+                let currentTokenStr = currentToken instanceof PublicKey ? currentToken.toBase58():currentToken;
                 let historyStr = history.map((token: any) => token.toBase58());
                 let currentIndex = historyStr.indexOf(currentTokenStr);
 
