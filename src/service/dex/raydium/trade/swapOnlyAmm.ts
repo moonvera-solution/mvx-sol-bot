@@ -159,7 +159,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
 
   const maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
     lockedWritableAccounts: [
-      new PublicKey(input.inputTokenAmount.token),
+      new PublicKey(input.inputTokenAmount.token.mint),
     ], percentile: input.ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
     fallback: true
   } // slotsToReturn?: number
