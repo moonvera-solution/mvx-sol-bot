@@ -8,9 +8,10 @@ import { Keypair, PublicKey } from '@solana/web3.js';
 import { _initDbConnection, _findSOLPoolByBaseMint } from "./db/mongo/crud";
 import { handleSettings } from './service/settings';
 import { getSolanaDetails } from './api';
-import { setSnipe } from './service/portfolio/strategies/snipper';
+import { setSnipe, listenToPoolLaunch } from './service/portfolio/strategies/snipper';
 import { display_token_details, display_snipe_options, handleCloseKeyboard } from './views';
 import dotenv from 'dotenv';
+dotenv.config();
 import { getSolBalance, sendSol } from './service/util';
 import { handleRefreshStart, handleRereshWallet } from './views/refreshData/refreshStart';
 import { refreshTokenDetails } from './views/refreshData/refreshBuy';
@@ -29,10 +30,6 @@ import { refreshSnipeDetails } from './views/refreshData/refereshSnipe';
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 
 // import { handleJupiterSell } from './service/dex/jupiter/trade/swaps';
-dotenv.config();
-const http = require('http');
-const express = require('express');
-const app = express();
 
 type MyContext = Context & SessionFlavor<ISESSION_DATA>;
 export const bot = new Bot<MyContext>(process.env.TELEGRAM_BOT_TOKEN!);
@@ -42,28 +39,6 @@ bot.use(session({
 
 // Set the webhook
 const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
-console.log('botToken', botToken);
-// const webhookUrl = `https://4335-74-56-136-237.ngrok-free.app`; 
-// bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
-//   .then(() => console.log("Webhook set successfully"))
-//   .catch(err => console.error("Error setting webhook:", err)
-// );
-// const handleUpdate = webhookCallback(bot, 'express');
-// // // Create the HTTP server and define request handling logic
-// app.use(express.json()); // for parsing application/json
-
-// app.post(`/bot${botToken}`, handleUpdate);
-
-// app.get('/', (req: any, res: any) => {
-//   res.send('Hello from ngrok server!');
-// });
-// // const server = createServer(bot);
-// const port = process.env.PORT || 3000; 
-// app.listen(port, () => {
-//     console.log(`Server is running on port ${port}`);
-// });
-
-
 const allowedUsernames = ['tech_01010', 'daniellesifg']; // without the @
 
 // /********** INIT BOT & DB ***** */
@@ -75,7 +50,6 @@ _initDbConnection();
 //     const referralLink = generateReferralLink(ctx); // Implement this function
 //     ctx.api.sendMessage(chatId, `Share this link with your friends to invite them: ${referralLink}`);
 // });
-
 
 bot.command("start", async (ctx: any) => {
     const chatId = ctx.chat.id;
@@ -235,9 +209,7 @@ bot.command('snipe', async (ctx) => {
         console.log('referralRecord', referralRecord.commissionPercentage);
         ctx.session.referralCommision = referralRecord.commissionPercentage;
         ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
-
     }
-
     ctx.session.latestCommand = 'snipe';
     await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to snipe.");
 
@@ -303,7 +275,7 @@ bot.on('message', async (ctx) => {
                 await handle_radyum_swap(ctx, (ctx.session.activeTradingPool.baseMint), 'buy', Number(msgTxt));
                 break;
             case 'sell_X_TOKEN': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', Number(msgTxt)); break;
-            case 'snipe_X_SOL': await setSnipe(ctx, Number(msgTxt)); break;
+            case 'snipe_X_SOL': await setSnipe(ctx, Number(msgTxt)); { ctx.session.snipeAmount = Number(msgTxt); break; }
             case 'import_wallet': {
                 if (ctx.session.latestCommand === 'import_wallet') {
                     const walletImportResult = await importWallet(ctx, String(msgTxt));
@@ -386,20 +358,25 @@ bot.on('message', async (ctx) => {
                         if (msgTxt) {
                             // ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
                             ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt);
-                            if (!ctx.session.activeTradingPool) { ctx.api.sendMessage(chatId, "🔴 Pool not found for this token."); return; }
-                            ctx.session.snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
-                            // Synchronize buyToken and sellToken with snipeToken
-                            ctx.session.buyToken = ctx.session.snipeToken;
-                            ctx.session.sellToken = ctx.session.snipeToken;
 
-                            // Add snipeToken to token history and update the current index
-                            ctx.session.tokenHistory.unshift(ctx.session.snipeToken);
-                            if (ctx.session.tokenHistory.length > 5) {
-                                ctx.session.tokenHistory.pop(); // Keep only the last 5 tokens
+                            if (true) {//!ctx.session.activeTradingPool) { 
+                                listenToPoolLaunch(ctx, msgTxt)
+                                ctx.api.sendMessage(chatId, "Snipper set for pool Launch"); return;
+                            } else {
+                                ctx.session.snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
+                                // Synchronize buyToken and sellToken with snipeToken
+                                ctx.session.buyToken = ctx.session.snipeToken;
+                                ctx.session.sellToken = ctx.session.snipeToken;
+
+                                // Add snipeToken to token history and update the current index
+                                ctx.session.tokenHistory.unshift(ctx.session.snipeToken);
+                                if (ctx.session.tokenHistory.length > 5) {
+                                    ctx.session.tokenHistory.pop(); // Keep only the last 5 tokens
+                                }
+                                // Update current token index
+                                // ctx.session.currentTokenIndex = 0; 
+                                display_snipe_options(ctx);
                             }
-                            // Update current token index
-                            // ctx.session.currentTokenIndex = 0; 
-                            display_snipe_options(ctx);
                         }
                     } else {
                         ctx.api.sendMessage(chatId, "🔴 Invalid address");
@@ -494,7 +471,7 @@ bot.on('callback_query', async (ctx: any) => {
                             `Rewards are credited instantly to your SOL balance.\n\n` +
                             `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals in the first month, 25% in the second month, and 12% on an ongoing basis.\n\n` +
                             `<i>Your total earnings have been sent to your referral wallet.</i>\n\n` +
-                            `<code><b>${referralData?.referralWallet}</b></code>\n\n` +
+                            // `<code><b>${referralData?.referralWallet}</b></code>\n\n` +
                             `<i>Note: Rewards are updated and sent in real-time and reflect your active contributions to the referral program.</i>`; // Fetch referral data
 
                         const options = {
@@ -779,11 +756,11 @@ bot.on('callback_query', async (ctx: any) => {
                 ctx.api.sendMessage(chatId, "Please enter amount to sell.");
                 break;
             }
-            case 'snipe_0.1_SOL': await setSnipe(ctx, '0.1'); break;
-            case 'snipe_0.2_SOL': await setSnipe(ctx, '0.2'); break;
-            case 'snipe_0.5_SOL': await setSnipe(ctx, '0.5'); break;
-            case 'snipe_1_SOL': await setSnipe(ctx, '1'); break;
-            case 'snipe_5_SOL': await setSnipe(ctx, '5'); break;
+            case 'snipe_0.1_SOL': await setSnipe(ctx, '0.1'); { ctx.session.snipeAmount = 0.1; break; }
+            case 'snipe_0.2_SOL': await setSnipe(ctx, '0.2'); { ctx.session.snipeAmount = 0.2; break; };
+            case 'snipe_0.5_SOL': await setSnipe(ctx, '0.5'); { ctx.session.snipeAmount = 0.5; break; };
+            case 'snipe_1_SOL': await setSnipe(ctx, '1'); { ctx.session.snipeAmount = 1; break; };
+            case 'snipe_5_SOL': await setSnipe(ctx, '5'); { ctx.session.snipeAmount = 5; break; };
             case 'snipe_X_SOL': {
                 ctx.session.latestCommand = 'snipe_X_SOL';
                 ctx.api.sendMessage(chatId, "Please enter amount to snipe.");

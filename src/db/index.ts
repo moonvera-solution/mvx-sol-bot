@@ -5,7 +5,12 @@ import {
     _getUserWalletByIndex,
     _dropUser
 } from './mongo/crud';
-import { Raydium_unOfficial_pools,Raydium_official_pools, WalletKeys, Portfolios ,UserPositions} from './mongo/schema';
+import { 
+    Raydium_unOfficial_pools,
+    Raydium_official_pools,
+    WalletKeys, Portfolios,
+    UserPositions,SnipeCache
+} from './mongo/schema';
 
 
 export {
@@ -18,5 +23,6 @@ export {
     Raydium_official_pools,
     WalletKeys,
     Portfolios,
-    UserPositions
+    UserPositions,
+    SnipeCache
 }

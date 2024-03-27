@@ -173,3 +173,9 @@ export type USERPOSITION_TYPE = {
     }
   ]
 }
+
+export type SNIPE_CACHE_TYPE = {
+  baseMint: string;
+  port: number;
+  chatIds: number[]
+}

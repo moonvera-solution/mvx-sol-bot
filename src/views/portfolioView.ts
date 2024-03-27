@@ -12,6 +12,7 @@ import { quoteToken } from './util/dataCalculation';
 export async function display_spl_positions(
     ctx: any,
 ) {
+    console.log("ctx.session.activeWalletIndex: ",ctx.session.activeWalletIndex);
     const userWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex].publicKey;
     const userPosition: any = await UserPositions.find({ walletId: userWallet });
 

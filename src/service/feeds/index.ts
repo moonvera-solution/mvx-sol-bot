@@ -13,7 +13,7 @@ export async function getTokenMetadata(ctx: any, tokenAddress: string): Promise<
     console.log('tokenAddress',tokenAddress)
     // console.log('ctx.session',ctx.session)
     // const tokenAddress = ctx.session.portfolio.activeTradingPool.baseMint;
-    const chatId = ctx.chat.id;
+    const chatId = ctx.session.portfolio.id;
     if (!isValidBase58(tokenAddress)) {
         console.error('Invalid token address:', tokenAddress);
         ctx.api.sendMessage(chatId, "Invalid token address provided.", { parse_mode: 'HTML' });

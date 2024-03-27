@@ -46,6 +46,8 @@ const connection_only = new Connection(NODE_URL);
   export const DEFAULT_DEMO_DATA_FILE = "demo.json";
   export const JITO_ACCESS_TOKEN=process.env.JITO_ACCESS_TOKEN;
   export const JUPITER_REFERRAL_ACCOUNT_PK = process.env.JUPITER_REFERRAL_ACCOUNT_PK;
+  export const SOL = new PublicKey('So11111111111111111111111111111111111111112');
+  export const AMMV4 = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8');
 
 export const DEFAULT_TOKEN = {
   // 'SOL': new Currency(9, 'USDC', 'USDC'),

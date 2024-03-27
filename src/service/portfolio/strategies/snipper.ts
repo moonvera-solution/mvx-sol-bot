@@ -16,19 +16,82 @@ import base58 from 'bs58';
 import { getRayPoolKeys, getPoolScheduleFromHistory } from "../../dex/raydium/market-data/1_Geyser";
 import { getTokenMetadata } from "../../feeds";
 import { waitForConfirmation, getSolBalance } from '../../util';
-import { Referrals, UserPositions } from "../../../db/mongo/schema";
+import { Referrals, UserPositions, SnipeCache } from "../../../db/mongo/schema";
+import axios from 'axios';
+import express from "express";
 
 
-export async function setSnipe(ctx: any, amountIn: any) {
+
+/*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+/*                       SNIPE WEB SERVICE                    */
+/*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
+const app = express();
+app.use(express.json());
+let port = 3100; // 3100 to 3200 is for snipper ws
+
+let _ctx: any;
+export async function listenToPoolLaunch(ctx: any, baseMint: string) {
+    try {
+        _ctx = JSON.parse(JSON.stringify(ctx));
+        const chatId = ctx.chat.id;
+        const record = await SnipeCache.findOne({ baseMint });
+        if (!record) {
+            axios.post(`http://localhost:3010/sniper-ws/${baseMint}`);
+            const cache = new SnipeCache({ baseMint, port, chatIds: [chatId] });
+            cache.save();
+            app.listen(port, () => {
+                console.log('Snipper listener is running on port', port);
+            });
+        } else {
+            if (record.chatIds.find(chatId)) {
+                await ctx.api.sendMessage(chatId, `Snipe already set for this token.`);
+            } else {
+                record.chatIds.push(chatId);
+                record.save();
+                port++; console.log('port', port);
+            }
+        }
+    } catch (e: any) {
+        console.log("Sniper WS CLOSED", e);
+    }
+}
+
+// un aware of context ctx, leave like this, simple
+app.post('/sniper-ws/:baseMint/:chatId', (async (req: any, res: any) => {
     
+    console.log('Callback WS', req.params.chatId);
+    console.log('Callback ctx', _ctx);
+    
+    if (_ctx.session.portfolio.chatId == req.params.chatId) {
+        if (port > 3199) port = 3100;
+        const baseMint = req.params.baseMint;
+        _ctx.session.activeTradingPool = await getRayPoolKeys(baseMint);
+        setSnipe(_ctx, _ctx.session.snipeAmount, baseMint);
+        await SnipeCache.deleteOne({ baseMint });
+        app.removeAllListeners();
+    }
+}));
+
+
+/*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+/*                       SNIPE CALL                           */
+/*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
+
+export async function setSnipe(ctx: any, amountIn: any, baseMint?: string) {
+
     // Returns either the time to wait or indicates pool is already open
     console.log('Snipe set ...');
-    const snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
-    const rayPoolKeys = await getRayPoolKeys(snipeToken.toBase58());
+    const chatId = _ctx.session.portfolio.chatId;
+    baseMint = baseMint ? baseMint : ctx.session.activeTradingPool.baseMint;
+    ctx.session.activeTradingPool = await getRayPoolKeys(baseMint!);
+    const snipeToken = new PublicKey(baseMint!);
+    const rayPoolKeys = ctx.session.activeTradingPool;
 
     const poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
     let liqInfo = await Liquidity.fetchInfo({ connection, poolKeys });
-    // console.log('liqInfo', liqInfo.startTime.toNumber());
+
     const amountInLamports = new BigNumber(Number.parseFloat(amountIn)).times(1e9);
     const snipeSlippage = ctx.session.snipeSlippage;
     const currentWalletIdx = ctx.session.activeWalletIndex;
@@ -38,17 +101,17 @@ export async function setSnipe(ctx: any, amountIn: any) {
     const userKeypair = await Keypair.fromSecretKey(base58.decode(String(currentWallet.secretKey)));
     ctx.session.snipeStatus = true;
 
-    await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一   ${amountIn} $${tokenData.symbol} Snipe set...`,
-    {
-        parse_mode: 'HTML',
-        disable_web_page_preview: true,
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: 'Cancel Snipe ', callback_data: 'cancel_snipe' }],
-            ]
-        },
-    });
-  
+    await ctx.api.sendMessage(chatId, `▄︻デ══━一   ${amountIn} $${tokenData.symbol} Snipe set...`,
+        {
+            parse_mode: 'HTML',
+            disable_web_page_preview: true,
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: 'Cancel Snipe ', callback_data: 'cancel_snipe' }],
+                ]
+            },
+        });
+
 
     // Start the simulation without waiting for it to complete
     const poolStartTime = liqInfo.startTime.toNumber();
@@ -56,7 +119,7 @@ export async function setSnipe(ctx: any, amountIn: any) {
 
     simulationPromise.catch((error) => {
         console.log("Error setting snipper", error);
-        ctx.api.sendMessage(ctx.chat.id, `Error setting snipper, please try again.`);
+        ctx.api.sendMessage(chatId, `Error setting snipper, please try again.`);
     });
 
     try {
@@ -67,6 +130,10 @@ export async function setSnipe(ctx: any, amountIn: any) {
     }
 }
 
+/*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+/*                       SNIPE SIMULATION                     */
+/*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
 export async function startSnippeSimulation(
     ctx: any,
     poolKeys: any,
@@ -76,7 +143,7 @@ export async function startSnippeSimulation(
     poolStartTime: number,
     tokenData: any
 ) {
-    const chatId = ctx.chat.id;
+    const chatId = ctx.session.portfolio.chatId;
     const walletTokenAccounts = await _getWalletTokenAccount(connection, userWallet.publicKey);
     const _tokenIn: Token = new Token(TOKEN_PROGRAM_ID, poolKeys.quoteMint, poolKeys.quoteDecimals, '', '');
     const _tokenOut: Token = new Token(TOKEN_PROGRAM_ID, poolKeys.baseMint, poolKeys.baseDecimals, '', '');
@@ -90,20 +157,20 @@ export async function startSnippeSimulation(
     const computeBudgetMicroLamports = ctx.session.priorityFees.microLamports;
     const totalComputeBudget = computeBudgetMicroLamports * (computeBudgetUnits / 1e6);
     // console.log('totalComputeBudget', totalComputeBudget);
-      // ------- check user balanace in DB --------
-      const userPosition = await UserPositions.findOne({ walletId: userWallet.publicKey });
-      let oldPositionSol: number = 0;
-      let oldPositionToken: number = 0;
-      if (userPosition) {
-          const existingPositionIndex = userPosition.positions.findIndex(
-              position => position.baseMint === _tokenOut.toString()
-          );
-       if(userPosition.positions[existingPositionIndex]){
-          oldPositionSol = userPosition?.positions[existingPositionIndex].amountIn
-          oldPositionToken = userPosition?.positions[existingPositionIndex].amountOut!
-       }
-      } 
-    
+    // ------- check user balanace in DB --------
+    const userPosition = await UserPositions.findOne({ walletId: userWallet.publicKey });
+    let oldPositionSol: number = 0;
+    let oldPositionToken: number = 0;
+    if (userPosition) {
+        const existingPositionIndex = userPosition.positions.findIndex(
+            position => position.baseMint === _tokenOut.toString()
+        );
+        if (userPosition.positions[existingPositionIndex]) {
+            oldPositionSol = userPosition?.positions[existingPositionIndex].amountIn
+            oldPositionToken = userPosition?.positions[existingPositionIndex].amountOut!
+        }
+    }
+
     //-------------- Update Earnings referal on Db ----------------
     const referralRecord = await Referrals.findOne({ referredUsers: chatId });
     let actualEarnings = referralRecord?.earnings;
@@ -164,7 +231,7 @@ export async function startSnippeSimulation(
             toPubkey: new PublicKey(referralWallet),
             lamports: referralAmmount,
         });
-       
+
         innerTransactions[0].instructions.push(mvxFeeInx);
         innerTransactions[0].instructions.push(referralInx);
         minimumBalanceNeeded += cut_bot_fee + referralAmmount;
@@ -177,7 +244,7 @@ export async function startSnippeSimulation(
         innerTransactions[0].instructions.push(mvxFeeInx);
         minimumBalanceNeeded += bot_fee;
     }
-   
+
 
     const userSolBalance = await getSolBalance(userWallet.publicKey);
     console.log('userSolBalance', userSolBalance);
@@ -203,14 +270,20 @@ export async function startSnippeSimulation(
 
     const simulateTransaction = async () => {
         let txSign: any;
-        let snipeStatus:boolean = ctx.session.snipeStatus;
+        let snipeStatus: boolean = ctx.session.snipeStatus;
         while (sim && snipeStatus && count < SNIPE_SIMULATION_COUNT_LIMIT) {
             count++
             snipeStatus = ctx.session.snipeStatus;
             simulationResult = await connection.simulateTransaction(txV, { replaceRecentBlockhash: true, commitment: 'confirmed' });
-            const regex = /Error: exceeds desired slippage limit/;
-            if (simulationResult.value.logs.find((logMsg: any) => regex.test(logMsg))) {
-                ctx.api.sendMessage(ctx.chat.id, `🔴 Slippage error, try increasing your slippage %.`);
+            const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
+            const NO_FUNDS_FEE_ERROR = /Insufficient funds for fee/;
+            if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) {
+                ctx.api.sendMessage(chatId, `🔴 Slippage error, try increasing your slippage %.`);
+                return;
+            }
+
+            if (simulationResult.value.logs.find((logMsg: any) => NO_FUNDS_FEE_ERROR.test(logMsg))) {
+                ctx.api.sendMessage(chatId, `🔴 Insufficient funds for priority/network fees.`);
                 return;
             }
 
@@ -255,18 +328,18 @@ export async function startSnippeSimulation(
                                         name: tokenData.name,
                                         symbol: tokenData.symbol,
                                         tradeType: `ray_swap_buy`,
-                                        amountIn: oldPositionSol? oldPositionSol + amountIn.toNumber(): amountIn.toNumber(),
-                                        amountOut: oldPositionToken? oldPositionToken + Number(extractAmount) : Number(extractAmount)
+                                        amountIn: oldPositionSol ? oldPositionSol + amountIn.toNumber() : amountIn.toNumber(),
+                                        amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount)
                                     });
 
-             
+
                                     if (referralFee > 0) {
                                         if (referralRecord) {
                                             let updateEarnings = actualEarnings! + referralAmmount;
                                             referralRecord.earnings = Number(updateEarnings.toFixed(0));
                                             await referralRecord?.save();
                                         }
-                                    } 
+                                    }
                                 }
                             }
                             return txSign
@@ -291,32 +364,12 @@ export async function startSnippeSimulation(
     }).catch((error) => {
         console.log("Promise race error", error);
     });
-
-
 }
-
-// const getPoolSchedule = async (ctx: any, poolKeys: any) => {
-//     const poolSchedule = await getPoolScheduleFromHistory(poolKeys.id.toBase58());
-//     const nowMilli = new BigNumber(Number(new Date().getTime()));
-//     const chatId = ctx.chat.id;
-
-//     let diff: BigNumber = new BigNumber(0);
-//     if (poolSchedule) {
-//         const launchSchedule = new BigNumber(poolSchedule.open_time * 1000);
-//         diff = launchSchedule.minus(nowMilli);
-//         if (diff.gt(0)) {
-//             ctx.bot.sendMessage(chatId, `Pool opening in ${formatLaunchCountDown(diff.toNumber())}`);
-//             console.log("Pool opening in", launchSchedule.toNumber(), "seconds...");
-//             return diff;
-//         }
-//     }
-// };
 
 async function sleep(ms: any) {
     console.log("Sleeping for", ms.div(1000).toNumber());
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-
 
 async function _getWalletTokenAccount(connection: Connection, wallet: PublicKey): Promise<TokenAccount[]> {
     const walletTokenAccount = await connection.getTokenAccountsByOwner(wallet, {
@@ -428,36 +481,4 @@ export function formatLaunchCountDown(launchSchedule: number): string {
 
     // Return the time string
     return `${hours}:${minutes}:${seconds}`;
-}
-async function getPoolKeysRPC(baseMint: PublicKey) {
-    const AMMV4 = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8');
-    const commitment = "confirmed"
-    // 'memcmp:{base:',LIQUIDITY_STATE_LAYOUT_V4.offsetOf("baseMint"),
-    // 'memcmp:{quote:',LIQUIDITY_STATE_LAYOUT_V4.offsetOf("quoteMint")
-    const accounts = await connection.getProgramAccounts(
-        AMMV4,
-        {
-            commitment,
-            filters: [
-                { dataSize: LIQUIDITY_STATE_LAYOUT_V4.span },
-                {
-                    memcmp: {
-                        offset: 400,
-                        bytes: baseMint.toBase58(),
-                    },
-                },
-                {
-                    memcmp: {
-                        offset: 432,
-                        bytes: 'So11111111111111111111111111111111111111112'
-                    },
-                },
-            ],
-        }
-    );
-
-    return accounts.map(({ pubkey, account }) => ({
-        id: pubkey.toString(),
-        ...LIQUIDITY_STATE_LAYOUT_V4.decode(account.data),
-    }));
 }

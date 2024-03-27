@@ -3,12 +3,12 @@ import {
   Raydium_official_pools,
   Raydium_unOfficial_pools, Portfolios, Referrals
 } from './schema';
-import dotenv from 'dotenv';
+import dotenv from 'dotenv'; dotenv.config();
 import { PublicKey } from "@metaplex-foundation/js";
 import bs58 from "bs58";
 import { RAYDIUM_POOL_TYPE, DEFAULT_PUBLIC_KEY, DefaultPoolInfoData } from '../../service/util/types';
 import { SecretsManagerClient, GetSecretValueCommand, } from "@aws-sdk/client-secrets-manager";
-dotenv.config();
+
 const user = encodeURIComponent(process.env.DB_USER!);
 const password = encodeURIComponent(process.env.DB_PASSWORD!);
 const ec2_user = encodeURIComponent(process.env.EC2_CRON_USER!);
@@ -192,7 +192,6 @@ export async function _getReferralData(ctx: any) {
       totalEarnings: referralRecord.earnings,
       commissionPercentage: referralRecord.commissionPercentage,
       count: referralRecord.numberOfReferrals,
-      referralWallet: referralRecord.generatorWallet,
     };
   } catch (error:any) {
     console.error('Error fetching referral data:', error);

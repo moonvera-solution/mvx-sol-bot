@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import {PORTFOLIO_TYPE,RAYDIUM_POOL_TYPE,USERPOSITION_TYPE,REFERRAL_TYPE} from '../../service/util/types';
 
-
 const Schema = mongoose.Schema;
 const WalletSchema = new Schema({
   chatId: { type: Number, unique: true }, // not unique, will be overriden when reseting wallet
@@ -60,6 +59,13 @@ const ReferralSchema = new Schema<REFERRAL_TYPE>({
   referredUsers: [{ type: Number }]
 
 });
+
+const snipeCacheSchema = new Schema({
+  baseMint: { type: String, required: true },
+  port: { type: Number, required: true },
+  chatIds: [{ type: Number }]
+});
+
 const UserPositionSchema = new Schema<USERPOSITION_TYPE>({
   walletId: { type: String, unique: true },
   positions: [
@@ -93,5 +99,6 @@ export const Raydium_official_pools = mongoose.model(
   PoolInfoSchema
 );
 
+export const SnipeCache = mongoose.model("SnipeCache", snipeCacheSchema);
 export const WalletKeys = mongoose.model("WalletKeys", WalletSchema);
 export const Portfolios = mongoose.model("Portfolios", UserPortfolioSchema);
