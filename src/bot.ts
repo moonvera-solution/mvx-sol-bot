@@ -42,32 +42,32 @@ bot.use(session({
 }));
 
 // Set the webhook
-const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
-const webhookUrl = 'https://7151-74-56-136-237.ngrok-free.app'; 
-bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
-  .then(() => console.log("Webhook set successfully"))
-  .catch(err => console.error("Error setting webhook:", err)
-);
-const handleUpdate = webhookCallback(bot, 'express');
+// const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
+// const webhookUrl = 'https://7151-74-56-136-237.ngrok-free.app'; 
+// bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
+//   .then(() => console.log("Webhook set successfully"))
+//   .catch(err => console.error("Error setting webhook:", err)
+// );
+// const handleUpdate = webhookCallback(bot, 'express');
 // // Create the HTTP server and define request handling logic
-app.use(express.json()); // for parsing application/json
+// app.use(express.json()); // for parsing application/json
 
-app.post(`/bot${botToken}`, handleUpdate);
+// app.post(`/bot${botToken}`, handleUpdate);
 
-app.get('/', (req: any, res: any) => {
-  res.send('Hello from ngrok server!');
-});
+// app.get('/', (req: any, res: any) => {
+//   res.send('Hello from ngrok server!');
+// });
 // // const server = createServer(bot);
-const port = process.env.PORT || 3000; 
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
+// const port = process.env.PORT || 3000; 
+// app.listen(port, () => {
+//     console.log(`Server is running on port ${port}`);
+// });
 
 
 const allowedUsernames = ['tech_01010', 'daniellesifg']; // without the @
 
 // /********** INIT BOT & DB ***** */
-// bot.start();
+bot.start();
 _initDbConnection();
 
 // bot.command('refer_friends', async (ctx) => {
@@ -455,24 +455,40 @@ bot.on('callback_query', async (ctx: any) => {
     // console.log("callback_query", data);
     const positionCallSell = /^sellpos_\d+_\d+$/;
     const positionCallBuy = /^buypos_x_\d+$/;
+    const positionNavigate = /^(prev_position|next_position)_\d+$/;
+
     try {
         const matchSell = data.match(positionCallSell);
         const matchBuy = data.match(positionCallBuy);
+        const matchNavigate = data.match(positionNavigate);
         if (matchSell) {
             const parts = data.split('_');
             const sellPercentage = parts[1]; // '25', '50', '75', or '100'
             const positionIndex = parts[2]; // Position index
 
-            ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
+            // ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
             await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', sellPercentage);
             return;
         }else if (matchBuy){
             const parts = data.split('_');
             const positionIndex = parts[2]; // Position index
-            ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
+            // ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
             ctx.api.sendMessage(chatId, "Please enter SOL amount");
             ctx.session.latestCommand = 'buy_X_SOL';
             return;
+        }else if (matchNavigate) {
+            const parts = data.split('_');
+            const newPositionIndex = parseInt(parts[2]); // New position index
+            console.log("newPositionIndex", newPositionIndex);
+            console.log("ctx.session.positionPool", ctx.session.positionPool);
+            // Update the current position index
+            ctx.session.positionIndex = newPositionIndex;
+            console.log("ctx.session.positionIndex", ctx.session.positionIndex);
+
+            ctx.session.activeTradingPool = ctx.session.positionPool[ctx.session.positionIndex]
+            console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
+            // Redisplay the positions with the updated index
+            await refresh_spl_positions(ctx);
         }
 
 
@@ -528,7 +544,7 @@ bot.on('callback_query', async (ctx: any) => {
             }
             case 'refresh_start': await handleRefreshStart(ctx);
                 break;
-            case 'refresh_portfolio' : await refresh_spl_positions(ctx);
+            case 'refresh_portfolio' : await refresh_spl_positions(ctx); break;
             case 'refrech_rug_check': await Refresh_rugCheck(ctx); break;
             case 'select_wallet_0':
                 ctx.session.activeWalletIndex = 0;

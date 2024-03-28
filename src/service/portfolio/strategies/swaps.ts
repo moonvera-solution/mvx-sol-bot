@@ -121,7 +121,7 @@ export async function handle_radyum_swap(
                  
                     const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
                     const txAmount = JSON.parse(JSON.stringify(txxs!.meta!.innerInstructions![0].instructions!));
-                    let extractAmount;
+                    let extractAmount: number | undefined ;
                     if (Array.isArray(txAmount)) {
                         txAmount.forEach((tx) => {
                             if (tx.parsed.info.authority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1') {
@@ -143,7 +143,7 @@ export async function handle_radyum_swap(
                         if(side === 'sell') {
                             confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
                         }else{
-                            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${solAmount.toFixed(3)} <b>${_symbol}</b> for ${tokenAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
+                            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${Number(extractAmount / Math.pow(10,userTokenBalanceAndDetails.decimals )).toFixed(4)} <b>${_symbol}</b> for ${(swapAmountIn/1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
                         }
                         
                     } else {
@@ -168,7 +168,7 @@ export async function handle_radyum_swap(
                     }
 
                     if (side == 'buy') {
-
+                        if (extractAmount) {
                         saveUserPosition(
                             ctx,
                             userWallet.publicKey.toString(), {
@@ -177,11 +177,21 @@ export async function handle_radyum_swap(
                             symbol: _symbol,
                             tradeType: `ray_swap_${side}`,
                             amountIn: oldPositionSol? oldPositionSol + swapAmountIn : swapAmountIn,
-                            amountOut:  oldPositionToken? oldPositionToken + Number(extractAmount) : extractAmount,
+                            amountOut:  oldPositionToken? oldPositionToken + Number(extractAmount) : Number(extractAmount),
                         });
-                       
+                        }
                     } else if(side == 'sell'){
                         if(extractAmount){
+                            let newAmountIn, newAmountOut;
+                            if (Number(swapAmountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
+                                // Set amountIn and amountOut to 0 if selling all
+                                newAmountIn = 0;
+                                newAmountOut = 0;
+                            } else {
+                             
+                                newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
+                                newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(swapAmountIn) : oldPositionToken;
+                            }
                             saveUserPosition(
                                 ctx,
                                 userWallet.publicKey.toString(), {
@@ -189,8 +199,8 @@ export async function handle_radyum_swap(
                                 name: userTokenBalanceAndDetails.userTokenName,
                                 symbol: _symbol,
                                 tradeType: `ray_swap_${side}`,
-                                amountIn: oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol,
-                                amountOut: oldPositionToken > 0 ? oldPositionToken - Number(swapAmountIn) : oldPositionToken,
+                                amountIn: newAmountIn,
+                                amountOut: newAmountOut,
                             });
                         }   
                     }

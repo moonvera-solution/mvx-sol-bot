@@ -20,7 +20,7 @@ export async function Refresh_rugCheck(ctx: any) {
     const quoteDecimals = rugPool.quoteDecimals;
     const baseMint = rugPool.baseMint;
     const lpMint = rugPool.lpMint;
-    console.log('lpMint', lpMint);  
+    // console.log('lpMint', lpMint);  
     const solprice = await getSolanaDetails();
     const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint });
     const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);

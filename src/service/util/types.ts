@@ -49,10 +49,9 @@ export interface ISESSION_DATA {
   generatorWallet: PublicKey;
   referralCommision: number;
   poolTime: number;
-
-positionPool: Array<any>;
-  
+  positionPool: Array<any>;
   priorityFees:PriotitizationFeeLevels;
+  positionIndex: number;
 }
 
 export const enum PriotitizationFeeLevels {
@@ -121,7 +120,8 @@ export const DefaultSessionData: ISESSION_DATA = {
   snipeSlippage: 20,
   poolTime: 0,
   positionPool: [],
-  priorityFees: PriotitizationFeeLevels.LOW
+  priorityFees: PriotitizationFeeLevels.LOW,
+  positionIndex: 0,
   // txTip:5_000
 }
 

@@ -18,19 +18,45 @@ export async function display_spl_positions(
     const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userWallet });
     // console.log("userPosition:: ", userPosition[0]);
     
-    let messageParts = [];
     
     const solprice = await getSolanaDetails();
     // console.log(userPosition[0]?.positions.length)
     if( userPosition[0]?.positions.length == 0) {
+            // await UserPositions.deleteOne({ positionChatId: chatId, walletId: userWallet });
             await ctx.api.sendMessage(ctx.chat.id, "No positions found", { parse_mode: 'HTML' });
             return;
     }
+    let currentIndex = ctx.session.positionIndex;
 
+    // Function to create keyboard for a given position
+    const createKeyboardForPosition = (index: any) => { 
+        let prevIndex = index - 1 < 0 ? userPosition[0].positions.length - 1 : index - 1;
+        let nextIndex = index + 1 >= userPosition[0].positions.length ? 0 : index + 1;
+
+        let posSymbol = userPosition[0].positions[currentIndex].symbol; // Get the symbol for the current position
+        ctx.session.activeTradingPool
+        return [
+            [ { text: `${posSymbol}`, callback_data: `current_position` }],
+            [{ text: `Sell 25%`, callback_data: `sellpos_25_${currentIndex}` },{ text: `Sell 50%`, callback_data: `sellpos_50_${currentIndex}` }],
+            [{ text: `Sell 75%`, callback_data: `sellpos_75_${currentIndex}` },{ text: `Sell 100%`, callback_data: `sellpos_100_${currentIndex}` }],
+            [{ text: `Buy more`, callback_data: `buypos_x_${currentIndex}` }],
+            [{ text: 'Previous', callback_data: `prev_position_${prevIndex}` }, 
+             { text: 'Next', callback_data: `next_position_${nextIndex}` }],
+            [{ text: `Refresh Positions`, callback_data: 'refresh_portfolio' }]
+        ];
+    };
+    let fullMessage = '';
     if (userPosition && userPosition[0]?.positions) {
         for (let index in userPosition[0].positions) {
 
             let pos = userPosition[0].positions[index];
+            if(pos.amountIn == 0 || pos.amountOut == 0 || pos.amountOut < 0 || pos.amountIn < 0) {
+                await UserPositions.updateOne(
+                    { walletId: userWallet },
+                    { $pull: { positions: { baseMint: pos.baseMint } }
+                });
+                continue;
+            }
             const token = String(pos.baseMint);
             
             const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
@@ -69,69 +95,30 @@ export async function display_spl_positions(
             const formattedmac= await formatNumberToKOrM(marketCap) ?? "NA";
         
             
-            let positionDetails = `<b>${pos.name} (${pos.symbol})</b> | <code>${poolKeys.baseMint}</code>\n\n` +
-            `Mcap: ${formattedmac} <b>USD</b>\n\n` +
+            fullMessage += `<b>${pos.name} (${pos.symbol})</b> | <code>${poolKeys.baseMint}</code>\n` +
+            `Mcap: ${formattedmac} <b>USD</b>\n` +
             `Capital: ${initialInSOL.toFixed(4)} <b>SOL</b> | ${initialInUSD.toFixed(4)} <b>USD </b>\n` +
             `Current value: ${valueInSOL.toFixed(4)} <b>SOL</b> | ${valueInUSD.toFixed(4)} <b>USD </b>\n` +
-            `Profit: ${profitInSol.toFixed(4)} <b>SOL</b> | ${profitInUSD.toFixed(4)} <b>USD</b> | ${profitPercentage.toFixed(2)}%\n\n ` +
-            `Token Balance in Wallet: ${Number(userBalance.dividedBy(1e9)).toFixed(2)} <b>${pos.symbol}</b> |${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n`+
-            ``;
+            `Profit: ${profitInSol.toFixed(4)} <b>SOL</b> | ${profitInUSD.toFixed(4)} <b>USD</b> | ${profitPercentage.toFixed(2)}%\n\n` +
+            `Token Balance in Wallet: ${Number(userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).toFixed(3)} <b>${pos.symbol}</b> | ${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n\n`;
       
-                    let dynamicCallback = `_p:${token}`;
-                    let sellButton = [
-                    [{text: `sell 25%`, callback_data: `sellpos_25_${index}`},
-                    {text: `sell 50%`, callback_data: `sellpos_50_${index}`},
-                    {text: `sell 75%`, callback_data: `sellpos_75_${index}`}, 
-                    {text: `sell 100%`, callback_data: `sellpos_100_${index}`}],
-                    [{text: `buy... ${pos.symbol}`,callback_data: `buypos_x_${index}` },{text: `refresh`, callback_data: 'refresh_portfolio'}]
-                    ];
-                    messageParts.push({ text: positionDetails, buttons: sellButton, parse_mode: 'HTML'});
+
         }
     };
+    let keyboardButtons = createKeyboardForPosition(currentIndex);
 
-    for (let part of messageParts) {
-        let options = {
-            parse_mode: 'HTML',
-            disable_web_page_preview: true,
-            reply_markup: {
-                inline_keyboard: part.buttons
-            },
-        };
-        await ctx.api.sendMessage(ctx.chat.id, part.text, options);
-    }
+    let options = {
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+        reply_markup: { inline_keyboard: keyboardButtons },
+    };
+
+    await ctx.api.sendMessage(ctx.chat.id, fullMessage, options);
 }
 
 
 
-async function formatSubscriptNumber(num: any) {
-    // console.log("num:: ", num);
-    // Convert the number to a BigNumber and then to a fixed string
-    const fixedString = new BigNumber(num).toFixed();
-    // console.log("fixedString:: ", fixedString);
 
-    // Split the string into the integer and decimal parts
-    const [integerPart, decimalPart] = fixedString.split('.');
-    // console.log("integerPart:: ", integerPart);
-    // console.log("decimalPart:: ", decimalPart);
-
-    // Count the number of trailing zeros in the decimal part
-    if (decimalPart) {
-        const trailingZeros = (decimalPart.match(/^0*/) || [''])[0].length;
-
-        // console.log("trailingZeros:: ", trailingZeros);
-        // Remove the trailing zeros
-        const trimmedDecimalPart = decimalPart.replace(/0+/, '');
-        // console.log("trimmedDecimalPart:: ", trimmedDecimalPart);
-        // Map the number of trailing zeros to a subscript character
-        const subscriptNumbers = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'];
-        const subscript = trailingZeros > 1 ? subscriptNumbers[trailingZeros - 1] : '';
-        // console.log("subscript:: ", subscript);
-        const oneZeroFix = subscript != '' ? subscript == '₀' ? '0' : `0${subscript}` : ''
-
-        // Return the formatted string
-        return `${integerPart}.${oneZeroFix}${roundLargeNumber(trimmedDecimalPart)}`;
-    }
-}
 
 
 /**

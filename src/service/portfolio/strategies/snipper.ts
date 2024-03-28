@@ -97,16 +97,18 @@ export async function startSnippeSimulation(
       // ------- check user balanace in DB --------
       const userPosition = await UserPositions.findOne({positionChatId: chatId, walletId: userWallet.publicKey.toString() });
       console.log('userPosition', userPosition);
+    console.log('_tokenOut', _tokenOut.mint.toBase58());
       let oldPositionSol: number = 0;
       let oldPositionToken: number = 0;
       if (userPosition) {
           const existingPositionIndex = userPosition.positions.findIndex(
-              position => position.baseMint === _tokenOut.toString()
-          );
-       if(userPosition.positions[existingPositionIndex]){
-          oldPositionSol = userPosition?.positions[existingPositionIndex].amountIn
-          oldPositionToken = userPosition?.positions[existingPositionIndex].amountOut!
-       }
+              position => position.baseMint === _tokenOut.mint.toBase58()
+            );
+            console.log('existingPositionIndex', existingPositionIndex);
+            if(userPosition.positions[existingPositionIndex]){
+                oldPositionSol = userPosition?.positions[existingPositionIndex].amountIn
+                oldPositionToken = userPosition?.positions[existingPositionIndex].amountOut!
+            }
       } 
     
     //-------------- Update Earnings referal on Db ----------------
@@ -210,6 +212,7 @@ export async function startSnippeSimulation(
   if (Units) {
     console.log("units: ", Units);
     Units = Math.ceil(Units * 2); // margin of error
+    console.log("Units", Units);
     innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Units }));
   }
   console.log("maxPriorityFee", maxPriorityFee);

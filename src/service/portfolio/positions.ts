@@ -24,14 +24,15 @@ export async function saveUserPosition(ctx: any, walletId: String, newPosition:
         if (userPosition) {
             // console.log("userPosition",userPosition);
             const existingPositionIndex = userPosition.positions.findIndex(
-                position => position.baseMint === newPosition.baseMint
+                position => position.baseMint === newPosition.baseMint.toString()
             );
             // console.log("existingPositionIndex",existingPositionIndex);
 
             if (existingPositionIndex === -1) {
-               
+                // console.log("newPosition",newPosition);
                 userPosition.positions.push(newPosition);
                 await userPosition.save();
+                
             } else {
                 userPosition.positions[existingPositionIndex] = newPosition;
                 await userPosition.save();
