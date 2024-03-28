@@ -294,6 +294,7 @@ bot.on('message', async (ctx) => {
                     } else {
                         ctx.api.sendMessage(chatId, "Invalid address");
                     }
+                    
                 }
                 break;
             }
