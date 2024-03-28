@@ -387,7 +387,7 @@ bot.on('message', async (ctx) => {
                     // ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
                     ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt);
 
-                    if (true) { //!ctx.session.activeTradingPool) {
+                    if (!ctx.session.activeTradingPool) {
                         ctx.session.snipperLookup = true;
                         ctx.session.snipeToken = new PublicKey(msgTxt);
                         display_snipe_options(ctx, msgTxt);
