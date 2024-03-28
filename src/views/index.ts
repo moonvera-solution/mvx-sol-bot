@@ -27,7 +27,6 @@ export async function handleCloseKeyboard(ctx: any) {
 }
 
 
-
 export async function display_token_details(ctx: any) {
 
 
@@ -162,6 +161,7 @@ export async function display_token_details(ctx: any) {
 export async function display_snipe_options(ctx: any,msgTxt?: string) {
     let messageText;
     const activePool = ctx.session.activeTradingPool;
+    if(!msgTxt && !activePool) {await ctx.api.sendMessage(ctx.chat.id, "Enter token address to snipe.", { parse_mode: 'HTML' }); return;}
 
     if (activePool && activePool.baseMint != DEFAULT_PUBLIC_KEY) {
 
@@ -232,7 +232,7 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
             `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
     } else {
         messageText = `📄 CA: <code>${msgTxt}</code> <a href="copy:${msgTxt}">🅲</a>\n` +
-            `No pool available for this token yet. \nSniper will be set for this token, please select slippage and amount.`;
+            `No pool available for this token yet. \nSet Sniper by selecting slippage and amount.`;
             // `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
             // `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
             // `Market Cap: <b>NaN USD</b>\n` +

@@ -260,14 +260,16 @@ bot.on('message', async (ctx) => {
                 } else if (ctx.session.currentMode === 'sell') {
                     ctx.session.latestCommand = 'sell';
                     await display_token_details(ctx);
-                }else{
+                } else {
                     await handleSettings(ctx);
                 }
                 break;
             }
-            case 'set_snipe_slippage':{
+            case 'set_snipe_slippage': {
                 ctx.session.snipeSlippage = Number(msgTxt);
-                await display_snipe_options(ctx);
+                ctx.session.latestCommand = 'snipe';
+                let snipeToken: string = ctx.session.snipeToken instanceof PublicKey ? ctx.session.snipeToken.toBase58() : ctx.session.snipeToken;
+                await display_snipe_options(ctx, snipeToken);
                 break;
             }
             case 'rug_check': {
@@ -295,13 +297,11 @@ bot.on('message', async (ctx) => {
                 }
                 break;
             }
-
-            case 'buy_X_SOL':
-                await handle_radyum_swap(ctx, (ctx.session.activeTradingPool.baseMint), 'buy', Number(msgTxt));
-                break;
+            case 'buy_X_SOL': await handle_radyum_swap(ctx, (ctx.session.activeTradingPool.baseMint), 'buy', Number(msgTxt));break;
             case 'sell_X_TOKEN': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', Number(msgTxt)); break;
             case 'snipe_X_SOL': {
                 if (msgTxt) {
+                    ctx.session.latestCommand = 'snipe';
                     if (ctx.session.snipperLookup) { snipperON(ctx, msgTxt) }
                     else { await setSnipe(ctx, msgTxt); }
                     break;
@@ -386,6 +386,7 @@ bot.on('message', async (ctx) => {
                 if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
                     // ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
                     ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt);
+                    console.log(" ctx.session.activeTradingPool", ctx.session.activeTradingPool);
 
                     if (!ctx.session.activeTradingPool) {
                         ctx.session.snipperLookup = true;
@@ -406,7 +407,7 @@ bot.on('message', async (ctx) => {
                         // Update current token index
                         // ctx.session.currentTokenIndex = 0; 
 
-                        display_snipe_options(ctx);
+                        display_snipe_options(ctx, ctx.session.snipeToken.toBase58());
                     }
                 } else {
                     ctx.api.sendMessage(chatId, "Invalid address");
@@ -579,7 +580,6 @@ bot.on('callback_query', async (ctx: any) => {
             }
             case 'help': await sendHelpMessage(ctx);
                 break;
-
             case 'create_new_wallet':
                 const allowed = await checkWalletsLength(ctx);
 
@@ -683,12 +683,13 @@ bot.on('callback_query', async (ctx: any) => {
                     ctx.session.referralCommision = referralRecord.commissionPercentage;
                     ctx.session.generatorWallet = referralRecord.generatorWallet;
                 }
-                const snipeToken = ctx.session.snipeToken;
+                let snipeToken = ctx.session.snipeToken;
                 ctx.session.latestCommand = 'snipe';
                 if (snipeToken == DEFAULT_PUBLIC_KEY) {
                     await ctx.api.sendMessage(chatId, "Enter token address to Snipe.");
                 } else {
-                    await display_snipe_options(ctx);
+                    snipeToken = snipeToken instanceof PublicKey ? snipeToken.toBase58() : snipeToken;
+                    await display_snipe_options(ctx, snipeToken);
                 }
                 break;
             }
@@ -712,7 +713,6 @@ bot.on('callback_query', async (ctx: any) => {
                 ctx.api.sendMessage(chatId, "Please paste the recipient's wallet address.");
                 break;
             }
-
             case 'previous_token': {
                 let history = ctx.session.tokenHistory;
                 let currentToken: PublicKey = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
@@ -820,7 +820,7 @@ bot.on('callback_query', async (ctx: any) => {
                 ctx.api.sendMessage(chatId, "Please enter amount to snipe.");
                 break;
             }
-            case 'display_spl_positions': {await display_spl_positions(ctx); break;}
+            case 'display_spl_positions': { await display_spl_positions(ctx); break; }
             case 'priority_low': {
                 ctx.session.priorityFees = PriotitizationFeeLevels.LOW;
                 priority_Level = 'low';

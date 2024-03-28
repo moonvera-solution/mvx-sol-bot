@@ -36,6 +36,7 @@ import {
   getWalletTokenAccount,
   buildTx,
   sendTx,
+  getSolBalance
 } from "../../../util";
 
 type WalletTokenAccounts = Awaited<ReturnType<typeof getWalletTokenAccount>>;
@@ -64,6 +65,7 @@ async function getPoolKeys(ammId: string): Promise<LiquidityPoolKeys> {
 
 export async function swapOnlyAmm(input: TxInputInfo) {
   const poolKeys = await getPoolKeys(input.targetPool);
+  let minSwapAmountBalance : number = 0;
   // console.log("poolKeys", poolKeys);
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                       QUOTE SWAP                           */
@@ -132,6 +134,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
       toPubkey: new PublicKey(WALLET_MVX),
       lamports: input.mvxFee.toNumber(), // 5_000 || 6_000
     });
+    
     const referralInx = SystemProgram.transfer({
       fromPubkey: input.wallet.publicKey,
       toPubkey: new PublicKey(input.referralWallet),
@@ -140,9 +143,10 @@ export async function swapOnlyAmm(input: TxInputInfo) {
 
     innerTransactions[0].instructions.push(mvxFeeInx);
     innerTransactions[0].instructions.push(referralInx);
-  }
-  // In case there is no referral  
-  else {
+
+    minSwapAmountBalance+= input.refferalFeePay.toNumber();
+    minSwapAmountBalance += input.mvxFee.toNumber();
+  }else {
     if (input.side === "sell") {
       const bot_fee = new BigNumber(amountOut.raw).multipliedBy(MVXBOT_FEES);
       input.mvxFee = new BigNumber(Math.ceil(Number(bot_fee)));
@@ -155,6 +159,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     });
     // innerTransactions[0].instructions.push(transferIx);
     innerTransactions[0].instructions.push(mvxFeeInx);
+    minSwapAmountBalance += input.mvxFee.toNumber();
   }
 
   const maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
@@ -164,19 +169,20 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     fallback: true
   } // slotsToReturn?: number
   );
-  // console.log("maxPriorityFee", maxPriorityFee);
+
+  minSwapAmountBalance += input.ctx.session.priorityFee;
+  const balanceInSOL = await getSolBalance(input.wallet.publicKey.toBase58());
+  if(balanceInSOL<minSwapAmountBalance) await input.ctx.api.sendMessage(input.ctx.portfolio.chatId, '🔴 Insufficient balance for transaction.', { parse_mode: 'HTML', disable_web_page_preview: true });
 
   const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee, });
 
   // Simulate the transaction and add the compute unit limit instruction to your transaction
   let [units] = await Promise.all([
     getSimulationUnits(connection, innerTransactions[0].instructions, input.wallet.publicKey),
-    
   ]);
 
   if (units) {
-    // console.log("units: ", units);
-    units = Math.ceil(units * 1.05); // margin of error
+    units = Math.ceil(units * 2); // margin of error
     innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units }));
   }
 

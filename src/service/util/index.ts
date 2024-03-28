@@ -349,7 +349,7 @@ export async function extractSignatureFromFailedTransaction(
     return failedSig;
 }
 export async function getSolBalance(publicKeyString: any) {
-    const publicKey = new PublicKey(publicKeyString);
+    const publicKey = publicKeyString instanceof PublicKey ? publicKeyString : new PublicKey(publicKeyString);
     try {
         const balance = await connection.getBalance(publicKey);
         return balance / LAMPORTS_PER_SOL; // Convert lamports to SOL

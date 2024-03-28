@@ -1,6 +1,6 @@
 import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken, publicKey } from '@raydium-io/raydium-sdk';
 import { PublicKey, Keypair } from '@solana/web3.js';
-import { getWalletTokenAccount, getSolBalance,waitForConfirmation } from '../../util';
+import { getWalletTokenAccount, getSolBalance, waitForConfirmation } from '../../util';
 import { DEFAULT_TOKEN, MVXBOT_FEES, connection } from '../../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
 import { display_token_details } from '../../../views';
@@ -38,7 +38,7 @@ export async function handle_radyum_swap(
 
 
         // ------- check user balanace in DB --------
-        const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString()});
+        const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
         console.log("userPosition", userPosition);
         let oldPositionSol: number = 0;
         let oldPositionToken: number = 0;
@@ -47,12 +47,11 @@ export async function handle_radyum_swap(
             const existingPositionIndex = userPosition.positions.findIndex(
                 position => position.baseMint === tokenOut.toString()
             );
-         if(userPosition.positions[existingPositionIndex]){
-            oldPositionSol = userPosition?.positions[existingPositionIndex].amountIn
-            oldPositionToken = userPosition?.positions[existingPositionIndex].amountOut!
-         }
-        } 
-
+            if (userPosition.positions[existingPositionIndex]) {
+                oldPositionSol = userPosition?.positions[existingPositionIndex].amountIn
+                oldPositionToken = userPosition?.positions[existingPositionIndex].amountOut!
+            }
+        }
 
         if (side == 'buy') {
             let originalBuyAmt = swapAmountIn;
@@ -64,21 +63,21 @@ export async function handle_radyum_swap(
             tokenIn = DEFAULT_TOKEN.WSOL;
             outputToken = OUTPUT_TOKEN;
             swapAmountIn = swapAmountIn * Math.pow(10, 9);
-             // ------------ MVXBOT_FEES  and referral ------------
-             
-             const bot_fee = new BigNumber(amountUse.multipliedBy(MVXBOT_FEES));
-             const referralAmmount = (bot_fee.multipliedBy(referralFee));
-             const cut_bot_fee = bot_fee.minus(referralAmmount);
-             if(referralFee > 0){
+            // ------------ MVXBOT_FEES  and referral ------------
+
+            const bot_fee = new BigNumber(amountUse.multipliedBy(MVXBOT_FEES));
+            const referralAmmount = (bot_fee.multipliedBy(referralFee));
+            const cut_bot_fee = bot_fee.minus(referralAmmount);
+            if (referralFee > 0) {
                 mvxFee = new BigNumber(cut_bot_fee.multipliedBy(1e9));
                 refferalFeePay = new BigNumber(referralAmmount).multipliedBy(1e9);
-             } else{
+            } else {
                 mvxFee = new BigNumber(bot_fee).multipliedBy(1e9);
-             }
+            }
             // mvxFee = new BigNumber(swapAmountIn).times(MVXBOT_FEES);
             await ctx.api.sendMessage(chatId, `💸 Buying ${originalBuyAmt} SOL of ${userTokenBalanceAndDetails.userTokenSymbol}`);
         } else {
-         
+
             if (userTokenBalance == 0) {
                 await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userTokenBalance} ${userTokenBalanceAndDetails.userTokenSymbol}`);
                 return;
@@ -90,13 +89,13 @@ export async function handle_radyum_swap(
             swapAmountIn = Math.floor(sellAmountPercent * swapAmountIn / 100);
             await ctx.api.sendMessage(chatId, `💸 Selling ${percent}% ${userTokenBalanceAndDetails.userTokenSymbol}`);
         }
+
         const inputTokenAmount = new TokenAmount(tokenIn, Number(swapAmountIn));
         const slippage = new Percent(Math.ceil(userSlippage * 100), 10_000);
         const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
         const referralRecord = await Referrals.findOne({ referredUsers: chatId });
         let actualEarnings = referralRecord?.earnings;
 
-        
         // referalRecord.earnings = updateEarnings;
         if (poolKeys) {
             raydium_amm_swap({
@@ -118,7 +117,7 @@ export async function handle_radyum_swap(
                 const isConfirmed = await waitForConfirmation(txids[0]);
 
                 if (isConfirmed) {
-                 
+
                     const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
                     const txAmount = JSON.parse(JSON.stringify(txxs!.meta!.innerInstructions![0].instructions!));
                     let extractAmount;
@@ -126,7 +125,7 @@ export async function handle_radyum_swap(
                         txAmount.forEach((tx) => {
                             if (tx.parsed.info.authority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1') {
                                 extractAmount = tx.parsed.info.amount;
-                                
+
                             }
                         });
                     }
@@ -135,40 +134,39 @@ export async function handle_radyum_swap(
                     let solAmount;
                     let tokenAmount;
                     const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
-                    let solFromSell =new BigNumber(0);;
+                    let solFromSell = new BigNumber(0);;
                     if (extractAmount) {
                         solFromSell = new BigNumber(extractAmount);
                         solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
                         tokenAmount = swapAmountIn / Math.pow(10, userTokenBalanceAndDetails.decimals);
-                        if(side === 'sell') {
+                        if (side === 'sell') {
                             confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
-                        }else{
+                        } else {
                             confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${solAmount.toFixed(3)} <b>${_symbol}</b> for ${tokenAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
                         }
-                        
+
                     } else {
                         confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
                     }
-                    
+
                     const bot_fee = new BigNumber(solFromSell).multipliedBy(MVXBOT_FEES);
                     const referralAmmount = (bot_fee.multipliedBy(referralFee));
                     const cut_bot_fee = bot_fee.minus(referralAmmount);
-                    if(side === 'sell'){
-                        if(referralFee > 0){
+                    if (side === 'sell') {
+                        if (referralFee > 0) {
                             mvxFee = new BigNumber(cut_bot_fee);
                             refferalFeePay = new BigNumber(referralAmmount);
-                        } else{
+                        } else {
                             mvxFee = new BigNumber(bot_fee);
                         }
                     }
-                    if(referralRecord){                       
+                    if (referralRecord) {
                         let updateEarnings = actualEarnings! + (refferalFeePay).toNumber();
                         referralRecord.earnings = Number(updateEarnings.toFixed(0));
                         await referralRecord?.save();
                     }
 
                     if (side == 'buy') {
-
                         saveUserPosition(
                             ctx,
                             userWallet.publicKey.toString(), {
@@ -176,12 +174,12 @@ export async function handle_radyum_swap(
                             name: userTokenBalanceAndDetails.userTokenName,
                             symbol: _symbol,
                             tradeType: `ray_swap_${side}`,
-                            amountIn: oldPositionSol? oldPositionSol + swapAmountIn : swapAmountIn,
-                            amountOut:  oldPositionToken? oldPositionToken + Number(extractAmount) : extractAmount,
+                            amountIn: oldPositionSol ? oldPositionSol + swapAmountIn : swapAmountIn,
+                            amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : extractAmount,
                         });
-                       
-                    } else if(side == 'sell'){
-                        if(extractAmount){
+
+                    } else if (side == 'sell') {
+                        if (extractAmount) {
                             saveUserPosition(
                                 ctx,
                                 userWallet.publicKey.toString(), {
@@ -192,7 +190,7 @@ export async function handle_radyum_swap(
                                 amountIn: oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol,
                                 amountOut: oldPositionToken > 0 ? oldPositionToken - Number(swapAmountIn) : oldPositionToken,
                             });
-                        }   
+                        }
                     }
                     ctx.session.latestCommand = side;
                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
@@ -212,6 +210,6 @@ export async function handle_radyum_swap(
 
 }
 
-async function sortAndRemovePosition(){
-    
+async function sortAndRemovePosition() {
+
 }

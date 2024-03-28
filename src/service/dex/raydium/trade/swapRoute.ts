@@ -12,8 +12,6 @@ import {
   TokenAmount,
   TradeV2
 } from '@raydium-io/raydium-sdk';
-import { TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
-
 import {
   Keypair, TransactionMessage,
   PublicKey, VersionedTransaction,
