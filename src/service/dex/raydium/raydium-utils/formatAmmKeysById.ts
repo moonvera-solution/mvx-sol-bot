@@ -28,8 +28,19 @@ export async function formatAmmKeysById(id: string): Promise<ApiPoolInfoV4> {
   const marketInfo = MARKET_STATE_LAYOUT_V3.decode(marketAccount.data)
 
   const lpMint = info.lpMint
-  const lpMintAccount = await connection.getAccountInfo(lpMint)
-  if (lpMintAccount === null) throw Error(' get lp mint info error')
+  let lpMintAccount = await connection.getAccountInfo(lpMint)
+  let attempts = 0;
+  const maxAttempts = 500; 
+  const delay = 500; 
+  while (lpMintAccount === null && attempts < maxAttempts) {
+      console.log(`Attempt ${attempts + 1}: LP Mint info not found. Retrying in ${delay / 1000} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      lpMintAccount = await connection.getAccountInfo(lpMint);
+      attempts++;
+  }
+  if (lpMintAccount === null){
+    throw Error(' get lp mint info error')
+  } 
   const lpMintInfo = SPL_MINT_LAYOUT.decode(lpMintAccount.data);
   const authority = Liquidity.getAssociatedAuthority({ programId: account.owner }).publicKey.toString();
   // console.log('id:', id, 'authority:', authority, 'lpMint:', lpMint.toString(), 'lpMintInfo:', lpMintInfo.decimals, 'marketId:', marketId.toString(), 'marketInfo:', marketInfo.baseVault.toString(), marketInfo.quoteVault.toString(), marketInfo.bids.toString(), marketInfo.asks.toString(), marketInfo.eventQueue.toString());

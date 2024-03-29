@@ -24,7 +24,7 @@ export async function getTokenMetadata(ctx: any, tokenAddress: string): Promise<
     const tokenData = await metaplex.nfts().findByMint({ mintAddress: mintAddress });
 
     const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
-    const publicKeyString = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
+    const publicKeyString = ctx.session.portfolio.wallets[activeWalletIndexIdx]!.publicKey;
     // const solanaDetails = await getSolanaDetails();
    
     // const liquidityInfo = await getLiquidityFromDextools(tokenAddress);

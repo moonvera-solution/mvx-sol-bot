@@ -349,7 +349,7 @@ export async function extractSignatureFromFailedTransaction(
     return failedSig;
 }
 export async function getSolBalance(publicKeyString: any) {
-    const publicKey = new PublicKey(publicKeyString);
+    const publicKey = publicKeyString instanceof PublicKey ? publicKeyString : new PublicKey(publicKeyString);
     try {
         const balance = await connection.getBalance(publicKey);
         return balance / LAMPORTS_PER_SOL; // Convert lamports to SOL
@@ -591,7 +591,7 @@ export async function waitForConfirmation(txid: string): Promise<boolean> {
         // console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
 
         const status = await getTransactionStatus(txid);
-        // console.log('Transaction status:', status);
+        console.log('Transaction status:', status);
 
         if (status === 'confirmed' || status === 'finalized') {
             // console.log('Transaction is confirmed.');
@@ -602,7 +602,7 @@ export async function waitForConfirmation(txid: string): Promise<boolean> {
         }
     }
 
-    if (!isConfirmed) {
+    if (!isConfirmed && attempts >= maxAttempts) {
         console.error('Transaction could not be confirmed within the max attempts.');
     }
 
