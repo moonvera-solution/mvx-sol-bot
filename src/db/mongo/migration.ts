@@ -10,8 +10,8 @@ const ec2_password = encodeURIComponent(process.env.EC2_DB_PASSWORD!);
 const isProd = process.env.NODE_ENV == 'PROD';
 const authMechanism = 'SCRAM-SHA-1';
 
-const local_url = `mongodb://${user}:${password}@localhost:27017/test`;
-const ec2_url = `mongodb://${ec2_user}:${ec2_password}@localhost:27017/test`;
+const local_url = `mongodb://${user}:${password}@localhost:35048/bot`;
+const ec2_url = `mongodb://${ec2_user}:${ec2_password}@localhost:35048/bot`;
 
 async function migrateData() {
     mongoose.connect(isProd ? ec2_url : local_url);

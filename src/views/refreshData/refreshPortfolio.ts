@@ -1,10 +1,8 @@
-import { USERPOSITION_TYPE } from "@/service/util/types";
-import { UserPositions } from "../..//db";
-import { connection, wallet } from "../../../config";
-import { ISESSION_DATA } from "../../service/util/types";
-import { PublicKey, sol } from "@metaplex-foundation/js";
-import BigNumber from "bignumber.js";
-import { SPL_ACCOUNT_LAYOUT, TOKEN_PROGRAM_ID } from "@raydium-io/raydium-sdk";
+import { UserPositions } from '../..//db';
+import { connection } from '../../../config';
+import { PublicKey, sol } from '@metaplex-foundation/js';
+import BigNumber from 'bignumber.js';
+import {  TOKEN_PROGRAM_ID } from '@raydium-io/raydium-sdk';
 import { getSolanaDetails } from "../../api/priceFeeds/coinMarket";
 import { getRayPoolKeys } from "../../service/dex/raydium/market-data/1_Geyser";
 import { quoteToken } from "./../util/dataCalculation";
@@ -91,7 +89,6 @@ export async function refresh_spl_positions(ctx: any) {
             const profitInSol = valueInSOL - initialInSOL;
             const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
             const formattedmac= await formatNumberToKOrM(marketCap) ?? "NA";
-        
             
             fullMessage += `<b>${pos.name} (${pos.symbol})</b> | <code>${poolKeys.baseMint}</code>\n` +
             `Mcap: ${formattedmac} <b>USD</b>\n` +
@@ -99,8 +96,6 @@ export async function refresh_spl_positions(ctx: any) {
             `Current value: ${valueInSOL.toFixed(4)} <b>SOL</b> | ${valueInUSD.toFixed(4)} <b>USD </b>\n` +
             `Profit: ${profitInSol.toFixed(4)} <b>SOL</b> | ${profitInUSD.toFixed(4)} <b>USD</b> | ${profitPercentage.toFixed(2)}%\n\n` +
             `Token Balance in Wallet: ${Number(userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).toFixed(3)} <b>${pos.symbol}</b> | ${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n\n`;
-      
-
         }
     };
     let keyboardButtons = createKeyboardForPosition(currentIndex);
@@ -113,25 +108,3 @@ export async function refresh_spl_positions(ctx: any) {
 
     await ctx.editMessageText(fullMessage, options);
 }
-
-
-
-/**
- * In this code, we first convert the number to a string and extract the first 5 digits.
- * Then, we round the last digit of these 5 digits. If the last digit is 5 or more,
- * it gets rounded up to 10, otherwise it gets rounded down to 0.
- * Finally, we concatenate the first 4 digits with the rounded last digit and convert the result back to a number.
- */
-function roundLargeNumber(num: string) {
-  let strNum = num.toString();
-  let firstFiveDigits = strNum.substring(0, 5);
-  let lastDigit = Number(firstFiveDigits[4]);
-  let roundedLastDigit = Math.round(lastDigit / 5) * 5;
-  let res = Number(firstFiveDigits.substring(0, 4) + roundedLastDigit);
-  return String(res).length < 5 ? res : String(res).substring(0, 4);
-}
-
-// formatSubscriptNumber(new BigNumber('0.00000004566')).then((r) => (console.log("=>",r)));
-// formatSubscriptNumber(new BigNumber('234540.0000000004566')).then((r) => (console.log("=>",r)));
-// formatSubscriptNumber(new BigNumber('20.4566')).then((r) => (console.log("=>",r)));
-// display_spl_positions('').then().catch(console.error);

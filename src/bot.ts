@@ -1,21 +1,18 @@
 import { createUserPortfolio, createNewWallet, handleGetPrivateKey, checkWalletsLength, confirmResetWalletAgain, resetWallet } from './service/portfolio/wallets';
 import { handle_radyum_swap } from './service/portfolio/strategies/swaps';
-import { Bot, Context, GrammyError, HttpError, session, SessionFlavor, Api, webhookCallback } from "grammy";
-import { InlineKeyboardMarkup } from 'node-telegram-bot-api';
+import { Bot, Context, GrammyError, HttpError, session, SessionFlavor } from "grammy";
 import { importWallet, getPortfolio } from './service/portfolio/wallets';
-import { ISESSION_DATA, PORTFOLIO_TYPE, RAYDIUM_POOL_TYPE, DefaultSessionData, DEFAULT_PUBLIC_KEY, DefaultPortfolioData } from './service/util/types';
+import { ISESSION_DATA, DefaultSessionData, DEFAULT_PUBLIC_KEY, DefaultPortfolioData } from './service/util/types';
 import { Keypair, PublicKey } from '@solana/web3.js';
 import { _initDbConnection } from "./db/mongo/crud";
 import { handleSettings } from './service/settings';
 import { getSolanaDetails } from './api';
 import { setSnipe, snipperON } from './service/portfolio/strategies/snipper';
 import { display_token_details, display_snipe_options, handleCloseKeyboard } from './views';
-import dotenv from 'dotenv';
 import { getSolBalance, sendSol } from './service/util';
 import { handleRefreshStart, handleRereshWallet } from './views/refreshData/refreshStart';
 import { refreshTokenDetails } from './views/refreshData/refreshBuy';
-import { handleWallets } from './views/util/dbWallet';
-import { getPoolToken_details, quoteToken } from './views/util/dataCalculation';
+import { handleWallets } from './views/util/dbWallet'; 
 import { _getReservers } from './service/dex/raydium/market-data/2_Strategy';
 import { RefreshAllWallets } from './views/refreshData/RefresHandleWallets';
 import { getRayPoolKeys } from './service/dex/raydium/market-data/1_Geyser';
@@ -28,12 +25,8 @@ import { display_spl_positions } from './views/portfolioView';
 import { refreshSnipeDetails } from './views/refreshData/refereshSnipe';
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { refresh_spl_positions } from './views/refreshData/refreshPortfolio';
-
-// import { handleJupiterSell } from './service/dex/jupiter/trade/swaps';
-dotenv.config();
-const http = require('http');
-const express = require('express');
-const app = express();
+import { logErrorToFile } from "../error/logger";
+import { _loadEnvVars } from "./service/util/loadKeys";
 
 type MyContext = Context & SessionFlavor<ISESSION_DATA>;
 export const bot = new Bot<MyContext>(process.env.TELEGRAM_BOT_TOKEN!);
@@ -41,60 +34,41 @@ bot.use(session({
     initial: () => JSON.parse(JSON.stringify(DefaultSessionData))
 }));
 
-// Set the webhook
-// const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
-// const webhookUrl = 'https://7151-74-56-136-237.ngrok-free.app'; 
-// bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
-//   .then(() => console.log("Webhook set successfully"))
-//   .catch(err => console.error("Error setting webhook:", err)
-// );
-// const handleUpdate = webhookCallback(bot, 'express');
-// // Create the HTTP server and define request handling logic
-// app.use(express.json()); // for parsing application/json
-
-// app.post(`/bot${botToken}`, handleUpdate);
-// app.post(`/bot${botToken}`, handleUpdate);
-
-// app.get('/', (req: any, res: any) => {
-//   res.send('Hello from ngrok server!');
-// });
-// // const server = createServer(bot);
-// const port = process.env.PORT || 3000; 
-// app.listen(port, () => {
-//     console.log(`Server is running on port ${port}`);
-// });
-
-
 const allowedUsernames = ['tech_01010', 'daniellesifg']; // without the @
 
-// /********** INIT BOT & DB ***** */
+/*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+/*                  BOT START & SET ENV                       */
+/*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 bot.start();
 bot.start();
 _initDbConnection();
 
-// bot.command('refer_friends', async (ctx) => {
-//     const chatId = ctx.chat.id;
-//     const referralLink = generateReferralLink(ctx); // Implement this function
-//     ctx.api.sendMessage(chatId, `Share this link with your friends to invite them: ${referralLink}`);
-// });
+async function _setUpEnv(ctx: any): Promise<any> {
+    try {
+        const chatId = ctx.chat.id;
+        ctx.session.latestCommand = "start";        
 
+        // set env vars
+        await _loadEnvVars(ctx);
 
-bot.command("start", async (ctx: any) => {
-    const chatId = ctx.chat.id;
-    const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
-    let isNewUser = false;
+        // set user portfolio
+        ctx.session.portfolio = await getPortfolio(chatId) !== DefaultPortfolioData ? await getPortfolio(chatId) : await createUserPortfolio(ctx);
 
+        // set referral
+        await _setReferral(ctx,ctx.session.portfolio == DefaultPortfolioData);
+
+    } catch (error: any) {
+        console.error('Error in _setUpEnv:', error);
+        logErrorToFile('Env SetUp', error);
+    }
+}
+
+async function _setReferral(ctx:any,isNewUser:boolean) {
+    let chatId = ctx.chat.id;
     let referralCode = null;
-    // Check if there's additional text with the /start command
     if (ctx.message.text.includes(' ')) {
         referralCode = ctx.message.text.split(' ')[1];
     }
-    // if user already exists
-    if (portfolio === DefaultPortfolioData) {
-        // User is new
-        isNewUser = true;
-    }
-
     if (referralCode) {
         const referralRecord = await Referrals.findOne({ referralCode: referralCode });
         if (referralRecord && referralRecord.generatorChatId !== chatId) {
@@ -124,84 +98,77 @@ bot.command("start", async (ctx: any) => {
         await ctx.api.sendMessage(chatId, "Welcome to MVXBOT! Please start the bot using a referral link.");
         return;
     }
+}
 
-    //-------Start bot with wallet---------------------------
-    ctx.session.latestCommand = "start";
-    let userWallet: Keypair | null = null;
-    if (portfolio !== DefaultPortfolioData) {
-        ctx.session.portfolio = portfolio;
-    } else {
-        // at this point wallet from session is not avialable yet
-        // hence we do ctx.session.portfolio = await getPortfolio(chatId); at the end of the "start" function.
-        userWallet = await createUserPortfolio(ctx); // => { publicKey, secretKey }
+bot.command("start", async (ctx: any) => {
+    try {
+        await _setUpEnv(ctx);
+        const chatId = ctx.chat.id;
+        const wIdx = ctx.session.activeWalletIndex;
+        const userPk = ctx.session.portfolio.wallets[wIdx].publicKey;
+        const publicKeyString =  userPk instanceof PublicKey ? userPk.toBase58() : userPk;
+        const balanceInSOL = await getSolBalance(publicKeyString);
+        if (balanceInSOL === null) {
+            await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
+            return;
+        }
+        // SOL price
+        let solPriceMessage;
+        const details = await getSolanaDetails();
+        if (details) {
+            const solData = details.toFixed(2);
+            solPriceMessage = `\n\SOL Price: <b>${solData}</b> USD`;
+        } else {
+            solPriceMessage = '\nError fetching current SOL price.';
+        }
+
+        // Combine the welcome message, SOL price message, and instruction to create a wallet
+        const welcomeMessage = `✨ Welcome to <b>MVXBOT</b> - Your Advanced Trading Companion! ✨\n` +
+            `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
+            `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
+            `We're always working to bring you new features - stay tuned!\n\n` +
+            `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
+            `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> USD\n\n` +
+            `🖐🏼 For security, we recommend exporting your private key and keeping it paper.`;
+
+        // Set the options for th e inline keyboard with social links
+        const options: any = {
+            reply_markup: JSON.stringify({
+                inline_keyboard: [
+                    // [
+                    //     { text: '🌎 Website', url: 'https://moonvera.io/' },
+                    //     { text: '𝚇', url: 'https://twitter.com/moonvera_' }
+
+                    // ],
+                    [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
+                    [{ text: '☑️ Rug Check', callback_data: 'rug_check' }],
+                    [{ text: '🎯 Turbo Snipe', callback_data: 'snipe' }],
+                    [{ text: '💱 Buy', callback_data: 'buy' }, { text: 'Sell 📈', callback_data: 'sell' }],
+                    [{ text: 'ℹ️ Help', callback_data: 'help' }, { text: 'Refer Friends', callback_data: 'refer_friends' }],
+                    [{ text: 'Refresh', callback_data: 'refresh_start' }],
+                    [{ text: 'Positions', callback_data: 'display_spl_positions' }],
+                ],
+            }),
+            parse_mode: 'HTML'
+        };
+        // Send the message with the inline keyboard
+        ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
+        ctx.session.portfolio = await getPortfolio(chatId);
+
+    } catch (error: any) {
+        logErrorToFile('bot on start', error);
+        console.error('Error:', error);
     }
-
-    // Retrieve the current SOL details
-    let solPriceMessage = '';
-    const details = await getSolanaDetails();
-    const publicKeyString: PublicKey | String = userWallet ? userWallet.publicKey :
-        ctx.session.portfolio.wallets[ctx.session.activeWalletIndex].publicKey;
-
-    // Fetch SOL balance
-    const balanceInSOL = await getSolBalance(publicKeyString);
-    if (balanceInSOL === null) {
-        await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
-        return;
-    }
-
-    // solana price 
-    if (details) {
-        const solData = details.toFixed(2);
-        solPriceMessage = `\n\SOL Price: <b>${solData}</b> USD`;
-    } else {
-        solPriceMessage = '\nError fetching current SOL price.';
-    }
-
-    // Combine the welcome message, SOL price message, and instruction to create a wallet
-    const welcomeMessage = `✨ Welcome to <b>MVXBOT</b> - Your Advanced Trading Companion! ✨\n` +
-        `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
-        `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
-        `We're always working to bring you new features - stay tuned!\n\n` +
-        `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
-        `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> USD\n\n` +
-        `🖐🏼 For security, we recommend exporting your private key and keeping it paper.`;
-
-
-
-    // Set the options for th e inline keyboard with social links
-    const options: any = {
-        reply_markup: JSON.stringify({
-            inline_keyboard: [
-                // [
-                //     { text: '🌎 Website', url: 'https://moonvera.io/' },
-                //     { text: '𝚇', url: 'https://twitter.com/moonvera_' }
-
-                // ],
-                [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
-                [{ text: '☑️ Rug Check', callback_data: 'rug_check' }],
-                [{ text: '🎯 Turbo Snipe', callback_data: 'snipe' }],
-                [{ text: '💱 Buy', callback_data: 'buy' }, { text: 'Sell 📈', callback_data: 'sell' }],
-                [{ text: 'ℹ️ Help', callback_data: 'help' }, { text: 'Refer Friends', callback_data: 'refer_friends' }],
-                [{ text: 'Refresh', callback_data: 'refresh_start' }],
-                [{ text: 'Positions', callback_data: 'display_spl_positions' }],
-            ],
-        }),
-        parse_mode: 'HTML'
-    };
-    // Send the message with the inline keyboard
-    ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
-    ctx.session.portfolio = await getPortfolio(chatId);
 });
-
 
 bot.command('help', async (ctx) => {
     await sendHelpMessage(ctx);
-
 });
+
 bot.command('positions', async (ctx) => {
     await display_spl_positions(ctx);
-
 });
+
 bot.command('rugchecking', async (ctx) => {
     await ctx.api.sendMessage(ctx.chat.id, "Please provide the token address for a rug pull analysis.");
     ctx.session.latestCommand = 'rug_check';
@@ -213,7 +180,6 @@ bot.command('buy', async (ctx) => {
     if (referralRecord) {
         ctx.session.referralCommision = referralRecord.commissionPercentage;
         ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
-
     }
     ctx.session.latestCommand = 'buy';
     await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to Buy.");
@@ -230,23 +196,21 @@ bot.command('sell', async (ctx) => {
     ctx.session.latestCommand = 'sell';
     await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to sell.");
 });
+
 bot.command('snipe', async (ctx) => {
     const chatId = ctx.chat.id;
     const referralRecord = await Referrals.findOne({ referredUsers: chatId });
     if (referralRecord) {
         ctx.session.referralCommision = referralRecord.commissionPercentage;
         ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
-
     }
-
     ctx.session.latestCommand = 'snipe';
     await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to snipe.");
-
 });
+
 bot.command('settings', async (ctx) => {
     await handleSettings(ctx);
 });
-
 
 bot.on('message', async (ctx) => {
     try {
@@ -296,11 +260,11 @@ bot.on('message', async (ctx) => {
                     } else {
                         ctx.api.sendMessage(chatId, "Invalid address");
                     }
-                    
+
                 }
                 break;
             }
-            case 'buy_X_SOL': await handle_radyum_swap(ctx, (ctx.session.activeTradingPool.baseMint), 'buy', Number(msgTxt));break;
+            case 'buy_X_SOL': await handle_radyum_swap(ctx, (ctx.session.activeTradingPool.baseMint), 'buy', Number(msgTxt)); break;
             case 'sell_X_TOKEN': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', Number(msgTxt)); break;
             case 'snipe_X_SOL': {
                 if (msgTxt) {
@@ -455,21 +419,22 @@ bot.on('message', async (ctx) => {
             }
 
         }
-    } catch (e: any) {
-        console.error("ERROR on bot.on txt msg", e);
+    } catch (error: any) {
+        logErrorToFile('bot on msg', error);
+        console.error("ERROR on bot.on txt msg", error);
     }
 });
 
 export let priority_Level = 'low';
 bot.on('callback_query', async (ctx: any) => {
-    const chatId = ctx.chat.id;
-    const data = ctx.callbackQuery.data;
-    // console.log("callback_query", data);
-    const positionCallSell = /^sellpos_\d+_\d+$/;
-    const positionCallBuy = /^buypos_x_\d+$/;
-    const positionNavigate = /^(prev_position|next_position)_\d+$/;
-
     try {
+        const chatId = ctx.chat.id;
+        const data = ctx.callbackQuery.data;
+        // console.log("callback_query", data);
+        const positionCallSell = /^sellpos_\d+_\d+$/;
+        const positionCallBuy = /^buypos_x_\d+$/;
+        const positionNavigate = /^(prev_position|next_position)_\d+$/;
+
         const matchSell = data.match(positionCallSell);
         const matchBuy = data.match(positionCallBuy);
         const matchNavigate = data.match(positionNavigate);
@@ -897,11 +862,17 @@ bot.on('callback_query', async (ctx: any) => {
             }
         }
         ctx.api.answerCallbackQuery(ctx.callbackQuery.id);
-    } catch (e: any) {
-        console.error(e.message);
-        console.error(e);
+    } catch (error: any) {
+        logErrorToFile('bot on callback_query', error);
+        console.error(error);
     }
 });
+
+// bot.command('refer_friends', async (ctx) => {
+//     const chatId = ctx.chat.id;
+//     const referralLink = generateReferralLink(ctx); // Implement this function
+//     ctx.api.sendMessage(chatId, `Share this link with your friends to invite them: ${referralLink}`);
+// });
 
 bot.catch((err) => {
     const ctx = err.ctx;

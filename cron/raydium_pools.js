@@ -8,16 +8,16 @@ const Bottleneck = require('bottleneck'); // Install this package via npm
 
 dotenv.config();
 
-const user = 'solfidev' //encodeURIComponent(process.env.DB_USER);
-const password = 'solfiFvVDc6gZmYho6DLLuJ3ptHS6rxb797Cxf1insiUnu2BLec2_user'//encodeURIComponent(process.env.DB_PASSWORD);
+const user = encodeURIComponent(process.env.DB_USER);
+const password = encodeURIComponent(process.env.DB_PASSWORD);
 const ec2_user = encodeURIComponent(process.env.EC2_CRON_USER);
 const ec2_password = encodeURIComponent(process.env.EC2_DB_PASSWORD);
 const isProd = process.env.NODE_ENV == 'dev';
 const authMechanism = 'SCRAM-SHA-1';
 
-const local_url = `mongodb://${user}:${password}@localhost:27017/test`;
-const ec2_url = `mongodb://${ec2_user}:${ec2_password}@localhost:27017/test`;
-const connection = new Connection('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41')
+const local_url = `mongodb://${user}:${password}@localhost:35048/bot`;
+const ec2_url = `mongodb://${ec2_user}:${ec2_password}@localhost:35048/bot`;
+const connection = new Connection('')
 
 /**
  * All DB functions are prefized with an underscore (_)

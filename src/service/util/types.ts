@@ -39,7 +39,7 @@ export interface ISESSION_DATA {
   snipeAmount: number;
   snipeSlippage: number;
   snipeStatus: boolean;
-  snipperLookup:boolean;
+  snipperLookup: boolean;
   buyTokenHistory: PublicKey[];
   sellTokenHistory: PublicKey[];
   tokenHistory: PublicKey[];
@@ -51,8 +51,11 @@ export interface ISESSION_DATA {
   referralCommision: number;
   poolTime: number;
   positionPool: Array<any>;
-  priorityFees:PriotitizationFeeLevels;
-  positionIndex: number;
+  priorityFees: PriotitizationFeeLevels;
+  positionIndex:number;
+  env: {
+    [key: string]: string
+  }
 }
 
 export const enum PriotitizationFeeLevels {
@@ -117,7 +120,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   sellToken: DEFAULT_PUBLIC_KEY,
   snipeToken: DEFAULT_PUBLIC_KEY,
   snipeStatus: true,
-  snipperLookup:false,
+  snipperLookup: false,
   snipeAmount: 0,
   snipeSlippage: 20,
   poolTime: 0,
@@ -125,6 +128,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   priorityFees: PriotitizationFeeLevels.LOW,
   positionIndex: 0,
   // txTip:5_000
+  env: {}
 }
 
 export type RAYDIUM_POOL_TYPE = {

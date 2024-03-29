@@ -1,6 +1,6 @@
 import { USERPOSITION_TYPE } from '@/service/util/types';
 import { UserPositions } from '../db';
-import { connection, wallet } from '../../config';
+import { connection } from '../../config';
 import { ISESSION_DATA } from '../service/util/types';
 import { PublicKey, sol } from '@metaplex-foundation/js';
 import BigNumber from 'bignumber.js';

@@ -2,20 +2,15 @@ import mongoose from 'mongoose';
 import {
  Portfolios, Referrals
 } from './schema';
-import dotenv from 'dotenv';
+import dotenv from 'dotenv';dotenv.config();
 import { PublicKey } from "@metaplex-foundation/js";
 import bs58 from "bs58";
-import { RAYDIUM_POOL_TYPE, DEFAULT_PUBLIC_KEY, DefaultPoolInfoData } from '../../service/util/types';
 import { SecretsManagerClient, GetSecretValueCommand, } from "@aws-sdk/client-secrets-manager";
 dotenv.config();
-const user = encodeURIComponent(process.env.DB_USER!);
-const password = encodeURIComponent(process.env.DB_PASSWORD!);
-const ec2_user = encodeURIComponent(process.env.EC2_CRON_USER!);
-const ec2_password = encodeURIComponent(process.env.EC2_DB_PASSWORD!);
+const user =''
+const password =''
 const isProd = process.env.NODE_ENV == 'PROD';
 const local_url = `mongodb://127.0.0.1:27017/test`;
-const SOL_TOKEN = "So11111111111111111111111111111111111111112";
-
 
 // https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/getting-started.html
 export async function anon() :Promise<any> {
@@ -25,7 +20,6 @@ export async function anon() :Promise<any> {
   });
 
   let response;
-
   try {
     response = await client.send(
       new GetSecretValueCommand({
@@ -47,17 +41,14 @@ export async function anon() :Promise<any> {
 export async function _initDbConnection() {
   // const db =  await mongoose.connect(local_url, { useNewUrlParser: true, useUnifiedTopology: true });
   const _anon = isProd ? await anon() : null;
-  mongoose.connect(local_url, {
-    /** Set to false to [disable buffering](http://mongoosejs.com/docs/faq.html#callback_never_executes) on all models associated with this connection. */
-    /** The name of the database you want to use. If not provided, Mongoose uses the database name from connection string. */
-    dbName: 'test',
-    /** username for authentication, equivalent to `options.auth.user`. Maintained for backwards compatibility. */
-    user: isProd ? _anon.user : user,
-    autoIndex: true,
-    /** password for authentication, equivalent to `options.auth.password`. Maintained for backwards compatibility. */
+  mongoose.connect(isProd ? _anon.db : local_url, {
+    user: isProd ? _anon.usr : user,
     pass: isProd ? _anon.pw : password,
+    autoIndex: true
   });
+
   const db = mongoose.connection;
+  
   db.on('error', console.error.bind(console, 'ERR connection error:'));
   db.once('open', function () {
     console.log("Connected to DB");
