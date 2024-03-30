@@ -34,11 +34,11 @@ import { _loadEnvVars ,loadSecrets} from "./service/util/loadKeys";
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
 (async() => {
-    const {tg, triton} = await loadSecrets();
+    const keys= await loadSecrets();
     type MyContext = Context & SessionFlavor<ISESSION_DATA>;
-    console.log("triton", triton , "\n")
+    console.log("triton", keys , "\n")
 
-    console.log("tg", tg);
+    console.log("tg", keys.tg);
 
     // const bot = new Bot<MyContext>(keys.tg);
 
