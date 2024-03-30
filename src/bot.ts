@@ -41,13 +41,15 @@ async function initializeBot() {
     if (isProd) {
         loadSecrets().then((_anon: any) => {
             console.log("_anon", _anon);
-            _initDbConnection(_anon);
-            tg = _anon.tg;
-            console.log("tg", tg);
-            const bot: Bot<MyContext> = new Bot<MyContext>(tg);
-            bot.use(session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) }));
-            bot.start();
-            return bot;
+            if (_anon) {
+                _initDbConnection(_anon);
+                tg = _anon.tg;
+                console.log("tg", tg);
+                const bot: Bot<MyContext> = new Bot<MyContext>(tg);
+                bot.use(session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) }));
+                bot.start();
+                return bot;
+            }
         });
     } else {
         _initDbConnection();
