@@ -26,15 +26,15 @@ import { refreshSnipeDetails } from './views/refreshData/refereshSnipe';
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { refresh_spl_positions } from './views/refreshData/refreshPortfolio';
 import { logErrorToFile } from "../error/logger";
-import { _loadEnvVars } from "./service/util/loadKeys";
+import { _loadEnvVars ,loadSecrets} from "./service/util/loadKeys";
 
 
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                  BOT START & SET ENV                       */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
-_initDbConnection().then((keys) => {
-    console.log("keys", keys)
+loadSecrets().then((keys) => {
+    console.log("keys", keys.tg)
 
     type MyContext = Context & SessionFlavor<ISESSION_DATA>;
     const bot = new Bot<MyContext>(keys.tg);
