@@ -1,5 +1,3 @@
-import { bot } from '../../bot'
-
 import { getSolanaDetails } from '../../api';
 import { getSolBalance } from '../../service/util/index';
 

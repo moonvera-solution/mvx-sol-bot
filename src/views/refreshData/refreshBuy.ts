@@ -5,13 +5,12 @@ import { RAYDIUM_POOL_TYPE } from '../../service/util/types';
 import { getSolanaDetails } from '../../api/priceFeeds/coinMarket';
 import { quoteToken } from '../util/dataCalculation';
 import { formatNumberToKOrM, getSolBalance } from '../../service/util';
-import { priority_Level } from '../../bot';
 import { runHigh, runMax, runMedium, runMin } from '../util/getPriority';
 
 
 export async function refreshTokenDetails(ctx: any) {
+    const priority_Level = ctx.session.priorityFees;
     const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
-
 
     // const { baseVault, quoteVault, baseDecimals, quoteDecimals, baseMint } = ctx.session.buyTokenData;
     const baseVault = rayPoolKeys.baseVault;
@@ -80,10 +79,9 @@ export async function refreshTokenDetails(ctx: any) {
                         [{ text: '⏮️ Previous', callback_data: 'previous_token' }, { text: `${tokenData.name} (${tokenData.symbol})`, callback_data: 'current_token' }, { text: 'Next ⏭️', callback_data: 'next_token' }],
                         [{ text: `⛷️ Set Slippage (${slippage}%) 🖋️`, callback_data: 'set_slippage' },{ text: 'Selling Mode 💸', callback_data: 'sell' }],
                         [{ text: '📈 Priority fees', callback_data: '_' }],
-
                         [ 
-                            { text: `Low ${priority_Level === 'low' ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 'medium' ? '✅' : ''}`, callback_data: 'priority_medium' },
-                            { text: `High ${priority_Level === 'high' ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 'max' ? '✅' : ''}`, callback_data: 'priority_max' }
+                            { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
+                            { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
                         ],
                         [{ text: 'Close', callback_data: 'closing' }]],
                 },
@@ -115,8 +113,8 @@ export async function refreshTokenDetails(ctx: any) {
                         [{ text: '📈 Priority fees', callback_data: '_' }],
 
                         [ 
-                            { text: `Low ${priority_Level === 'low' ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 'medium' ? '✅' : ''}`, callback_data: 'priority_medium' },
-                            { text: `High ${priority_Level === 'high' ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 'max' ? '✅' : ''}`, callback_data: 'priority_max' }
+                            { text: `Low ${priority_Level === 2500? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
+                            { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
                         ],
                         [{ text: 'Close', callback_data: 'closing' }]
                     ],

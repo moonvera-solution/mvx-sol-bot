@@ -1,18 +1,14 @@
 import { PublicKey } from '@solana/web3.js';
 import {getTokenMetadata, getUserTokenBalanceAndDetails} from '../../service/feeds'
-import TelegramBot from 'node-telegram-bot-api';
 import { RAYDIUM_POOL_TYPE } from '../../service/util/types';
 import { getSolanaDetails } from '../../api/priceFeeds/coinMarket';
 import { quoteToken } from '../util/dataCalculation';
 import { formatNumberToKOrM, getSolBalance } from '../../service/util';
-
-import { priority_Level } from '../../bot';
 import { runMin, runMedium, runHigh, runMax } from '../util/getPriority';
 
 export async function refreshSnipeDetails(ctx: any) {
+    const priority_Level = ctx.session.priorityFees;
     const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
- 
-
     ctx.session.currentMode = 'snipe';
     // showing the user the countdowm to the snipe
     const currentTime = new Date();

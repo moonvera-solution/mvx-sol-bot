@@ -7,40 +7,17 @@ import { PublicKey } from "@metaplex-foundation/js";
 import bs58 from "bs58";
 import { SecretsManagerClient, GetSecretValueCommand, } from "@aws-sdk/client-secrets-manager";
 dotenv.config();
-const user =''
-const password =''
+const user ='mvxKing'
+const password ='kingstonEmpireOfTheSun'
 const isProd = process.env.NODE_ENV == 'PROD';
 const local_url = `mongodb://127.0.0.1:27017/test`;
 
-// https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/getting-started.html
-export async function anon() :Promise<any> {
-  const secret_name = "mvx-bot-db"
-  const client = new SecretsManagerClient({
-    region: "ca-central-1",
-  });
-
-  let response;
-  try {
-    response = await client.send(
-      new GetSecretValueCommand({
-        SecretId: secret_name,
-        VersionStage: "AWSCURRENT", // VersionStage defaults to AWSCURRENT if unspecified
-      })
-    );
-  } catch (error:any) {
-    // For a list of exceptions thrown, see
-    // https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
-    throw error;
-  }
-  return response.SecretString;
-}
 
 /**
  * All DB functions are prefized with an underscore (_)
  */
-export async function _initDbConnection() {
+export async function _initDbConnection(_anon?:any) {
   // const db =  await mongoose.connect(local_url, { useNewUrlParser: true, useUnifiedTopology: true });
-  const _anon = isProd ? await anon() : null;
   mongoose.connect(isProd ? _anon.db : local_url, {
     user: isProd ? _anon.usr : user,
     pass: isProd ? _anon.pw : password,
