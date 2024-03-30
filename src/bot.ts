@@ -32,7 +32,11 @@ import { _loadEnvVars } from "./service/util/loadKeys";
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                  BOT START & SET ENV                       */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
-_initDbConnection();
+
+_initDbConnection().then((keys) => console.log("keys", keys));
+
+type MyContext = Context & SessionFlavor<ISESSION_DATA>;
+const bot = new Bot<MyContext>(process.env.TELEGRAM_BOT_TOKEN!);
 
 bot.use(session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) }));
 bot.start();

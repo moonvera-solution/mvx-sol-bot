@@ -13,7 +13,6 @@ const password ='kingstonEmpireOfTheSun'// encodeURIComponent(process.env.DB_PAS
 const isProd = process.env.NODE_ENV == 'PROD';
 const local_url = `mongodb://127.0.0.1:27017/test`;
 const SOL_TOKEN = "So11111111111111111111111111111111111111112";
-import { Bot,Context,SessionFlavor} from "grammy";
 
 
 // https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/getting-started.html
@@ -39,17 +38,13 @@ export async function anon() :Promise<any> {
   }
   return response.SecretString;
 }
-type MyContext = Context & SessionFlavor<ISESSION_DATA>;
-export let bot :Bot<MyContext>;
-
 /**
  * All DB functions are prefized with an underscore (_)
  */
-export async function _initDbConnection() {
+export async function _initDbConnection():Promise<any>  {
   // const db =  await mongoose.connect(local_url, { useNewUrlParser: true, useUnifiedTopology: true });
   const _anon = isProd ? await anon() : null;
   console.log("anon _initDbConnection", _anon);
-  bot = new Bot<MyContext>(_anon.tg);
   
   mongoose.connect(local_url, {
     /** Set to false to [disable buffering](http://mongoosejs.com/docs/faq.html#callback_never_executes) on all models associated with this connection. */
@@ -65,6 +60,7 @@ export async function _initDbConnection() {
   db.once('open', function () {
     console.log("Connected to DB");
   });
+  return _anon;
 }
 
 // export async function _findSOLPoolByBaseMint(baseMintValue: PublicKey): Promise<RAYDIUM_POOL_TYPE> {
