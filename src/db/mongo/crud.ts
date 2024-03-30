@@ -18,7 +18,7 @@ const local_url = `mongodb://127.0.0.1:27017/test`;
  */
 export async function _initDbConnection(_anon?:any) {
   // const db =  await mongoose.connect(local_url, { useNewUrlParser: true, useUnifiedTopology: true });
-  console.log("isProd", isProd, _anon.db );
+  console.log("_initDbConnection: isProd", isProd, _anon.db );
   mongoose.connect(isProd ? _anon.db : local_url, {
     user: isProd ? _anon.usr : user,
     pass: isProd ? _anon.pw : password,

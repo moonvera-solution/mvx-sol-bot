@@ -37,10 +37,17 @@ type MyContext = Context & SessionFlavor<ISESSION_DATA>;
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
 async function initializeBot() {
-    const _anon = isProd? await loadSecrets() : process.env.TELEGRAM_BOT_TOKEN;
-    console.log("isProd", isProd, _anon);
-    await _initDbConnection(_anon);
-    const bot = new Bot<MyContext>(isProd ? _anon.tg : _anon);
+    let tg: any = null;
+    if (isProd) {
+        await loadSecrets().then((_anon: any) => {
+            _initDbConnection(_anon);
+            tg = _anon.tg;
+        });
+    } else {
+        _initDbConnection();
+        tg = process.env.TELEGRAM_TOKEN;
+    }
+    const bot: Bot<MyContext> = new Bot<MyContext>(tg);
     bot.use(session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) }));
     bot.start();
     return bot;
