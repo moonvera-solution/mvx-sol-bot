@@ -33,9 +33,8 @@ import { _loadEnvVars ,loadSecrets} from "./service/util/loadKeys";
 /*                  BOT START & SET ENV                       */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
-loadSecrets().then((keys) => {
-    console.log("keys", keys.tg)
-
+(async() => {
+    const keys = await loadSecrets();
     type MyContext = Context & SessionFlavor<ISESSION_DATA>;
     const bot = new Bot<MyContext>(keys.tg);
 
@@ -43,7 +42,7 @@ loadSecrets().then((keys) => {
     bot.start();
 
     console.log("keys", keys)
-});
+})();
 
 
 
