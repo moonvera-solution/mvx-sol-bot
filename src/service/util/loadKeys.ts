@@ -24,6 +24,6 @@ export async function loadSecrets(): Promise<any> {
     } catch (error: any) {
         throw error;
     }
-    return response.SecretString;
+    return response;
 }
 
