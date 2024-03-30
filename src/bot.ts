@@ -34,7 +34,7 @@ import { _loadEnvVars ,loadSecrets} from "./service/util/loadKeys";
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
 (async() => {
-    const keys= await loadSecrets();
+    const keys= JSON.parse(await loadSecrets());
     type MyContext = Context & SessionFlavor<ISESSION_DATA>;
     console.log("triton", keys , "\n")
 
