@@ -34,11 +34,12 @@ import { _loadEnvVars ,loadSecrets} from "./service/util/loadKeys";
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
 (async() => {
-    const keys = await loadSecrets();
+    const {tg, triton} = await loadSecrets();
     type MyContext = Context & SessionFlavor<ISESSION_DATA>;
-    console.log("keys", keys , "\n")
+    console.log("triton", triton , "\n")
 
-    console.log("keys", keys.tg)
+    console.log("tg", tg);
+
     // const bot = new Bot<MyContext>(keys.tg);
 
     // bot.use(session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) }));
