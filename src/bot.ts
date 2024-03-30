@@ -4,7 +4,7 @@ import { Bot, Context, GrammyError, HttpError, session, SessionFlavor } from "gr
 import { importWallet, getPortfolio } from './service/portfolio/wallets';
 import { ISESSION_DATA, DefaultSessionData, DEFAULT_PUBLIC_KEY, DefaultPortfolioData } from './service/util/types';
 import { Keypair, PublicKey } from '@solana/web3.js';
-import { _initDbConnection ,bot} from "./db/mongo/crud";
+import { _initDbConnection } from "./db/mongo/crud";
 import { handleSettings } from './service/settings';
 import { getSolanaDetails } from './api';
 import { setSnipe, snipperON } from './service/portfolio/strategies/snipper';
