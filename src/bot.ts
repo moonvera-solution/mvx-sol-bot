@@ -843,7 +843,6 @@ bot.on('callback_query', async (ctx: any) => {
             }
             case 'priority_max': {
                 ctx.session.priorityFees = PriotitizationFeeLevels.MAX;
-                priority_Level = 'max';
                 if (ctx.session.latestCommand === 'snipe') {
                     await refreshSnipeDetails(ctx);
 
