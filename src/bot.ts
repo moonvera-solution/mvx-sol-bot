@@ -36,12 +36,15 @@ import { _loadEnvVars ,loadSecrets} from "./service/util/loadKeys";
 (async() => {
     const keys = await loadSecrets();
     type MyContext = Context & SessionFlavor<ISESSION_DATA>;
-    const bot = new Bot<MyContext>(keys.tg);
+    console.log("keys", keys , "\n")
 
-    bot.use(session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) }));
-    bot.start();
+    console.log("keys", keys.tg)
+    // const bot = new Bot<MyContext>(keys.tg);
 
-    console.log("keys", keys)
+    // bot.use(session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) }));
+    // bot.start();
+
+
 })();
 
 
