@@ -11,7 +11,7 @@ dotenv.config();
 const user = 'mvxKing'//encodeURIComponent(process.env.DB_USER!);
 const password = 'kingstonEmpireOfTheSun'// encodeURIComponent(process.env.DB_PASSWORD!);
 const isProd = process.env.NODE_ENV == 'PROD';
-const local_url = `mongodb://${user}:${password}@127.0.0.1:27017/test`;
+const local_url = `mongodb://127.0.0.1:27017/test`;
 const SOL_TOKEN = "So11111111111111111111111111111111111111112";
 
 
@@ -46,22 +46,12 @@ export async function _initDbConnection(): Promise<any> {
   const _anon = isProd ? JSON.parse(await anon()) : null;
 
   console.log(isProd, _anon.db, _anon.usr, _anon.pw);
-  // 'mongodb://username:password@host:port/database?options...'
-  // db: 'mongodb://127.0.0.1:35048/bot'
 
-  let protocol = String(_anon.db).substring(0, 10); // 'mongodb://'
-  let at = String(_anon.db).substring(10); // 127.0.0.1:35048/bot'
-  const CnnString = `${protocol}${_anon.usr}:${_anon.pw}@${at}`;
-
-  console.log("CnnString", CnnString);
-  
-  await mongoose.connect(isProd ? CnnString : local_url);
-
-  // , {
-  //   user: isProd ? _anon.usr : user,
-  //   pass: isProd ? _anon.pw : password,
-  //   autoIndex: true,
-  // });
+  await mongoose.connect(isProd ? _anon.db : local_url, {
+    user: isProd ? _anon.usr : user,
+    pass: isProd ? _anon.pw : password,
+    autoIndex: true,
+  });
 
   const db = mongoose.connection;
   db.on('error', console.error.bind(console, 'ERR connection error:'));
