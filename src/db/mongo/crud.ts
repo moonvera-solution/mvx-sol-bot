@@ -44,22 +44,21 @@ export async function anon(): Promise<any> {
 export async function _initDbConnection(): Promise<any> {
   // const db =  await mongoose.connect(local_url, { useNewUrlParser: true, useUnifiedTopology: true });
   const _anon = isProd ? JSON.parse(await anon()) : null;
-  console.log("anon _initDbConnection", _anon);
 
-  mongoose.connect(isProd ? _anon.db : local_url, {
-    /** Set to false to [disable buffering](http://mongoosejs.com/docs/faq.html#callback_never_executes) on all models associated with this connection. */
-    /** The name of the database you want to use. If not provided, Mongoose uses the database name from connection string. */
-    /** username for authentication, equivalent to `options.auth.user`. Maintained for backwards compatibility. */
+  console.log(isProd,_anon.db, _anon.usr, _anon.pwd);
+
+  await mongoose.connect(isProd ? _anon.db : local_url, {
     user: isProd ? _anon.usr : user,
-    autoIndex: true,
-    /** password for authentication, equivalent to `options.auth.password`. Maintained for backwards compatibility. */
     pass: isProd ? _anon.pw : password,
+    autoIndex: true,
   });
+
   const db = mongoose.connection;
   db.on('error', console.error.bind(console, 'ERR connection error:'));
   db.once('open', function () {
     console.log("Connected to DB");
   });
+
   return _anon;
 }
 
