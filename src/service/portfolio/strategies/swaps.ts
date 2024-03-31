@@ -114,7 +114,7 @@ export async function handle_radyum_swap(
             }).then(async ({ txids }) => {
                 let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processed successfully. <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>.\n Please wait for confirmation...`
                 await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-                const isConfirmed = await waitForConfirmation(txids[0]);
+                const isConfirmed = await waitForConfirmation(ctx, txids[0]);
 
                 if (isConfirmed) {
 

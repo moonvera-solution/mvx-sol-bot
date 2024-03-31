@@ -182,7 +182,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   ]);
 
   if (units) {
-    // console.log("units: ", units);
+    console.log("units: ", units);
     units = Math.ceil(units * 2); // margin of error
     innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: units }));
   }

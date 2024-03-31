@@ -222,7 +222,6 @@ export async function startSnippeSimulation(
         await ctx.api.sendMessage(chatId, `🔴 Insufficient balance for Turbo Snipping. Your balance is ${userSolBalance} SOL.`);
         return;
     }
-    // console.log('maxPriorityFee', ctx.session.priorityFee);
     const maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [
             new PublicKey(poolKeys.id.toBase58()),
@@ -301,11 +300,11 @@ export async function startSnippeSimulation(
                     });
                 setTimeout(() => {
                     buildAndSendTx(userWallet, innerTransactions, { preflightCommitment: 'processed' })
-                        .then(async (txids) => {
-                            let msg = `🟢 Snipe <a href="https://solscan.io/tx/${txids[0]}">transaction</a> sent. Please wait for confirmartion...`
+                        .then(async (txids: any) => {
+                            let msg = `🟢 Snipe <a href="https://solscan.io/tx/${txids[0]}">transaction</a> sent. Please wait for confirmation...`
                             await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
                             txSign = txids[0];
-                            let isConfirmed = await waitForConfirmation(txids[0]);
+                            let isConfirmed = await waitForConfirmation(ctx,txids[0]);
                             // console.log('isConfirmed', isConfirmed);
                             if (isConfirmed == true) {
                                 console.log('isConfirmed', isConfirmed);

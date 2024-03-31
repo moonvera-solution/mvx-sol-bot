@@ -581,9 +581,9 @@ export function isValidBase58(str: any) {
     return base58Regex.test(str);
 }
 
-export async function waitForConfirmation(txid: string): Promise<boolean> {
+export async function waitForConfirmation(ctx: any, txid: string): Promise<boolean> {
     let isConfirmed = false;
-    const maxAttempts = 500;
+    const maxAttempts = 150;
     let attempts = 0;
 
     while (!isConfirmed && attempts < maxAttempts) {
@@ -603,6 +603,7 @@ export async function waitForConfirmation(txid: string): Promise<boolean> {
     }
 
     if (!isConfirmed && attempts >= maxAttempts) {
+        ctx.api.sendMessage(ctx.chat.id, 'Transaction could not be confirmed within the low priority fee.');
         console.error('Transaction could not be confirmed within the max attempts.');
     }
 

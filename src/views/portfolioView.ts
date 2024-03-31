@@ -50,17 +50,19 @@ export async function display_spl_positions(
         for (let index in userPosition[0].positions) {
 
             let pos = userPosition[0].positions[index];
-            if(pos.amountIn == 0 || pos.amountOut == 0 || pos.amountOut < 0 || pos.amountIn < 0) {
+            const token = String(pos.baseMint);
+
+            const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
+            let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
+            if(pos.amountIn == 0 || pos.amountOut == 0 || pos.amountOut < 0 || pos.amountIn < 0 ||  userBalance.toNumber() == 0) {
                 await UserPositions.updateOne(
                     { walletId: userWallet },
                     { $pull: { positions: { baseMint: pos.baseMint } }
                 });
                 continue;
             }
-            const token = String(pos.baseMint);
             
-            const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
-            let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
+            
             // console.log("userBalance:: ", userBalance.toNumber());
             if (!userBalance.gt(0)) {
                 await UserPositions.updateOne(
@@ -84,13 +86,19 @@ export async function display_spl_positions(
             const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
             const userBalanceUSD = (userBalance.dividedBy(1e9)).times(tokenPriceUSD).toFixed(2);
             const userBalanceSOL = (userBalance.dividedBy(1e9)).times(tokenPriceSOL).toFixed(3);
-            const valueInUSD = (pos.amountOut) / Math.pow(10,poolKeys.baseDecimals) * Number(tokenPriceUSD);
-            const valueInSOL = (pos.amountOut) / Math.pow(10,poolKeys.baseDecimals) * Number(tokenPriceSOL);
-            const initialInUSD = (pos.amountIn / 1e9) * Number(solprice);
+            console.log('pos.amountOut', pos.amountOut);
+            console.log('userBalance', userBalance.toNumber());
+            const valueInUSD = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(userBalanceUSD) * 1e9) / Math.pow(10,poolKeys.baseDecimals) * Number(tokenPriceUSD) : 'N/A';
+            console.log('valueInUSD', valueInUSD);
+            const valueInSOL = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10,poolKeys.baseDecimals) * Number(tokenPriceSOL): 'N/A';
+            console.log('valueInSOL', valueInSOL);
+            const initialInUSD =  (pos.amountIn / 1e9) * Number(solprice);
+            console.log('initialInUSD', initialInUSD);
             const initialInSOL = (pos.amountIn / 1e9) ;
-            const profitPercentage = (valueInUSD - (pos.amountIn / 1e9 * solprice)) / (pos.amountIn / 1e9 * solprice) * 100;
-            const profitInUSD = valueInUSD - initialInUSD;
-            const profitInSol = valueInSOL - initialInSOL;
+            console.log('initialInSOL', initialInSOL);
+            const profitPercentage = valueInUSD != 'N/A'? (valueInUSD - (pos.amountIn / 1e9 * solprice)) / (pos.amountIn / 1e9 * solprice) * 100: 'N/A';
+            const profitInUSD = valueInUSD != 'N/A'? valueInUSD - initialInUSD : 'N/A';
+            const profitInSol = valueInSOL != 'N/A'? valueInSOL - initialInSOL : 'N/A';
             const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
             const formattedmac= await formatNumberToKOrM(marketCap) ?? "NA";
         
@@ -98,8 +106,8 @@ export async function display_spl_positions(
             fullMessage += `<b>${pos.name} (${pos.symbol})</b> | <code>${poolKeys.baseMint}</code>\n` +
             `Mcap: ${formattedmac} <b>USD</b>\n` +
             `Capital: ${initialInSOL.toFixed(4)} <b>SOL</b> | ${initialInUSD.toFixed(4)} <b>USD </b>\n` +
-            `Current value: ${valueInSOL.toFixed(4)} <b>SOL</b> | ${valueInUSD.toFixed(4)} <b>USD </b>\n` +
-            `Profit: ${profitInSol.toFixed(4)} <b>SOL</b> | ${profitInUSD.toFixed(4)} <b>USD</b> | ${profitPercentage.toFixed(2)}%\n\n` +
+            `Current value: ${valueInSOL != 'N/A'? valueInSOL.toFixed(4): 'N/A'} <b>SOL</b> | ${valueInUSD != 'N/A'? valueInUSD.toFixed(4): 'N/A'} <b>USD </b>\n` +
+            `Profit: ${ profitInSol != 'N/A' ? profitInSol.toFixed(4): 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? profitInUSD.toFixed(4): 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A'? profitPercentage.toFixed(2): 'N/A'}%\n\n` +
             `Token Balance in Wallet: ${Number(userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).toFixed(3)} <b>${pos.symbol}</b> | ${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n\n`;
       
 
