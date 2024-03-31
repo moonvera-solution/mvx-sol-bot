@@ -54,6 +54,8 @@ export async function _initDbConnection(): Promise<any> {
   });
 
   const db = mongoose.connection;
+  const colls = await db.listCollections();
+  console.log("colls", colls);
   db.on('error', console.error.bind(console, 'ERR connection error:'));
   db.once('open', function () {
     console.log("Connected to DB");
