@@ -45,7 +45,7 @@ export async function _initDbConnection(): Promise<any> {
   // const db =  await mongoose.connect(local_url, { useNewUrlParser: true, useUnifiedTopology: true });
   const _anon = isProd ? JSON.parse(await anon()) : null;
 
-  console.log(isProd,_anon.db, _anon.usr, _anon.pwd);
+  console.log(isProd,_anon.db, _anon.usr, _anon.pw);
 
   await mongoose.connect(isProd ? _anon.db : local_url, {
     user: isProd ? _anon.usr : user,
