@@ -45,6 +45,8 @@ export async function display_spl_positions(
             [{ text: `Refresh Positions`, callback_data: 'refresh_portfolio' }]
         ];
     };
+    try{
+
     let fullMessage = '';
     if (userPosition && userPosition[0]?.positions) {
         for (let index in userPosition[0].positions) {
@@ -71,9 +73,20 @@ export async function display_spl_positions(
                 );
                 continue;
             }
+            function poolKeysExists(poolKeysArray: any, newPoolKeys: any) {
+                return poolKeysArray.some((existingKeys: any) => 
+                    existingKeys.baseVault === newPoolKeys.baseVault &&
+                    existingKeys.quoteVault === newPoolKeys.quoteVault &&
+                    existingKeys.baseDecimals === newPoolKeys.baseDecimals &&
+                    existingKeys.quoteDecimals === newPoolKeys.quoteDecimals &&
+                    existingKeys.baseMint === newPoolKeys.baseMint);
+            }
 
             let poolKeys = await getRayPoolKeys(token);
-             ctx.session.positionPool.push(poolKeys);
+            if (!poolKeysExists(ctx.session.positionPool, poolKeys)) {
+                ctx.session.positionPool.push(poolKeys);
+            }
+             console.log('poolKeys', ctx.session.positionPool.length);
              const tokenInfo = await quoteToken({
                 baseVault: poolKeys.baseVault,
                 quoteVault: poolKeys.quoteVault,
@@ -86,22 +99,23 @@ export async function display_spl_positions(
             const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
             const userBalanceUSD = (userBalance.dividedBy(1e9)).times(tokenPriceUSD).toFixed(2);
             const userBalanceSOL = (userBalance.dividedBy(1e9)).times(tokenPriceSOL).toFixed(3);
-            console.log('pos.amountOut', pos.amountOut);
+            // console.log('pos.amountOut', pos.amountOut);
             console.log('userBalance', userBalance.toNumber());
             const valueInUSD = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10,poolKeys.baseDecimals) * Number(tokenPriceUSD) : 'N/A';
-            console.log('valueInUSD', valueInUSD);
+            // console.log('valueInUSD', valueInUSD);
             const valueInSOL = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10,poolKeys.baseDecimals) * Number(tokenPriceSOL): 'N/A';
-            console.log('valueInSOL', valueInSOL);
+            // console.log('valueInSOL', valueInSOL);
             const initialInUSD =  (pos.amountIn / 1e9) * Number(solprice);
-            console.log('initialInUSD', initialInUSD);
+            // console.log('initialInUSD', initialInUSD);
             const initialInSOL = (pos.amountIn / 1e9) ;
-            console.log('initialInSOL', initialInSOL);
+            // console.log('initialInSOL', initialInSOL);
             const profitPercentage = valueInUSD != 'N/A'? (valueInUSD - (pos.amountIn / 1e9 * solprice)) / (pos.amountIn / 1e9 * solprice) * 100: 'N/A';
             const profitInUSD = valueInUSD != 'N/A'? valueInUSD - initialInUSD : 'N/A';
             const profitInSol = valueInSOL != 'N/A'? valueInSOL - initialInSOL : 'N/A';
             const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
             const formattedmac= await formatNumberToKOrM(marketCap) ?? "NA";
-        
+            console.log('pos.name', pos.name);
+            console.log('pos.symbol', pos.symbol);
             
             fullMessage += `<b>${pos.name} (${pos.symbol})</b> | <code>${poolKeys.baseMint}</code>\n` +
             `Mcap: ${formattedmac} <b>USD</b>\n` +
@@ -122,6 +136,10 @@ export async function display_spl_positions(
     };
 
     await ctx.api.sendMessage(ctx.chat.id, fullMessage, options);
+} catch (err) {
+    console.error(err);
+
+}
 }
 
 
