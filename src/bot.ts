@@ -28,15 +28,19 @@ import { refresh_spl_positions } from './views/refreshData/refreshPortfolio';
 import { logErrorToFile } from "../error/logger";
 import { _loadEnvVars, loadSecrets } from "./service/util/loadKeys";
 
-
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                  BOT START & SET ENV                      */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 type MyContext = Context & SessionFlavor<ISESSION_DATA>;
 let keys : any;
+let bot: Bot<MyContext>;
 _initDbConnection();
-loadSecrets().then((res) => { keys = JSON.parse(res) });
-const bot = new Bot<MyContext>(keys.tg);
+loadSecrets().then((res) => { 
+    keys = JSON.parse(res); 
+    console.log("keys", keys);
+    bot = new Bot<MyContext>(keys.tg);
+});
+/** 
 bot.use(session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) }));
 bot.start();
 
@@ -894,3 +898,4 @@ bot.catch((err) => {
 
 
 
+*/
