@@ -46,10 +46,8 @@ type MyContext = Context & SessionFlavor<ISESSION_DATA>;
     async function _setUpEnv(ctx: any): Promise<any> {
         try {
             const chatId = ctx.chat.id;
-            ctx.session.latestCommand = "start";
 
-            // set env vars
-            await _loadEnvVars(ctx);
+            ctx.session.env['triton'] = keys ? keys.triton : process.env.TRITON_RPC_TOKEN;
 
             // set user portfolio
             ctx.session.portfolio = await getPortfolio(chatId) !== DefaultPortfolioData ? await getPortfolio(chatId) : await createUserPortfolio(ctx);
@@ -103,6 +101,7 @@ type MyContext = Context & SessionFlavor<ISESSION_DATA>;
     bot.command("start", async (ctx: any) => {
         try {
             await _setUpEnv(ctx);
+            ctx.session.latestCommand = "start";
             const chatId = ctx.chat.id;
             const wIdx = ctx.session.activeWalletIndex;
             const userPk = ctx.session.portfolio.wallets[wIdx].publicKey;
