@@ -26,4 +26,3 @@ export async function loadSecrets(): Promise<any> {
     }
     return response.SecretString;
 }
-

@@ -1,22 +1,22 @@
 import mongoose from 'mongoose';
 import {
- Portfolios, Referrals
+  Portfolios, Referrals
 } from './schema';
-import dotenv from 'dotenv';dotenv.config();
+import dotenv from 'dotenv'; dotenv.config();
 import { PublicKey } from "@metaplex-foundation/js";
 import bs58 from "bs58";
-import { ISESSION_DATA,RAYDIUM_POOL_TYPE, DEFAULT_PUBLIC_KEY, DefaultPoolInfoData } from '../../service/util/types';
+import { ISESSION_DATA, RAYDIUM_POOL_TYPE, DEFAULT_PUBLIC_KEY, DefaultPoolInfoData } from '../../service/util/types';
 import { SecretsManagerClient, GetSecretValueCommand, } from "@aws-sdk/client-secrets-manager";
 dotenv.config();
-const user ='mvxKing'//encodeURIComponent(process.env.DB_USER!);
-const password ='kingstonEmpireOfTheSun'// encodeURIComponent(process.env.DB_PASSWORD!);
+const user = 'mvxKing'//encodeURIComponent(process.env.DB_USER!);
+const password = 'kingstonEmpireOfTheSun'// encodeURIComponent(process.env.DB_PASSWORD!);
 const isProd = process.env.NODE_ENV == 'PROD';
 const local_url = `mongodb://127.0.0.1:27017/test`;
 const SOL_TOKEN = "So11111111111111111111111111111111111111112";
 
 
 // https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/getting-started.html
-export async function anon() :Promise<any> {
+export async function anon(): Promise<any> {
   const secret_name = "mvx-bot-db"
   const client = new SecretsManagerClient({
     region: "ca-central-1",
@@ -31,7 +31,7 @@ export async function anon() :Promise<any> {
         VersionStage: "AWSCURRENT", // VersionStage defaults to AWSCURRENT if unspecified
       })
     );
-  } catch (error:any) {
+  } catch (error: any) {
     // For a list of exceptions thrown, see
     // https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
     throw error;
@@ -41,12 +41,12 @@ export async function anon() :Promise<any> {
 /**
  * All DB functions are prefized with an underscore (_)
  */
-export async function _initDbConnection():Promise<any>  {
+export async function _initDbConnection(): Promise<any> {
   // const db =  await mongoose.connect(local_url, { useNewUrlParser: true, useUnifiedTopology: true });
-  const _anon = isProd ? await anon() : null;
+  const _anon = isProd ? JSON.parse(await anon()) : null;
   console.log("anon _initDbConnection", _anon);
-  
-  mongoose.connect(local_url, {
+
+  mongoose.connect(isProd ? _anon.db : local_url, {
     /** Set to false to [disable buffering](http://mongoosejs.com/docs/faq.html#callback_never_executes) on all models associated with this connection. */
     /** The name of the database you want to use. If not provided, Mongoose uses the database name from connection string. */
     /** username for authentication, equivalent to `options.auth.user`. Maintained for backwards compatibility. */
@@ -64,23 +64,23 @@ export async function _initDbConnection():Promise<any>  {
 }
 
 // export async function _findSOLPoolByBaseMint(baseMintValue: PublicKey): Promise<RAYDIUM_POOL_TYPE> {
-  // try {
-  //   // Search in unofficial pools
-  //   let pool: RAYDIUM_POOL_TYPE | null = await Raydium_unOfficial_pools.findOne({ baseMint: baseMintValue, quoteMint: SOL_TOKEN });
-  //   console.log("pool", pool);
-  //   if (pool?.baseMint != DEFAULT_PUBLIC_KEY) {
-  //     return pool as RAYDIUM_POOL_TYPE;
-  //   }
+// try {
+//   // Search in unofficial pools
+//   let pool: RAYDIUM_POOL_TYPE | null = await Raydium_unOfficial_pools.findOne({ baseMint: baseMintValue, quoteMint: SOL_TOKEN });
+//   console.log("pool", pool);
+//   if (pool?.baseMint != DEFAULT_PUBLIC_KEY) {
+//     return pool as RAYDIUM_POOL_TYPE;
+//   }
 
-  //   // If not found in unofficial pools, search in official pools
-  //   pool = await Raydium_official_pools.findOne({ baseMint: baseMintValue, quoteMint: SOL_TOKEN });
-  //   if (pool?.baseMint != DEFAULT_PUBLIC_KEY) {
-  //     return pool as RAYDIUM_POOL_TYPE;
-  //   }
-  // } catch (err: any) {
-  //   console.log(`No pool found with baseMint: ${baseMintValue}`, err.message);
-  // }
-  // return DefaultPoolInfoData as RAYDIUM_POOL_TYPE;
+//   // If not found in unofficial pools, search in official pools
+//   pool = await Raydium_official_pools.findOne({ baseMint: baseMintValue, quoteMint: SOL_TOKEN });
+//   if (pool?.baseMint != DEFAULT_PUBLIC_KEY) {
+//     return pool as RAYDIUM_POOL_TYPE;
+//   }
+// } catch (err: any) {
+//   console.log(`No pool found with baseMint: ${baseMintValue}`, err.message);
+// }
+// return DefaultPoolInfoData as RAYDIUM_POOL_TYPE;
 // }
 
 export async function _savePortfolio(
@@ -164,7 +164,7 @@ export async function _generateReferralLink(ctx: any, walletAddress: PublicKey) 
     }
     //MVXBOT_bot for live prod
     referralLink = `https://t.me/stbbot_dev_bot?start=${referralCode}`;
-  } catch (error:any) {
+  } catch (error: any) {
     console.error('Error in _generateReferralLink:', error);
     throw new Error('Unable to process referral link.');
   }
@@ -192,7 +192,7 @@ export async function _getReferralData(ctx: any) {
       count: referralRecord.numberOfReferrals,
       referralWallet: referralRecord.generatorWallet,
     };
-  } catch (error:any) {
+  } catch (error: any) {
     console.error('Error fetching referral data:', error);
     return null; // handle the error 
   }
