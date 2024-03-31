@@ -88,7 +88,7 @@ export async function display_spl_positions(
             const userBalanceSOL = (userBalance.dividedBy(1e9)).times(tokenPriceSOL).toFixed(3);
             console.log('pos.amountOut', pos.amountOut);
             console.log('userBalance', userBalance.toNumber());
-            const valueInUSD = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(userBalanceUSD) * 1e9) / Math.pow(10,poolKeys.baseDecimals) * Number(tokenPriceUSD) : 'N/A';
+            const valueInUSD = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10,poolKeys.baseDecimals) * Number(tokenPriceUSD) : 'N/A';
             console.log('valueInUSD', valueInUSD);
             const valueInSOL = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10,poolKeys.baseDecimals) * Number(tokenPriceSOL): 'N/A';
             console.log('valueInSOL', valueInSOL);
