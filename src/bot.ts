@@ -34,6 +34,7 @@ import { _loadEnvVars, loadSecrets } from "./service/util/loadKeys";
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 type MyContext = Context & SessionFlavor<ISESSION_DATA>;
 let keys : any;
+_initDbConnection();
 (async () => { keys = JSON.parse(await loadSecrets()) })();
 const bot = new Bot<MyContext>(keys.tg);
 bot.use(session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) }));
