@@ -1,7 +1,6 @@
 import { isValidBase58, formatNumberToKOrM, getSolBalance } from "../util";
 import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TOKEN_PROGRAM_ID, Token as RayddiumToken, publicKey } from '@raydium-io/raydium-sdk';
-import { PublicKey } from '@solana/web3.js';
-import { connection } from '../../../config';
+import { PublicKey,Connection } from '@solana/web3.js';
 import {RAYDIUM_POOL_TYPE} from '../util/types';
 import {
    
@@ -19,6 +18,7 @@ export async function getTokenMetadata(ctx: any, tokenAddress: string): Promise<
         ctx.api.sendMessage(chatId, "Invalid token address provided.", { parse_mode: 'HTML' });
         return;
     }
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     const metaplex = Metaplex.make(connection);
     const mintAddress = new PublicKey(tokenAddress);
     const tokenData = await metaplex.nfts().findByMint({ mintAddress: mintAddress });
@@ -34,7 +34,7 @@ export async function getTokenMetadata(ctx: any, tokenAddress: string): Promise<
     // Call the refactored function with the results of the API calls
 
     // const decimals = token.mint.decimals;
-    const userTokenDetails = await getUserTokenBalanceAndDetails(new PublicKey(publicKeyString), new PublicKey(tokenAddress));
+    const userTokenDetails = await getUserTokenBalanceAndDetails(new PublicKey(publicKeyString), new PublicKey(tokenAddress),connection);
     const birdeyeURL = `https://birdeye.so/token/${tokenAddress}?chain=solana`;
     const dextoolsURL = `https://www.dextools.io/app/solana/pair-explorer/${tokenAddress}`;
     const dexscreenerURL = `https://dexscreener.com/solana/${tokenAddress}`;
@@ -44,7 +44,7 @@ export async function getTokenMetadata(ctx: any, tokenAddress: string): Promise<
 
     // Process the data received from the API calls
     // const solPriceInUSD = solanaDetails.toFixed(3);
-    const balanceInSOL = await getSolBalance(publicKeyString);
+    const balanceInSOL = await getSolBalance(publicKeyString,connection);
     // const balanceInUSD = (balanceInSOL * (solanaDetails).toFixed(2));
     return {
         // solanaDetails,
@@ -65,10 +65,9 @@ export async function getTokenMetadata(ctx: any, tokenAddress: string): Promise<
 }
 
 // Instanceoff is to avoid getting mint.buffer error
-export async function getUserTokenBalanceAndDetails(userWallet: PublicKey, tokenAddress: PublicKey) : Promise<any> {
+export async function getUserTokenBalanceAndDetails(userWallet: PublicKey, tokenAddress: PublicKey,connection:Connection) : Promise<any> {
     let userBalance = 0;
     try {
-  
 
         const metaplex = Metaplex.make(connection);
         const mintAddress = (tokenAddress instanceof PublicKey) ? tokenAddress : new PublicKey(tokenAddress);
@@ -93,7 +92,7 @@ export async function getUserTokenBalanceAndDetails(userWallet: PublicKey, token
     }
 }
 
-export async function getLiquityFromOwner(userWallet: PublicKey, tokenAddress: PublicKey) : Promise<any> {
+export async function getLiquityFromOwner(userWallet: PublicKey, tokenAddress: PublicKey,connection:Connection) : Promise<any> {
     let userBalance = 0;
     try {
         const mintAddress = (tokenAddress instanceof PublicKey) ? tokenAddress : new PublicKey(tokenAddress);

@@ -1,7 +1,7 @@
 import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken, publicKey } from '@raydium-io/raydium-sdk';
-import { PublicKey, Keypair } from '@solana/web3.js';
+import { PublicKey, Keypair,Connection } from '@solana/web3.js';
 import { getWalletTokenAccount, getSolBalance, waitForConfirmation } from '../../util';
-import { DEFAULT_TOKEN, MVXBOT_FEES, connection } from '../../../../config';
+import { DEFAULT_TOKEN, MVXBOT_FEES } from '../../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
 import { display_token_details } from '../../../views';
 import { ISESSION_DATA } from '../../util/types';
@@ -27,11 +27,12 @@ export async function handle_radyum_swap(
     const referralWallet = ctx.session.generatorWallet;
 
     try {
-        const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut));
+        const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+        const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut),connection);
         const poolKeys = ctx.session.activeTradingPool;
         const OUTPUT_TOKEN = new RayddiumToken(TOKEN_PROGRAM_ID, tokenOut, userTokenBalanceAndDetails.decimals);
-        const walletTokenAccounts = await getWalletTokenAccount(connection, new PublicKey(userWallet.publicKey!));
-        let userSolBalance = await getSolBalance(userWallet.publicKey);
+        const walletTokenAccounts = await getWalletTokenAccount(connection, new PublicKey(userWallet.publicKey));
+        let userSolBalance = await getSolBalance(userWallet.publicKey,connection);
         let userTokenBalance = userTokenBalanceAndDetails.userTokenBalance;
         let tokenIn, outputToken;
         const referralFee = ctx.session.referralCommision / 100;
@@ -114,7 +115,7 @@ export async function handle_radyum_swap(
             }).then(async ({ txids }) => {
                 let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processed successfully. <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>.\n Please wait for confirmation...`
                 await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-                const isConfirmed = await waitForConfirmation(txids[0]);
+                const isConfirmed = await waitForConfirmation(ctx, txids[0]);
 
                 if (isConfirmed) {
 

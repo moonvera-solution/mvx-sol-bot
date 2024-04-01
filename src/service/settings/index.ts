@@ -2,6 +2,8 @@
 import { RefreshAllWallets } from '../../views/refreshData/RefresHandleWallets';
 import { getSolanaDetails } from '../../api';
 import { getSolBalance } from '../util';
+import { PublicKey,Connection } from '@solana/web3.js';
+
 
 export async function handleSettings(ctx:any) {
     // await RefreshAllWallets(ctx);
@@ -10,7 +12,8 @@ export async function handleSettings(ctx:any) {
     const chatId = ctx.chat.id;
     const publicKeyString: any = userWallet.publicKey; // The user's public key
     // Fetch SOL balance
-    const balanceInSOL = await getSolBalance(publicKeyString);
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const balanceInSOL = await getSolBalance(publicKeyString,connection);
     if (balanceInSOL === null) {
         await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
         return;

@@ -22,7 +22,6 @@ import {
 } from "@solana/web3.js";
 import base58 from "bs58";
 import {
-  connection,
   makeTxVersion,
   MVXBOT_FEES,
   TIP_VALIDATOR,
@@ -57,14 +56,13 @@ export type TxInputInfo = {
 };
 
 
-async function getPoolKeys(ammId: string): Promise<LiquidityPoolKeys> {
-  const targetPoolInfo = await formatAmmKeysById(ammId);
-  assert(targetPoolInfo, "cannot find the target pool");
-  return jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys;
-}
 
 export async function swapOnlyAmm(input: TxInputInfo) {
-  const poolKeys = await getPoolKeys(input.targetPool);
+  const connection = new Connection(`${input.ctx.session.env.tritonRPC}${input.ctx.session.env.tritonToken}`);
+  const targetPoolInfo = await formatAmmKeysById(input.targetPool,connection);
+  assert(targetPoolInfo, "cannot find the target pool");
+  const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys;
+
   let minSwapAmountBalance : number = 0;
   // console.log("poolKeys", poolKeys);
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
@@ -172,7 +170,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   );
 
   minSwapAmountBalance += input.ctx.session.priorityFee;
-  const balanceInSOL = await getSolBalance(input.wallet.publicKey.toBase58());
+  const balanceInSOL = await getSolBalance(input.wallet.publicKey.toBase58(),connection);
   if(balanceInSOL<minSwapAmountBalance) await input.ctx.api.sendMessage(input.ctx.portfolio.chatId, '🔴 Insufficient balance for transaction.', { parse_mode: 'HTML', disable_web_page_preview: true });
 
   const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee, });
@@ -183,7 +181,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   ]);
 
   if (units) {
-    // console.log("units: ", units);
+    console.log("units: ", units);
     units = Math.ceil(units * 2); // margin of error
     innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: units }));
   }
@@ -191,10 +189,12 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   innerTransactions[0].instructions.push(priorityFeeInstruction);
   // console.log("Inx #", innerTransactions[0].instructions.length);
 
+
   return {
     txids: await buildAndSendTx(
       input.wallet,
       innerTransactions,
+      connection,
       input.commitment
     ),
   };

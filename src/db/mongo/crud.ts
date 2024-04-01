@@ -7,13 +7,10 @@ import { PublicKey } from "@metaplex-foundation/js";
 import bs58 from "bs58";
 import { ISESSION_DATA, RAYDIUM_POOL_TYPE, DEFAULT_PUBLIC_KEY, DefaultPoolInfoData } from '../../service/util/types';
 import { SecretsManagerClient, GetSecretValueCommand, } from "@aws-sdk/client-secrets-manager";
-dotenv.config();
 const user = 'mvxKing'//encodeURIComponent(process.env.DB_USER!);
 const password = 'kingstonEmpireOfTheSun'// encodeURIComponent(process.env.DB_PASSWORD!);
 const isProd = process.env.NODE_ENV == 'PROD';
 const local_url = `mongodb://127.0.0.1:27017/test`;
-const SOL_TOKEN = "So11111111111111111111111111111111111111112";
-
 
 // https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/getting-started.html
 export async function anon(): Promise<any> {
@@ -43,9 +40,12 @@ export async function anon(): Promise<any> {
  */
 export async function _initDbConnection(): Promise<any> {
   // const db =  await mongoose.connect(local_url, { useNewUrlParser: true, useUnifiedTopology: true });
-  const _anon = isProd ? JSON.parse(await anon()) : null;
+  let _anon;
+  if(isProd){
+    _anon = JSON.parse(await anon());
+    console.log(isProd, _anon.db, _anon.usr, _anon.pw);
+  }
 
-  console.log(isProd, _anon.db, _anon.usr, _anon.pw);
 
   await mongoose.connect(isProd ? _anon.db : local_url, {
     user: isProd ? _anon.usr : user,
@@ -54,8 +54,6 @@ export async function _initDbConnection(): Promise<any> {
   });
 
   const db = mongoose.connection;
-  const colls = await db.listCollections();
-  console.log("colls", colls);
   db.on('error', console.error.bind(console, 'ERR connection error:'));
   db.once('open', function () {
     console.log("Connected to DB");

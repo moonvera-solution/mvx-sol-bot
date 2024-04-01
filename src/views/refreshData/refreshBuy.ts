@@ -1,4 +1,4 @@
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey,Connection} from '@solana/web3.js';
 import {getTokenMetadata, getUserTokenBalanceAndDetails} from '../../service/feeds'
 import TelegramBot from 'node-telegram-bot-api';
 import { RAYDIUM_POOL_TYPE } from '../../service/util/types';
@@ -34,8 +34,9 @@ export async function refreshTokenDetails(ctx: any) {
     const mediumPriorityFee = await runMedium(ctx);
     const highPriorityFee = await runHigh(ctx);
     const maxPriorityFee = await runMax(ctx);
-    
-    const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint });
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+
+    const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint ,connection});
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
     const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(quoteDecimals);
@@ -44,11 +45,11 @@ export async function refreshTokenDetails(ctx: any) {
     const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
     const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
 
-    const balanceInSOL = await getSolBalance(userPublicKey);
+    const balanceInSOL = await getSolBalance(userPublicKey,connection);
     const balanceInUSD = (balanceInSOL * (solprice)).toFixed(2);
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
     // console.log('newpublickey', new PublicKey(userPublicKey));
-    const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress);
+    const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress,connection);
     let slippage = ctx.session.latestSlippage;
     try {
         // Construct the message

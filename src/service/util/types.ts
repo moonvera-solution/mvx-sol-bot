@@ -52,7 +52,7 @@ export interface ISESSION_DATA {
   poolTime: number;
   positionPool: Array<any>;
   priorityFees: PriotitizationFeeLevels;
-  positionIndex:number;
+  positionIndex: number;
   env: {
     [key: string]: string
   }

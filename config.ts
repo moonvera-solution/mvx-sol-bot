@@ -16,15 +16,6 @@ import {
 } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 
-// ONLY FOR SWAP TESTING
-
-
-const NODE_URL = 'https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41';
-
-const connection_only = new Connection(NODE_URL);
-  export const connection = connection_only;
-
-
   export const PROGRAMIDS = MAINNET_PROGRAM_ID;
   export const ENDPOINT = _ENDPOINT;
   export const RAYDIUM_MAINNET_API = RAYDIUM_MAINNET;
@@ -40,9 +31,6 @@ export const DEFAULT_TOKEN = {
   'USDC': new Token(TOKEN_PROGRAM_ID, new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'), 6, 'USDC', 'USDC'),
   'RAY': new Token(TOKEN_PROGRAM_ID, new PublicKey('4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R'), 6, 'RAY', 'RAY'),
   'SOLFI': new Token(TOKEN_PROGRAM_ID, new PublicKey('FvVDc6gZmYho6DLLuJ3ptHS6rxb797Cxf1insiUnu2BL'), 8, 'SOLFI', 'SOLFI'),
-  'RAY_USDC-LP': new Token(TOKEN_PROGRAM_ID, new PublicKey('FGYXP4vBkMEtKhxrmEBcWN8VNmXX8qNgEJpENKDETZ4Y'), 6, 'RAY-USDC', 'RAY-USDC'),
-  'SOLFI_SOL_LP': new Token(TOKEN_PROGRAM_ID, new PublicKey('DtU8TMzfQAFSTjEcRUBAwBrWzkv6a32maR6FiezV8hGd'), 8, 'SOLFI-SOL', 'SOLFI-SOL'),
-  'SOLFI_SOL_V4_POOL': '46MCgSVT6KdBNK9UiBgyhEUPY3VbJRu8aZ3X1MQKxTeV' // AMM ID
 }
 
 export const MVXBOT_FEES = BigNumber(0.008) // this is %

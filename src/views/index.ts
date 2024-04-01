@@ -5,11 +5,8 @@ import { quoteToken } from './util/dataCalculation';
 import { getSolanaDetails } from '../api';
 import { formatNumberToKOrM, getSolBalance } from '../service/util';
 import { RAYDIUM_POOL_TYPE } from '../service/util/types';
-import { getRayPoolKeys } from '../service/dex/raydium/market-data/1_Geyser';
-import { connection } from '../../config';
 import { jsonInfo2PoolKeys, Liquidity, LiquidityPoolKeys, SPL_ACCOUNT_LAYOUT, TOKEN_PROGRAM_ID, TokenAccount } from '@raydium-io/raydium-sdk';
 import { Keypair, Connection } from '@solana/web3.js';
-import { getMaxPrioritizationFeeByPercentile } from '@/service/fees/priorityFees';
 import { runHigh, runMax, runMedium, runMin } from './util/getPriority';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 
@@ -55,8 +52,9 @@ export async function display_token_details(ctx: any) {
     const mediumPriorityFee = await runMedium(ctx);
     const highPriorityFee = await runHigh(ctx);
     const maxPriorityFee = await runMax(ctx);
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
-    const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint });
+    const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint , connection});
     // const formattedLiquidity = await formatNumberToKOrM(tokenInfo.liquidity * solprice * 2 ?? "N/A");
     const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
     const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(quoteDecimals);
@@ -66,10 +64,9 @@ export async function display_token_details(ctx: any) {
     const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
-
-    const balanceInSOL = await getSolBalance(userPublicKey);
+    const balanceInSOL = await getSolBalance(userPublicKey,connection);
     const balanceInUSD = (balanceInSOL * (solprice)).toFixed(2);
-    const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress);
+    const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress,connection);
     try {
         // Construct the message
         let options: any;
@@ -156,6 +153,8 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
     let messageText;
     const priority_Level = ctx.session.priorityFees;
     const activePool = ctx.session.activeTradingPool;
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+
     if(!msgTxt && !activePool) {await ctx.api.sendMessage(ctx.chat.id, "Enter token address to snipe.", { parse_mode: 'HTML' }); return;}
 
     if (activePool && activePool.baseMint != DEFAULT_PUBLIC_KEY) {
@@ -195,7 +194,7 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         } = await getTokenMetadata(ctx, tokenAddress.toBase58());
         const solprice = await getSolanaDetails();
 
-        const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint });
+        const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint ,connection});
         const lowPriorityFee = await runMin(ctx);
         const mediumPriorityFee = await runMedium(ctx);
         const highPriorityFee = await runHigh(ctx);
@@ -209,9 +208,9 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
         const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
 
-        const balanceInSOL = await getSolBalance(userPublicKey);
+        const balanceInSOL = await getSolBalance(userPublicKey,connection);
         const balanceInUSD = (balanceInSOL * (solprice)).toFixed(2);
-        const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress);
+        const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress,connection);
 
         messageText = `<b>${tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
             `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +

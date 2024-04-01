@@ -1,12 +1,9 @@
 import { PublicKey} from '@metaplex-foundation/js';
 import { getLiquityFromOwner, getTokenMetadata, getUserTokenBalanceAndDetails } from '../../service/feeds';
-import TelegramBot from 'node-telegram-bot-api';
 import { quoteToken } from '../util/dataCalculation';
 import { getSolanaDetails } from '../../api';
-import { formatNumberToKOrM, getSolBalance } from '../../service/util';
-import axios from 'axios';
+import { formatNumberToKOrM } from '../../service/util';
 import { Connection } from '@solana/web3.js';
-import { LIQUIDITY_STATE_LAYOUT_V4, publicKey } from '@raydium-io/raydium-sdk';
 const connection_only = new Connection('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'); // TRITON
 
 export async function Refresh_rugCheck(ctx: any) {
@@ -20,9 +17,10 @@ export async function Refresh_rugCheck(ctx: any) {
     const quoteDecimals = rugPool.quoteDecimals;
     const baseMint = rugPool.baseMint;
     const lpMint = rugPool.lpMint;
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     // console.log('lpMint', lpMint);  
     const solprice = await getSolanaDetails();
-    const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint });
+    const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint ,connection});
     const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
     const tokenPriceUSD = (tokenInfo.price.times(solprice)).toFixed(quoteDecimals);
     const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
@@ -39,7 +37,7 @@ export async function Refresh_rugCheck(ctx: any) {
     const MutableInfo = tokenData.isMutable? '⚠️ Mutable' : '✅ Immutable';
     const creatorAddress = tokenData.updateAuthorityAddress.toBase58();
     const renounced = tokenData.mint.mintAuthorityAddress?.toString() !== tokenData.updateAuthorityAddress.toString()? "✅" : "❌ No";
-    const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint));
+    const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint),connection);
     const getPooledSol: any = await connection_only.getParsedAccountInfo(new PublicKey(quoteVault), "processed");
     const getBaseSupply: any = await connection_only.getParsedAccountInfo(new PublicKey(baseMint), "processed");
     const circulatingSupply: any = await connection_only.getParsedAccountInfo(new PublicKey(baseVault));
@@ -54,7 +52,7 @@ export async function Refresh_rugCheck(ctx: any) {
     const isRaydium = exchanger.toString() === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1'? "<b>Raydium</b>" : "Unknown";
     const lpSupply = lpSupplyOwner.userTokenBalance; 
     const islpBurnt = lpSupply > 0 ? "❌ No" : "✅ Yes";
-    const getCreatorPercentage = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint));
+    const getCreatorPercentage = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint),connection);
     const creatorPercentage = (Number(getCreatorPercentage.userTokenBalance) / Number(baseTokenSupply) * 100).toFixed(2);
     try {
     let messageText = `<b>------ ${tokenData.name} (${tokenData.symbol}) ------</b>\n` +

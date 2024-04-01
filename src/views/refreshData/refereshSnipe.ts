@@ -1,10 +1,11 @@
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey ,Connection} from '@solana/web3.js';
 import {getTokenMetadata, getUserTokenBalanceAndDetails} from '../../service/feeds'
 import { RAYDIUM_POOL_TYPE } from '../../service/util/types';
 import { getSolanaDetails } from '../../api/priceFeeds/coinMarket';
 import { quoteToken } from '../util/dataCalculation';
 import { formatNumberToKOrM, getSolBalance } from '../../service/util';
 import { runMin, runMedium, runHigh, runMax } from '../util/getPriority';
+
 
 export async function refreshSnipeDetails(ctx: any) {
     const priority_Level = ctx.session.priorityFees;
@@ -29,7 +30,7 @@ export async function refreshSnipeDetails(ctx: any) {
     const baseDecimals = rayPoolKeys.baseDecimals;
     const quoteDecimals = rayPoolKeys.quoteDecimals;
     const baseMint = rayPoolKeys.baseMint;
-    const chatId = ctx.chat.id;
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     const tokenAddress = new PublicKey(ctx.session.snipeToken);
     const {
         birdeyeURL,
@@ -39,7 +40,7 @@ export async function refreshSnipeDetails(ctx: any) {
     } = await getTokenMetadata(ctx, tokenAddress.toBase58());
     const solprice = await getSolanaDetails();
   
-    const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint });
+    const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint,connection });
     const lowPriorityFee = await runMin(ctx);
     const mediumPriorityFee = await runMedium(ctx);
     const highPriorityFee = await runHigh(ctx);
@@ -51,10 +52,9 @@ export async function refreshSnipeDetails(ctx: any) {
     const formattedmac= await formatNumberToKOrM(marketCap) ?? "NA";
     const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
     const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
-
-    const balanceInSOL = await getSolBalance(userPublicKey);
+    const balanceInSOL = await getSolBalance(userPublicKey,connection);
     const balanceInUSD = (balanceInSOL * (solprice)).toFixed(2);
-    const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress);
+    const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress,connection);
     let options: any;
     let messageText: any;
      messageText = `<b>${tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +

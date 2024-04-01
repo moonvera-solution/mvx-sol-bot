@@ -1,18 +1,18 @@
 import { UserPositions } from '../..//db';
-import { connection } from '../../../config';
-import { PublicKey, sol } from '@metaplex-foundation/js';
+import { PublicKey } from '@metaplex-foundation/js';
+import { Connection } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import {  TOKEN_PROGRAM_ID } from '@raydium-io/raydium-sdk';
 import { getSolanaDetails } from "../../api/priceFeeds/coinMarket";
-import { getRayPoolKeys } from "../../service/dex/raydium/market-data/1_Geyser";
 import { quoteToken } from "./../util/dataCalculation";
 import { formatNumberToKOrM } from "../../service/util";
+import { getRayPoolKeys } from '../../service/dex/raydium/raydium-utils/formatAmmKeysById'
 
 export async function refresh_spl_positions(ctx: any) {
     const chatId = ctx.chat.id;
     const userWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex]?.publicKey;
     const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userWallet });
-    // console.log("userPosition:: ", userPosition[0]);
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     
     
     const solprice = await getSolanaDetails();
@@ -66,14 +66,15 @@ export async function refresh_spl_positions(ctx: any) {
                 continue;
             }
 
-            let poolKeys = await getRayPoolKeys(token);
+            let poolKeys = await getRayPoolKeys(ctx,token);
              ctx.session.positionPool.push(poolKeys);
              const tokenInfo = await quoteToken({
                 baseVault: poolKeys.baseVault,
                 quoteVault: poolKeys.quoteVault,
                 baseDecimals: poolKeys.baseDecimals,
                 quoteDecimals: poolKeys.quoteDecimals,
-                baseSupply: poolKeys.baseMint
+                baseSupply: poolKeys.baseMint,
+                connection
             });
             const tokenPriceSOL = tokenInfo.price.toNumber();
             const tokenPriceUSD = tokenInfo.price.times(solprice).toFixed(2);

@@ -3,7 +3,7 @@ import { handle_radyum_swap } from './service/portfolio/strategies/swaps';
 import { Bot, Context, GrammyError, HttpError, session, SessionFlavor } from "grammy";
 import { importWallet, getPortfolio } from './service/portfolio/wallets';
 import { ISESSION_DATA, DefaultSessionData, DEFAULT_PUBLIC_KEY, DefaultPortfolioData } from './service/util/types';
-import { Keypair, PublicKey } from '@solana/web3.js';
+import { Keypair, PublicKey,Connection } from '@solana/web3.js';
 import { _initDbConnection } from "./db/mongo/crud";
 import { handleSettings } from './service/settings';
 import { getSolanaDetails } from './api';
@@ -13,9 +13,8 @@ import { getSolBalance, sendSol } from './service/util';
 import { handleRefreshStart, handleRereshWallet } from './views/refreshData/refreshStart';
 import { refreshTokenDetails } from './views/refreshData/refreshBuy';
 import { handleWallets } from './views/util/dbWallet';
-import { _getReservers } from './service/dex/raydium/market-data/2_Strategy';
 import { RefreshAllWallets } from './views/refreshData/RefresHandleWallets';
-import { getRayPoolKeys } from './service/dex/raydium/market-data/1_Geyser';
+import { getRayPoolKeys } from './service/dex/raydium/raydium-utils/formatAmmKeysById'
 import { sendHelpMessage, sendReferMessage } from './views/util/helpMessage';
 import { display_rugCheck } from './views/rugCheck';
 import { Refresh_rugCheck } from './views/refreshData/refreshRug';
@@ -26,18 +25,21 @@ import { refreshSnipeDetails } from './views/refreshData/refereshSnipe';
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { refresh_spl_positions } from './views/refreshData/refreshPortfolio';
 import { logErrorToFile } from "../error/logger";
-import { _loadEnvVars, loadSecrets } from "./service/util/loadKeys";
-
+import { loadSecrets } from "./service/util/loadKeys";
+import dotenv from 'dotenv';
+dotenv.config();
 
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
-/*                  BOT START & SET ENV                      */
+/*                  BOT START & SET ENV                       */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 type MyContext = Context & SessionFlavor<ISESSION_DATA>;
+const isProd = process.env.NODE_ENV == 'PROD';
 
 (async () => {
     await _initDbConnection();
-    const keys = JSON.parse(await loadSecrets());
-    const bot = new Bot<MyContext>(keys.tg);
+    const keys = isProd ? JSON.parse(await loadSecrets()) : process.env.TELEGRAM_BOT_TOKEN;
+
+    const bot = new Bot<MyContext>(isProd ? keys.tg : keys);
     bot.use(session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) }));
     bot.start();
 
@@ -46,8 +48,8 @@ type MyContext = Context & SessionFlavor<ISESSION_DATA>;
     async function _setUpEnv(ctx: any): Promise<any> {
         try {
             const chatId = ctx.chat.id;
-
-            ctx.session.env['triton'] = keys ? keys.triton : process.env.TRITON_RPC_TOKEN;
+            ctx.session.env['tritonRPC'] = 'https://moonvera-pit.rpcpool.com/';
+            ctx.session.env['tritonToken'] = isProd ? keys.triton : process.env.TRITON_RPC_TOKEN;
 
             // set user portfolio
             ctx.session.portfolio = await getPortfolio(chatId) !== DefaultPortfolioData ? await getPortfolio(chatId) : await createUserPortfolio(ctx);
@@ -60,6 +62,10 @@ type MyContext = Context & SessionFlavor<ISESSION_DATA>;
             logErrorToFile('Env SetUp', error);
         }
     }
+
+/*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+/*                      SET REFERRAL                          */
+/*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
     async function _setReferral(ctx: any, isNewUser: boolean) {
         let chatId = ctx.chat.id;
@@ -97,16 +103,27 @@ type MyContext = Context & SessionFlavor<ISESSION_DATA>;
             return;
         }
     }
-
+    
+/*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+/*                      BOT START                             */
+/*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
     bot.command("start", async (ctx: any) => {
+
         try {
             await _setUpEnv(ctx);
+            console.log("conn", `${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+
             ctx.session.latestCommand = "start";
             const chatId = ctx.chat.id;
             const wIdx = ctx.session.activeWalletIndex;
             const userPk = ctx.session.portfolio.wallets[wIdx].publicKey;
             const publicKeyString = userPk instanceof PublicKey ? userPk.toBase58() : userPk;
-            const balanceInSOL = await getSolBalance(publicKeyString);
+
+
+            const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+            console.log("conn", `${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+
+            const balanceInSOL = await getSolBalance(publicKeyString,connection);
             if (balanceInSOL === null) {
                 await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
                 return;
@@ -171,7 +188,6 @@ type MyContext = Context & SessionFlavor<ISESSION_DATA>;
     bot.command('rugchecking', async (ctx) => {
         await ctx.api.sendMessage(ctx.chat.id, "Please provide the token address for a rug pull analysis.");
         ctx.session.latestCommand = 'rug_check';
-
     });
 
     bot.command('buy', async (ctx) => {
@@ -251,7 +267,8 @@ type MyContext = Context & SessionFlavor<ISESSION_DATA>;
                                 ctx.session.tokenHistory.shift();
                             }
 
-                            ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt);
+                            const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+                            ctx.session.activeTradingPool = await getRayPoolKeys(ctx,msgTxt);
 
                             // Synchronize buyToken and sellToken with the rugCheckToken
                             ctx.session.buyToken = rugCheckToken;
@@ -327,7 +344,7 @@ type MyContext = Context & SessionFlavor<ISESSION_DATA>;
                 case 'buy': {
                     try {
                         if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
-                            let poolInfo = ctx.session.tokenRayPoolInfo[msgTxt] ?? await getRayPoolKeys(msgTxt);
+                            let poolInfo = ctx.session.tokenRayPoolInfo[msgTxt] ?? await getRayPoolKeys(ctx,msgTxt);
 
                             if (!poolInfo) {
                                 ctx.api.sendMessage(chatId, "🔴 Invalid address");
@@ -352,8 +369,7 @@ type MyContext = Context & SessionFlavor<ISESSION_DATA>;
                 }
                 case 'snipe': {
                     if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
-                        // ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
-                        ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt);
+                        ctx.session.activeTradingPool = await getRayPoolKeys(ctx,msgTxt);
                         console.log(" ctx.session.activeTradingPool", ctx.session.activeTradingPool);
 
                         if (!ctx.session.activeTradingPool) {
@@ -454,20 +470,20 @@ type MyContext = Context & SessionFlavor<ISESSION_DATA>;
                 ctx.session.latestCommand = 'buy_X_SOL';
                 return;
             }
-            // else if (matchNavigate) {
-            //     const parts = data.split('_');
-            //     const newPositionIndex = parseInt(parts[2]); // New position index
-            //     console.log("newPositionIndex", newPositionIndex);
-            //     console.log("ctx.session.positionPool", ctx.session.positionPool);
-            //     // Update the current position index
-            //     ctx.session.positionIndex = newPositionIndex;
-            //     console.log("ctx.session.positionIndex", ctx.session.positionIndex);
+            else if (matchNavigate) {
+                const parts = data.split('_');
+                const newPositionIndex = parseInt(parts[2]); // New position index
+                console.log("newPositionIndex", newPositionIndex);
+                console.log("ctx.session.positionPool", ctx.session.positionPool);
+                // Update the current position index
+                ctx.session.positionIndex = newPositionIndex;
+                console.log("ctx.session.positionIndex", ctx.session.positionIndex);
 
-            //     ctx.session.activeTradingPool = ctx.session.positionPool[ctx.session.positionIndex]
-            //     console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
-            //     // Redisplay the positions with the updated index
-            //     await refresh_spl_positions(ctx);
-            // }
+                ctx.session.activeTradingPool = ctx.session.positionPool[ctx.session.positionIndex]
+                console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
+                // Redisplay the positions with the updated index
+                await refresh_spl_positions(ctx);
+            }
 
             switch (data) {
                 case 'refer_friends': {
@@ -611,7 +627,7 @@ type MyContext = Context & SessionFlavor<ISESSION_DATA>;
                         let poolInfo = ctx.session.tokenRayPoolInfo[tokenString];
 
                         if (!poolInfo) {
-                            poolInfo = await getRayPoolKeys(tokenString);
+                            poolInfo = await getRayPoolKeys(ctx,tokenString);
                             ctx.session.tokenRayPoolInfo[tokenString] = poolInfo;
                         }
 
@@ -647,7 +663,7 @@ type MyContext = Context & SessionFlavor<ISESSION_DATA>;
                         let poolInfo = ctx.session.tokenRayPoolInfo[tokenString];
 
                         if (!poolInfo) {
-                            poolInfo = await getRayPoolKeys(tokenString);
+                            poolInfo = await getRayPoolKeys(ctx,tokenString);
                             ctx.session.tokenRayPoolInfo[tokenString] = poolInfo;
                         }
 
@@ -717,7 +733,7 @@ type MyContext = Context & SessionFlavor<ISESSION_DATA>;
                         // Check if the pool info is already in the session
                         let poolInfo = ctx.session.tokenRayPoolInfo[previousTokenStr];
                         if (!poolInfo) {
-                            poolInfo = await getRayPoolKeys(previousTokenStr);
+                            poolInfo = await getRayPoolKeys(ctx,previousTokenStr);
                             ctx.session.tokenRayPoolInfo[previousTokenStr] = poolInfo;
                         }
 
@@ -745,7 +761,7 @@ type MyContext = Context & SessionFlavor<ISESSION_DATA>;
                         // Check if the pool info is already in the session
                         let poolInfo = ctx.session.tokenRayPoolInfo[nextTokenStr];
                         if (!poolInfo) {
-                            poolInfo = await getRayPoolKeys(nextTokenStr);
+                            poolInfo = await getRayPoolKeys(ctx,nextTokenStr);
                             ctx.session.tokenRayPoolInfo[nextTokenStr] = poolInfo;
                         }
 

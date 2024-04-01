@@ -28,7 +28,6 @@ import {
 
 import {
     addLookupTableInfo,
-    connection,
     makeTxVersion
 } from '../../../config';
 
@@ -73,7 +72,7 @@ export async function getWalletTokenAccount(connection: Connection, wallet: Publ
     }));
 }
 
-export async function buildTx(innerSimpleV0Transaction: InnerSimpleV0Transaction[], options?: SendOptions):
+export async function buildTx(innerSimpleV0Transaction: InnerSimpleV0Transaction[], connection:Connection, options?: SendOptions):
     Promise<(VersionedTransaction | Transaction)[]> {
     return await buildSimpleTransaction({
         connection,
@@ -84,7 +83,7 @@ export async function buildTx(innerSimpleV0Transaction: InnerSimpleV0Transaction
     });
 }
 
-export async function buildAndSendTx(keypair: Keypair, innerSimpleV0Transaction: InnerSimpleV0Transaction[], options?: SendOptions) {
+export async function buildAndSendTx(keypair: Keypair, innerSimpleV0Transaction: InnerSimpleV0Transaction[], connection:Connection,options?: SendOptions) {
     const willSendTx: (VersionedTransaction | Transaction)[] = await buildSimpleTransaction({
         connection,
         makeTxVersion,
@@ -348,7 +347,7 @@ export async function extractSignatureFromFailedTransaction(
     // always return the failed signature value
     return failedSig;
 }
-export async function getSolBalance(publicKeyString: any) {
+export async function getSolBalance(publicKeyString: any, connection: Connection) {
     const publicKey = publicKeyString instanceof PublicKey ? publicKeyString : new PublicKey(publicKeyString);
     try {
         const balance = await connection.getBalance(publicKey);
@@ -537,6 +536,7 @@ export async function sendSol(ctx: any, recipientAddress: PublicKey, solAmount: 
     const userSecretKey = userWallet.secretKey; // User's secret key
     const userPublicKey = userWallet.publicKey; // User's public key
     const amount = solAmount * LAMPORTS_PER_SOL; // Convert SOL to lamports
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     // Create a transaction
     const transaction = new Transaction().add(
         SystemProgram.transfer({
@@ -581,14 +581,14 @@ export function isValidBase58(str: any) {
     return base58Regex.test(str);
 }
 
-export async function waitForConfirmation(txid: string): Promise<boolean> {
+export async function waitForConfirmation(ctx: any, txid: string): Promise<boolean> {
     let isConfirmed = false;
-    const maxAttempts = 500;
+    const maxAttempts = 5;
     let attempts = 0;
 
     while (!isConfirmed && attempts < maxAttempts) {
         attempts++;
-        // console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
+        console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
 
         const status = await getTransactionStatus(txid);
         console.log('Transaction status:', status);
@@ -602,7 +602,8 @@ export async function waitForConfirmation(txid: string): Promise<boolean> {
         }
     }
 
-    if (!isConfirmed && attempts >= maxAttempts) {
+    if (!isConfirmed) {
+        ctx.api.sendMessage(ctx.chat.id, 'Transaction could not be confirmed within the low priority fee.');
         console.error('Transaction could not be confirmed within the max attempts.');
     }
 

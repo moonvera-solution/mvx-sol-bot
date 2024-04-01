@@ -4,17 +4,51 @@ import {
   Liquidity,
   MARKET_STATE_LAYOUT_V3,
   Market,
-  SPL_MINT_LAYOUT,
-  LiquidityPoolKeysV4
+  SPL_MINT_LAYOUT
 } from '@raydium-io/raydium-sdk';
 import {
-  PublicKey
+  PublicKey,Connection
 } from '@solana/web3.js';
 
-import { connection } from '../../../../../config';
+export async function getRayPoolKeys(ctx:any,shitcoin: string) {
+  const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+  const commitment = "confirmed"
+  const AMMV4 = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8');
+  const baseMint = new PublicKey(shitcoin);
+  const quoteMint = new PublicKey('So11111111111111111111111111111111111111112');
+  const accounts = await connection.getProgramAccounts(
+    AMMV4,
+    {
+      commitment,
+      filters: [
+        { dataSize: LIQUIDITY_STATE_LAYOUT_V4.span },
+        {
+          memcmp: {
+            offset: LIQUIDITY_STATE_LAYOUT_V4.offsetOf("baseMint"),
+            bytes: baseMint.toBase58(),
+          },
+        },
+        {
+          memcmp: {
+            offset: LIQUIDITY_STATE_LAYOUT_V4.offsetOf("quoteMint"),
+            bytes: quoteMint.toBase58(),
+          },
+        },
+      ],
+    }
+  );
 
-export async function formatAmmKeysById(id: string): Promise<ApiPoolInfoV4> {
- 
+  const ammId = accounts && accounts[0] && accounts[0].pubkey;
+  let keys: any = null;
+  // ammid exists and keys still null
+  while (ammId && keys == undefined) {
+    keys = await formatAmmKeysById(ammId.toString(),connection);
+  }
+  // console.log('keys:', keys);
+  return keys;
+}
+
+export async function formatAmmKeysById(id: string, connection: Connection): Promise<ApiPoolInfoV4> {
   const account = await connection.getAccountInfo(new PublicKey(id), 'processed')
  
   if (account === null) throw Error(' get id info error ')

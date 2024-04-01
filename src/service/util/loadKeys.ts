@@ -6,9 +6,8 @@ import { logErrorToFile } from "../../../error/logger";
 
 export async function _loadEnvVars(ctx: any) {
     try{
-        let keys = isProd ? await loadSecrets() : null;
+        let keys = isProd ? JSON.parse(await loadSecrets()) : null;
         ctx.session.env['triton'] = keys ? keys.tritonToken : process.env.TRITON_RPC_TOKEN;
-        ctx.session.env['tg'] = keys ? keys.tgToken : process.env.TELEGRAM_BOT_TOKEN;
     }catch(error:any){
         logErrorToFile("_loadEnvVars",error);
         console.error(error);

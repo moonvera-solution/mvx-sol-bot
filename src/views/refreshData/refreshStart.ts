@@ -1,8 +1,11 @@
 import { getSolBalance } from '../../service/util';
 import { getSolanaDetails,  } from '../../api';
+import { Connection } from '@solana/web3.js';
 
 export async function handleRefreshStart(ctx: any) {
     const chatId = ctx.chat.id;
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+
     // Fetch the latest SOL price
     const details = await getSolanaDetails();
     let solPriceMessage = '';
@@ -21,7 +24,7 @@ export async function handleRefreshStart(ctx: any) {
     }
    const publicKeyString: any = userWallet.publicKey; // The user's public key
      // Fetch SOL balance
-     const balanceInSOL = await getSolBalance(publicKeyString);
+     const balanceInSOL = await getSolBalance(publicKeyString,connection);
      if (balanceInSOL === null) {
          await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
          return;
@@ -67,14 +70,15 @@ export async function handleRefreshStart(ctx: any) {
 
 export async function handleRereshWallet(ctx: any){
 
+    const chatId = ctx.chat.id;
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     const selectedWallet = ctx.session.activeWalletIndex;
     const userWallet = ctx.session.portfolio.wallets[selectedWallet];
-    const chatId = ctx.chat.id;
 
     const publicKeyString: any = userWallet.publicKey; // The user's public key
 
     // Fetch SOL balance
-    const balanceInSOL = await getSolBalance(publicKeyString);
+    const balanceInSOL = await getSolBalance(publicKeyString,connection);
     if (balanceInSOL === null) {
         await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
         return;

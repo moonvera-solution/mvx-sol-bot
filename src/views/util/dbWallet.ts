@@ -1,10 +1,13 @@
 import { getSolanaDetails } from '../../api';
 import { getSolBalance } from '../../service/util/index';
+import { Connection } from '@solana/web3.js';
 
 export async function handleWallets(ctx: any) {
     const chatId = ctx.chat.id;
     const wallets = ctx.session.portfolio.wallets;
     const selectedWalletIndex = ctx.session.activeWalletIndex; // Index of the currently selected wallet
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+
 
     if (!wallets || wallets.length === 0) {
         await ctx.api.sendMessage(chatId, "No wallets found. Please add a wallet first.");
@@ -14,7 +17,7 @@ export async function handleWallets(ctx: any) {
     let inlineKeyboardRows = [];
 
     for (const [index, wallet] of wallets.entries()) {
-        const balanceInSOL = await getSolBalance(wallet.publicKey);
+        const balanceInSOL = await getSolBalance(wallet.publicKey,connection);
         const balanceInUSD = balanceInSOL * solanaDetails;
 
         let walletIdentifier = wallet.publicKey;
