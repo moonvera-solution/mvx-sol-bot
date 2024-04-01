@@ -37,10 +37,8 @@ const isProd = process.env.NODE_ENV == 'PROD';
 
 
 _initDbConnection();
-const obj = loadSecrets().then((k: any) => k);
-const keys = isProd ? JSON.parse(obj) : process.env.TELEGRAM_BOT_TOKEN;
-
-const bot = new Bot<MyContext>(isProd ? keys.tg : keys);
+const keys = process.env.TELEGRAM_BOT_TOKEN;
+const bot = new Bot<MyContext>(keys!);
 bot.use(session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) }));
 bot.start();
 
