@@ -172,9 +172,63 @@ bot.command("start", async (ctx: any) => {
     }
 });
 
+
+bot.command('help', async (ctx) => {
+    await sendHelpMessage(ctx);
+});
+
+bot.command('positions', async (ctx) => {
+    await display_spl_positions(ctx);
+});
+
+bot.command('rugchecking', async (ctx) => {
+    await ctx.api.sendMessage(ctx.chat.id, "Please provide the token address for a rug pull analysis.");
+    ctx.session.latestCommand = 'rug_check';
+});
+
+bot.command('buy', async (ctx) => {
+    const chatId = ctx.chat.id;
+    const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+    if (referralRecord) {
+        ctx.session.referralCommision = referralRecord.commissionPercentage;
+        ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
+    }
+    ctx.session.latestCommand = 'buy';
+    await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to Buy.");
+
+});
+
+bot.command('sell', async (ctx) => {
+    const chatId = ctx.chat.id;
+    const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+    if (referralRecord) {
+        ctx.session.referralCommision = referralRecord.commissionPercentage;
+        ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
+
+    }
+    ctx.session.latestCommand = 'sell';
+    await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to sell.");
+});
+
+bot.command('snipe', async (ctx) => {
+    const chatId = ctx.chat.id;
+    const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+    if (referralRecord) {
+        ctx.session.referralCommision = referralRecord.commissionPercentage;
+        ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
+    }
+    ctx.session.latestCommand = 'snipe';
+    await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to snipe.");
+});
+
+bot.command('settings', async (ctx) => {
+    await handleSettings(ctx);
+});
+
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                      BOT ON MSG                            */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
 bot.on('message', async (ctx) => {
     try {
         const chatId = ctx.chat.id;
@@ -825,60 +879,6 @@ bot.on('callback_query', async (ctx: any) => {
         console.error(e);
     }
 });
-
-
-bot.command('help', async (ctx) => {
-    await sendHelpMessage(ctx);
-});
-
-bot.command('positions', async (ctx) => {
-    await display_spl_positions(ctx);
-});
-
-bot.command('rugchecking', async (ctx) => {
-    await ctx.api.sendMessage(ctx.chat.id, "Please provide the token address for a rug pull analysis.");
-    ctx.session.latestCommand = 'rug_check';
-});
-
-bot.command('buy', async (ctx) => {
-    const chatId = ctx.chat.id;
-    const referralRecord = await Referrals.findOne({ referredUsers: chatId });
-    if (referralRecord) {
-        ctx.session.referralCommision = referralRecord.commissionPercentage;
-        ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
-    }
-    ctx.session.latestCommand = 'buy';
-    await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to Buy.");
-
-});
-
-bot.command('sell', async (ctx) => {
-    const chatId = ctx.chat.id;
-    const referralRecord = await Referrals.findOne({ referredUsers: chatId });
-    if (referralRecord) {
-        ctx.session.referralCommision = referralRecord.commissionPercentage;
-        ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
-
-    }
-    ctx.session.latestCommand = 'sell';
-    await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to sell.");
-});
-
-bot.command('snipe', async (ctx) => {
-    const chatId = ctx.chat.id;
-    const referralRecord = await Referrals.findOne({ referredUsers: chatId });
-    if (referralRecord) {
-        ctx.session.referralCommision = referralRecord.commissionPercentage;
-        ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
-    }
-    ctx.session.latestCommand = 'snipe';
-    await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to snipe.");
-});
-
-bot.command('settings', async (ctx) => {
-    await handleSettings(ctx);
-});
-
 
 bot.catch((err) => {
     const ctx = err.ctx;
