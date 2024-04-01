@@ -61,10 +61,11 @@ const getMaxPrioritizationFeeByPercentile = async (
 
 
 
-export  async function runMin(ctx: any) {
+export  async function runMin(ctx: any, raydiumId: any) {
+ const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [
-            new PublicKey(ctx.session.activeTradingPool.id),
+            new PublicKey(priorityCalculation),
         ],
         percentile: PriotitizationFeeLevels.LOW,
         fallback: false,
@@ -72,10 +73,12 @@ export  async function runMin(ctx: any) {
     return result;  
     // console.log('result_Min', result);
 }
-export async function runMedium(ctx: any) {
+export async function runMedium(ctx: any, raydiumId: any) {
+  const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
+
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [
-            new PublicKey(ctx.session.activeTradingPool.id),
+            new PublicKey(priorityCalculation),
         ],
         percentile: PriotitizationFeeLevels.MEDIUM,
         fallback: false,
@@ -84,10 +87,11 @@ export async function runMedium(ctx: any) {
     // console.log('result_Medium', result);
 }
 
-export async function runHigh(ctx: any) {
+export async function runHigh(ctx: any, raydiumId: any) {
+  const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [
-            new PublicKey(ctx.session.activeTradingPool.id),
+            new PublicKey(priorityCalculation),
         ],
         percentile: PriotitizationFeeLevels.HIGH,
         fallback: false,
@@ -97,10 +101,12 @@ export async function runHigh(ctx: any) {
     // console.log('result_High', result);
 }
 
-export async function runMax(ctx: any) {
+export async function runMax(ctx: any, raydiumId: any) {
+  const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
+
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [
-            new PublicKey(ctx.session.activeTradingPool.id),
+            new PublicKey(priorityCalculation),
         ],
         percentile: PriotitizationFeeLevels.MAX,
         fallback: false,

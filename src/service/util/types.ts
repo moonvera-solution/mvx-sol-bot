@@ -1,6 +1,6 @@
 import { PublicKey } from '@solana/web3.js';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
-import { DEFAULT_PRIORITY_FEE_UNITS, DEFAULT_PRIORITY_FEE_MICRO_LAMPORTS } from '../../../config';
+
 // DB MODELS
 export type PORTFOLIO_TYPE = {
   chatId: number,

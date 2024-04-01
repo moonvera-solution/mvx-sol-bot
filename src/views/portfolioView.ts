@@ -101,8 +101,7 @@ export async function display_spl_positions(ctx: any) {
                 const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
                 const userBalanceUSD = (userBalance.dividedBy(1e9)).times(tokenPriceUSD).toFixed(2);
                 const userBalanceSOL = (userBalance.dividedBy(1e9)).times(tokenPriceSOL).toFixed(3);
-                // console.log('pos.amountOut', pos.amountOut);
-                console.log('userBalance', userBalance.toNumber());
+
                 const valueInUSD = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10, poolKeys.baseDecimals) * Number(tokenPriceUSD) : 'N/A';
                 // console.log('valueInUSD', valueInUSD);
                 const valueInSOL = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10, poolKeys.baseDecimals) * Number(tokenPriceSOL) : 'N/A';
@@ -125,8 +124,6 @@ export async function display_spl_positions(ctx: any) {
                     `Current value: ${valueInSOL != 'N/A' ? valueInSOL.toFixed(4) : 'N/A'} <b>SOL</b> | ${valueInUSD != 'N/A' ? valueInUSD.toFixed(4) : 'N/A'} <b>USD </b>\n` +
                     `Profit: ${profitInSol != 'N/A' ? profitInSol.toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? profitInUSD.toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? profitPercentage.toFixed(2) : 'N/A'}%\n\n` +
                     `Token Balance in Wallet: ${Number(userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).toFixed(3)} <b>${pos.symbol}</b> | ${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n\n`;
-
-
             }
         };
         let keyboardButtons = createKeyboardForPosition(currentIndex);

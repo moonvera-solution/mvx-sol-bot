@@ -1,19 +1,27 @@
 import { PublicKey ,Connection} from '@solana/web3.js';
 import {getTokenMetadata, getUserTokenBalanceAndDetails} from '../../service/feeds'
-import { RAYDIUM_POOL_TYPE } from '../../service/util/types';
+import { DEFAULT_PUBLIC_KEY, RAYDIUM_POOL_TYPE } from '../../service/util/types';
 import { getSolanaDetails } from '../../api/priceFeeds/coinMarket';
 import { quoteToken } from '../util/dataCalculation';
 import { formatNumberToKOrM, getSolBalance } from '../../service/util';
 import { runMin, runMedium, runHigh, runMax } from '../util/getPriority';
 
-
 export async function refreshSnipeDetails(ctx: any) {
+    let options: any;
+    let messageText: any;
+
     const priority_Level = ctx.session.priorityFees;
+    const activePool = ctx.session.activeTradingPool;
     const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
     ctx.session.currentMode = 'snipe';
+    let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
+    if (activePool && activePool.baseMint != DEFAULT_PUBLIC_KEY) {
+
     // showing the user the countdowm to the snipe
     const currentTime = new Date();
-    const poolStartTime = new Date(ctx.session.poolTime.startTime.toNumber() * 1000); 
+    let poolStartTime = new Date();
+    if(!ctx.session.poolTime.startTime) {
+     poolStartTime = new Date(ctx.session.poolTime.startTime!.toNumber() * 1000); }
 
     let poolStatusMessage;
     if (currentTime >= poolStartTime) {
@@ -41,10 +49,11 @@ export async function refreshSnipeDetails(ctx: any) {
     const solprice = await getSolanaDetails();
   
     const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint,connection });
-    const lowPriorityFee = await runMin(ctx);
-    const mediumPriorityFee = await runMedium(ctx);
-    const highPriorityFee = await runHigh(ctx);
-    const maxPriorityFee = await runMax(ctx);    const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
+    const lowPriorityFee = await runMin(ctx, raydiumId);
+    const mediumPriorityFee = await runMedium(ctx, raydiumId);
+    const highPriorityFee = await runHigh(ctx, raydiumId);
+    const maxPriorityFee = await runMax(ctx, raydiumId);    
+    const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
     const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(quoteDecimals);
     const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
@@ -55,8 +64,7 @@ export async function refreshSnipeDetails(ctx: any) {
     const balanceInSOL = await getSolBalance(userPublicKey,connection);
     const balanceInUSD = (balanceInSOL * (solprice)).toFixed(2);
     const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress,connection);
-    let options: any;
-    let messageText: any;
+
      messageText = `<b>${tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
                 `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
                 `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
@@ -69,13 +77,11 @@ export async function refreshSnipeDetails(ctx: any) {
                 `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) /1e9).toFixed(7)} <b>SOL</b> \n\n` +
                 `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
                 `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n ` ;
-                const priorityButtons = [
-                    [{ text: 'Priority Fees', callback_data: '-' }],
-                    [{ text: 'Low', callback_data: 'priority_low' },
-                    { text:  'Medium', callback_data: 'priority_medium' },
-                    { text:  'High', callback_data: 'priority_high' },
-                    { text:  'Max', callback_data: 'priority_very_high' }],
-                ];
+} else {
+    const { tokenData } = await getTokenMetadata(ctx, ctx.session.snipeToken);
+    messageText = `<b>${tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${ctx.session.snipeToken}</code> <a href="copy:${ctx.session.snipeToken}">🅲</a>\n` +
+    `No pool available for this token yet. \nSet Sniper by selecting slippage and amount.`;
+}          
                 options = {
                     parse_mode: 'HTML',
                     disable_web_page_preview: true,
@@ -88,8 +94,8 @@ export async function refreshSnipeDetails(ctx: any) {
                             [{ text: `⛷️ Set Slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' },{ text: 'Selling Mode 💸', callback_data: 'sell' }],
                             [{ text: '📈 Priority fees', callback_data: '_' }],
                             [ 
-                                { text: `Low ${priority_Level === 'low' ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 'medium' ? '✅' : ''}`, callback_data: 'priority_medium' },
-                                { text: `High ${priority_Level === 'high' ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 'max' ? '✅' : ''}`, callback_data: 'priority_max' }
+                                { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
+                                { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
                             ],
                             [{ text: 'Cancel', callback_data: 'closing' }]
                         ]
@@ -97,4 +103,5 @@ export async function refreshSnipeDetails(ctx: any) {
                 };
 
                 await ctx.editMessageText(messageText, options);
-            }
+            
+        }
