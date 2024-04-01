@@ -49,7 +49,6 @@ async function _setUpEnv(ctx: any): Promise<any> {
         const chatId = ctx.chat.id;
         ctx.session.env['tritonRPC'] = 'https://moonvera-pit.rpcpool.com/';
         ctx.session.env['tritonToken'] = process.env.TRITON_RPC_TOKEN!;
-        console.log('_setUpEnv', `${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
         // set user portfolio
         ctx.session.portfolio = await getPortfolio(chatId) !== DefaultPortfolioData ? await getPortfolio(chatId) : await createUserPortfolio(ctx);
