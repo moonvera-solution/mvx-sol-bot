@@ -222,12 +222,24 @@ export async function startSnippeSimulation(
         await ctx.api.sendMessage(chatId, `🔴 Insufficient balance for Turbo Snipping. Your balance is ${userSolBalance} SOL.`);
         return;
     }
-    const maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
-        lockedWritableAccounts: [
-            new PublicKey(poolKeys.id.toBase58()),
-        ], percentile: ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
-        fallback: true
-    });
+    let maxPriorityFee ;
+    const raydiumId = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8')
+    if(poolKeys){
+        maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
+            lockedWritableAccounts: [
+                new PublicKey(poolKeys.id.toBase58()),
+            ], percentile: ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
+            fallback: true
+        });
+    } else {
+        maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
+            lockedWritableAccounts: [
+                new PublicKey(raydiumId.toBase58()),
+            ], percentile: ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
+            fallback: true
+        });
+    }
+   
     const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee, });
     //      // Simulate the transaction and add the compute unit limit instruction to your transaction
     let [Units, recentBlockhash] = await Promise.all([

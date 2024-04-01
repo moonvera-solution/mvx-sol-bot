@@ -12,6 +12,7 @@ import { runHigh, runMax, runMedium, runMin } from '../util/getPriority';
 export async function refreshTokenDetails(ctx: any) {
     const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
 
+    let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
 
     // const { baseVault, quoteVault, baseDecimals, quoteDecimals, baseMint } = ctx.session.buyTokenData;
     const baseVault = rayPoolKeys.baseVault;
@@ -31,10 +32,10 @@ export async function refreshTokenDetails(ctx: any) {
         tokenData,
     } = await getTokenMetadata(ctx, tokenAddress.toBase58()); // Convert tokenAddress to string using toBase58()
     const solprice = await getSolanaDetails();
-    const lowPriorityFee = await runMin(ctx);
-    const mediumPriorityFee = await runMedium(ctx);
-    const highPriorityFee = await runHigh(ctx);
-    const maxPriorityFee = await runMax(ctx);
+    const lowPriorityFee = await runMin(ctx, raydiumId);
+    const mediumPriorityFee = await runMedium(ctx, raydiumId);
+    const highPriorityFee = await runHigh(ctx, raydiumId);
+    const maxPriorityFee = await runMax(ctx, raydiumId);
     
     const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint });
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);

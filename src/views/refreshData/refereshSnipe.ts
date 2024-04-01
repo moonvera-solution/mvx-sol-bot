@@ -14,9 +14,13 @@ export async function refreshSnipeDetails(ctx: any) {
  
 
     ctx.session.currentMode = 'snipe';
+    let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
+
     // showing the user the countdowm to the snipe
     const currentTime = new Date();
-    const poolStartTime = new Date(ctx.session.poolTime.startTime.toNumber() * 1000); 
+    let poolStartTime = new Date();
+    if(!ctx.session.poolTime.startTime) {
+     poolStartTime = new Date(ctx.session.poolTime.startTime!.toNumber() * 1000); }
 
     let poolStatusMessage;
     if (currentTime >= poolStartTime) {
@@ -28,11 +32,11 @@ export async function refreshSnipeDetails(ctx: any) {
     }
 
     // const { baseVault, quoteVault, baseDecimals, quoteDecimals, baseMint } = ctx.session.buyTokenData;
-    const baseVault = rayPoolKeys.baseVault;
-    const quoteVault = rayPoolKeys.quoteVault;
-    const baseDecimals = rayPoolKeys.baseDecimals;
-    const quoteDecimals = rayPoolKeys.quoteDecimals;
-    const baseMint = rayPoolKeys.baseMint;
+    const baseVault = rayPoolKeys!.baseVault;
+    const quoteVault = rayPoolKeys!.quoteVault;
+    const baseDecimals = rayPoolKeys!.baseDecimals;
+    const quoteDecimals = rayPoolKeys!.quoteDecimals;
+    const baseMint = rayPoolKeys!.baseMint;
     const chatId = ctx.chat.id;
     const tokenAddress = new PublicKey(ctx.session.snipeToken);
     const {
@@ -44,10 +48,11 @@ export async function refreshSnipeDetails(ctx: any) {
     const solprice = await getSolanaDetails();
   
     const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint });
-    const lowPriorityFee = await runMin(ctx);
-    const mediumPriorityFee = await runMedium(ctx);
-    const highPriorityFee = await runHigh(ctx);
-    const maxPriorityFee = await runMax(ctx);    const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
+    const lowPriorityFee = await runMin(ctx, raydiumId);
+    const mediumPriorityFee = await runMedium(ctx, raydiumId);
+    const highPriorityFee = await runHigh(ctx, raydiumId);
+    const maxPriorityFee = await runMax(ctx, raydiumId);    
+    const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
     const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(quoteDecimals);
     const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
     const priceImpact = tokenInfo.priceImpact.toFixed(2);

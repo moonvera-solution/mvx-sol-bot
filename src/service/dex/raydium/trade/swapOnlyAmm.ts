@@ -162,13 +162,23 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     minSwapAmountBalance += input.mvxFee.toNumber();
   }
 
-  const maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
-    lockedWritableAccounts: [
-      new PublicKey(poolKeys.id.toBase58()),
-    ], percentile: input.ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
-    fallback: true
-  } // slotsToReturn?: number
-  );
+  let maxPriorityFee ;
+    const raydiumId = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8')
+    if(poolKeys){
+        maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
+            lockedWritableAccounts: [
+                new PublicKey(poolKeys.id.toBase58()),
+            ], percentile: input.ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
+            fallback: true
+        });
+    } else {
+        maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
+            lockedWritableAccounts: [
+                new PublicKey(raydiumId.toBase58()),
+            ], percentile: input.ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
+            fallback: true
+        });
+    }
 
   minSwapAmountBalance += input.ctx.session.priorityFee;
   const balanceInSOL = await getSolBalance(input.wallet.publicKey.toBase58());

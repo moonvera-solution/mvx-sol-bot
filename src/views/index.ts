@@ -29,6 +29,7 @@ export async function handleCloseKeyboard(ctx: any) {
 
 export async function display_token_details(ctx: any) {
 
+    let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
 
     const tokenKey = ctx.session.latestCommand === 'buy' ? 'buyToken' : 'sellToken';
     const tokenString = ctx.session.activeTradingPool.baseMint;
@@ -55,10 +56,10 @@ export async function display_token_details(ctx: any) {
         tokenData,
     } = await getTokenMetadata(ctx, tokenAddress.toBase58()); // Convert tokenAddress to string using toBase58()
     const solprice = await getSolanaDetails();
-    const lowPriorityFee = await runMin(ctx);
-    const mediumPriorityFee = await runMedium(ctx);
-    const highPriorityFee = await runHigh(ctx);
-    const maxPriorityFee = await runMax(ctx);
+    const lowPriorityFee = await runMin(ctx, raydiumId);
+    const mediumPriorityFee = await runMedium(ctx, raydiumId);
+    const highPriorityFee = await runHigh(ctx, raydiumId);
+    const maxPriorityFee = await runMax(ctx, raydiumId);
 
     const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint });
     // const formattedLiquidity = await formatNumberToKOrM(tokenInfo.liquidity * solprice * 2 ?? "N/A");
@@ -160,6 +161,7 @@ export async function display_token_details(ctx: any) {
 
 export async function display_snipe_options(ctx: any,msgTxt?: string) {
     let messageText;
+    let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
     const activePool = ctx.session.activeTradingPool;
     if(!msgTxt && !activePool) {await ctx.api.sendMessage(ctx.chat.id, "Enter token address to snipe.", { parse_mode: 'HTML' }); return;}
 
@@ -201,10 +203,10 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         const solprice = await getSolanaDetails();
 
         const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint });
-        const lowPriorityFee = await runMin(ctx);
-        const mediumPriorityFee = await runMedium(ctx);
-        const highPriorityFee = await runHigh(ctx);
-        const maxPriorityFee = await runMax(ctx);
+        const lowPriorityFee = await runMin(ctx, raydiumId);
+        const mediumPriorityFee = await runMedium(ctx, raydiumId);
+        const highPriorityFee = await runHigh(ctx, raydiumId);
+        const maxPriorityFee = await runMax(ctx, raydiumId);
         const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
         const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(quoteDecimals);
         const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
