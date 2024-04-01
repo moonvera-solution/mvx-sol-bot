@@ -14,14 +14,16 @@ export async function _loadEnvVars(ctx: any) {
     }
 }
 
-export async function loadSecrets(): Promise<any> {
+export function loadSecrets():any {
     const secret_name = "mvx-bot-db"
     const client = new SecretsManagerClient({region: "ca-central-1"});
     let response;
     try {
-        response = await client.send(new GetSecretValueCommand({SecretId: secret_name}));
+         client.send(new GetSecretValueCommand({SecretId: secret_name})).then((data) => {
+            if(data){response = data.SecretString;}
+         });
     } catch (error: any) {
         throw error;
     }
-    return response.SecretString;
+    return response && response;
 }
