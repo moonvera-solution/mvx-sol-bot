@@ -43,7 +43,7 @@ export async function _initDbConnection(): Promise<any> {
   let _anon;
   if(isProd){
     _anon = JSON.parse(await anon());
-    console.log(isProd, _anon.db, _anon.usr, _anon.pw);
+
   }
 
 
