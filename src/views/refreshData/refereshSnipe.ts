@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 import {getTokenMetadata, getUserTokenBalanceAndDetails} from '../../service/feeds'
 import TelegramBot from 'node-telegram-bot-api';
-import { RAYDIUM_POOL_TYPE } from '../../service/util/types';
+import { DEFAULT_PUBLIC_KEY, RAYDIUM_POOL_TYPE } from '../../service/util/types';
 import { getSolanaDetails } from '../../api/priceFeeds/coinMarket';
 import { quoteToken } from '../util/dataCalculation';
 import { formatNumberToKOrM, getSolBalance } from '../../service/util';
@@ -10,11 +10,17 @@ import { priority_Level } from '../../bot';
 import { runMin, runMedium, runHigh, runMax } from '../util/getPriority';
 
 export async function refreshSnipeDetails(ctx: any) {
+    let options: any;
+    let messageText: any;
+
+    const activePool = ctx.session.activeTradingPool;
+
     const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
  
 
     ctx.session.currentMode = 'snipe';
     let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
+    if (activePool && activePool.baseMint != DEFAULT_PUBLIC_KEY) {
 
     // showing the user the countdowm to the snipe
     const currentTime = new Date();
@@ -32,11 +38,11 @@ export async function refreshSnipeDetails(ctx: any) {
     }
 
     // const { baseVault, quoteVault, baseDecimals, quoteDecimals, baseMint } = ctx.session.buyTokenData;
-    const baseVault = rayPoolKeys!.baseVault;
-    const quoteVault = rayPoolKeys!.quoteVault;
-    const baseDecimals = rayPoolKeys!.baseDecimals;
-    const quoteDecimals = rayPoolKeys!.quoteDecimals;
-    const baseMint = rayPoolKeys!.baseMint;
+    const baseVault = rayPoolKeys.baseVault;
+    const quoteVault = rayPoolKeys.quoteVault;
+    const baseDecimals = rayPoolKeys.baseDecimals;
+    const quoteDecimals = rayPoolKeys.quoteDecimals;
+    const baseMint = rayPoolKeys.baseMint;
     const chatId = ctx.chat.id;
     const tokenAddress = new PublicKey(ctx.session.snipeToken);
     const {
@@ -64,8 +70,7 @@ export async function refreshSnipeDetails(ctx: any) {
     const balanceInSOL = await getSolBalance(userPublicKey);
     const balanceInUSD = (balanceInSOL * (solprice)).toFixed(2);
     const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress);
-    let options: any;
-    let messageText: any;
+
      messageText = `<b>${tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
                 `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
                 `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
@@ -78,13 +83,11 @@ export async function refreshSnipeDetails(ctx: any) {
                 `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) /1e9).toFixed(7)} <b>SOL</b> \n\n` +
                 `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
                 `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n ` ;
-                const priorityButtons = [
-                    [{ text: 'Priority Fees', callback_data: '-' }],
-                    [{ text: 'Low', callback_data: 'priority_low' },
-                    { text:  'Medium', callback_data: 'priority_medium' },
-                    { text:  'High', callback_data: 'priority_high' },
-                    { text:  'Max', callback_data: 'priority_very_high' }],
-                ];
+} else {
+    const { tokenData } = await getTokenMetadata(ctx, ctx.session.snipeToken);
+    messageText = `<b>${tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${ctx.session.snipeToken}</code> <a href="copy:${ctx.session.snipeToken}">🅲</a>\n` +
+    `No pool available for this token yet. \nSet Sniper by selecting slippage and amount.`;
+}          
                 options = {
                     parse_mode: 'HTML',
                     disable_web_page_preview: true,

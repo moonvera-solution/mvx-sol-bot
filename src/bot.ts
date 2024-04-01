@@ -389,7 +389,6 @@ bot.on('message', async (ctx) => {
                 if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
                     // ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
                     ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt);
-                    console.log(" ctx.session.activeTradingPool", ctx.session.activeTradingPool);
 
                     if (!ctx.session.activeTradingPool) {
                         ctx.session.snipperLookup = true;
@@ -492,14 +491,14 @@ bot.on('callback_query', async (ctx: any) => {
         else if (matchNavigate) {
             const parts = data.split('_');
             const newPositionIndex = parseInt(parts[2]); // New position index
-            console.log("newPositionIndex", newPositionIndex);
-            console.log("ctx.session.positionPool", ctx.session.positionPool);
+            // console.log("newPositionIndex", newPositionIndex);
+            // console.log("ctx.session.positionPool", ctx.session.positionPool);
             // Update the current position index
             ctx.session.positionIndex = newPositionIndex;
-            console.log("ctx.session.positionIndex", ctx.session.positionIndex);
+            // console.log("ctx.session.positionIndex", ctx.session.positionIndex);
 
             ctx.session.activeTradingPool = ctx.session.positionPool[ctx.session.positionIndex]
-            console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
+            // console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
             // Redisplay the positions with the updated index
             await refresh_spl_positions(ctx);
         }
@@ -851,7 +850,7 @@ bot.on('callback_query', async (ctx: any) => {
                 } else {
                     await refreshTokenDetails(ctx);
                 }
-                console.log('ctx.session.priorityFees', ctx.session.priorityFees);
+                // console.log('ctx.session.priorityFees', ctx.session.priorityFees);
                 break;
             }
             case 'priority_medium': {
@@ -863,8 +862,7 @@ bot.on('callback_query', async (ctx: any) => {
                 } else {
                     await refreshTokenDetails(ctx);
                 }
-
-                console.log('ctx.session.priorityFees', ctx.session.priorityFees);
+                // console.log('ctx.session.priorityFees', ctx.session.priorityFees);
                 break;
             }
             case 'priority_high': {
@@ -877,7 +875,7 @@ bot.on('callback_query', async (ctx: any) => {
                     await refreshTokenDetails(ctx);
                 }
 
-                console.log('ctx.session.priorityFees', ctx.session.priorityFees);
+                // console.log('ctx.session.priorityFees', ctx.session.priorityFees);
 
                 break;
             }
@@ -891,7 +889,7 @@ bot.on('callback_query', async (ctx: any) => {
                     await refreshTokenDetails(ctx);
                 }
 
-                console.log('ctx.session.priorityFees', ctx.session.priorityFees);
+                // console.log('ctx.session.priorityFees', ctx.session.priorityFees);
 
                 break;
             }

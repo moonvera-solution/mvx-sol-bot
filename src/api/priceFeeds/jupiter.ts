@@ -58,7 +58,7 @@ async function deriveReferralAcc() {
         ],
         new PublicKey("REFER4ZgmyYx9c6He5XfaTMiGfdLwRnkV4RPp9t9iF3") // the Referral Program
     );
-    console.log("", feeAccount.toBase58());
+    // console.log("", feeAccount.toBase58());
     return feeAccount;
 }
 

@@ -24,10 +24,10 @@ export async function trade(poolKeys: any): Promise<boolean> {
     let isDone = false;
     if (poolKeys && poolKeys.id && poolKeys.baseMint && poolKeys.quoteMint) {
 
-        console.log("base", poolKeys.baseMint.toBase58());
-        console.log("quote", poolKeys.quoteMint.toBase58());
-        console.log("poolId", poolKeys.id.toBase58());
-        console.log("decimals", poolKeys.baseDecimals);
+        // console.log("base", poolKeys.baseMint.toBase58());
+        // console.log("quote", poolKeys.quoteMint.toBase58());
+        // console.log("poolId", poolKeys.id.toBase58());
+        // console.log("decimals", poolKeys.baseDecimals);
 
         const presentValue = await _quote({ // in token NOT sol
             amountIn: AMOUNT_IN, baseVault: poolKeys.quoteVault,
@@ -51,7 +51,7 @@ export async function trade(poolKeys: any): Promise<boolean> {
             amountIn: AMOUNT_IN,
             amountOut: new BigNumber(amountOut.toFixed(0))
         });
-        log("buyTx: ", buyTx);
+        // log("buyTx: ", buyTx);
         // connect(buyTx);
 
         // receive data from websocket
@@ -77,9 +77,9 @@ export async function trade(poolKeys: any): Promise<boolean> {
             });
             const profit: BigNumber = futureValue.minus(userTokenBalance.toNumber());
 
-            log("futureValue", futureValue.toNumber());
-            log("expected", EXPECTED_PROFIT.toNumber());
-            log("profit", profit.toNumber());
+            // log("futureValue", futureValue.toNumber());
+            // log("expected", EXPECTED_PROFIT.toNumber());
+            // log("profit", profit.toNumber());
 
             if (profit.gt(EXPECTED_PROFIT)) {
                 const sellTx = await _swap({

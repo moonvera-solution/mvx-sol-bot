@@ -233,7 +233,8 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
             `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
             `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
     } else {
-        messageText = `📄 CA: <code>${msgTxt}</code> <a href="copy:${msgTxt}">🅲</a>\n` +
+        const { tokenData } = await getTokenMetadata(ctx, ctx.session.snipeToken);
+        messageText = `<b>${tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${msgTxt}</code> <a href="copy:${msgTxt}">🅲</a>\n` +
             `No pool available for this token yet. \nSet Sniper by selecting slippage and amount.`;
             // `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
             // `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
@@ -245,10 +246,10 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
             // `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
             // `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
             // `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
-    }
+     }
 
 
-    await ctx.api.sendMessage(ctx.chat.id, messageText, {
+      await ctx.api.sendMessage(ctx.chat.id, messageText, {
         parse_mode: 'HTML',
         disable_web_page_preview: true,
         reply_markup: {
