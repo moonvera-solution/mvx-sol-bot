@@ -50,6 +50,7 @@ const isProd = process.env.NODE_ENV == 'PROD';
             const chatId = ctx.chat.id;
             ctx.session.env['tritonRPC'] = 'https://moonvera-pit.rpcpool.com/';
             ctx.session.env['tritonToken'] = isProd ? keys.triton : process.env.TRITON_RPC_TOKEN;
+            console.log( '_setUpEnv',`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
             // set user portfolio
             ctx.session.portfolio = await getPortfolio(chatId) !== DefaultPortfolioData ? await getPortfolio(chatId) : await createUserPortfolio(ctx);
@@ -107,6 +108,7 @@ const isProd = process.env.NODE_ENV == 'PROD';
     /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
     /*                      BOT START                             */
     /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
     bot.command("start", async (ctx: any) => {
         try {
             await _setUpEnv(ctx);
@@ -170,7 +172,6 @@ const isProd = process.env.NODE_ENV == 'PROD';
             console.error('Error:', error);
         }
     });
-
 
     /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
     /*                      BOT ON MSG                            */
