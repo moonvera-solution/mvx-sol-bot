@@ -92,11 +92,7 @@ bot.command("start", async (ctx: any) => {
                 ctx.session.generatorWallet = referralRecord.generatorWallet;
                 ctx.session.referralCommision = referralRecord.commissionPercentage;
             }
-        } else {
-            // Handle invalid referral code
-            await ctx.api.sendMessage(chatId, "Invalid referral link. Please check your link or contact @swalefdao.");
-            // return;
-        }
+        } 
     } else if (isNewUser) {
         // New user without a referral code
         await ctx.api.sendMessage(chatId, "Welcome to DRIBs bot. Please start the bot using a referral link.");
