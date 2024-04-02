@@ -54,7 +54,7 @@ async function _setUpEnv(ctx: any): Promise<any> {
         ctx.session.portfolio = await getPortfolio(chatId) !== DefaultPortfolioData ? await getPortfolio(chatId) : await createUserPortfolio(ctx);
 
         // set referral
-        await _setReferral(ctx, ctx.session.portfolio == DefaultPortfolioData);
+        await _setReferral(ctx, ctx.session.portfolio === DefaultPortfolioData);
 
     } catch (error: any) {
         console.error('Error in _setUpEnv:', error);
@@ -98,7 +98,7 @@ async function _setReferral(ctx: any, isNewUser: boolean) {
         }
     } else if (isNewUser) {
         // New user without a referral code
-        await ctx.api.sendMessage(chatId, "Welcome to DRIB bot! Please start the bot using a referral link.");
+        await ctx.api.sendMessage(chatId, "Welcome to DRIBx bot! Please start the bot using a referral link.");
         return;
     }
 }
@@ -133,7 +133,7 @@ bot.command("start", async (ctx: any) => {
         }
 
         // Combine the welcome message, SOL price message, and instruction to create a wallet
-        const welcomeMessage = `✨ Welcome to <b>DRIB bot</b> - Your Advanced Trading Companion! ✨\n` +
+        const welcomeMessage = `✨ Welcome to <b>DRIBx bot</b> - Your Advanced Trading Companion! ✨\n` +
         `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
         `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
         `We're always working to bring you new features - stay tuned!\n\n` +

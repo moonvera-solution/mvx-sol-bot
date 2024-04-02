@@ -32,7 +32,7 @@ export async function handleRefreshStart(ctx: any) {
      const balanceInUSD = (balanceInSOL * (details).toFixed(2));
 
     // Update the welcome message with the new SOL price
-    const welcomeMessage = `✨ Welcome to <b>DRIB bot</b> - Your Advanced Trading Companion! ✨\n` +
+    const welcomeMessage = `✨ Welcome to <b>DRIBx bot</b> - Your Advanced Trading Companion! ✨\n` +
     `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
     `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
     `We're always working to bring you new features - stay tuned!\n\n` +
