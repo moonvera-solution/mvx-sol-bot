@@ -121,7 +121,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
 
       const referralFee = input.ctx.session.referralCommision / 100;
 
-      const bot_fee = new BigNumber(amountOut.raw).multipliedBy(MVXBOT_FEES);
+      const bot_fee = new BigNumber(amountOut.raw.toString()).multipliedBy(MVXBOT_FEES);
       const referralAmmount = bot_fee.multipliedBy(referralFee);
       const cut_bot_fee = bot_fee.minus(referralAmmount);
 
@@ -146,9 +146,9 @@ export async function swapOnlyAmm(input: TxInputInfo) {
 
     minSwapAmountBalance+= input.refferalFeePay.toNumber();
     minSwapAmountBalance += input.mvxFee.toNumber();
-  }else {
+  } else {
     if (input.side === "sell") {
-      const bot_fee = new BigNumber(amountOut.raw).multipliedBy(MVXBOT_FEES);
+      const bot_fee = new BigNumber(amountOut.raw.toString()).multipliedBy(MVXBOT_FEES);
       input.mvxFee = new BigNumber(Math.ceil(Number(bot_fee)));
     }
     // buy without referral

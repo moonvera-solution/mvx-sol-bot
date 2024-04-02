@@ -89,7 +89,6 @@ export async function getUserTokenBalanceAndDetails(userWallet: PublicKey, token
     
     } catch (error) {
         console.error("Error in getUserTokenBalanceAndDetails: ", error);
-        throw error;
     }
 }
 

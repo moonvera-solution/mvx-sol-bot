@@ -8,7 +8,7 @@ import {
 import { Connection, PublicKey, Keypair, SendOptions, SystemProgram, Signer, Transaction, VersionedTransaction, RpcResponseAndContext, TransactionMessage, SimulatedTransactionResponse, ComputeBudgetProgram } from "@solana/web3.js";
 import { getPoolKeys } from "../../../../src/service/dex/raydium/market-data/PoolsFilter";
 import { connection, MVXBOT_FEES, TIP_VALIDATOR, WALLET_MVX, SNIPE_SIMULATION_COUNT_LIMIT } from "../../../../config";
-import { buildAndSendTx } from '../../util';
+import { buildAndSendTx, trackUntilFinalized } from '../../util';
 import { saveUserPosition } from '../positions';
 import { amount, token } from "@metaplex-foundation/js";
 const log = (k: any, v: any) => console.log(k, v);
@@ -337,14 +337,15 @@ export async function startSnippeSimulation(
                                 let solAmount;
                                 let tokenAmount;
                                 const _symbol = tokenData.symbol;
-                                console.log('extractAmount', extractAmount);
+                                // console.log('extractAmount', extractAmount);
                                 if (extractAmount) {
-                                    console.log('extractAmount', extractAmount);
+                                    // console.log('extractAmount', extractAmount);
                                     solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
                                     tokenAmount = amountIn.div(Math.pow(10, tokenData.decimals));
                                     confirmedMsg = `✅ <b>Snipe Tx Confirmed:</b> You sniped ${solAmount.toFixed(3)} <b>${_symbol}</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
                                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
-
+                                    let isFinalized = await trackUntilFinalized(ctx,txids[0]);
+                                    if (isFinalized == true) {
                                     saveUserPosition(
                                         ctx,
                                         userWallet.publicKey.toString(), {
@@ -355,7 +356,7 @@ export async function startSnippeSimulation(
                                         amountIn: oldPositionSol ? oldPositionSol + amountIn.toNumber() : amountIn.toNumber(),
                                         amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount)
                                     });
-
+                                    }
 
                                     if (referralFee > 0) {
                                         if (referralRecord) {

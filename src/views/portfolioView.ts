@@ -9,6 +9,7 @@ import { getSolanaDetails } from "../api/priceFeeds/coinMarket";
 import { getRayPoolKeys } from '../service/dex/raydium/market-data/1_Geyser';
 import { quoteToken } from './util/dataCalculation';
 import { formatNumberToKOrM } from '../service/util';
+import { get } from 'axios';
 
 export async function display_spl_positions(
     ctx: any,
@@ -27,6 +28,10 @@ export async function display_spl_positions(
             return;
     }
     let currentIndex = ctx.session.positionIndex;
+    if(userPosition[0].positions[currentIndex]){
+        ctx.session.activeTradingPool = await getRayPoolKeys(userPosition[0].positions[currentIndex].baseMint);
+
+    }
 
     // Function to create keyboard for a given position
     const createKeyboardForPosition = (index: any) => { 
@@ -34,19 +39,18 @@ export async function display_spl_positions(
         let nextIndex = index + 1 >= userPosition[0].positions.length ? 0 : index + 1;
 
         let posSymbol = userPosition[0].positions[currentIndex].symbol; // Get the symbol for the current position
-        ctx.session.activeTradingPool
         return [
             [ { text: `${posSymbol}`, callback_data: `current_position` }],
             [{ text: `Sell 25%`, callback_data: `sellpos_25_${currentIndex}` },{ text: `Sell 50%`, callback_data: `sellpos_50_${currentIndex}` }],
             [{ text: `Sell 75%`, callback_data: `sellpos_75_${currentIndex}` },{ text: `Sell 100%`, callback_data: `sellpos_100_${currentIndex}` }],
             [{ text: `Buy more`, callback_data: `buypos_x_${currentIndex}` }],
-            [{ text: 'Previous', callback_data: `prev_position_${prevIndex}` }, 
-             { text: 'Next', callback_data: `next_position_${nextIndex}` }],
+            [{ text: '⏮️ Previous', callback_data: `prev_position_${prevIndex}` }, 
+             { text: 'Next ⏭️', callback_data: `next_position_${nextIndex}` }],
             [{ text: `Refresh Positions`, callback_data: 'refresh_portfolio' }]
         ];
     };
     try{
-
+    
     let fullMessage = '';
     if (userPosition && userPosition[0]?.positions) {
         for (let index in userPosition[0].positions) {
@@ -56,6 +60,7 @@ export async function display_spl_positions(
 
             const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
             let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
+            // console.log("userBalance:: ", userBalance.toNumber());
             if(pos.amountIn == 0 || pos.amountOut == 0 || pos.amountOut < 0 || pos.amountIn < 0 ||  userBalance.toNumber() == 0) {
                 await UserPositions.updateOne(
                     { walletId: userWallet },
@@ -86,7 +91,7 @@ export async function display_spl_positions(
             if (!poolKeysExists(ctx.session.positionPool, poolKeys)) {
                 ctx.session.positionPool.push(poolKeys);
             }
-             console.log('poolKeys', ctx.session.positionPool.length);
+            //  console.log('poolKeys', ctx.session.positionPool.length);
              const tokenInfo = await quoteToken({
                 baseVault: poolKeys.baseVault,
                 quoteVault: poolKeys.quoteVault,
@@ -100,7 +105,7 @@ export async function display_spl_positions(
             const userBalanceUSD = (userBalance.dividedBy(1e9)).times(tokenPriceUSD).toFixed(2);
             const userBalanceSOL = (userBalance.dividedBy(1e9)).times(tokenPriceSOL).toFixed(3);
             // console.log('pos.amountOut', pos.amountOut);
-            console.log('userBalance', userBalance.toNumber());
+            // console.log('userBalance', userBalance.toNumber());
             const valueInUSD = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10,poolKeys.baseDecimals) * Number(tokenPriceUSD) : 'N/A';
             // console.log('valueInUSD', valueInUSD);
             const valueInSOL = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10,poolKeys.baseDecimals) * Number(tokenPriceSOL): 'N/A';
@@ -114,8 +119,8 @@ export async function display_spl_positions(
             const profitInSol = valueInSOL != 'N/A'? valueInSOL - initialInSOL : 'N/A';
             const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
             const formattedmac= await formatNumberToKOrM(marketCap) ?? "NA";
-            console.log('pos.name', pos.name);
-            console.log('pos.symbol', pos.symbol);
+            // console.log('pos.name', pos.name);
+            // console.log('pos.symbol', pos.symbol);
             
             fullMessage += `<b>${pos.name} (${pos.symbol})</b> | <code>${poolKeys.baseMint}</code>\n` +
             `Mcap: ${formattedmac} <b>USD</b>\n` +

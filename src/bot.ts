@@ -433,7 +433,7 @@ bot.on('message', async (ctx) => {
                         `👥 <b>Referrals Count:</b> ${referralData?.count}\n` +
                         `💰 <b>Total Earnings:</b> ${referEarningSol} SOL/Token ($${referEarningDollar}) | 0.00 TOKEN\n` +
                         `Rewards are credited instantly to your SOL balance.\n\n` +
-                        `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals in the first month, 25% in the second month, and 12% on an ongoing basis.\n\n` +
+                        `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals.\n\n` +
                         `Your total earnings have been sent to your referral wallet <b>${recipientAddress}</b>.\n\n` +
                         `<i>Note: Rewards are updated and sent in real-time and reflect your active contributions to the referral program.</i>`;
                     const options: any = {
