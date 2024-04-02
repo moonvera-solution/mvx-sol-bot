@@ -2,7 +2,7 @@ import { createUserPortfolio, createNewWallet, handleGetPrivateKey, checkWallets
 import { handle_radyum_swap } from './service/portfolio/strategies/swaps';
 import { Bot, Context, GrammyError, HttpError, session, SessionFlavor } from "grammy";
 import { importWallet, getPortfolio } from './service/portfolio/wallets';
-import { ISESSION_DATA, DefaultSessionData, DEFAULT_PUBLIC_KEY, DefaultPortfolioData } from './service/util/types';
+import { ISESSION_DATA, DefaultSessionData, DEFAULT_PUBLIC_KEY,PORTFOLIO_TYPE, DefaultPortfolioData } from './service/util/types';
 import { Keypair, PublicKey, Connection } from '@solana/web3.js';
 import { _initDbConnection } from "./db/mongo/crud";
 import { handleSettings } from './service/settings';
@@ -42,49 +42,33 @@ const bot = new Bot<MyContext>(keys!);
 bot.use(session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) }));
 bot.start();
 
-const allowedUsernames = ['tech_01010', 'daniellesifg', 'CryptoBoosie','swalefdao','coachalib']; // without the @
+const allowedUsernames = ['tech_01010', 'daniellesifg', 'CryptoBoosie', 'swalefdao', 'coachalib']; // without the @
 
-async function _setUpEnv(ctx: any): Promise<any> {
-    try {
-        const chatId = ctx.chat.id;
-        ctx.session.env['tritonRPC'] = 'https://moonvera-pit.rpcpool.com/';
-        ctx.session.env['tritonToken'] = process.env.TRITON_RPC_TOKEN!;
-
-        // set user portfolio
-        const portfolio = await getPortfolio(chatId);
-        if(portfolio !== DefaultPortfolioData ){
-            ctx.session.portfolio = portfolio;
-        }else{
-            await createUserPortfolio(ctx).then((sK:any) =>{
-                getPortfolio(chatId).then((portfolio:any) =>{
-                    ctx.session.portfolio = portfolio;
-                })
-            });
-        }
-        console.log("portfolio",ctx.session.portfolio);
-        
-        // set referral
-        const isNewUser = ctx.session.portfolio[0] == DefaultPortfolioData;
-        console.log("",isNewUser);
-
-        await _setReferral(ctx, isNewUser);
-
-    } catch (error: any) {
-        console.error('Error in _setUpEnv:', error);
-        logErrorToFile('Env SetUp', error);
-    }
-}
- 
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
-/*                      SET REFERRAL                          */
+/*                      BOT START                             */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
-async function _setReferral(ctx: any, isNewUser: boolean) {
-    let chatId = ctx.chat.id;
+
+bot.command("start", async (ctx: any) => {
+    const chatId = ctx.chat.id;
+    const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
+    let isNewUser = false;
+    ctx.session.env['tritonRPC'] = 'https://moonvera-pit.rpcpool.com/';
+    ctx.session.env['tritonToken'] = process.env.TRITON_RPC_TOKEN!;
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+
+
     let referralCode = null;
+    // Check if there's additional text with the /start command
     if (ctx.message.text.includes(' ')) {
         referralCode = ctx.message.text.split(' ')[1];
     }
+    // if user already exists
+    if (portfolio === DefaultPortfolioData) {
+        // User is new
+        isNewUser = true;
+    }
+
     if (referralCode) {
         const referralRecord = await Referrals.findOne({ referralCode: referralCode });
         if (referralRecord && referralRecord.generatorChatId !== chatId) {
@@ -111,42 +95,44 @@ async function _setReferral(ctx: any, isNewUser: boolean) {
         }
     } else if (isNewUser) {
         // New user without a referral code
-        await ctx.api.sendMessage(chatId, "Welcome to DRIBx bot! Please start the bot using a referral link.");
+        await ctx.api.sendMessage(chatId, "Welcome to BerdX BOT! Please start the bot using a referral link.");
         return;
     }
-}
 
-/*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
-/*                      BOT START                             */
-/*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+    //-------Start bot with wallet---------------------------
+    ctx.session.latestCommand = "start";
+    let userWallet: Keypair | null = null;
+    if (portfolio !== DefaultPortfolioData) {
+        ctx.session.portfolio = portfolio;
+    } else {
+        // at this point wallet from session is not avialable yet
+        // hence we do ctx.session.portfolio = await getPortfolio(chatId); at the end of the "start" function.
+        userWallet = await createUserPortfolio(ctx); // => { publicKey, secretKey }
+    }
 
-bot.command("start", async (ctx: any) => {
-    try {
-        await _setUpEnv(ctx);
-        ctx.session.latestCommand = "start";
-        const chatId = ctx.chat.id;
-        const wIdx = ctx.session.activeWalletIndex;
-        const userPk = ctx.session.portfolio.wallets[wIdx].publicKey;
-        const publicKeyString = userPk instanceof PublicKey ? userPk.toBase58() : userPk;
-        const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    // Retrieve the current SOL details
+    let solPriceMessage = '';
+    const details = await getSolanaDetails();
+    const publicKeyString: PublicKey | String = userWallet ? userWallet.publicKey :
+        ctx.session.portfolio.wallets[ctx.session.activeWalletIndex].publicKey;
 
-        const balanceInSOL = await getSolBalance(publicKeyString, connection);
-        if (balanceInSOL === null) {
-            await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
-            return;
-        }
-        // SOL price
-        let solPriceMessage: string;
-        const details = await getSolanaDetails();
-        if (details) {
-            const solData = details.toFixed(2);
-            solPriceMessage = `\n\SOL Price: <b>${solData}</b> USD`;
-        } else {
-            solPriceMessage = '\nError fetching current SOL price.';
-        }
+    // Fetch SOL balance
+    const balanceInSOL = await getSolBalance(publicKeyString,connection);
+    if (balanceInSOL === null) {
+        await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
+        return;
+    }
 
-        // Combine the welcome message, SOL price message, and instruction to create a wallet
-        const welcomeMessage = `✨ Welcome to <b>DRIBx bot</b> - Your Advanced Trading Companion! ✨\n` +
+    // solana price 
+    if (details) {
+        const solData = details.toFixed(2);
+        solPriceMessage = `\n\SOL Price: <b>${solData}</b> USD`;
+    } else {
+        solPriceMessage = '\nError fetching current SOL price.';
+    }
+
+    // Combine the welcome message, SOL price message, and instruction to create a wallet
+    const welcomeMessage = `✨ Welcome to <b>DRIBx bot</b> - Your Advanced Trading Companion! ✨\n` +
         `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
         `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
         `We're always working to bring you new features - stay tuned!\n\n` +
@@ -154,34 +140,31 @@ bot.command("start", async (ctx: any) => {
         `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> USD\n\n` +
         `🖐🏼 For security, we recommend exporting your private key and keeping it paper.`;
 
-        // Set the options for th e inline keyboard with social links
-        const options: any = {
-            reply_markup: JSON.stringify({
-                inline_keyboard: [
-                    // [
-                    //     { text: '🌎 Website', url: 'https://moonvera.io/' },
-                    //     { text: '𝚇', url: 'https://twitter.com/moonvera_' }
 
-                    // ],
-                    [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
-                    [{ text: '☑️ Rug Check', callback_data: 'rug_check' }],
-                    [{ text: '🎯 Turbo Snipe', callback_data: 'snipe' }],
-                    [{ text: '💱 Buy', callback_data: 'buy' }, { text: 'Sell 📈', callback_data: 'sell' }],
-                    [{ text: 'ℹ️ Help', callback_data: 'help' }, { text: 'Refer Friends', callback_data: 'refer_friends' }],
-                    [{ text: 'Refresh', callback_data: 'refresh_start' }],
-                    [{ text: 'Positions', callback_data: 'display_spl_positions' }],
-                ],
-            }),
-            parse_mode: 'HTML'
-        };
-        // Send the message with the inline keyboard
-        ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
-        ctx.session.portfolio = await getPortfolio(chatId);
 
-    } catch (error: any) {
-        logErrorToFile('bot on start', error);
-        console.error('Error:', error);
-    }
+    // Set the options for th e inline keyboard with social links
+    const options: any = {
+        reply_markup: JSON.stringify({
+            inline_keyboard: [
+                // [
+                //     { text: '🌎 Website', url: 'https://moonvera.io/' },
+                //     { text: '𝚇', url: 'https://twitter.com/moonvera_' }
+
+                // ],
+                [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
+                [{ text: '☑️ Rug Check', callback_data: 'rug_check' }],
+                [{ text: '🎯 Turbo Snipe', callback_data: 'snipe' }],
+                [{ text: '💱 Buy', callback_data: 'buy' }, { text: 'Sell 📈', callback_data: 'sell' }],
+                [{ text: 'ℹ️ Help', callback_data: 'help' }, { text: 'Refer Friends', callback_data: 'refer_friends' }],
+                [{ text: 'Refresh', callback_data: 'refresh_start' }],
+                [{ text: 'Positions', callback_data: 'display_spl_positions' }],
+            ],
+        }),
+        parse_mode: 'HTML'
+    };
+    // Send the message with the inline keyboard
+    ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
+    ctx.session.portfolio = await getPortfolio(chatId);
 });
 
 
