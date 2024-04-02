@@ -17,13 +17,10 @@ export async function display_spl_positions(ctx: any) {
     const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userWallet });
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
-    // console.log("userPosition:: ", userPosition[0]);
-
     const solprice = await getSolanaDetails();
-    // console.log(userPosition[0]?.positions.length)
-    if (userPosition[0]?.positions.length == 0) {
+    if (!userPosition[0]) {
         // await UserPositions.deleteOne({ positionChatId: chatId, walletId: userWallet });
-        await ctx.api.sendMessage(ctx.chat.id, "No positions found", { parse_mode: 'HTML' });
+        await ctx.api.sendMessage(ctx.chat.id, "No positions found.", { parse_mode: 'HTML' });
         return;
     }
     let currentIndex = ctx.session.positionIndex;
@@ -116,8 +113,8 @@ export async function display_spl_positions(ctx: any) {
                 const profitInSol = valueInSOL != 'N/A' ? valueInSOL - initialInSOL : 'N/A';
                 const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
                 const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
-                console.log('pos.name', pos.name);
-                console.log('pos.symbol', pos.symbol);
+                // console.log('pos.name', pos.name);
+                // console.log('pos.symbol', pos.symbol);
 
                 fullMessage += `<b>${pos.name} (${pos.symbol})</b> | <code>${poolKeys.baseMint}</code>\n` +
                     `Mcap: ${formattedmac} <b>USD</b>\n` +

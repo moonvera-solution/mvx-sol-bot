@@ -108,6 +108,7 @@ bot.command("start", async (ctx: any) => {
         // at this point wallet from session is not avialable yet
         // hence we do ctx.session.portfolio = await getPortfolio(chatId); at the end of the "start" function.
         userWallet = await createUserPortfolio(ctx); // => { publicKey, secretKey }
+        ctx.session.portfolio.wallets[ctx.session.activeWalletIndex] = userWallet;
     }
 
     // Retrieve the current SOL details
