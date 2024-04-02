@@ -64,7 +64,7 @@ bot.command("start", async (ctx: any) => {
         referralCode = ctx.message.text.split(' ')[1];
     }
     // if user already exists
-    if (portfolio === DefaultPortfolioData) { // User is new
+    if (portfolio === DefaultPortfolioData) {// User is new
         isNewUser = true;
     }
 
@@ -73,12 +73,7 @@ bot.command("start", async (ctx: any) => {
 
     const allowedUsers = allowedUsernames.includes(userName);
 
-    if (!allowedUsers) {
-        await ctx.api.sendMessage(chatId, `You are not authorized to use DRIBs.\n`+`Please get a referral to beta access from @swalefdao.`);
-        return;
-    }
-
-    if (referralCode) {
+    if (referralCode || allowedUsers) {
         const referralRecord = await Referrals.findOne({ referralCode: referralCode });
         if (referralRecord && referralRecord.generatorChatId !== chatId) {
             if (!referralRecord.referredUsers.includes(chatId)) {
