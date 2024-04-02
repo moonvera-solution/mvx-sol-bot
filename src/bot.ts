@@ -52,19 +52,19 @@ async function _setUpEnv(ctx: any): Promise<any> {
 
         // set user portfolio
         ctx.session.portfolio = (await getPortfolio(chatId) !== DefaultPortfolioData ? (await getPortfolio(chatId)) : (await createUserPortfolio(ctx)));
-        console.log("ctx.session.portfolio",ctx.session.portfolio);
+
         // set referral
-        const isNewUser = ctx.session.portfolio == DefaultPortfolioData;
+        const isNewUser = ctx.session.portfolio[0] == DefaultPortfolioData;
         console.log("",isNewUser);
 
-        await _setReferral(ctx, ctx.session.portfolio == DefaultPortfolioData);
+        await _setReferral(ctx, isNewUser);
 
     } catch (error: any) {
         console.error('Error in _setUpEnv:', error);
         logErrorToFile('Env SetUp', error);
     }
 }
-
+ 
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                      SET REFERRAL                          */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
