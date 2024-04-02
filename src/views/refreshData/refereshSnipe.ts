@@ -109,4 +109,4 @@ export async function refreshSnipeDetails(ctx: any) {
                 };
 
                 await ctx.editMessageText(messageText, options);
-            }
+}

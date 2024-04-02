@@ -65,7 +65,7 @@ bot.use(session({
 // });
 
 
-const allowedUsernames = ['tech_01010', 'daniellesifg']; // without the @
+const allowedUsernames = ['tech_01010', 'daniellesifg', 'CryptoBoosie','swalefdao','coachalib']; // without the @
 
 // /********** INIT BOT & DB ***** */
 bot.start();
@@ -121,7 +121,7 @@ bot.command("start", async (ctx: any) => {
         }
     } else if (isNewUser) {
         // New user without a referral code
-        await ctx.api.sendMessage(chatId, "Welcome to MVXBOT! Please start the bot using a referral link.");
+        await ctx.api.sendMessage(chatId, "Welcome to BerdX BOT! Please start the bot using a referral link.");
         return;
     }
 
@@ -158,7 +158,7 @@ bot.command("start", async (ctx: any) => {
     }
 
     // Combine the welcome message, SOL price message, and instruction to create a wallet
-    const welcomeMessage = `✨ Welcome to <b>MVXBOT</b> - Your Advanced Trading Companion! ✨\n` +
+    const welcomeMessage = `✨ Welcome to <b>DRIB bot</b> - Your Advanced Trading Companion! ✨\n` +
         `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
         `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
         `We're always working to bring you new features - stay tuned!\n\n` +
