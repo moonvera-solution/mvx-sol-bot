@@ -64,11 +64,13 @@ bot.command("start", async (ctx: any) => {
         referralCode = ctx.message.text.split(' ')[1];
     }
     // if user already exists
-    if (portfolio === DefaultPortfolioData) {
-        // User is new
+    if (portfolio === DefaultPortfolioData) { // User is new
         isNewUser = true;
     }
+
     const userName = ctx.message.from.username;
+    console.log("userName:",userName);
+
     const allowedUsers = allowedUsernames.includes(userName);
 
     if (!allowedUsers) {
