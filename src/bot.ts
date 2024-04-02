@@ -55,7 +55,7 @@ async function _setUpEnv(ctx: any): Promise<any> {
         console.log("ctx.session.portfolio",ctx.session.portfolio);
         // set referral
         const isNewUser = ctx.session.portfolio == DefaultPortfolioData;
-        console.log("isNewUser",isNewUser);
+        console.log("",isNewUser);
 
         await _setReferral(ctx, ctx.session.portfolio == DefaultPortfolioData);
 
@@ -69,8 +69,7 @@ async function _setUpEnv(ctx: any): Promise<any> {
 /*                      SET REFERRAL                          */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
-async function _setReferral(ctx: any, 
-    : boolean) {
+async function _setReferral(ctx: any, isNewUser: boolean) {
     let chatId = ctx.chat.id;
     let referralCode = null;
     if (ctx.message.text.includes(' ')) {
