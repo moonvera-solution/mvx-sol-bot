@@ -51,7 +51,13 @@ async function _setUpEnv(ctx: any): Promise<any> {
         ctx.session.env['tritonToken'] = process.env.TRITON_RPC_TOKEN!;
 
         // set user portfolio
-        ctx.session.portfolio = (await getPortfolio(chatId) !== DefaultPortfolioData ? (await getPortfolio(chatId)) : (await createUserPortfolio(ctx)));
+        const portfolio = await getPortfolio(chatId);
+        if(portfolio !== DefaultPortfolioData ){
+            ctx.session.portfolio = portfolio;
+        }else{
+            await createUserPortfolio(ctx);
+            ctx.session.portfolio = await getPortfolio(chatId);
+        }
 
         // set referral
         const isNewUser = ctx.session.portfolio[0] == DefaultPortfolioData;
