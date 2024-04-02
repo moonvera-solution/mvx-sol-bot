@@ -98,7 +98,7 @@ async function _setReferral(ctx: any, isNewUser: boolean) {
         }
     } else if (isNewUser) {
         // New user without a referral code
-        await ctx.api.sendMessage(chatId, "Welcome to MVXBOT! Please start the bot using a referral link.");
+        await ctx.api.sendMessage(chatId, "Welcome to DRIB bot! Please start the bot using a referral link.");
         return;
     }
 }
@@ -133,13 +133,13 @@ bot.command("start", async (ctx: any) => {
         }
 
         // Combine the welcome message, SOL price message, and instruction to create a wallet
-        const welcomeMessage = `✨ Welcome to <b>MVXBOT</b> - Your Advanced Trading Companion! ✨\n` +
-            `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
-            `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
-            `We're always working to bring you new features - stay tuned!\n\n` +
-            `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
-            `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> USD\n\n` +
-            `🖐🏼 For security, we recommend exporting your private key and keeping it paper.`;
+        const welcomeMessage = `✨ Welcome to <b>DRIB bot</b> - Your Advanced Trading Companion! ✨\n` +
+        `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
+        `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
+        `We're always working to bring you new features - stay tuned!\n\n` +
+        `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
+        `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> USD\n\n` +
+        `🖐🏼 For security, we recommend exporting your private key and keeping it paper.`;
 
         // Set the options for th e inline keyboard with social links
         const options: any = {

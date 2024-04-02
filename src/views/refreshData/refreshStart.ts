@@ -32,13 +32,13 @@ export async function handleRefreshStart(ctx: any) {
      const balanceInUSD = (balanceInSOL * (details).toFixed(2));
 
     // Update the welcome message with the new SOL price
-    const welcomeMessage = `✨ Welcome to <b>MVXBOT</b> - Your Advanced Trading Companion! ✨\n` +
+    const welcomeMessage = `✨ Welcome to <b>DRIB bot</b> - Your Advanced Trading Companion! ✨\n` +
     `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
     `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
     `We're always working to bring you new features - stay tuned!\n\n` +
     `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
     `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> USD\n\n` +
-    `🖐🏼 For security, we recommend exporting your private key and keeping it secure`;
+    `🖐🏼 For security, we recommend exporting your private key and keeping it paper.`;
 
  // Define the inline keyboard options
  const options: any = {
