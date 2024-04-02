@@ -95,7 +95,7 @@ bot.command("start", async (ctx: any) => {
         }
     } else if (isNewUser) {
         // New user without a referral code
-        await ctx.api.sendMessage(chatId, "Welcome to BerdX BOT! Please start the bot using a referral link.");
+        await ctx.api.sendMessage(chatId, "Welcome to DRIBx bot. Please start the bot using a referral link.");
         return;
     }
 
