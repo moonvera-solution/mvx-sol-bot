@@ -55,10 +55,14 @@ async function _setUpEnv(ctx: any): Promise<any> {
         if(portfolio !== DefaultPortfolioData ){
             ctx.session.portfolio = portfolio;
         }else{
-            await createUserPortfolio(ctx);
-            ctx.session.portfolio = await getPortfolio(chatId);
+            await createUserPortfolio(ctx).then((sK:any) =>{
+                getPortfolio(chatId).then((portfolio:any) =>{
+                    ctx.session.portfolio = portfolio;
+                })
+            });
         }
-
+        console.log("portfolio",ctx.session.portfolio);
+        
         // set referral
         const isNewUser = ctx.session.portfolio[0] == DefaultPortfolioData;
         console.log("",isNewUser);
