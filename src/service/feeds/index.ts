@@ -110,6 +110,5 @@ export async function getLiquityFromOwner(userWallet: PublicKey, tokenAddress: P
     
     } catch (error) {
         console.error("Error in getUserTokenBalanceAndDetails: ", error);
-        throw error;
     }
 }

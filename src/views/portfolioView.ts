@@ -27,21 +27,22 @@ export async function display_spl_positions(ctx: any) {
         return;
     }
     let currentIndex = ctx.session.positionIndex;
-
+    if(userPosition[0].positions[currentIndex]){
+        ctx.session.activeTradingPool = await getRayPoolKeys(ctx,userPosition[0].positions[currentIndex].baseMint);
+    }
     // Function to create keyboard for a given position
     const createKeyboardForPosition = (index: any) => {
         let prevIndex = index - 1 < 0 ? userPosition[0].positions.length - 1 : index - 1;
         let nextIndex = index + 1 >= userPosition[0].positions.length ? 0 : index + 1;
 
         let posSymbol = userPosition[0].positions[currentIndex].symbol; // Get the symbol for the current position
-        ctx.session.activeTradingPool
         return [
             [{ text: `${posSymbol}`, callback_data: `current_position` }],
             [{ text: `Sell 25%`, callback_data: `sellpos_25_${currentIndex}` }, { text: `Sell 50%`, callback_data: `sellpos_50_${currentIndex}` }],
             [{ text: `Sell 75%`, callback_data: `sellpos_75_${currentIndex}` }, { text: `Sell 100%`, callback_data: `sellpos_100_${currentIndex}` }],
             [{ text: `Buy more`, callback_data: `buypos_x_${currentIndex}` }],
-            [{ text: 'Previous', callback_data: `prev_position_${prevIndex}` },
-            { text: 'Next', callback_data: `next_position_${nextIndex}` }],
+            [{ text: '⏮️ Previous', callback_data: `prev_position_${prevIndex}` }, 
+             { text: 'Next ⏭️', callback_data: `next_position_${nextIndex}` }],
             [{ text: `Refresh Positions`, callback_data: 'refresh_portfolio' }]
         ];
     };
@@ -87,7 +88,7 @@ export async function display_spl_positions(ctx: any) {
                 if (!poolKeysExists(ctx.session.positionPool, poolKeys)) {
                     ctx.session.positionPool.push(poolKeys);
                 }
-                console.log('poolKeys', ctx.session.positionPool.length);
+                // console.log('poolKeys', ctx.session.positionPool.length);
                 const tokenInfo = await quoteToken({
                     baseVault: poolKeys.baseVault,
                     quoteVault: poolKeys.quoteVault,
@@ -99,8 +100,8 @@ export async function display_spl_positions(ctx: any) {
                 const tokenPriceSOL = tokenInfo.price.toNumber();
                 const tokenPriceUSD = tokenInfo.price.times(solprice).toFixed(2);
                 const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
-                const userBalanceUSD = (userBalance.dividedBy(1e9)).times(tokenPriceUSD).toFixed(2);
-                const userBalanceSOL = (userBalance.dividedBy(1e9)).times(tokenPriceSOL).toFixed(3);
+                const userBalanceUSD = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceUSD).toFixed(2);
+                const userBalanceSOL = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceSOL).toFixed(3);
 
                 const valueInUSD = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10, poolKeys.baseDecimals) * Number(tokenPriceUSD) : 'N/A';
                 // console.log('valueInUSD', valueInUSD);

@@ -23,6 +23,7 @@ export async function refresh_spl_positions(ctx: any) {
             return;
     }
     let currentIndex = ctx.session.positionIndex;
+    ctx.session.activeTradingPool = await getRayPoolKeys(ctx,userPosition[0].positions[currentIndex].baseMint);
 
     // Function to create keyboard for a given position
     const createKeyboardForPosition = (index: any) => {
@@ -36,11 +37,13 @@ export async function refresh_spl_positions(ctx: any) {
             [{ text: `Sell 25%`, callback_data: `sellpos_25_${index}` },{ text: `Sell 50%`, callback_data: `sellpos_50_${index}` }],
             [{ text: `Sell 75%`, callback_data: `sellpos_75_${index}` },{ text: `Sell 100%`, callback_data: `sellpos_100_${index}` }],
             [{ text: `Buy more`, callback_data: `buypos_x_${index}` }],
-            [{ text: 'Previous', callback_data: `prev_position_${prevIndex}` }, 
-             { text: 'Next', callback_data: `next_position_${nextIndex}` }],
+            [{ text: '⏮️ Previous', callback_data: `prev_position_${prevIndex}` }, 
+            { text: 'Next ⏭️', callback_data: `next_position_${nextIndex}` }],
             [{ text: `Refresh Positions`, callback_data: 'refresh_portfolio' }]
         ];
     };
+    try {
+
     let fullMessage = '';
     if (userPosition && userPosition[0]?.positions) {
         for (let index in userPosition[0].positions) {
@@ -107,5 +110,14 @@ export async function refresh_spl_positions(ctx: any) {
         reply_markup: { inline_keyboard: keyboardButtons },
     };
 
-    await ctx.editMessageText(fullMessage, options);
+    if(userPosition[0].positions.length !== 0) {
+        await ctx.editMessageText(fullMessage, options);
+        } else {
+            await ctx.api.sendMessage(ctx.chat.id, "No positions found", { parse_mode: 'HTML' });
+        
+        }
+} catch (err) {
+    console.error(err);
+
+}
 }

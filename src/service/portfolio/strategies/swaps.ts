@@ -1,6 +1,6 @@
 import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken, publicKey } from '@raydium-io/raydium-sdk';
 import { PublicKey, Keypair,Connection } from '@solana/web3.js';
-import { getWalletTokenAccount, getSolBalance, waitForConfirmation } from '../../util';
+import { getWalletTokenAccount, getSolBalance, waitForConfirmation, trackUntilFinalized } from '../../util';
 import { DEFAULT_TOKEN, MVXBOT_FEES } from '../../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
 import { display_token_details } from '../../../views';
@@ -169,16 +169,21 @@ export async function handle_radyum_swap(
 
                     if (side == 'buy') {
                         if (extractAmount) {
-                        saveUserPosition(
-                            ctx,
-                            userWallet.publicKey.toString(), {
-                            baseMint: poolKeys.baseMint,
-                            name: userTokenBalanceAndDetails.userTokenName,
-                            symbol: _symbol,
-                            tradeType: `ray_swap_${side}`,
-                            amountIn: oldPositionSol? oldPositionSol + swapAmountIn : swapAmountIn,
-                            amountOut:  oldPositionToken? oldPositionToken + Number(extractAmount) : Number(extractAmount),
-                        });
+                        console.log('extractAmount', extractAmount);
+                        const isFinalized = await trackUntilFinalized(ctx, txids[0]);
+
+                        if(isFinalized){
+                            saveUserPosition(
+                                ctx,
+                                userWallet.publicKey.toString(), {
+                                baseMint: poolKeys.baseMint,
+                                name: userTokenBalanceAndDetails.userTokenName,
+                                symbol: _symbol,
+                                tradeType: `ray_swap_${side}`,
+                                amountIn: oldPositionSol? oldPositionSol + swapAmountIn : swapAmountIn,
+                                amountOut:  oldPositionToken? oldPositionToken + Number(extractAmount) : Number(extractAmount),
+                            });
+                        }
                         }
                     } else if(side == 'sell'){
                         if(extractAmount){

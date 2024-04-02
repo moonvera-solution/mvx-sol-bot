@@ -605,9 +605,38 @@ export async function waitForConfirmation(ctx: any, txid: string): Promise<boole
     if (!isConfirmed) {
         ctx.api.sendMessage(ctx.chat.id, 'Transaction could not be confirmed within the low priority fee.');
         console.error('Transaction could not be confirmed within the max attempts.');
-    }
+    }else if(isConfirmed) {
+        trackUntilFinalized(ctx, txid);
+       }
 
     return isConfirmed;
+}
+
+export async function trackUntilFinalized(ctx: any, txid: string): Promise<boolean> {
+    let isFinalized = false;
+    const maxAttempts = 100;
+    let attempts = 0;
+
+    while (!isFinalized && attempts < maxAttempts) {
+        attempts++;
+
+        const status = await getTransactionStatus(txid);
+        console.log('Transaction status:', status);
+
+        if (status === 'finalized') {
+            isFinalized = true;
+        } else {
+            console.log('Waiting for finalization...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+    }
+
+    if (!isFinalized && attempts >= maxAttempts) {
+        ctx.api.sendMessage(ctx.chat.id, 'Transaction could not be finalized within the maximum attempts.');
+        console.error('Transaction could not be finalized within the max attempts.');
+    }
+    console.log('Transaction is finalized:', isFinalized);
+    return isFinalized;
 }
 
 export async function getTransactionStatus(txid: string) {
