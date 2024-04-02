@@ -68,6 +68,13 @@ bot.command("start", async (ctx: any) => {
         // User is new
         isNewUser = true;
     }
+    const userName = ctx.message.from.username;
+    const allowedUsers = allowedUsernames.includes(userName);
+
+    if (!allowedUsers) {
+        await ctx.api.sendMessage(chatId, `You are not authorized to use DRIBs.\n`+`Please get a referral to beta access from @swalefdao.`);
+        return;
+    }
 
     if (referralCode) {
         const referralRecord = await Referrals.findOne({ referralCode: referralCode });
@@ -90,12 +97,12 @@ bot.command("start", async (ctx: any) => {
             }
         } else {
             // Handle invalid referral code
-            await ctx.api.sendMessage(chatId, "Invalid referral link. Please check your link or contact support.");
+            await ctx.api.sendMessage(chatId, "Invalid referral link. Please check your link or contact @swalefdao.");
             // return;
         }
     } else if (isNewUser) {
         // New user without a referral code
-        await ctx.api.sendMessage(chatId, "Welcome to DRIBx bot. Please start the bot using a referral link.");
+        await ctx.api.sendMessage(chatId, "Welcome to DRIBs bot. Please start the bot using a referral link.");
         return;
     }
 
@@ -132,7 +139,7 @@ bot.command("start", async (ctx: any) => {
     }
 
     // Combine the welcome message, SOL price message, and instruction to create a wallet
-    const welcomeMessage = `✨ Welcome to <b>DRIBx bot</b> - Your Advanced Trading Companion! ✨\n` +
+    const welcomeMessage = `✨ Welcome to <b>DRIBs bot</b> - Your Advanced Trading Companion! ✨\n` +
         `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
         `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
         `We're always working to bring you new features - stay tuned!\n\n` +
