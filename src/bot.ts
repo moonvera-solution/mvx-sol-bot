@@ -42,7 +42,7 @@ const bot = new Bot<MyContext>(keys!);
 bot.use(session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) }));
 bot.start();
 
-const allowedUsernames = ['tech_01010', 'daniellesifg']; // without the @
+const allowedUsernames = ['tech_01010', 'daniellesifg', 'CryptoBoosie','swalefdao','coachalib']; // without the @
 
 async function _setUpEnv(ctx: any): Promise<any> {
     try {

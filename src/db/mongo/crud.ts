@@ -161,7 +161,7 @@ export async function _generateReferralLink(ctx: any, walletAddress: PublicKey) 
       referralCode = existingReferral.referralCode;
     }
     //MVXBOT_bot for live prod
-    referralLink = `https://t.me/stbbot_dev_bot?start=${referralCode}`;
+    referralLink = `https://t.me/DRIB_dbot?start=${referralCode}`;
   } catch (error: any) {
     console.error('Error in _generateReferralLink:', error);
     throw new Error('Unable to process referral link.');
@@ -183,7 +183,7 @@ export async function _getReferralData(ctx: any) {
     // Return the data from the found referral record
     return {
       referralCode: referralRecord.referralCode,
-      referralLink: `https://t.me/stbbot_dev_bot?start=${referralRecord.referralCode}`,
+      referralLink: `https://t.me/DRIB_dbot?start=${referralRecord.referralCode}`,
       numberOfReferrals: referralRecord.numberOfReferrals,
       totalEarnings: referralRecord.earnings,
       commissionPercentage: referralRecord.commissionPercentage,
