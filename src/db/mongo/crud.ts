@@ -51,7 +51,8 @@ export async function _initDbConnection(): Promise<any> {
     pass: isProd ? _anon.pw : password,
     autoIndex: true,
   });
-
+  
+  console.log("isProd",isProd);
   const db = mongoose.connection;
   db.on('error', console.error.bind(console, 'ERR connection error:'));
   db.once('open', function () {
