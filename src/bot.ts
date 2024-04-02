@@ -869,7 +869,12 @@ bot.on('callback_query', async (ctx: any) => {
                 break;
             }
         }
-        ctx.api.answerCallbackQuery(ctx.callbackQuery.id);
+        try{
+            ctx.api.answerCallbackQuery(ctx.callbackQuery.id);
+        } catch (e: any) {
+            console.error(e.message);
+            console.error(e);
+        }
     } catch (e: any) {
         console.error(e.message);
         console.error(e);

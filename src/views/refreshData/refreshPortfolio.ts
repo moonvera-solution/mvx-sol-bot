@@ -14,7 +14,6 @@ export async function refresh_spl_positions(ctx: any) {
     const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userWallet });
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     
-    
     const solprice = await getSolanaDetails();
     // console.log(userPosition[0]?.positions.length)
     if(!userPosition[0]) {
