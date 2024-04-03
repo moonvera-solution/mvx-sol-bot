@@ -172,8 +172,9 @@ export async function handle_radyum_swap(
                         console.log('extractAmount', extractAmount);
                         const isFinalized = await trackUntilFinalized(ctx, txids[0]);
 
+                        console.log('isFinalized', isFinalized)
                         if(isFinalized){
-                            saveUserPosition(
+                            await saveUserPosition(
                                 ctx,
                                 userWallet.publicKey.toString(), {
                                 baseMint: poolKeys.baseMint,

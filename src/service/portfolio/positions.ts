@@ -27,9 +27,11 @@ export async function saveUserPosition(ctx: any, walletId: String, newPosition:
                 // console.log("newPosition",newPosition);
                 userPosition.positions.push(newPosition);
                 await userPosition.save();
+                console.log('adding new position', )
                 
             } else {
                 userPosition.positions[existingPositionIndex] = newPosition;
+                console.log('update existing position', )
                 await userPosition.save();
             }
         } else {
@@ -42,6 +44,8 @@ export async function saveUserPosition(ctx: any, walletId: String, newPosition:
                });
             //    console.log("savePosition",savePosition);
                await savePosition.save();
+               console.log('saved new position', )
+
         }
     } catch (err) {
         console.error(err);
