@@ -1,8 +1,8 @@
 import { createUserPortfolio, createNewWallet, handleGetPrivateKey, checkWalletsLength, confirmResetWalletAgain, resetWallet } from './service/portfolio/wallets';
 import { handle_radyum_swap } from './service/portfolio/strategies/swaps';
-import { Bot, Context, GrammyError, HttpError, session, SessionFlavor,webhookCallback } from "grammy";
+import { Bot, Context, GrammyError, HttpError, session, SessionFlavor, webhookCallback } from "grammy";
 import { importWallet, getPortfolio } from './service/portfolio/wallets';
-import { ISESSION_DATA, DefaultSessionData, DEFAULT_PUBLIC_KEY,PORTFOLIO_TYPE, DefaultPortfolioData } from './service/util/types';
+import { ISESSION_DATA, DefaultSessionData, DEFAULT_PUBLIC_KEY, PORTFOLIO_TYPE, DefaultPortfolioData } from './service/util/types';
 import { Keypair, PublicKey, Connection } from '@solana/web3.js';
 import { _initDbConnection } from "./db/mongo/crud";
 import { handleSettings } from './service/settings';
@@ -73,178 +73,203 @@ const allowedUsernames = ['tech_01010', 'daniellesifg', 'CryptoBoosie', 'swalefd
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                      BOT START                             */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
-
-
 bot.command("start", async (ctx: any) => {
-    const chatId = ctx.chat.id;
-    const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
-    let isNewUser = false;
-    ctx.session.env['tritonRPC'] = 'https://moonvera-pit.rpcpool.com/';
-    ctx.session.env['tritonToken'] = process.env.TRITON_RPC_TOKEN!;
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    try {
+        const chatId = ctx.chat.id;
+        const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
+        let isNewUser = false;
+        ctx.session.env['tritonRPC'] = 'https://moonvera-pit.rpcpool.com/';
+        ctx.session.env['tritonToken'] = process.env.TRITON_RPC_TOKEN!;
+        const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
 
-    let referralCode = null;
-    // Check if there's additional text with the /start command
-    if (ctx.message.text.includes(' ')) {
-        referralCode = ctx.message.text.split(' ')[1];
-    }
-    // if user already exists
-    if (portfolio === DefaultPortfolioData) {// User is new
-        isNewUser = true;
-    }
+        let referralCode = null;
+        // Check if there's additional text with the /start command
+        if (ctx.message.text.includes(' ')) {
+            referralCode = ctx.message.text.split(' ')[1];
+        }
+        // if user already exists
+        if (portfolio === DefaultPortfolioData) {// User is new
+            isNewUser = true;
+        }
 
-    const userName = ctx.message.from.username;
-    console.log("userName:",userName);
+        const userName = ctx.message.from.username;
+        console.log("userName:", userName);
 
-    const allowedUsers = allowedUsernames.includes(userName);
+        const allowedUsers = allowedUsernames.includes(userName);
 
-    if (referralCode || allowedUsers) {
-        const referralRecord = await Referrals.findOne({ referralCode: referralCode });
-        if (referralRecord && referralRecord.generatorChatId !== chatId) {
-            if (!referralRecord.referredUsers.includes(chatId)) {
-                // Add the user's chatId to the referredUsers array
-                referralRecord.referredUsers.push(chatId);
+        if (referralCode || allowedUsers) {
+            const referralRecord = await Referrals.findOne({ referralCode: referralCode });
+            if (referralRecord && referralRecord.generatorChatId !== chatId) {
+                if (!referralRecord.referredUsers.includes(chatId)) {
+                    // Add the user's chatId to the referredUsers array
+                    referralRecord.referredUsers.push(chatId);
 
-                // Increment the referral count
-                referralRecord.numberOfReferrals! += 1;
-                await referralRecord.save();
-                ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
-                ctx.session.referralCommision = referralRecord.commissionPercentage;
-                // ctx.session.referralEarnings = referralRecord.earnings;
-                // Optional: Notify the user that they have been referred successfully
-                await ctx.reply("Welcome! You have been referred successfully.");
-            } else {
-                ctx.session.generatorWallet = referralRecord.generatorWallet;
-                ctx.session.referralCommision = referralRecord.commissionPercentage;
+                    // Increment the referral count
+                    referralRecord.numberOfReferrals! += 1;
+                    await referralRecord.save();
+                    ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
+                    ctx.session.referralCommision = referralRecord.commissionPercentage;
+                    // ctx.session.referralEarnings = referralRecord.earnings;
+                    // Optional: Notify the user that they have been referred successfully
+                    await ctx.reply("Welcome! You have been referred successfully.");
+                } else {
+                    ctx.session.generatorWallet = referralRecord.generatorWallet;
+                    ctx.session.referralCommision = referralRecord.commissionPercentage;
+                }
             }
-        } 
-    } else if (isNewUser) {
-        // New user without a referral code
-        await ctx.api.sendMessage(chatId, "Welcome to DRIBs bot. Please start the bot using a referral link.");
-        return;
+        } else if (isNewUser) {
+            // New user without a referral code
+            await ctx.api.sendMessage(chatId, "Welcome to DRIBs bot. Please start the bot using a referral link.");
+            return;
+        }
+
+        //-------Start bot with wallet---------------------------
+        ctx.session.latestCommand = "start";
+        let userWallet: Keypair | null = null;
+        if (portfolio !== DefaultPortfolioData) {
+            ctx.session.portfolio = portfolio;
+        } else {
+            // at this point wallet from session is not avialable yet
+            // hence we do ctx.session.portfolio = await getPortfolio(chatId); at the end of the "start" function.
+            userWallet = await createUserPortfolio(ctx); // => { publicKey, secretKey }
+            ctx.session.portfolio.wallets[ctx.session.activeWalletIndex] = userWallet;
+        }
+
+        // Retrieve the current SOL details
+        let solPriceMessage = '';
+        const details = await getSolanaDetails();
+        const publicKeyString: PublicKey | String = userWallet ? userWallet.publicKey :
+            ctx.session.portfolio.wallets[ctx.session.activeWalletIndex].publicKey;
+
+        // Fetch SOL balance
+        const balanceInSOL = await getSolBalance(publicKeyString, connection);
+        if (balanceInSOL === null) {
+            await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
+            return;
+        }
+
+        // solana price 
+        if (details) {
+            const solData = details.toFixed(2);
+            solPriceMessage = `\n\SOL Price: <b>${solData}</b> USD`;
+        } else {
+            solPriceMessage = '\nError fetching current SOL price.';
+        }
+
+        // Combine the welcome message, SOL price message, and instruction to create a wallet
+        const welcomeMessage = `✨ Welcome to <b>DRIBs bot</b> - Your Advanced Trading Companion! ✨\n` +
+            `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
+            `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
+            `We're always working to bring you new features - stay tuned!\n\n` +
+            `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
+            `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> USD\n\n` +
+            `🖐🏼 For security, we recommend exporting your private key and keeping it paper.`;
+
+
+
+        // Set the options for th e inline keyboard with social links
+        const options: any = {
+            reply_markup: JSON.stringify({
+                inline_keyboard: [
+                    // [
+                    //     { text: '🌎 Website', url: 'https://moonvera.io/' },
+                    //     { text: '𝚇', url: 'https://twitter.com/moonvera_' }
+
+                    // ],
+                    [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
+                    [{ text: '☑️ Rug Check', callback_data: 'rug_check' }],
+                    [{ text: '🎯 Turbo Snipe', callback_data: 'snipe' }],
+                    [{ text: '💱 Buy', callback_data: 'buy' }, { text: 'Sell 📈', callback_data: 'sell' }],
+                    [{ text: 'ℹ️ Help', callback_data: 'help' }, { text: 'Refer Friends', callback_data: 'refer_friends' }],
+                    [{ text: 'Refresh', callback_data: 'refresh_start' }],
+                    [{ text: 'Positions', callback_data: 'display_spl_positions' }],
+                ],
+            }),
+            parse_mode: 'HTML'
+        };
+        // Send the message with the inline keyboard
+        ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
+        ctx.session.portfolio = await getPortfolio(chatId);
+    } catch (error: any) {
+        logErrorToFile("bot on start cmd", error);
     }
-
-    //-------Start bot with wallet---------------------------
-    ctx.session.latestCommand = "start";
-    let userWallet: Keypair | null = null;
-    if (portfolio !== DefaultPortfolioData) {
-        ctx.session.portfolio = portfolio;
-    } else {
-        // at this point wallet from session is not avialable yet
-        // hence we do ctx.session.portfolio = await getPortfolio(chatId); at the end of the "start" function.
-        userWallet = await createUserPortfolio(ctx); // => { publicKey, secretKey }
-        ctx.session.portfolio.wallets[ctx.session.activeWalletIndex] = userWallet;
-    }
-
-    // Retrieve the current SOL details
-    let solPriceMessage = '';
-    const details = await getSolanaDetails();
-    const publicKeyString: PublicKey | String = userWallet ? userWallet.publicKey :
-        ctx.session.portfolio.wallets[ctx.session.activeWalletIndex].publicKey;
-
-    // Fetch SOL balance
-    const balanceInSOL = await getSolBalance(publicKeyString,connection);
-    if (balanceInSOL === null) {
-        await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
-        return;
-    }
-
-    // solana price 
-    if (details) {
-        const solData = details.toFixed(2);
-        solPriceMessage = `\n\SOL Price: <b>${solData}</b> USD`;
-    } else {
-        solPriceMessage = '\nError fetching current SOL price.';
-    }
-
-    // Combine the welcome message, SOL price message, and instruction to create a wallet
-    const welcomeMessage = `✨ Welcome to <b>DRIBs bot</b> - Your Advanced Trading Companion! ✨\n` +
-        `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
-        `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
-        `We're always working to bring you new features - stay tuned!\n\n` +
-        `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
-        `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> USD\n\n` +
-        `🖐🏼 For security, we recommend exporting your private key and keeping it paper.`;
-
-
-
-    // Set the options for th e inline keyboard with social links
-    const options: any = {
-        reply_markup: JSON.stringify({
-            inline_keyboard: [
-                // [
-                //     { text: '🌎 Website', url: 'https://moonvera.io/' },
-                //     { text: '𝚇', url: 'https://twitter.com/moonvera_' }
-
-                // ],
-                [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
-                [{ text: '☑️ Rug Check', callback_data: 'rug_check' }],
-                [{ text: '🎯 Turbo Snipe', callback_data: 'snipe' }],
-                [{ text: '💱 Buy', callback_data: 'buy' }, { text: 'Sell 📈', callback_data: 'sell' }],
-                [{ text: 'ℹ️ Help', callback_data: 'help' }, { text: 'Refer Friends', callback_data: 'refer_friends' }],
-                [{ text: 'Refresh', callback_data: 'refresh_start' }],
-                [{ text: 'Positions', callback_data: 'display_spl_positions' }],
-            ],
-        }),
-        parse_mode: 'HTML'
-    };
-    // Send the message with the inline keyboard
-    ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
-    ctx.session.portfolio = await getPortfolio(chatId);
 });
-
 
 bot.command('help', async (ctx) => {
     await sendHelpMessage(ctx);
 });
 
 bot.command('positions', async (ctx) => {
-    await display_spl_positions(ctx);
+    try {
+        await display_spl_positions(ctx);
+    } catch (error: any) {
+        logErrorToFile("bot on positions cmd", error);
+    }
 });
 
 bot.command('rugchecking', async (ctx) => {
-    await ctx.api.sendMessage(ctx.chat.id, "Please provide the token address for a rug pull analysis.");
-    ctx.session.latestCommand = 'rug_check';
+    try {
+        await ctx.api.sendMessage(ctx.chat.id, "Please provide the token address for a rug pull analysis.");
+        ctx.session.latestCommand = 'rug_check';
+    } catch (error: any) {
+        logErrorToFile("bot on rugchecking cmd", error);
+    }
 });
 
 bot.command('buy', async (ctx) => {
-    const chatId = ctx.chat.id;
-    const referralRecord = await Referrals.findOne({ referredUsers: chatId });
-    if (referralRecord) {
-        ctx.session.referralCommision = referralRecord.commissionPercentage;
-        ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
+    try {
+        const chatId = ctx.chat.id;
+        const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+        if (referralRecord) {
+            ctx.session.referralCommision = referralRecord.commissionPercentage;
+            ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
+        }
+        ctx.session.latestCommand = 'buy';
+        await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to Buy.");
+    } catch (error: any) {
+        logErrorToFile("bot on buy cmd", error);
     }
-    ctx.session.latestCommand = 'buy';
-    await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to Buy.");
-
 });
 
 bot.command('sell', async (ctx) => {
-    const chatId = ctx.chat.id;
-    const referralRecord = await Referrals.findOne({ referredUsers: chatId });
-    if (referralRecord) {
-        ctx.session.referralCommision = referralRecord.commissionPercentage;
-        ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
+    try {
+        const chatId = ctx.chat.id;
+        const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+        if (referralRecord) {
+            ctx.session.referralCommision = referralRecord.commissionPercentage;
+            ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
 
+        }
+        ctx.session.latestCommand = 'sell';
+        await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to sell.");
+    } catch (error: any) {
+        logErrorToFile("bot on sell cmd", error);
     }
-    ctx.session.latestCommand = 'sell';
-    await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to sell.");
 });
 
 bot.command('snipe', async (ctx) => {
-    const chatId = ctx.chat.id;
-    const referralRecord = await Referrals.findOne({ referredUsers: chatId });
-    if (referralRecord) {
-        ctx.session.referralCommision = referralRecord.commissionPercentage;
-        ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
+    try {
+        const chatId = ctx.chat.id;
+        const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+        if (referralRecord) {
+            ctx.session.referralCommision = referralRecord.commissionPercentage;
+            ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
+        }
+        ctx.session.latestCommand = 'snipe';
+        await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to snipe.");
+    } catch (error: any) {
+        logErrorToFile("bot on snipe cmd", error);
     }
-    ctx.session.latestCommand = 'snipe';
-    await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to snipe.");
+
 });
 
 bot.command('settings', async (ctx) => {
-    await handleSettings(ctx);
+    try {
+        await handleSettings(ctx);
+    } catch (error: any) {
+        logErrorToFile("bot.command('settings',", error);
+    }
 });
 
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
@@ -459,6 +484,7 @@ bot.on('message', async (ctx) => {
         }
     } catch (e: any) {
         console.error("ERROR on bot.on txt msg", e);
+        logErrorToFile("bot.on('message'", e);
     }
 });
 
@@ -467,14 +493,16 @@ bot.on('message', async (ctx) => {
 /*                      BOT ON CALLBACK                       */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 bot.on('callback_query', async (ctx: any) => {
-    const chatId = ctx.chat.id;
-    const data = ctx.callbackQuery.data;
-    // console.log("callback_query", data);
-    const positionCallSell = /^sellpos_\d+_\d+$/;
-    const positionCallBuy = /^buypos_x_\d+$/;
-    const positionNavigate = /^(prev_position|next_position)_\d+$/;
-
     try {
+        const chatId = ctx.chat.id;
+        const data = ctx.callbackQuery.data;
+        // console.log("callback_query", data);
+        const positionCallSell = /^sellpos_\d+_\d+$/;
+        const positionCallBuy = /^buypos_x_\d+$/;
+        const positionNavigate = /^(prev_position|next_position)_\d+$/;
+        ctx.api.answerCallbackQuery(ctx.callbackQuery.id);
+
+
         const matchSell = data.match(positionCallSell);
         const matchBuy = data.match(positionCallBuy);
         const matchNavigate = data.match(positionNavigate);
@@ -895,14 +923,8 @@ bot.on('callback_query', async (ctx: any) => {
                 break;
             }
         }
-        try{
-            ctx.api.answerCallbackQuery(ctx.callbackQuery.id);
-        } catch (e: any) {
-            console.error(e.message);
-            console.error(e);
-        }
     } catch (e: any) {
-        console.error(e.message);
+        logErrorToFile("callback_query", e);
         console.error(e);
     }
 });
@@ -912,10 +934,13 @@ bot.catch((err) => {
     console.error(`Error while handling update ${ctx.update.update_id}:`);
     const e = err.error;
     if (e instanceof GrammyError) {
+        logErrorToFile("GrammyError bot.catch((err)", e);
         console.error("Error in request:", e.description);
     } else if (e instanceof HttpError) {
+        logErrorToFile("HttpError bot.catch((err)", e);
         console.error("Could not contact Telegram:", e);
     } else {
+        logErrorToFile("Unknown bot.catch((err)", e);
         console.error("Unknown error:", e);
     }
 });
