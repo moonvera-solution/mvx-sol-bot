@@ -13,15 +13,15 @@ export async function saveUserPosition(ctx: any, walletId: String, newPosition:
         amountOut: number | undefined;
     }) {
      const chatId = ctx.chat.id;
-
+        console.log("saveUserPosition",saveUserPosition);
     try {
         const userPosition = await UserPositions.findOne({positionChatId: chatId, walletId: walletId});
         if (userPosition) {
-            // console.log("userPosition",userPosition);
+            console.log("userPosition",userPosition);
             const existingPositionIndex = userPosition.positions.findIndex(
                 position => position.baseMint === newPosition.baseMint.toString()
             );
-            console.log("existingPositionIndex",existingPositionIndex);
+            console.log("saveUserPosition: existingPositionIndex",existingPositionIndex);
 
             if (existingPositionIndex === -1) {
                 // console.log("newPosition",newPosition);

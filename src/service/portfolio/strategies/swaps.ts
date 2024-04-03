@@ -1,5 +1,5 @@
 import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken, publicKey } from '@raydium-io/raydium-sdk';
-import { PublicKey, Keypair,Connection } from '@solana/web3.js';
+import { PublicKey, Keypair, Connection } from '@solana/web3.js';
 import { getWalletTokenAccount, getSolBalance, waitForConfirmation, trackUntilFinalized } from '../../util';
 import { DEFAULT_TOKEN, MVXBOT_FEES } from '../../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
@@ -28,11 +28,11 @@ export async function handle_radyum_swap(
 
     try {
         const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
-        const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut),connection);
+        const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection);
         const poolKeys = ctx.session.activeTradingPool;
         const OUTPUT_TOKEN = new RayddiumToken(TOKEN_PROGRAM_ID, tokenOut, userTokenBalanceAndDetails.decimals);
         const walletTokenAccounts = await getWalletTokenAccount(connection, new PublicKey(userWallet.publicKey));
-        let userSolBalance = await getSolBalance(userWallet.publicKey,connection);
+        let userSolBalance = await getSolBalance(userWallet.publicKey, connection);
         let userTokenBalance = userTokenBalanceAndDetails.userTokenBalance;
         let tokenIn, outputToken;
         const referralFee = ctx.session.referralCommision / 100;
@@ -65,7 +65,7 @@ export async function handle_radyum_swap(
             tokenIn = DEFAULT_TOKEN.WSOL;
             outputToken = OUTPUT_TOKEN;
             swapAmountIn = swapAmountIn * Math.pow(10, 9);
-            
+
             // ------------ MVXBOT_FEES  and referral ------------
 
             const bot_fee = new BigNumber(amountUse.multipliedBy(MVXBOT_FEES));
@@ -120,17 +120,20 @@ export async function handle_radyum_swap(
                 const isConfirmed = await waitForConfirmation(ctx, txids[0]);
 
                 if (isConfirmed) {
-
                     const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
-                    const txAmount = JSON.parse(JSON.stringify(txxs!.meta!.innerInstructions![0].instructions!));
-                    let extractAmount: number | undefined ;
-                    if (Array.isArray(txAmount)) {
-                        txAmount.forEach((tx) => {
-                            if (tx.parsed.info.authority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1') {
-                                extractAmount = tx.parsed.info.amount;
+                    let txAmount: Array<any> | undefined;
+                    let extractAmount: number | undefined;
+                    
+                    let inner = JSON.parse(JSON.stringify(txxs));
+                    console.log('TXXXXX::: ',JSON.parse(JSON.stringify(inner.meta.innerInstructions)));
 
-                            }
-                        });
+                    if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions[0].instructions) {
+                        JSON.parse(JSON.stringify(txxs.meta.innerInstructions[0].instructions));
+                        if (Array.isArray(txAmount)) {
+                            txAmount.forEach((tx) => {
+                                if (tx.parsed.info.authority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1') { extractAmount = tx.parsed.info.amount; }
+                            });
+                        }
                     }
 
                     let confirmedMsg;
@@ -138,17 +141,14 @@ export async function handle_radyum_swap(
                     let tokenAmount;
                     const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
                     let solFromSell = new BigNumber(0);
-                    
+
                     if (extractAmount) {
                         solFromSell = new BigNumber(extractAmount);
                         solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
                         tokenAmount = swapAmountIn / Math.pow(10, userTokenBalanceAndDetails.decimals);
-                        if (side === 'sell') {
-                            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
-                        }else{
-                            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${Number(extractAmount / Math.pow(10,userTokenBalanceAndDetails.decimals )).toFixed(4)} <b>${_symbol}</b> for ${(swapAmountIn/1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
-                        }
-
+                        side == 'sell' ?
+                            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.` :
+                            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4)} <b>${_symbol}</b> for ${(swapAmountIn / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
                     } else {
                         confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
                     }
@@ -170,13 +170,11 @@ export async function handle_radyum_swap(
                         await referralRecord?.save();
                     }
 
-                    if (side == 'buy') {
-                        if (extractAmount) {
+                    if (side == 'buy' && extractAmount) {
                         console.log('extractAmount', extractAmount);
                         const isFinalized = await trackUntilFinalized(ctx, txids[0]);
-
-                        console.log('isFinalized', isFinalized)
-                        if(isFinalized){
+                        
+                        if (isFinalized) {
                             await saveUserPosition(
                                 ctx,
                                 userWallet.publicKey.toString(), {
@@ -184,34 +182,31 @@ export async function handle_radyum_swap(
                                 name: userTokenBalanceAndDetails.userTokenName,
                                 symbol: _symbol,
                                 tradeType: `ray_swap_${side}`,
-                                amountIn: oldPositionSol? oldPositionSol + swapAmountIn : swapAmountIn,
-                                amountOut:  oldPositionToken? oldPositionToken + Number(extractAmount) : Number(extractAmount),
+                                amountIn: oldPositionSol ? oldPositionSol + swapAmountIn : swapAmountIn,
+                                amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
                             });
                         }
+                    } else if (side == 'sell' && extractAmount) {
+
+                        let newAmountIn, newAmountOut;
+                        if (Number(swapAmountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
+                            newAmountIn = 0;
+                            newAmountOut = 0;
+                        } else {
+                            newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
+                            newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(swapAmountIn) : oldPositionToken;
                         }
-                    } else if(side == 'sell'){
-                        if(extractAmount){
-                            let newAmountIn, newAmountOut;
-                            if (Number(swapAmountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
-                                // Set amountIn and amountOut to 0 if selling all
-                                newAmountIn = 0;
-                                newAmountOut = 0;
-                            } else {
-                             
-                                newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
-                                newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(swapAmountIn) : oldPositionToken;
-                            }
-                            saveUserPosition(
-                                ctx,
-                                userWallet.publicKey.toString(), {
-                                baseMint: poolKeys.baseMint,
-                                name: userTokenBalanceAndDetails.userTokenName,
-                                symbol: _symbol,
-                                tradeType: `ray_swap_${side}`,
-                                amountIn: newAmountIn,
-                                amountOut: newAmountOut,
-                            });
-                        }
+
+                        await saveUserPosition(
+                            ctx,
+                            userWallet.publicKey.toString(), {
+                            baseMint: poolKeys.baseMint,
+                            name: userTokenBalanceAndDetails.userTokenName,
+                            symbol: _symbol,
+                            tradeType: `ray_swap_${side}`,
+                            amountIn: newAmountIn,
+                            amountOut: newAmountOut,
+                        });
                     }
                     ctx.session.latestCommand = side;
                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
