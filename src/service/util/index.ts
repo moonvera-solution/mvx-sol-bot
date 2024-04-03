@@ -603,15 +603,33 @@ export async function waitForConfirmation(ctx: any, txid: string): Promise<boole
     }
 
     if (!isConfirmed) {
-        ctx.api.sendMessage(ctx.chat.id, 'Transaction could not be confirmed within the low priority fee.');
+        ctx.api.sendMessage(ctx.chat.id, `Transaction could not be confirmed within the ${getPriorityFeeLabel(ctx.session.priorityFees)} priority fee.`);
         console.error('Transaction could not be confirmed within the max attempts.');
     }else if(isConfirmed) {
         trackUntilFinalized(ctx, txid);
-       }
+    }
 
     return isConfirmed;
 }
 
+export function getPriorityFeeLabel(fee: number) : string{
+    let priorityFeeLabel;
+    switch(fee) {
+        case 2500:
+            priorityFeeLabel = 'low';
+            break;
+        case 5000:
+            priorityFeeLabel = 'medium';
+            break;
+        case 7500:
+            priorityFeeLabel = 'high';
+            break;
+        case 10000:
+            priorityFeeLabel = 'max';
+            break;
+    }
+    return String(priorityFeeLabel);
+}
 export async function trackUntilFinalized(ctx: any, txid: string): Promise<boolean> {
     let isFinalized = false;
     const maxAttempts = 100;
