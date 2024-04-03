@@ -513,7 +513,7 @@ bot.on('callback_query', async (ctx: any) => {
         switch (data) {
             case 'refer_friends': {
                 const chatId = ctx.chat.id;
-                const username = ctx.from.username;
+                const username = ctx.update.callback_query.from.username; //ctx.from.username;
 
                 // Check if the user is allowed to access the referral program
                 if (allowedUsernames.includes(username)) {
