@@ -605,7 +605,10 @@ export async function waitForConfirmation(ctx: any, txid: string): Promise<boole
     if (!isConfirmed) {
         ctx.api.sendMessage(ctx.chat.id, `Transaction could not be confirmed within the ${getPriorityFeeLabel(ctx.session.priorityFees)} priority fee.`);
         console.error('Transaction could not be confirmed within the max attempts.');
+    }else if(isConfirmed) {
+        trackUntilFinalized(ctx, txid);
     }
+
     return isConfirmed;
 }
 
