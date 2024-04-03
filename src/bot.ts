@@ -42,9 +42,9 @@ _initDbConnection();
 const keys = process.env.TELEGRAM_BOT_TOKEN;
 const bot = new Bot<MyContext>(keys!);
 bot.use(session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) }));
-bot.start();
+//bot.start();
 // Set the webhook
-/**
+
 const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
 console.log("botToken", botToken);
 const webhookUrl = 'https://drib.ngrok.app'; 
@@ -67,7 +67,7 @@ const port = process.env.PORT || 80;
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
-*/
+
 const allowedUsernames = ['tech_01010', 'daniellesifg', 'CryptoBoosie', 'swalefdao', 'coachalib']; // without the @
 
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
