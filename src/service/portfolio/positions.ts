@@ -21,7 +21,7 @@ export async function saveUserPosition(ctx: any, walletId: String, newPosition:
             const existingPositionIndex = userPosition.positions.findIndex(
                 position => position.baseMint === newPosition.baseMint.toString()
             );
-            // console.log("existingPositionIndex",existingPositionIndex);
+            console.log("existingPositionIndex",existingPositionIndex);
 
             if (existingPositionIndex === -1) {
                 // console.log("newPosition",newPosition);
@@ -45,8 +45,8 @@ export async function saveUserPosition(ctx: any, walletId: String, newPosition:
             //    console.log("savePosition",savePosition);
                await savePosition.save();
                console.log('saved new position', )
-
         }
+        console.log('NOT SAVED', )
     } catch (err) {
         console.error(err);
     }

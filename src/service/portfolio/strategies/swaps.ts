@@ -41,6 +41,7 @@ export async function handle_radyum_swap(
         // ------- check user balanace in DB --------
         const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
         console.log("userPosition", userPosition);
+
         let oldPositionSol: number = 0;
         let oldPositionToken: number = 0;
         if (userPosition) {
@@ -64,6 +65,7 @@ export async function handle_radyum_swap(
             tokenIn = DEFAULT_TOKEN.WSOL;
             outputToken = OUTPUT_TOKEN;
             swapAmountIn = swapAmountIn * Math.pow(10, 9);
+            
             // ------------ MVXBOT_FEES  and referral ------------
 
             const bot_fee = new BigNumber(amountUse.multipliedBy(MVXBOT_FEES));
@@ -135,7 +137,8 @@ export async function handle_radyum_swap(
                     let solAmount;
                     let tokenAmount;
                     const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
-                    let solFromSell = new BigNumber(0);;
+                    let solFromSell = new BigNumber(0);
+                    
                     if (extractAmount) {
                         solFromSell = new BigNumber(extractAmount);
                         solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
