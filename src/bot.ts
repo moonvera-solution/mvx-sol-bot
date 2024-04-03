@@ -42,31 +42,31 @@ _initDbConnection();
 const keys = process.env.TELEGRAM_BOT_TOKEN;
 const bot = new Bot<MyContext>(keys!);
 bot.use(session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) }));
-//bot.start();
+bot.start();
 // Set the webhook
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
 console.log("botToken", botToken);
 const webhookUrl = 'https://drib.ngrok.app'; 
 
-bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
-  .then(() => console.log("Webhook set successfully"))
-  .catch(err => console.error("Error setting webhook:", err)
-);
-const handleUpdate = webhookCallback(bot, 'express');
-// Create the HTTP server and define request handling logic
-app.use(express.json()); // for parsing application/json
+// bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
+//   .then(() => console.log("Webhook set successfully"))
+//   .catch(err => console.error("Error setting webhook:", err)
+// );
+// const handleUpdate = webhookCallback(bot, 'express');
+// // Create the HTTP server and define request handling logic
+// app.use(express.json()); // for parsing application/json
 
-app.post(`/bot${botToken}`, handleUpdate);
+// app.post(`/bot${botToken}`, handleUpdate);
 
-app.get('/', (req: any, res: any) => {
-  res.send('Hello from ngrok server!');
-});
-// const server = createServer(bot);
-const port = process.env.PORT || 80; 
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
+// app.get('/', (req: any, res: any) => {
+//   res.send('Hello from ngrok server!');
+// });
+// // const server = createServer(bot);
+// const port = process.env.PORT || 80; 
+// app.listen(port, () => {
+//     console.log(`Server is running on port ${port}`);
+// });
 
 const allowedUsernames = ['tech_01010', 'daniellesifg', 'CryptoBoosie', 'swalefdao', 'coachalib']; // without the @
 
