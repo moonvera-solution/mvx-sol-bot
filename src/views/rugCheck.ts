@@ -19,25 +19,29 @@ export async function display_rugCheck(ctx: any) {
     ctx.session.snipeToken = baseMint;
     ctx.session.buyToken = baseMint;
     const lpMint = rugPool.lpMint;
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     try{
 
-    const solprice = await getSolanaDetails();
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
-    
+  const [tokenMetadataResult, solPrice, tokenInfo] = await Promise.all([
+        getTokenMetadata(ctx, token.toBase58()),
+        getSolanaDetails(),
+        quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection })
+    ]);
 
-    const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint,connection });
-    const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
-    const tokenPriceUSD = (tokenInfo.price.times(solprice)).toFixed(quoteDecimals);
-    const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
-    const formattedmac= await formatNumberToKOrM(marketCap) ?? "NA";
-   // pool ration is 0.5 so we multiply by 2 or divide by 0.5
-    const formattedLiquidity = await formatNumberToKOrM((tokenInfo.liquidity * solprice) / 0.5 ) ?? "N/A";
     const {
         birdeyeURL,
         dextoolsURL,
         dexscreenerURL,
         tokenData,
-    } = await getTokenMetadata(ctx, token.toBase58());
+    } = tokenMetadataResult;
+
+    
+
+    const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
+    const tokenPriceUSD = (tokenInfo.price.times(solPrice)).toFixed(quoteDecimals);
+    const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
+   // pool ration is 0.5 so we multiply by 2 or divide by 0.5
+ 
 
     const processData = (data: any) => {
         if (data.value?.data instanceof Buffer) {
@@ -68,11 +72,18 @@ export async function display_rugCheck(ctx: any) {
 
     const circulatedSupply = Number(((Number(circulatingSupply.tokenAmount.amount)) / Math.pow(10, baseDecimals)).toFixed(2));
     const baseTokenSupply = Number(((Number(getBaseSupply.supply)) / Math.pow(10, baseDecimals)).toFixed(2));
+    // const formattedmac= await formatNumberToKOrM(marketCap) ?? "NA";
+    // const formattedLiquidity = await formatNumberToKOrM((tokenInfo.liquidity * solPrice) / 0.5 ) ?? "N/A";
 
-    const [formattedCirculatingSupply, formattedSupply] = await Promise.all([
+    let [formattedCirculatingSupply, formattedSupply,formattedLiquidity,formattedmac] = await Promise.all([
         formatNumberToKOrM(Number(circulatedSupply)),
-        formatNumberToKOrM(Number(baseTokenSupply))
+        formatNumberToKOrM(Number(baseTokenSupply)),
+        formatNumberToKOrM((tokenInfo.liquidity * solPrice) / 0.5 ),
+        formatNumberToKOrM(marketCap)
+
     ]);
+    formattedmac = formattedmac ? formattedmac:  "NA";
+    formattedLiquidity = formattedLiquidity ? formattedLiquidity : "N/A";
     const circulatingPercentage = (Number(circulatedSupply) / Number(baseTokenSupply) * 100).toFixed(2);
     const pooledSol = Number(((Number(getPooledSol.tokenAmount.amount)) / Math.pow(10, quoteDecimals)).toFixed(2));
     const isRaydium = aMM.mintAuthority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1'? "<b>Raydium</b>" : "Unknown";
@@ -80,7 +91,7 @@ export async function display_rugCheck(ctx: any) {
     const islpBurnt = lpSupply > 0 ? "❌ No" : "✅ Yes";
     const creatorPercentage = (Number(getCreatorPercentage.userTokenBalance) / Number(baseTokenSupply) * 100).toFixed(2);
 
-    let messageText = `<b>------ ${tokenData.name} (${tokenData.symbol}) ------</b>\n` +
+    let messageText = `<b>------ ${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol}) ------</b>\n` +
     `Contract: <code>${token}</code>\n\n` +
     `<b>Links:</b>\n` +
     `👁️ <a href="${birdeyeURL}">Birdeye View</a> | ` +

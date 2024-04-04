@@ -19,25 +19,28 @@ export async function Refresh_rugCheck(ctx: any) {
     ctx.session.snipeToken = baseMint;
     ctx.session.buyToken = baseMint;
     const lpMint = rugPool.lpMint;
-    try{
-    const solprice = await getSolanaDetails();
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
-    
 
-    const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint,connection });
+    try{
+        const [tokenMetadataResult, solPrice, tokenInfo] = await Promise.all([
+            getTokenMetadata(ctx, token.toBase58()),
+            getSolanaDetails(),
+            quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection })
+        ]);
+    
+        const {
+            birdeyeURL,
+            dextoolsURL,
+            dexscreenerURL,
+            tokenData,
+        } = tokenMetadataResult;
     const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
-    const tokenPriceUSD = (tokenInfo.price.times(solprice)).toFixed(quoteDecimals);
-    const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
+    const tokenPriceUSD = (tokenInfo.price.times(solPrice)).toFixed(quoteDecimals);
+    const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
     const formattedmac= await formatNumberToKOrM(marketCap) ?? "NA";
    // pool ration is 0.5 so we multiply by 2 or divide by 0.5
-    const formattedLiquidity = await formatNumberToKOrM((tokenInfo.liquidity * solprice) / 0.5 ) ?? "N/A";
-    const {
-        birdeyeURL,
-        dextoolsURL,
-        dexscreenerURL,
-        tokenData,
-    } = await getTokenMetadata(ctx, token.toBase58());
-
+    const formattedLiquidity = await formatNumberToKOrM((tokenInfo.liquidity * solPrice) / 0.5 ) ?? "N/A";
+   
     const processData = (data: any) => {
         if (data.value?.data instanceof Buffer) {
             return null;
