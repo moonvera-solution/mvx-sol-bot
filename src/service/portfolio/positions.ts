@@ -46,7 +46,6 @@ export async function saveUserPosition(ctx: any, walletId: String, newPosition:
                await savePosition.save();
                console.log('saved new position', )
         }
-        console.log('NOT SAVED', )
     } catch (err) {
         console.error(err);
     }
