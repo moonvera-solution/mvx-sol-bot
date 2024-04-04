@@ -4,9 +4,9 @@ import { quoteToken } from './util/dataCalculation';
 import { getSolanaDetails } from '../api';
 import { formatNumberToKOrM, getSolBalance } from '../service/util';
 import { Connection } from '@solana/web3.js';
-const connection_only = new Connection('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'); // TRITON
 
 export async function display_rugCheck(ctx: any) {
+    
     const chatId = ctx.chat.id;
     const session = ctx.session;
     const token = session.rugCheckToken;
@@ -35,19 +35,36 @@ export async function display_rugCheck(ctx: any) {
         dexscreenerURL,
         tokenData,
     } = await getTokenMetadata(ctx, token.toBase58());
+
+    const processData = (data: any) => {
+        if (data.value?.data instanceof Buffer) {
+            // Handle the buffer type or skip processing
+            return null;
+        }
+        return data.value?.data.parsed.info;
+    };
+
+    const responses = await Promise.all([
+        connection.getParsedAccountInfo(new PublicKey(quoteVault), "processed"),
+        connection.getParsedAccountInfo(new PublicKey(baseMint), "processed"),
+        connection.getParsedAccountInfo(new PublicKey(baseVault), "processed"),
+        connection.getParsedAccountInfo(new PublicKey(lpMint), "processed"),
+    ]);
+    const getPooledSol= processData(responses[0]);
+    const getBaseSupply= processData(responses[1]);
+    const circulatingSupply = processData(responses[2]);
+    const aMM = processData(responses[3]);
+
     const MutableInfo = tokenData.isMutable? '⚠️ Mutable' : '✅ Immutable';
     const creatorAddress = tokenData.updateAuthorityAddress.toBase58();
     const renounced = tokenData.mint.mintAuthorityAddress?.toString() !== tokenData.updateAuthorityAddress.toString()? "✅" : "❌ No";
     const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint),connection);
-    const getPooledSol: any = await connection_only.getParsedAccountInfo(new PublicKey(quoteVault), "processed");
-    const getBaseSupply: any = await connection_only.getParsedAccountInfo(new PublicKey(baseMint), "processed");
-    const circulatingSupply: any = await connection_only.getParsedAccountInfo(new PublicKey(baseVault));
+
     const circulatedSupply = ((Number(circulatingSupply.value?.data.parsed.info.tokenAmount.amount)) / Math.pow(10, baseDecimals)).toFixed(2);
     const baseTokenSupply = ((Number(getBaseSupply.value?.data.parsed.info.supply)) / Math.pow(10, baseDecimals)).toFixed(2);
     const formattedCirculatingSupply = await formatNumberToKOrM(Number(circulatedSupply));
     const circulatingPercentage = (Number(circulatedSupply) / Number(baseTokenSupply) * 100).toFixed(2);
     const pooledSol = ((Number(getPooledSol.value?.data.parsed.info.tokenAmount.amount)) / Math.pow(10, quoteDecimals)).toFixed(2);
-    const aMM: any = await connection_only.getParsedAccountInfo(new PublicKey(lpMint), "processed");
     const exchanger = aMM.value?.data.parsed.info.mintAuthority;
     const formattedSupply = await formatNumberToKOrM(Number(baseTokenSupply));
     const isRaydium = exchanger.toString() === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1'? "<b>Raydium</b>" : "Unknown";
