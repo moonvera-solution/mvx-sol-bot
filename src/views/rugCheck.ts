@@ -60,6 +60,8 @@ export async function display_rugCheck(ctx: any) {
         getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint), connection),
         getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint), connection)
     ]);
+    console.log('getCreatorPercentage:', getCreatorPercentage);
+    console.log('lpSupplyOwner:', lpSupplyOwner);
     const MutableInfo = tokenData.isMutable? '⚠️ Mutable' : '✅ Immutable';
     const renounced = tokenData.mint.mintAuthorityAddress?.toString() !== tokenData.updateAuthorityAddress.toString()? "✅" : "❌ No";
     // const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint),connection);
@@ -71,6 +73,9 @@ export async function display_rugCheck(ctx: any) {
         formatNumberToKOrM(Number(circulatedSupply)),
         formatNumberToKOrM(Number(baseTokenSupply))
     ]);
+
+    console.log('formattedCirculatingSupply:', formattedCirculatingSupply);
+    console.log('formattedSupply:', formattedSupply);
     
     // const formattedCirculatingSupply = await formatNumberToKOrM(Number(circulatedSupply));
     const circulatingPercentage = (Number(circulatedSupply) / Number(baseTokenSupply) * 100).toFixed(2);
