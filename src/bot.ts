@@ -475,6 +475,8 @@ bot.on('callback_query', async (ctx: any) => {
     const positionNavigate = /^(prev_position|next_position)_\d+$/;
 
     try {
+        ctx.api.answerCallbackQuery(ctx.callbackQuery.id);
+
         const matchSell = data.match(positionCallSell);
         const matchBuy = data.match(positionCallBuy);
         const matchNavigate = data.match(positionNavigate);
@@ -895,12 +897,8 @@ bot.on('callback_query', async (ctx: any) => {
                 break;
             }
         }
-        try{
-            ctx.api.answerCallbackQuery(ctx.callbackQuery.id);
-        } catch (e: any) {
-            console.error(e.message);
-            console.error(e);
-        }
+
+      
     } catch (e: any) {
         console.error(e.message);
         console.error(e);
