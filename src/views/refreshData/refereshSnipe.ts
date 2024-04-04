@@ -49,10 +49,16 @@ export async function refreshSnipeDetails(ctx: any) {
     const solprice = await getSolanaDetails();
   
     const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint,connection });
-    const lowPriorityFee = await runMin(ctx, raydiumId);
-    const mediumPriorityFee = await runMedium(ctx, raydiumId);
-    const highPriorityFee = await runHigh(ctx, raydiumId);
-    const maxPriorityFee = await runMax(ctx, raydiumId);    
+    async function getPriorityFees(ctx: any, raydiumId: string) {
+        return await Promise.all([
+            runMin(ctx, raydiumId),
+            runMedium(ctx, raydiumId),
+            runHigh(ctx, raydiumId),
+            runMax(ctx, raydiumId)
+        ]);
+    }
+    const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
+ 
     const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
     const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(quoteDecimals);
     const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
