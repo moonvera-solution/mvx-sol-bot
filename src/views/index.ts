@@ -50,10 +50,17 @@ export async function display_token_details(ctx: any) {
         tokenData,
     } = await getTokenMetadata(ctx, tokenAddress.toBase58()); // Convert tokenAddress to string using toBase58()
     const solprice = await getSolanaDetails();
-    const lowPriorityFee = await runMin(ctx, raydiumId);
-    const mediumPriorityFee = await runMedium(ctx, raydiumId);
-    const highPriorityFee = await runHigh(ctx, raydiumId);
-    const maxPriorityFee = await runMax(ctx, raydiumId);
+    
+    async function getPriorityFees(ctx: any, raydiumId: string) {
+        return await Promise.all([
+            runMin(ctx, raydiumId),
+            runMedium(ctx, raydiumId),
+            runHigh(ctx, raydiumId),
+            runMax(ctx, raydiumId)
+        ]);
+    }
+    const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
+
 
     const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint , connection});
     // const formattedLiquidity = await formatNumberToKOrM(tokenInfo.liquidity * solprice * 2 ?? "N/A");
