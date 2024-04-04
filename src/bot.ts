@@ -25,11 +25,10 @@ import { refreshSnipeDetails } from './views/refreshData/refereshSnipe';
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { refresh_spl_positions } from './views/refreshData/refreshPortfolio';
 import { logErrorToFile } from "../error/logger";
-import { loadSecrets } from "./service/util/loadKeys";
 import dotenv from 'dotenv';
 dotenv.config();
-const express = require('express');
-const app = express();
+// const express = require('express');
+// const app = express();
 
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                  BOT START & SET ENV                       */
@@ -89,7 +88,7 @@ bot.command("start", async (ctx: any) => {
             referralCode = ctx.message.text.split(' ')[1];
         }
         // if user already exists
-        if (portfolio === DefaultPortfolioData) {// User is new
+        if (portfolio == DefaultPortfolioData) {// User is new
             isNewUser = true;
         }
 
@@ -127,7 +126,8 @@ bot.command("start", async (ctx: any) => {
         //-------Start bot with wallet---------------------------
         ctx.session.latestCommand = "start";
         let userWallet: Keypair | null = null;
-        if (portfolio !== DefaultPortfolioData) {
+
+        if (portfolio != DefaultPortfolioData) {
             ctx.session.portfolio = portfolio;
         } else {
             // at this point wallet from session is not avialable yet

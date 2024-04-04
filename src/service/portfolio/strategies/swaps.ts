@@ -1,7 +1,7 @@
 import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken, publicKey } from '@raydium-io/raydium-sdk';
 import { PublicKey, Keypair, Connection } from '@solana/web3.js';
-import { getWalletTokenAccount, getSolBalance, waitForConfirmation,getPriorityFeeLabel, trackUntilFinalized } from '../../util';
-import { DEFAULT_TOKEN, MVXBOT_FEES } from '../../../../config';
+import { getWalletTokenAccount, getSolBalance, waitForConfirmation, getPriorityFeeLabel, getTokenExplorerURLS, trackUntilFinalized } from '../../util';
+import { DEFAULT_TOKEN, MVXBOT_FEES, RAYDIUM_AUTHORITY } from '../../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
 import { display_token_details } from '../../../views';
 import { ISESSION_DATA } from '../../util/types';
@@ -11,7 +11,6 @@ import BigNumber from 'bignumber.js';
 import axios from 'axios';
 import bs58 from 'bs58';
 import { Referrals, UserPositions } from '../../../db/mongo/schema';
-
 
 export async function handle_radyum_swap(
     ctx: any,
@@ -115,34 +114,35 @@ export async function handle_radyum_swap(
                 wallet: Keypair.fromSecretKey(bs58.decode(String(userWallet.secretKey))),
                 commitment: 'processed'
             }).then(async ({ txids }) => {
-                let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing with ${getPriorityFeeLabel(ctx.session.priorityFees)} priotity fee. <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>.\n Please wait for confirmation...`
+                let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing with ${getPriorityFeeLabel(ctx.session.priorityFees)} priotity fee. <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>. Please wait for confirmation...`
                 await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-                const isConfirmed = await waitForConfirmation(ctx, txids[0]);
+                let extractAmountCounter: number = 0;
+                let extractAmount: number = 0;
 
-                if (isConfirmed) {
-                    const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
-                    let txAmount: Array<any> | undefined;
-                    let extractAmount: number | undefined;
+                if (await waitForConfirmation(ctx, txids[0])) {
+                    while (extractAmount == 0 && extractAmountCounter < 11) { // it has to find it since its a transfer tx
 
-                    let inner = JSON.parse(JSON.stringify(txxs));
+                        extractAmountCounter++
+                        console.log("extractAmountCounter", extractAmountCounter);
 
-                    if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions[0].instructions) {
-                        txAmount = JSON.parse(JSON.stringify(txxs.meta.innerInstructions[0].instructions));
-                        txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
-                        txAmount.forEach((tx) => {
-                            console.log('inner tx: ', JSON.parse(JSON.stringify(tx)));
+                        const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
+                        let txAmount: Array<any> | undefined;
 
-                            if (tx.parsed.info.authority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1') { extractAmount = tx.parsed.info.amount; }
-                        });
+                        if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions[0].instructions) {
+                            txAmount = JSON.parse(JSON.stringify(txxs.meta.innerInstructions[0].instructions));
+                            txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
+                            txAmount.forEach((tx) => {
+                                if (tx.parsed.info.authority == RAYDIUM_AUTHORITY) { extractAmount = tx.parsed.info.amount; }
+                                console.log('inner tx: ', JSON.parse(JSON.stringify(tx)));
+                            });
+                        }
                     }
 
-                    let confirmedMsg;
-                    let solAmount;
-                    let tokenAmount;
-                    const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
+
+                    let confirmedMsg, solAmount, tokenAmount, _symbol = userTokenBalanceAndDetails.userTokenSymbol;
                     let solFromSell = new BigNumber(0);
 
-                    if (extractAmount) {
+                    if (extractAmount > 0) {
                         solFromSell = new BigNumber(extractAmount);
                         solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
                         tokenAmount = swapAmountIn / Math.pow(10, userTokenBalanceAndDetails.decimals);
@@ -156,24 +156,16 @@ export async function handle_radyum_swap(
                     const bot_fee = new BigNumber(solFromSell).multipliedBy(MVXBOT_FEES);
                     const referralAmmount = (bot_fee.multipliedBy(referralFee));
                     const cut_bot_fee = bot_fee.minus(referralAmmount);
-                    if (side === 'sell') {
-                        if (referralFee > 0) {
-                            mvxFee = new BigNumber(cut_bot_fee);
-                            refferalFeePay = new BigNumber(referralAmmount);
-                        } else {
-                            mvxFee = new BigNumber(bot_fee);
-                        }
-                    }
+
                     if (referralRecord) {
                         let updateEarnings = actualEarnings! + (refferalFeePay).toNumber();
                         referralRecord.earnings = Number(updateEarnings.toFixed(0));
                         await referralRecord?.save();
                     }
 
-                    if (side == 'buy' && extractAmount) {
+                    if (side == 'buy') {
                         console.log('extractAmount', extractAmount);
                         const isFinalized = await trackUntilFinalized(ctx, txids[0]);
-
                         if (isFinalized) {
                             await saveUserPosition(
                                 ctx,
@@ -186,7 +178,13 @@ export async function handle_radyum_swap(
                                 amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
                             });
                         }
-                    } else if (side == 'sell' && extractAmount) {
+                    } else if (side == 'sell') {
+                        if (referralFee > 0) {
+                            mvxFee = new BigNumber(cut_bot_fee);
+                            refferalFeePay = new BigNumber(referralAmmount);
+                        } else {
+                            mvxFee = new BigNumber(bot_fee);
+                        }
 
                         let newAmountIn, newAmountOut;
                         if (Number(swapAmountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
@@ -210,7 +208,19 @@ export async function handle_radyum_swap(
                     }
                     ctx.session.latestCommand = side;
                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
+
+                } else {  // Tx not confirmed
+
+                    const priorityFeeLabel = getPriorityFeeLabel(ctx.session.priorityFees);
+                    const { dextoolsURL, birdeyeURL, dexscreenerURL } = getTokenExplorerURLS(poolKeys.baseMint instanceof PublicKey ? poolKeys.baseMint.toBase58() : poolKeys.baseMint);
+                    const checkLiquidityMsg = priorityFeeLabel == 'high' || priorityFeeLabel == 'max' ?
+                        `Verify token liquidity: \n` + `<a href="${birdeyeURL}">Birdeye</a> | ` + `<a href="${dextoolsURL}">Dextools</a> | ` + `<a href="${dexscreenerURL}">Dexscreener</a>` :
+                        `Consider increasing the priority fee level.`;
+                    ctx.api.sendMessage(ctx.chat.id,
+                        `Transaction could not be confirmed within the ${priorityFeeLabel.toUpperCase()} priority fee. \n` + checkLiquidityMsg
+                    );
                 }
+
             }).catch(async (error: any) => {
                 let msg = `🔴 ${side.toUpperCase()} Swap failed, please try again.`;
                 await ctx.api.sendMessage(chatId, msg);

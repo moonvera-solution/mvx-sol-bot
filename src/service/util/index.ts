@@ -49,12 +49,12 @@ export async function sendTx(
     const txids: string[] = [];
     for (const iTx of txs) {
         if (iTx instanceof VersionedTransaction) {
-            console.log("sending versioned");
             iTx.sign([payer]);
             let ixId = await connection.sendRawTransaction(iTx.serialize(),options);
+            console.log("sending versioned tx: ",ixId);
             txids.push(ixId);
         } else {
-            console.log("sending versioned");
+            console.log("sending legacy tx: ",iTx);
             txids.push(await connection.sendTransaction(iTx, [payer], options));
         }
     }
@@ -601,14 +601,6 @@ export async function waitForConfirmation(ctx: any, txid: string): Promise<boole
             await new Promise(resolve => setTimeout(resolve, 500));
         }
     }
-
-    if (!isConfirmed) {
-        ctx.api.sendMessage(ctx.chat.id, `Transaction could not be confirmed within the ${getPriorityFeeLabel(ctx.session.priorityFees)} priority fee.`);
-        console.error('Transaction could not be confirmed within the max attempts.');
-    }else if(isConfirmed) {
-        trackUntilFinalized(ctx, txid);
-    }
-
     return isConfirmed;
 }
 
@@ -689,3 +681,10 @@ export async function getTransactionStatus(txid: string) {
     }
 }
 
+export function getTokenExplorerURLS(tokenAddress: string): { birdeyeURL: any; dextoolsURL: string; dexscreenerURL: string; } {
+    return {
+        birdeyeURL: `https://birdeye.so/token/${tokenAddress}?chain=solana`,
+        dextoolsURL: `https://www.dextools.io/app/solana/pair-explorer/${tokenAddress}`,
+        dexscreenerURL: `https://dexscreener.com/solana/${tokenAddress}`,
+    }
+}
