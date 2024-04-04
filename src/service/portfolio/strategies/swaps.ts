@@ -118,12 +118,14 @@ export async function handle_radyum_swap(
                 const isConfirmed = await waitForConfirmation(ctx, txids[0]);
 
                 if (isConfirmed) {
-
                     const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
                     const txAmount = JSON.parse(JSON.stringify(txxs!.meta!.innerInstructions![0].instructions!));
                     let extractAmount: number | undefined ;
                     if (Array.isArray(txAmount)) {
                         txAmount.forEach((tx) => {
+
+                            console.log(JSON.parse(JSON.stringify(tx)));
+
                             if (tx.parsed.info.authority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1') {
                                 extractAmount = tx.parsed.info.amount;
 
