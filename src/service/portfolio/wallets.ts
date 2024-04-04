@@ -36,7 +36,7 @@ export async function getPortfolio(chatId: any): Promise<PORTFOLIO_TYPE> {
 //   await bot.api.sendMessage(chatId, "Export your private key and manage your wallet", walletOptions);
 // }
 
-export async function createUserPortfolio(ctx:any): Promise<any> {
+export async function createUserPortfolio(ctx: any): Promise<any> {
   const chatId = ctx.chat.id;
   try {
     const { publicKey, secretKey } = generateSolanaWallet();
@@ -58,29 +58,29 @@ export async function createNewWallet(ctx: any) {
   const chatId = ctx.chat.id;
 
   try {
-      // Generate a new Solana wallet
-      let { publicKey, secretKey } = generateSolanaWallet();
-      
-      // Note: Avoid logging the secret key for security reasons
+    // Generate a new Solana wallet
+    let { publicKey, secretKey } = generateSolanaWallet();
 
-      // Create a wallet object with the public key and encoded secret key
-      const newWallet = {
-          walletId: publicKey,
-          publicKey: publicKey,
-          secretKey: bs58.encode(secretKey) // Encode the Uint8Array secretKey with base58
-      };
+    // Note: Avoid logging the secret key for security reasons
 
-      // Save the new wallet in the database
-      await Portfolios.updateOne(
-          { chatId }, 
-          { $push: { wallets: newWallet } },
-          { upsert: true }
-      );
+    // Create a wallet object with the public key and encoded secret key
+    const newWallet = {
+      walletId: publicKey,
+      publicKey: publicKey,
+      secretKey: bs58.encode(secretKey) // Encode the Uint8Array secretKey with base58
+    };
+
+    // Save the new wallet in the database
+    await Portfolios.updateOne(
+      { chatId },
+      { $push: { wallets: newWallet } },
+      { upsert: true }
+    );
 
   } catch (error: any) {
-      console.error('Error creating Solana wallet:', error.message);
-      await ctx.api.sendMessage(chatId, 'Error creating wallet. Please try again.');
-      return;
+    console.error('Error creating Solana wallet:', error.message);
+    await ctx.api.sendMessage(chatId, 'Error creating wallet. Please try again.');
+    return;
   }
 
   return;
@@ -116,12 +116,12 @@ export async function importWallet(ctx: any, secretKey: string): Promise<any> {
 export async function checkWalletsLength(ctx: any) {
   const chatId = ctx.chat.id;
   const wallet = await Portfolios.findOne({ chatId });
- if(wallet?.wallets.length == 2){
-  ctx.api.sendMessage(chatId, "You have reached the maximum number of wallets allowed per user.");
-  return false;
-}else{
-  return true;
-}
+  if (wallet?.wallets.length == 2) {
+    ctx.api.sendMessage(chatId, "You have reached the maximum number of wallets allowed per user.");
+    return false;
+  } else {
+    return true;
+  }
 }
 
 export async function handleGetPrivateKey(ctx: any) {
@@ -159,15 +159,15 @@ export async function handleGetPrivateKey(ctx: any) {
 // Not suporting resets yet 1eb2024
 export async function confirmResetWalletAgain(ctx: any) {
   const chatId = ctx.chat.id;
-    const options: any = {
-        reply_markup: JSON.stringify({
-            inline_keyboard: [
-                [{ text: 'Yes, Reset Wallet', callback_data: 'delete_wallet' }],
-                [{ text: 'No, Go Back', callback_data: 'cancel_reset_wallet' }]
-            ]
-        })
-    };
-    await ctx.api.sendMessage(chatId, 'This is your final warning. Are you absolutely sure you want to reset your wallet?', options);
+  const options: any = {
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [{ text: 'Yes, Reset Wallet', callback_data: 'delete_wallet' }],
+        [{ text: 'No, Go Back', callback_data: 'cancel_reset_wallet' }]
+      ]
+    })
+  };
+  await ctx.api.sendMessage(chatId, 'This is your final warning. Are you absolutely sure you want to reset your wallet?', options);
 }
 
 export async function resetWallet(ctx: any) {
@@ -176,7 +176,7 @@ export async function resetWallet(ctx: any) {
   const userWallet = ctx.session.portfolio.wallets[walletIndex];
 
   const privatekeyString: any = userWallet.secretKey;
-// console.log('walletPublicKey', walletIndex);
+  // console.log('walletPublicKey', walletIndex);
 
   try {
     await ctx.api.sendMessage(chatId, `⚠️ IMPORTANT: This is the private key of your wallet that is being deleted: <code><b>${privatekeyString}</b></code>\n\n` +
@@ -198,10 +198,10 @@ export async function resetWallet(ctx: any) {
     };
     await ctx.api.sendMessage(chatId, 'Would you like to import an existing wallet or create a new one?', options);
 
-} catch (err: any) {
-  console.log("Something wrong when finding wallet data!", err.message);
-  return err.message;
-}
+  } catch (err: any) {
+    console.log("Something wrong when finding wallet data!", err.message);
+    return err.message;
+  }
 }
 // test
 // console.log(importWallet(1, '2jaFhsbZMy8n7HzMAKrVYADqi5cYhKca7fWpet1gKGtb8X4EW7k1ZqpX7Qdr5NAaV4wTEK6L2mHvEFNaPg7sFR9L'));

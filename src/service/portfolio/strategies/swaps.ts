@@ -1,6 +1,6 @@
 import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken, publicKey } from '@raydium-io/raydium-sdk';
 import { PublicKey, Keypair, Connection } from '@solana/web3.js';
-import { getWalletTokenAccount, getSolBalance, waitForConfirmation, trackUntilFinalized } from '../../util';
+import { getWalletTokenAccount, getSolBalance, waitForConfirmation,getPriorityFeeLabel, trackUntilFinalized } from '../../util';
 import { DEFAULT_TOKEN, MVXBOT_FEES } from '../../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
 import { display_token_details } from '../../../views';
@@ -115,7 +115,7 @@ export async function handle_radyum_swap(
                 wallet: Keypair.fromSecretKey(bs58.decode(String(userWallet.secretKey))),
                 commitment: 'processed'
             }).then(async ({ txids }) => {
-                let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processed successfully. <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>.\n Please wait for confirmation...`
+                let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing with ${getPriorityFeeLabel(ctx.session.priorityFees)} priotity fee. <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>.\n Please wait for confirmation...`
                 await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
                 const isConfirmed = await waitForConfirmation(ctx, txids[0]);
 
@@ -123,17 +123,16 @@ export async function handle_radyum_swap(
                     const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
                     let txAmount: Array<any> | undefined;
                     let extractAmount: number | undefined;
-                    
+
                     let inner = JSON.parse(JSON.stringify(txxs));
-                    console.log('TXXXXX::: ',JSON.parse(JSON.stringify(inner.meta.innerInstructions)));
+                    console.log('TXXXXX::: ', JSON.parse(JSON.stringify(inner.meta.innerInstructions[0].instructions)));
 
                     if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions[0].instructions) {
-                        JSON.parse(JSON.stringify(txxs.meta.innerInstructions[0].instructions));
-                        if (Array.isArray(txAmount)) {
-                            txAmount.forEach((tx) => {
-                                if (tx.parsed.info.authority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1') { extractAmount = tx.parsed.info.amount; }
-                            });
-                        }
+                        txAmount = JSON.parse(JSON.stringify(txxs.meta.innerInstructions[0].instructions));
+                        txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
+                        txAmount.forEach((tx) => {
+                            if (tx.parsed.info.authority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1') { extractAmount = tx.parsed.info.amount; }
+                        });
                     }
 
                     let confirmedMsg;
@@ -173,7 +172,7 @@ export async function handle_radyum_swap(
                     if (side == 'buy' && extractAmount) {
                         console.log('extractAmount', extractAmount);
                         const isFinalized = await trackUntilFinalized(ctx, txids[0]);
-                        
+
                         if (isFinalized) {
                             await saveUserPosition(
                                 ctx,

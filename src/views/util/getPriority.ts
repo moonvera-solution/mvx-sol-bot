@@ -8,8 +8,6 @@ import {
   getMinPrioritizationFeeByPercentile,
   getRecentPrioritizationFeesByPercentile,
 } from "../../service/fees/priorityFees";
-import { run } from "node_modules/grammy/out/composer";
-const connection = new Connection('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41');
 
 interface GetRecentPrioritizationFeesByPercentileConfig
   extends GetRecentPrioritizationFeesConfig {
@@ -62,6 +60,7 @@ const getMaxPrioritizationFeeByPercentile = async (
 
 
 export  async function runMin(ctx: any, raydiumId: any) {
+  const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
  const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [
@@ -75,6 +74,7 @@ export  async function runMin(ctx: any, raydiumId: any) {
 }
 export async function runMedium(ctx: any, raydiumId: any) {
   const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
+  const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [
@@ -89,6 +89,7 @@ export async function runMedium(ctx: any, raydiumId: any) {
 
 export async function runHigh(ctx: any, raydiumId: any) {
   const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
+  const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [
             new PublicKey(priorityCalculation),
@@ -103,6 +104,7 @@ export async function runHigh(ctx: any, raydiumId: any) {
 
 export async function runMax(ctx: any, raydiumId: any) {
   const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
+  const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [

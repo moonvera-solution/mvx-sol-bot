@@ -82,7 +82,6 @@ bot.command("start", async (ctx: any) => {
     ctx.session.env['tritonRPC'] = 'https://moonvera-pit.rpcpool.com/';
     ctx.session.env['tritonToken'] = process.env.TRITON_RPC_TOKEN!;
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
-    console.log("connection:", connection);
 
 
     let referralCode = null;

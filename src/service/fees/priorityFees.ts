@@ -236,6 +236,6 @@ export async function getSimulationUnits(
   if (simulation.value.err) {
     return undefined;
   }
-
+  console.log("simulation.value.unitsConsumed",simulation.value.unitsConsumed);
   return simulation.value.unitsConsumed;
 }
