@@ -19,6 +19,8 @@ export async function display_rugCheck(ctx: any) {
     ctx.session.snipeToken = baseMint;
     ctx.session.buyToken = baseMint;
     const lpMint = rugPool.lpMint;
+    try{
+
     const solprice = await getSolanaDetails();
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     
@@ -55,7 +57,6 @@ export async function display_rugCheck(ctx: any) {
     const circulatingSupply = processData(responses[2]);
     const aMM = processData(responses[3]);
     const creatorAddress = tokenData.updateAuthorityAddress.toBase58();
-    console.log('getPooledSol:', getPooledSol);
     const [getCreatorPercentage, lpSupplyOwner] = await Promise.all([
         getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint), connection),
         getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint), connection)
@@ -114,5 +115,7 @@ export async function display_rugCheck(ctx: any) {
         }
     };
     await ctx.api.sendMessage(chatId, messageText, options);
-
+    }catch(e){
+        console.log(e);
+    }
 }

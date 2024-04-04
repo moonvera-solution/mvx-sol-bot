@@ -16,16 +16,19 @@ export async function Refresh_rugCheck(ctx: any) {
     const baseDecimals = rugPool.baseDecimals;
     const quoteDecimals = rugPool.quoteDecimals;
     const baseMint = rugPool.baseMint;
+    ctx.session.snipeToken = baseMint;
+    ctx.session.buyToken = baseMint;
     const lpMint = rugPool.lpMint;
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
-    // console.log('lpMint', lpMint);  
+    try{
     const solprice = await getSolanaDetails();
-    const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint ,connection});
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    
+
+    const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint,connection });
     const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
     const tokenPriceUSD = (tokenInfo.price.times(solprice)).toFixed(quoteDecimals);
     const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
     const formattedmac= await formatNumberToKOrM(marketCap) ?? "NA";
-    
    // pool ration is 0.5 so we multiply by 2 or divide by 0.5
     const formattedLiquidity = await formatNumberToKOrM((tokenInfo.liquidity * solprice) / 0.5 ) ?? "N/A";
     const {
@@ -34,27 +37,49 @@ export async function Refresh_rugCheck(ctx: any) {
         dexscreenerURL,
         tokenData,
     } = await getTokenMetadata(ctx, token.toBase58());
-    const MutableInfo = tokenData.isMutable? '⚠️ Mutable' : '✅ Immutable';
+
+    const processData = (data: any) => {
+        if (data.value?.data instanceof Buffer) {
+            return null;
+        }
+        return data.value?.data.parsed.info;
+    };
+
+    const responses = await Promise.all([
+        connection.getParsedAccountInfo(new PublicKey(quoteVault), "processed"),
+        connection.getParsedAccountInfo(new PublicKey(baseMint), "processed"),
+        connection.getParsedAccountInfo(new PublicKey(baseVault), "processed"),
+        connection.getParsedAccountInfo(new PublicKey(lpMint), "processed"),
+    ]);
+    const getPooledSol= processData(responses[0]);
+    const getBaseSupply= processData(responses[1]);
+    const circulatingSupply = processData(responses[2]);
+    const aMM = processData(responses[3]);
     const creatorAddress = tokenData.updateAuthorityAddress.toBase58();
+    const [getCreatorPercentage, lpSupplyOwner] = await Promise.all([
+        getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint), connection),
+        getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint), connection)
+    ]);
+
+    const MutableInfo = tokenData.isMutable? '⚠️ Mutable' : '✅ Immutable';
     const renounced = tokenData.mint.mintAuthorityAddress?.toString() !== tokenData.updateAuthorityAddress.toString()? "✅" : "❌ No";
-    const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint),connection);
-    const getPooledSol: any = await connection_only.getParsedAccountInfo(new PublicKey(quoteVault), "processed");
-    const getBaseSupply: any = await connection_only.getParsedAccountInfo(new PublicKey(baseMint), "processed");
-    const circulatingSupply: any = await connection_only.getParsedAccountInfo(new PublicKey(baseVault));
-    const circulatedSupply = ((Number(circulatingSupply.value?.data.parsed.info.tokenAmount.amount)) / Math.pow(10, baseDecimals)).toFixed(2);
-    const baseTokenSupply = ((Number(getBaseSupply.value?.data.parsed.info.supply)) / Math.pow(10, baseDecimals)).toFixed(2);
-    const formattedCirculatingSupply = await formatNumberToKOrM(Number(circulatedSupply));
+    // const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint),connection);
+
+    const circulatedSupply = Number(((Number(circulatingSupply.tokenAmount.amount)) / Math.pow(10, baseDecimals)).toFixed(2));
+    const baseTokenSupply = Number(((Number(getBaseSupply.supply)) / Math.pow(10, baseDecimals)).toFixed(2));
+
+    const [formattedCirculatingSupply, formattedSupply] = await Promise.all([
+        formatNumberToKOrM(Number(circulatedSupply)),
+        formatNumberToKOrM(Number(baseTokenSupply))
+    ]);
     const circulatingPercentage = (Number(circulatedSupply) / Number(baseTokenSupply) * 100).toFixed(2);
-    const pooledSol = ((Number(getPooledSol.value?.data.parsed.info.tokenAmount.amount)) / Math.pow(10, quoteDecimals)).toFixed(2);
-    const aMM: any = await connection_only.getParsedAccountInfo(new PublicKey(lpMint), "processed");
-    const exchanger = aMM.value?.data.parsed.info.mintAuthority;
-    const formattedSupply = await formatNumberToKOrM(Number(baseTokenSupply));
-    const isRaydium = exchanger.toString() === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1'? "<b>Raydium</b>" : "Unknown";
+    const pooledSol = Number(((Number(getPooledSol.tokenAmount.amount)) / Math.pow(10, quoteDecimals)).toFixed(2));
+    console.log('pooledSol:', pooledSol);
+    const isRaydium = aMM.mintAuthority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1'? "<b>Raydium</b>" : "Unknown";
     const lpSupply = lpSupplyOwner.userTokenBalance; 
     const islpBurnt = lpSupply > 0 ? "❌ No" : "✅ Yes";
-    const getCreatorPercentage = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint),connection);
     const creatorPercentage = (Number(getCreatorPercentage.userTokenBalance) / Number(baseTokenSupply) * 100).toFixed(2);
-    try {
+
     let messageText = `<b>------ ${tokenData.name} (${tokenData.symbol}) ------</b>\n` +
     `Contract: <code>${token}</code>\n\n` +
     `<b>Links:</b>\n` +
@@ -88,6 +113,7 @@ export async function Refresh_rugCheck(ctx: any) {
             ]
         }
     };
+
     await ctx.editMessageText(messageText, options);
 } catch (error: any) {
     console.error('Error in Refresh_rugCheck:', error.message);
