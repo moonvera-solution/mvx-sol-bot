@@ -73,7 +73,7 @@ export async function display_rugCheck(ctx: any) {
         formatNumberToKOrM(Number(baseTokenSupply))
     ]);
     const circulatingPercentage = (Number(circulatedSupply) / Number(baseTokenSupply) * 100).toFixed(2);
-    const pooledSol = Number(((Number(getPooledSol.rentExemptReserve.amount)) / Math.pow(10, quoteDecimals)).toFixed(2));
+    const pooledSol = Number(((Number(getPooledSol.tokenAmount.amount)) / Math.pow(10, quoteDecimals)).toFixed(2));
     console.log('pooledSol:', pooledSol);
     const isRaydium = aMM.mintAuthority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1'? "<b>Raydium</b>" : "Unknown";
     const lpSupply = lpSupplyOwner.userTokenBalance; 
