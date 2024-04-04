@@ -65,9 +65,8 @@ export async function display_rugCheck(ctx: any) {
     const formattedCirculatingSupply = await formatNumberToKOrM(Number(circulatedSupply));
     const circulatingPercentage = (Number(circulatedSupply) / Number(baseTokenSupply) * 100).toFixed(2);
     const pooledSol = ((Number(getPooledSol.value?.data.parsed.info.tokenAmount.amount)) / Math.pow(10, quoteDecimals)).toFixed(2);
-    const exchanger = aMM.value?.data.parsed.info.mintAuthority;
     const formattedSupply = await formatNumberToKOrM(Number(baseTokenSupply));
-    const isRaydium = exchanger.toString() === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1'? "<b>Raydium</b>" : "Unknown";
+    const isRaydium = aMM.mintAuthority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1'? "<b>Raydium</b>" : "Unknown";
     const lpSupply = lpSupplyOwner.userTokenBalance; 
     const islpBurnt = lpSupply > 0 ? "❌ No" : "✅ Yes";
     const getCreatorPercentage = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint),connection);
