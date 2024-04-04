@@ -59,6 +59,7 @@ export async function display_rugCheck(ctx: any) {
     console.log('getBaseSupply:', getBaseSupply);
     console.log('getPooledSol:', getPooledSol);
     console.log('creatorAddress:', creatorAddress);
+
     const [getCreatorPercentage, lpSupplyOwner] = await Promise.all([
         getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint), connection),
         getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint), connection)
@@ -69,8 +70,8 @@ export async function display_rugCheck(ctx: any) {
     const renounced = tokenData.mint.mintAuthorityAddress?.toString() !== tokenData.updateAuthorityAddress.toString()? "✅" : "❌ No";
     // const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint),connection);
 
-    const circulatedSupply = ((Number(circulatingSupply.amount)) / Math.pow(10, baseDecimals)).toFixed(2);
-    const baseTokenSupply = ((Number(getBaseSupply.supply)) / Math.pow(10, baseDecimals)).toFixed(2);
+    const circulatedSupply = Number(((Number(circulatingSupply.amount)) / Math.pow(10, baseDecimals)).toFixed(2));
+    const baseTokenSupply = Number(((Number(getBaseSupply.supply)) / Math.pow(10, baseDecimals)).toFixed(2));
     console.log('circulatedSupply:', circulatedSupply);
     console.log('baseTokenSupply:', baseTokenSupply);
     const [formattedCirculatingSupply, formattedSupply] = await Promise.all([
