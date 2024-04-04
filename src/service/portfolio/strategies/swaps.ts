@@ -125,12 +125,13 @@ export async function handle_radyum_swap(
                     let extractAmount: number | undefined;
 
                     let inner = JSON.parse(JSON.stringify(txxs));
-                    console.log('TXXXXX::: ', JSON.parse(JSON.stringify(inner.meta.innerInstructions[0].instructions)));
 
                     if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions[0].instructions) {
                         txAmount = JSON.parse(JSON.stringify(txxs.meta.innerInstructions[0].instructions));
                         txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
                         txAmount.forEach((tx) => {
+                            console.log('TXXXXX::: ', JSON.parse(JSON.stringify(tx)));
+
                             if (tx.parsed.info.authority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1') { extractAmount = tx.parsed.info.amount; }
                         });
                     }
