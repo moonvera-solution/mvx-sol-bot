@@ -21,6 +21,7 @@ export async function display_rugCheck(ctx: any) {
     const lpMint = rugPool.lpMint;
     const solprice = await getSolanaDetails();
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    
 
     const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint,connection });
     const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
@@ -38,7 +39,6 @@ export async function display_rugCheck(ctx: any) {
 
     const processData = (data: any) => {
         if (data.value?.data instanceof Buffer) {
-            // Handle the buffer type or skip processing
             return null;
         }
         return data.value?.data.parsed.info;
@@ -54,22 +54,32 @@ export async function display_rugCheck(ctx: any) {
     const getBaseSupply= processData(responses[1]);
     const circulatingSupply = processData(responses[2]);
     const aMM = processData(responses[3]);
-
-    const MutableInfo = tokenData.isMutable? '⚠️ Mutable' : '✅ Immutable';
     const creatorAddress = tokenData.updateAuthorityAddress.toBase58();
+
+    const [getCreatorPercentage, lpSupplyOwner] = await Promise.all([
+        getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint), connection),
+        getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint), connection)
+    ]);
+    const MutableInfo = tokenData.isMutable? '⚠️ Mutable' : '✅ Immutable';
     const renounced = tokenData.mint.mintAuthorityAddress?.toString() !== tokenData.updateAuthorityAddress.toString()? "✅" : "❌ No";
-    const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint),connection);
+    // const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint),connection);
 
     const circulatedSupply = ((Number(circulatingSupply.value?.data.parsed.info.tokenAmount.amount)) / Math.pow(10, baseDecimals)).toFixed(2);
     const baseTokenSupply = ((Number(getBaseSupply.value?.data.parsed.info.supply)) / Math.pow(10, baseDecimals)).toFixed(2);
-    const formattedCirculatingSupply = await formatNumberToKOrM(Number(circulatedSupply));
+
+    const [formattedCirculatingSupply, formattedSupply] = await Promise.all([
+        formatNumberToKOrM(Number(circulatedSupply)),
+        formatNumberToKOrM(Number(baseTokenSupply))
+    ]);
+    
+    // const formattedCirculatingSupply = await formatNumberToKOrM(Number(circulatedSupply));
     const circulatingPercentage = (Number(circulatedSupply) / Number(baseTokenSupply) * 100).toFixed(2);
     const pooledSol = ((Number(getPooledSol.value?.data.parsed.info.tokenAmount.amount)) / Math.pow(10, quoteDecimals)).toFixed(2);
-    const formattedSupply = await formatNumberToKOrM(Number(baseTokenSupply));
+    // const formattedSupply = await formatNumberToKOrM(Number(baseTokenSupply));
     const isRaydium = aMM.mintAuthority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1'? "<b>Raydium</b>" : "Unknown";
     const lpSupply = lpSupplyOwner.userTokenBalance; 
     const islpBurnt = lpSupply > 0 ? "❌ No" : "✅ Yes";
-    const getCreatorPercentage = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint),connection);
+    // const getCreatorPercentage = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint),connection);
     const creatorPercentage = (Number(getCreatorPercentage.userTokenBalance) / Number(baseTokenSupply) * 100).toFixed(2);
 
     let messageText = `<b>------ ${tokenData.name} (${tokenData.symbol}) ------</b>\n` +
