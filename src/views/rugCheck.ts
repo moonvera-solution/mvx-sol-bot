@@ -55,7 +55,10 @@ export async function display_rugCheck(ctx: any) {
     const circulatingSupply = processData(responses[2]);
     const aMM = processData(responses[3]);
     const creatorAddress = tokenData.updateAuthorityAddress.toBase58();
-
+    console.log('circulatingSupply:', circulatingSupply);
+    console.log('getBaseSupply:', getBaseSupply);
+    console.log('getPooledSol:', getPooledSol);
+    console.log('creatorAddress:', creatorAddress);
     const [getCreatorPercentage, lpSupplyOwner] = await Promise.all([
         getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint), connection),
         getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint), connection)
@@ -68,7 +71,8 @@ export async function display_rugCheck(ctx: any) {
 
     const circulatedSupply = ((Number(circulatingSupply.value?.data.parsed.info.tokenAmount.amount)) / Math.pow(10, baseDecimals)).toFixed(2);
     const baseTokenSupply = ((Number(getBaseSupply.value?.data.parsed.info.supply)) / Math.pow(10, baseDecimals)).toFixed(2);
-
+    console.log('circulatedSupply:', circulatedSupply);
+    console.log('baseTokenSupply:', baseTokenSupply);
     const [formattedCirculatingSupply, formattedSupply] = await Promise.all([
         formatNumberToKOrM(Number(circulatedSupply)),
         formatNumberToKOrM(Number(baseTokenSupply))
