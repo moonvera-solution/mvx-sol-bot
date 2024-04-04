@@ -34,7 +34,7 @@ export async function getTokenMetadata(ctx: any, tokenAddress: string): Promise<
     // Call the refactored function with the results of the API calls
 
     // const decimals = token.mint.decimals;
-    const userTokenDetails = await getUserTokenBalanceAndDetails(new PublicKey(publicKeyString), new PublicKey(tokenAddress),connection);
+    // const userTokenDetails = await getUserTokenBalanceAndDetails(new PublicKey(publicKeyString), new PublicKey(tokenAddress),connection);
     const birdeyeURL = `https://birdeye.so/token/${tokenAddress}?chain=solana`;
     const dextoolsURL = `https://www.dextools.io/app/solana/pair-explorer/${tokenAddress}`;
     const dexscreenerURL = `https://dexscreener.com/solana/${tokenAddress}`;
@@ -44,7 +44,7 @@ export async function getTokenMetadata(ctx: any, tokenAddress: string): Promise<
 
     // Process the data received from the API calls
     // const solPriceInUSD = solanaDetails.toFixed(3);
-    const balanceInSOL = await getSolBalance(publicKeyString,connection);
+    // const balanceInSOL = await getSolBalance(publicKeyString,connection);
     // const balanceInUSD = (balanceInSOL * (solanaDetails).toFixed(2));
     return {
         // solanaDetails,
@@ -52,14 +52,14 @@ export async function getTokenMetadata(ctx: any, tokenAddress: string): Promise<
         // tokenInfo,
         // tokenCreator,
         // tokenCreatorPercentage,
-        userTokenDetails,
+        // userTokenDetails,
         birdeyeURL,
         dextoolsURL,
         dexscreenerURL,
         // formattedLiquidity,
         // formattedmac,
         // solPriceInUSD,
-        balanceInSOL,
+        // balanceInSOL,
         // balanceInUSD,
     }
 }
