@@ -12,7 +12,7 @@ import {
 
 export async function getRayPoolKeys(ctx:any,shitcoin: string) {
   const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
-  console.log('connection:', connection);
+  // console.log('connection:', connection);
   const commitment = "confirmed"
   const AMMV4 = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8');
   const baseMint = new PublicKey(shitcoin);
