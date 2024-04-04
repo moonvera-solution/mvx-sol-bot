@@ -43,13 +43,25 @@ export async function display_token_details(ctx: any) {
     const tokenAddress = new PublicKey(baseMint);
     const chatId = ctx.chat.id;
     // const messageId = ctx.msg.message_id;
+    // const {
+    //     birdeyeURL,
+    //     dextoolsURL,
+    //     dexscreenerURL,
+    //     tokenData,
+    // } = await getTokenMetadata(ctx, tokenAddress.toBase58()); // Convert tokenAddress to string using toBase58()
+    // const solprice = await getSolanaDetails();
+    const [tokenMetadataResult, solPrice, tokenInfo] = await Promise.all([
+        getTokenMetadata(ctx, tokenAddress.toBase58()),
+        getSolanaDetails(),
+        quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection })
+    ]);
+
     const {
         birdeyeURL,
         dextoolsURL,
         dexscreenerURL,
         tokenData,
-    } = await getTokenMetadata(ctx, tokenAddress.toBase58()); // Convert tokenAddress to string using toBase58()
-    const solprice = await getSolanaDetails();
+    } = tokenMetadataResult;
     
     async function getPriorityFees(ctx: any, raydiumId: string) {
         return await Promise.all([
@@ -62,18 +74,18 @@ export async function display_token_details(ctx: any) {
     const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
 
 
-    const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint , connection});
+    // const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint , connection});
     // const formattedLiquidity = await formatNumberToKOrM(tokenInfo.liquidity * solprice * 2 ?? "N/A");
     const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
-    const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(quoteDecimals);
-    const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
+    const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
+    const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
     const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
     const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
     const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     const balanceInSOL = await getSolBalance(userPublicKey,connection);
-    const balanceInUSD = (balanceInSOL * (solprice)).toFixed(2);
+    const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
     const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress,connection);
     try {
         // Construct the message
@@ -82,7 +94,7 @@ export async function display_token_details(ctx: any) {
 
         if (ctx.session.latestCommand == 'buy') {
             ctx.session.currentMode = 'buy';
-            messageText = `<b>${tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
+            messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
                 `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
                 `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
                 `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
@@ -115,7 +127,7 @@ export async function display_token_details(ctx: any) {
             };
         } else if (ctx.session.latestCommand == 'sell') {
             ctx.session.currentMode = 'sell';
-            messageText = `<b>${tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
+            messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
                 `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
                 `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
                 `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
@@ -195,15 +207,18 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         const baseMint = rayPoolKeys.baseMint;
         const chatId = ctx.chat.id;
         const tokenAddress = new PublicKey(ctx.session.snipeToken);
+        const [tokenMetadataResult, solPrice, tokenInfo] = await Promise.all([
+            getTokenMetadata(ctx, tokenAddress.toBase58()),
+            getSolanaDetails(),
+            quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection })
+        ]);
+    
         const {
             birdeyeURL,
             dextoolsURL,
             dexscreenerURL,
             tokenData,
-        } = await getTokenMetadata(ctx, tokenAddress.toBase58());
-        const solprice = await getSolanaDetails();
-
-        const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint,connection });
+        } = tokenMetadataResult;
         async function getPriorityFees(ctx: any, raydiumId: string) {
             return await Promise.all([
                 runMin(ctx, raydiumId),
@@ -215,8 +230,8 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
     
         const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
-        const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(quoteDecimals);
-        const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
+        const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
+        const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
         const priceImpact = tokenInfo.priceImpact.toFixed(2);
         const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
         const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
@@ -224,10 +239,10 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
 
         const balanceInSOL = await getSolBalance(userPublicKey,connection);
-        const balanceInUSD = (balanceInSOL * (solprice)).toFixed(2);
+        const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
         const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress,connection);
 
-        messageText = `<b>${tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
+        messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
             `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
             `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
             `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
