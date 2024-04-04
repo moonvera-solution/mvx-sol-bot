@@ -6,18 +6,27 @@ import Percent from 'bignumber.js';
 
 
 
-export async function getPoolToken_details(tokenBaseVault: PublicKey, tokenQuoteVault: PublicKey, baseMint: PublicKey,connection: Connection): 
+export async function getPoolToken_details(tokenBaseVault: PublicKey, tokenQuoteVault: PublicKey, baseMint: PublicKey, connection: Connection): 
 Promise<{ baseTokenVaultSupply: BigNumber, quoteTokenVaultSupply: BigNumber, baseTokenSupply: BigNumber }> {
-    const baseVault: any = await  connection.getParsedAccountInfo(new PublicKey(tokenBaseVault), "processed");
-    const quoteVault: any = await connection.getParsedAccountInfo(new PublicKey(tokenQuoteVault), "processed");
-    const baseSupply: any = await connection.getParsedAccountInfo(new PublicKey(baseMint), "processed");
+    const [baseVault, quoteVault, baseSupply] = await Promise.all([
+        connection.getParsedAccountInfo(new PublicKey(tokenBaseVault), "processed"),
+        connection.getParsedAccountInfo(new PublicKey(tokenQuoteVault), "processed"),
+        connection.getParsedAccountInfo(new PublicKey(baseMint), "processed")
+    ]);
+
+    // Type checking and extracting data
+    const baseTokenVaultSupply = baseVault.value?.data instanceof Buffer ? new BigNumber(0) : new BigNumber(baseVault.value?.data.parsed.info.tokenAmount.amount);
+    const quoteTokenVaultSupply = quoteVault.value?.data instanceof Buffer ? new BigNumber(0) : new BigNumber(quoteVault.value?.data.parsed.info.tokenAmount.amount);
+    const baseTokenSupply = baseSupply.value?.data instanceof Buffer ? new BigNumber(0) : new BigNumber(baseSupply.value?.data.parsed.info.supply);
 
     return {
-        baseTokenVaultSupply: new BigNumber(baseVault.value?.data.parsed.info.tokenAmount.amount),
-        quoteTokenVaultSupply: new BigNumber(quoteVault.value?.data.parsed.info.tokenAmount.amount),
-        baseTokenSupply: new BigNumber(baseSupply.value?.data.parsed.info.supply),
+        baseTokenVaultSupply,
+        quoteTokenVaultSupply,
+        baseTokenSupply,
     }
 }
+
+
 
 export async function quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply, connection }:
     { baseVault: PublicKey, quoteVault: PublicKey, baseDecimals: number, quoteDecimals: number, baseSupply: PublicKey, connection: Connection}):
