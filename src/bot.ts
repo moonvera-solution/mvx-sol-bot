@@ -45,7 +45,7 @@ bot.start();
 // Set the webhook
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
-console.log("botToken", botToken);
+// console.log("botToken", botToken);
 // const webhookUrl = 'https://drib.ngrok.app'; 
 
 // bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
