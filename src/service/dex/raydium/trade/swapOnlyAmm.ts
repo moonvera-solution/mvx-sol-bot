@@ -98,13 +98,13 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   /*                      TIP VALIDATOR                         */
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
-  const validatorLead = await connection.getSlotLeader();
+  // const validatorLead = await connection.getSlotLeader();
 
-  const transferIx = SystemProgram.transfer({
-      fromPubkey: input.wallet.publicKey,
-      toPubkey: new PublicKey(validatorLead),
-      lamports: TIP_VALIDATOR, // 5_000 || 6_000
-  });
+  // const transferIx = SystemProgram.transfer({
+  //     fromPubkey: input.wallet.publicKey,
+  //     toPubkey: new PublicKey(validatorLead),
+  //     lamports: TIP_VALIDATOR, // 5_000 || 6_000
+  // });
 
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                      REFERRAL AMOUNT                      */
@@ -151,7 +151,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
       toPubkey: new PublicKey(WALLET_MVX),
       lamports: input.mvxFee.toNumber(), // 5_000 || 6_000
     });
-    innerTransactions[0].instructions.push(transferIx);
+    // innerTransactions[0].instructions.push(transferIx);
     innerTransactions[0].instructions.push(mvxFeeInx);
     minSwapAmountBalance += input.mvxFee.toNumber();
   }

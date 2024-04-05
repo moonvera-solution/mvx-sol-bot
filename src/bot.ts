@@ -414,6 +414,9 @@ bot.on('message', async (ctx) => {
                 break;
             }
             case 'snipe': {
+                try{
+
+            
                 if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
                     // ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
                     ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
@@ -442,7 +445,11 @@ bot.on('message', async (ctx) => {
                 } else {
                     ctx.api.sendMessage(chatId, "Invalid address");
                 }
-                break;
+              
+            } catch (error: any) {
+                console.log("error", error);
+            }
+            break;
             }
             case 'refer_friends': {
                 ctx.session.awaitingWalletAddress = false; // Reset the flag
