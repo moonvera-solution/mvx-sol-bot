@@ -43,12 +43,15 @@ export async function refreshSnipeDetails(ctx: any) {
     const baseMint = rayPoolKeys.baseMint;
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     const tokenAddress = new PublicKey(ctx.session.snipeToken);
-    const [tokenMetadataResult, solPrice, tokenInfo, balanceInSOL] = await Promise.all([
+    const [tokenMetadataResult, solPrice, tokenInfo, balanceInSOL,userTokenDetails] = await Promise.all([
         getTokenMetadata(ctx, tokenAddress.toBase58()),
         getSolanaDetails(),
         quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
-        getSolBalance(userPublicKey,connection)
+        getSolBalance(userPublicKey,connection),
+        getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection)
+
     ]);
+    const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
 
     const {
         birdeyeURL,
@@ -75,7 +78,7 @@ export async function refreshSnipeDetails(ctx: any) {
   
     // const balanceInSOL = await getSolBalance(userPublicKey,connection);
     const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
-    const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress,connection);
+    // const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress,connection);
 
      messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
                 `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
@@ -87,7 +90,7 @@ export async function refreshSnipeDetails(ctx: any) {
                 `price Impact (5.0 SOL) : <b>${priceImpact}%</b> | (1.0 SOL): <b>${priceImpact_1}%</b> \n\n` +
                 `Pool Status: <b>${poolStatusMessage}</b>\n\n` +
                 `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) /1e9).toFixed(7)} <b>SOL</b> \n\n` +
-                `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
+                `Token Balance: <b>${userTokenDetails.userTokenBalance.toFixed(3)} $${userTokenDetails.userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
                 `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n ` ;
 } else {
     const { tokenData } = await getTokenMetadata(ctx, ctx.session.snipeToken);

@@ -259,7 +259,7 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
             `price Impact (5.0 SOL) : <b>${priceImpact}%</b> | (1.0 SOL): <b>${priceImpact_1}%</b> \n\n` +
             `Pool Status: <b>${poolStatusMessage}</b>\n\n` +
             `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
-            `Token Balance: <b>${userTokenDetails.userTokenBalance.toFixed(3)} $${userTokenSymbol.userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
+            `Token Balance: <b>${userTokenDetails.userTokenBalance.toFixed(3)} $${userTokenDetails.userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
             `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
     } else {
         const { tokenData } = await getTokenMetadata(ctx, ctx.session.snipeToken);
