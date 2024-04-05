@@ -173,15 +173,16 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee, });
 
   // Simulate the transaction and add the compute unit limit instruction to your transaction
-  let [units] = await Promise.all([
-    getSimulationUnits(connection, innerTransactions[0].instructions, input.wallet.publicKey),
-  ]);
+  // let [units] = await Promise.all([
+  //   getSimulationUnits(connection, innerTransactions[0].instructions, input.wallet.publicKey),
+  // ]);
 
-  if (units) {
-    console.log("units: ",units);
-    units = Math.ceil(units * 1.2); // margin of error
-    innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: units }));
-  }
+  // if (units) {
+  //   console.log("units: ",units);
+  //   units = Math.ceil(units * 1.2); // margin of error
+  //   innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: units }));
+  // }
+  innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 5000 }));
 
   innerTransactions[0].instructions.push(priorityFeeInstruction);
   // console.log("Inx #", innerTransactions[0].instructions.length);
