@@ -56,6 +56,7 @@ export async function display_rugCheck(ctx: any) {
         connection.getParsedAccountInfo(new PublicKey(baseVault), "processed"),
         connection.getParsedAccountInfo(new PublicKey(lpMint), "processed"),
     ]);
+    //Geting the data from the responses
     const getPooledSol= processData(responses[0]);
     const getBaseSupply= processData(responses[1]);
     const circulatingSupply = processData(responses[2]);
@@ -63,7 +64,8 @@ export async function display_rugCheck(ctx: any) {
     const creatorAddress = tokenData.updateAuthorityAddress.toBase58();
     const circulatedSupply = Number(((Number(circulatingSupply.tokenAmount.amount)) / Math.pow(10, baseDecimals)).toFixed(2));
     const baseTokenSupply = Number(((Number(getBaseSupply.supply)) / Math.pow(10, baseDecimals)).toFixed(2));
- 
+    
+    //Get the user balance
     let [getCreatorPercentage, lpSupplyOwner, formattedCirculatingSupply, formattedSupply,formattedLiquidity,formattedmac] = await Promise.all([
         getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint), connection),
         getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint), connection),
