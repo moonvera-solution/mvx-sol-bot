@@ -305,6 +305,11 @@ bot.on('message', async (ctx) => {
             case 'rug_check': {
                 if (msgTxt) {
                     if (PublicKey.isOnCurve(msgTxt!)) {
+                        const isTOken = await checkAccountType(ctx, msgTxt)
+                        if(!isTOken){
+                          ctx.api.sendMessage(chatId, "Invalid address");
+                          return;
+                        }
                         let rugCheckToken = new PublicKey(msgTxt);
                         ctx.session.rugCheckToken = rugCheckToken;
                         ctx.session.tokenHistory.push(rugCheckToken); // Add to the beginning of the history
