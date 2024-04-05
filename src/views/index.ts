@@ -209,8 +209,7 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
             dexscreenerURL,
             tokenData,
         } = tokenMetadataResult;
-    const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
-        console.log('userTokenDetails', userTokenDetails);
+        const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
         const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
         const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
 

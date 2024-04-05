@@ -65,6 +65,7 @@ export  async function runMin(ctx: any, raydiumId: any) {
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [
             new PublicKey(priorityCalculation),
+            new PublicKey(raydiumId)
         ],
         percentile: PriotitizationFeeLevels.LOW,
         fallback: false,
@@ -79,6 +80,7 @@ export async function runMedium(ctx: any, raydiumId: any) {
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [
             new PublicKey(priorityCalculation),
+            new PublicKey(raydiumId)
         ],
         percentile: PriotitizationFeeLevels.MEDIUM,
         fallback: false,
@@ -93,6 +95,7 @@ export async function runHigh(ctx: any, raydiumId: any) {
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [
             new PublicKey(priorityCalculation),
+            new PublicKey(raydiumId)
         ],
         percentile: PriotitizationFeeLevels.HIGH,
         fallback: false,
@@ -109,6 +112,7 @@ export async function runMax(ctx: any, raydiumId: any) {
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [
             new PublicKey(priorityCalculation),
+            new PublicKey(raydiumId)
         ],
         percentile: PriotitizationFeeLevels.MAX,
         fallback: false,
