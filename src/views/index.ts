@@ -175,6 +175,8 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
     let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
     const activePool = ctx.session.activeTradingPool;
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
+    const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
 
     if(!msgTxt && !activePool) {await ctx.api.sendMessage(ctx.chat.id, "Enter token address to snipe.", { parse_mode: 'HTML' }); return;}
 
@@ -184,7 +186,6 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         const poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
        
 
-        // const { baseVault, quoteVault, baseDecimals, quoteDecimals, baseMint } = ctx.session.buyTokenData;
         const baseVault = rayPoolKeys.baseVault;
         const quoteVault = rayPoolKeys.quoteVault;
         const baseDecimals = rayPoolKeys.baseDecimals;
@@ -192,11 +193,14 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         const baseMint = rayPoolKeys.baseMint;
         const chatId = ctx.chat.id;
         const tokenAddress = new PublicKey(ctx.session.snipeToken);
-        const [tokenMetadataResult, solPrice, tokenInfo, liqInfo] = await Promise.all([
+        // const balanceInSOL = await getSolBalance(userPublicKey,connection);
+
+        const [tokenMetadataResult, solPrice, tokenInfo, liqInfo, balanceInSOL] = await Promise.all([
             getTokenMetadata(ctx, tokenAddress.toBase58()),
             getSolanaDetails(),
             quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
-            Liquidity.fetchInfo({ connection, poolKeys })
+            Liquidity.fetchInfo({ connection, poolKeys }),
+            getSolBalance(userPublicKey,connection),
         ]);
     
         const {
@@ -205,6 +209,10 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
             dexscreenerURL,
             tokenData,
         } = tokenMetadataResult;
+        
+        const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
+        const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
+
         async function getPriorityFees(ctx: any, raydiumId: string) {
             return await Promise.all([
                 runMin(ctx, raydiumId),
@@ -214,7 +222,7 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
             ]);
         }
         const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
-        // let liqInfo = await Liquidity.fetchInfo({ connection, poolKeys });
+
 
         ctx.session.currentMode = 'snipe';
         ctx.session.poolTime = liqInfo;
@@ -233,14 +241,11 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
     
         const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
         const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
-        const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
+ 
         const priceImpact = tokenInfo.priceImpact.toFixed(2);
         const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
-        const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
-        const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
-        const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
 
-        const balanceInSOL = await getSolBalance(userPublicKey,connection);
+
         const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
         const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress,connection);
 
