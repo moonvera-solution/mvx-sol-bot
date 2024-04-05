@@ -193,7 +193,6 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         const baseMint = rayPoolKeys.baseMint;
         const chatId = ctx.chat.id;
         const tokenAddress = new PublicKey(ctx.session.snipeToken);
-        // const balanceInSOL = await getSolBalance(userPublicKey,connection);
 
         const [tokenMetadataResult, solPrice, tokenInfo, liqInfo, balanceInSOL] = await Promise.all([
             getTokenMetadata(ctx, tokenAddress.toBase58()),
@@ -209,7 +208,7 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
             dexscreenerURL,
             tokenData,
         } = tokenMetadataResult;
-        
+
         const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
         const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
 

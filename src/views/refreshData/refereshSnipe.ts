@@ -15,6 +15,9 @@ export async function refreshSnipeDetails(ctx: any) {
     const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
     ctx.session.currentMode = 'snipe';
     let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
+
+    const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
+    const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
     if (activePool && activePool.baseMint != DEFAULT_PUBLIC_KEY) {
 
     // showing the user the countdowm to the snipe
@@ -40,10 +43,11 @@ export async function refreshSnipeDetails(ctx: any) {
     const baseMint = rayPoolKeys.baseMint;
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     const tokenAddress = new PublicKey(ctx.session.snipeToken);
-    const [tokenMetadataResult, solPrice, tokenInfo] = await Promise.all([
+    const [tokenMetadataResult, solPrice, tokenInfo, balanceInSOL] = await Promise.all([
         getTokenMetadata(ctx, tokenAddress.toBase58()),
         getSolanaDetails(),
-        quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection })
+        quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
+        getSolBalance(userPublicKey,connection)
     ]);
 
     const {
@@ -68,13 +72,12 @@ export async function refreshSnipeDetails(ctx: any) {
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     const formattedmac= await formatNumberToKOrM(marketCap) ?? "NA";
-    const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
-    const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
-    const balanceInSOL = await getSolBalance(userPublicKey,connection);
+  
+    // const balanceInSOL = await getSolBalance(userPublicKey,connection);
     const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
     const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress,connection);
 
-     messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
+     messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
                 `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
                 `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
                 `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
