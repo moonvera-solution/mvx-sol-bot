@@ -181,7 +181,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   //   units = Math.ceil(units * 1.2); // margin of error
   //   innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: units }));
   // }
-
+  innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 500_000 }));
   innerTransactions[0].instructions.push(priorityFeeInstruction);
   // console.log("Inx #", innerTransactions[0].instructions.length);
 
