@@ -22,6 +22,7 @@ import base58 from "bs58";
 import {
   makeTxVersion,
   MVXBOT_FEES,
+  TIP_VALIDATOR,
   WALLET_MVX
 } from "../../../../../config";
 import { formatAmmKeysById } from "../raydium-utils/formatAmmKeysById";
@@ -97,13 +98,13 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   /*                      TIP VALIDATOR                         */
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
-  // const validatorLead = await connection.getSlotLeader();
+  const validatorLead = await connection.getSlotLeader();
 
-  // const transferIx = SystemProgram.transfer({
-  //     fromPubkey: input.wallet.publicKey,
-  //     toPubkey: new PublicKey(validatorLead),
-  //     lamports: TIP_VALIDATOR, // 5_000 || 6_000
-  // });
+  const transferIx = SystemProgram.transfer({
+      fromPubkey: input.wallet.publicKey,
+      toPubkey: new PublicKey(validatorLead),
+      lamports: TIP_VALIDATOR, // 5_000 || 6_000
+  });
 
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                      REFERRAL AMOUNT                      */
@@ -150,7 +151,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
       toPubkey: new PublicKey(WALLET_MVX),
       lamports: input.mvxFee.toNumber(), // 5_000 || 6_000
     });
-    // innerTransactions[0].instructions.push(transferIx);
+    innerTransactions[0].instructions.push(transferIx);
     innerTransactions[0].instructions.push(mvxFeeInx);
     minSwapAmountBalance += input.mvxFee.toNumber();
   }
@@ -172,16 +173,16 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee, });
 
   // Simulate the transaction and add the compute unit limit instruction to your transaction
-  // let [units] = await Promise.all([
-  //   getSimulationUnits(connection, innerTransactions[0].instructions, input.wallet.publicKey),
-  // ]);
+  let [units] = await Promise.all([
+    getSimulationUnits(connection, innerTransactions[0].instructions, input.wallet.publicKey),
+  ]);
 
-  // if (units) {
-  //   console.log("units: ",units);
-  //   units = Math.ceil(units * 1.2); // margin of error
-  //   innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: units }));
-  // }
-  innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 500_000 }));
+  if (units) {
+    console.log("units: ",units);
+    units = Math.ceil(units * 1.2); // margin of error
+    innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: units }));
+  }
+
   innerTransactions[0].instructions.push(priorityFeeInstruction);
   // console.log("Inx #", innerTransactions[0].instructions.length);
 
