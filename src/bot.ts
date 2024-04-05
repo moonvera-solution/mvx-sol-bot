@@ -442,7 +442,8 @@ bot.on('message', async (ctx) => {
 
                         display_snipe_options(ctx, ctx.session.snipeToken.toBase58());
                     }
-                } else {
+                } else if(msgTxt && !PublicKey.isOnCurve(msgTxt)){
+
                     ctx.api.sendMessage(chatId, "Invalid address");
                 }
               
