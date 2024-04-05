@@ -4,7 +4,6 @@ import { quoteToken } from '../util/dataCalculation';
 import { getSolanaDetails } from '../../api';
 import { formatNumberToKOrM } from '../../service/util';
 import { Connection } from '@solana/web3.js';
-const connection_only = new Connection('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'); // TRITON
 
 export async function Refresh_rugCheck(ctx: any) {
     const chatId = ctx.chat.id;
