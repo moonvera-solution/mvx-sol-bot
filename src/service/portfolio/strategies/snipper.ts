@@ -363,10 +363,7 @@ export async function startSnippeSimulation(
                         }
                     } else {  // Tx not confirmed
                         const priorityFeeLabel = getPriorityFeeLabel(ctx.session.priorityFees);
-                        const { dextoolsURL, birdeyeURL, dexscreenerURL } = getTokenExplorerURLS(poolKeys.baseMint instanceof PublicKey ? poolKeys.baseMint.toBase58() : poolKeys.baseMint);
-                        const checkLiquidityMsg = priorityFeeLabel == 'high' || priorityFeeLabel == 'max' ?
-                            `Verify token liquidity: \n` + `<a href="${birdeyeURL}">Birdeye</a> | ` + `<a href="${dextoolsURL}">Dextools</a> | ` + `<a href="${dexscreenerURL}">Dexscreener</a>` :
-                            `Consider increasing the priority fee level.`;
+                        const checkLiquidityMsg = priorityFeeLabel 
                         ctx.api.sendMessage(ctx.chat.id,
                             `Transaction could not be confirmed within the ${priorityFeeLabel.toUpperCase()} priority fee. \n` + checkLiquidityMsg
                         );
