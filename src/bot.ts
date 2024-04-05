@@ -390,6 +390,12 @@ bot.on('message', async (ctx) => {
             case 'buy': {
                 try {
                     if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
+                        //to avoid crashin with wron address
+                        const isTOken = await checkAccountType(ctx, msgTxt)
+                        if(!isTOken){
+                          ctx.api.sendMessage(chatId, "Invalid address");
+                          return;
+                        }
                         let poolInfo = ctx.session.tokenRayPoolInfo[msgTxt] ?? await getRayPoolKeys(ctx, msgTxt);
 
                         if (!poolInfo) {
@@ -973,8 +979,7 @@ async function checkAccountType(ctx: any,address: any) {
    try {
         const accountInfo = await connection.getAccountInfo(publicKey);
         if (accountInfo) {
-            // Check if the account is an SPL token account
-            // SPL token accounts are associated with the TOKEN_PROGRAM_ID
+         
             return accountInfo.owner.equals(TOKEN_PROGRAM_ID);
         } else {
             console.log('Account not found');
