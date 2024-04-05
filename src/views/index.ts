@@ -182,22 +182,7 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
 
         const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
         const poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
-        let liqInfo = await Liquidity.fetchInfo({ connection, poolKeys });
-
-        ctx.session.currentMode = 'snipe';
-        ctx.session.poolTime = liqInfo;
-        // showing the user the countdowm to the snipe
-        const currentTime = new Date();
-        const poolStartTime = new Date(liqInfo.startTime.toNumber() * 1000);
-
-        let poolStatusMessage;
-        if (currentTime >= poolStartTime) {
-            poolStatusMessage = "✅ Opened";
-        } else {
-            const timeDiff = Number(poolStartTime) - Number(currentTime);
-            const countdown = new Date(timeDiff).toISOString().substr(11, 8);
-            poolStatusMessage = `⏳ Opening in ${countdown}`;
-        }
+       
 
         // const { baseVault, quoteVault, baseDecimals, quoteDecimals, baseMint } = ctx.session.buyTokenData;
         const baseVault = rayPoolKeys.baseVault;
@@ -207,10 +192,11 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         const baseMint = rayPoolKeys.baseMint;
         const chatId = ctx.chat.id;
         const tokenAddress = new PublicKey(ctx.session.snipeToken);
-        const [tokenMetadataResult, solPrice, tokenInfo] = await Promise.all([
+        const [tokenMetadataResult, solPrice, tokenInfo, liqInfo] = await Promise.all([
             getTokenMetadata(ctx, tokenAddress.toBase58()),
             getSolanaDetails(),
-            quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection })
+            quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
+            Liquidity.fetchInfo({ connection, poolKeys })
         ]);
     
         const {
@@ -228,6 +214,22 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
             ]);
         }
         const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
+        // let liqInfo = await Liquidity.fetchInfo({ connection, poolKeys });
+
+        ctx.session.currentMode = 'snipe';
+        ctx.session.poolTime = liqInfo;
+        // showing the user the countdowm to the snipe
+        const currentTime = new Date();
+        const poolStartTime = new Date(liqInfo.startTime.toNumber() * 1000);
+
+        let poolStatusMessage;
+        if (currentTime >= poolStartTime) {
+            poolStatusMessage = "✅ Opened";
+        } else {
+            const timeDiff = Number(poolStartTime) - Number(currentTime);
+            const countdown = new Date(timeDiff).toISOString().substr(11, 8);
+            poolStatusMessage = `⏳ Opening in ${countdown}`;
+        }
     
         const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
         const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
