@@ -243,7 +243,6 @@ export async function startSnippeSimulation(
     if (Units) {
         console.log("units: ", Units);
         Units = Math.ceil(Units * 2); // margin of error
-        console.log("Units", Units);
         innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Units }));
     }
     console.log("maxPriorityFee", maxPriorityFee);
