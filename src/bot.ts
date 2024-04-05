@@ -925,7 +925,13 @@ bot.on('callback_query', async (ctx: any) => {
         }
     } catch (e: any) {
         logErrorToFile("callback_query", e);
-        console.error(e);
+        if (e instanceof GrammyError && e.error_code === 400) {
+            // Handle the specific GrammyError (e.g., by sending a message to the user)
+            console.error("Callback query failed due to timeout or invalid ID.");
+        } else {
+            console.error(e);
+
+        }
     }
 });
 
