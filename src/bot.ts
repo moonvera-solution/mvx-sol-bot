@@ -418,6 +418,13 @@ bot.on('message', async (ctx) => {
 
             
                 if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
+                  const isTOken = await checkAccountType(ctx, msgTxt)
+                  if(!isTOken){
+                    ctx.api.sendMessage(chatId, "Invalid address");
+                    return;
+                  }
+                   
+                
                     // ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
                     ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
 
@@ -957,3 +964,24 @@ bot.catch((err) => {
         console.error("Unknown error:", e);
     }
 });
+
+async function checkAccountType(ctx: any,address: any) {
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const publicKey = new PublicKey(address);
+    const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+
+   try {
+        const accountInfo = await connection.getAccountInfo(publicKey);
+        if (accountInfo) {
+            // Check if the account is an SPL token account
+            // SPL token accounts are associated with the TOKEN_PROGRAM_ID
+            return accountInfo.owner.equals(TOKEN_PROGRAM_ID);
+        } else {
+            console.log('Account not found');
+            return false;
+        }
+    } catch (error) {
+        console.error('Error in fetching account info:', error);
+        return false;
+    }
+}
