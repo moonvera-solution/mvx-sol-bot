@@ -447,7 +447,7 @@ bot.on('message', async (ctx) => {
                 }
               
             } catch (error: any) {
-                console.log("error", error);
+                console.error("Error in 'snipe' command:", error.message);
             }
             break;
             }
