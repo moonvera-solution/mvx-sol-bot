@@ -50,12 +50,21 @@ export async function sendTx(
     for (const iTx of txs) {
         if (iTx instanceof VersionedTransaction) {
             iTx.sign([payer]);
-            let ixId = await connection.sendRawTransaction(iTx.serialize(),options);
-            console.log("sending versioned tx: ",ixId);
+            let ixId = await connection.sendRawTransaction(iTx.serialize(), {
+                maxRetries: 0,
+                preflightCommitment: 'processed',
+                skipPreflight: false
+            });
+            console.log("sending versioned tx: ", ixId);
             txids.push(ixId);
         } else {
-            console.log("sending legacy tx: ",iTx);
-            txids.push(await connection.sendTransaction(iTx, [payer], options));
+            console.log("sending legacy tx: ", iTx);
+            txids.push(await connection.sendTransaction(iTx, [payer], {
+                maxRetries: 0,
+                preflightCommitment: 'processed',
+                skipPreflight: true
+            }
+            ));
         }
     }
     return txids;
@@ -64,7 +73,7 @@ export async function sendTx(
 export async function getWalletTokenAccount(connection: Connection, wallet: PublicKey): Promise<TokenAccount[]> {
     const walletTokenAccount = await connection.getTokenAccountsByOwner(wallet, {
         programId: TOKEN_PROGRAM_ID,
-    },'processed');
+    }, 'processed');
     return walletTokenAccount.value.map((i) => ({
         pubkey: i.pubkey,
         programId: i.account.owner,
@@ -72,7 +81,7 @@ export async function getWalletTokenAccount(connection: Connection, wallet: Publ
     }));
 }
 
-export async function buildTx(innerSimpleV0Transaction: InnerSimpleV0Transaction[], connection:Connection, options?: SendOptions):
+export async function buildTx(innerSimpleV0Transaction: InnerSimpleV0Transaction[], connection: Connection, options?: SendOptions):
     Promise<(VersionedTransaction | Transaction)[]> {
     return await buildSimpleTransaction({
         connection,
@@ -83,7 +92,7 @@ export async function buildTx(innerSimpleV0Transaction: InnerSimpleV0Transaction
     });
 }
 
-export async function buildAndSendTx(keypair: Keypair, innerSimpleV0Transaction: InnerSimpleV0Transaction[], connection:Connection,options?: SendOptions) {
+export async function buildAndSendTx(keypair: Keypair, innerSimpleV0Transaction: InnerSimpleV0Transaction[], connection: Connection, options?: SendOptions) {
     const willSendTx: (VersionedTransaction | Transaction)[] = await buildSimpleTransaction({
         connection,
         makeTxVersion,
@@ -557,9 +566,9 @@ export async function sendSol(ctx: any, recipientAddress: PublicKey, solAmount: 
             { commitment: 'processed' }
         );
 
-const solscanUrl = `https://solscan.io/tx/${signature}`;
+        const solscanUrl = `https://solscan.io/tx/${signature}`;
 
-await ctx.api.sendMessage(chatId, `💸 Sent ${solAmount} SOL to ${recipientAddress.toBase58()}.\nView on Solscan: ${solscanUrl}`,{ parse_mode: 'HTML', disable_web_page_preview: true });
+        await ctx.api.sendMessage(chatId, `💸 Sent ${solAmount} SOL to ${recipientAddress.toBase58()}.\nView on Solscan: ${solscanUrl}`, { parse_mode: 'HTML', disable_web_page_preview: true });
     } catch (error) {
         console.error("Transaction Error:", error);
         await ctx.api.sendMessage(chatId, "Transaction failed. Please try again later.");
@@ -604,9 +613,9 @@ export async function waitForConfirmation(ctx: any, txid: string): Promise<boole
     return isConfirmed;
 }
 
-export function getPriorityFeeLabel(fee: number) : string{
+export function getPriorityFeeLabel(fee: number): string {
     let priorityFeeLabel;
-    switch(fee) {
+    switch (fee) {
         case 2500:
             priorityFeeLabel = 'low';
             break;
@@ -666,7 +675,7 @@ export async function getTransactionStatus(txid: string) {
         const response = await axios.post(solanaRpcUrl, body, {
             headers: { 'Content-Type': 'application/json' },
         });
-        
+
         const data = response.data;
         // console.log('Transaction status data:', data);
         // Check if the transaction is confirmed

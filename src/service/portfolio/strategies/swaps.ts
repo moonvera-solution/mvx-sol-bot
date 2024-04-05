@@ -96,7 +96,7 @@ export async function handle_radyum_swap(
         const slippage = new Percent(Math.ceil(userSlippage * 100), 10_000);
         const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
         const referralRecord = await Referrals.findOne({ referredUsers: chatId });
-        let actualEarnings = referralRecord?.earnings;
+        let actualEarnings = referralRecord && referralRecord.earnings;
 
         // referalRecord.earnings = updateEarnings;
         if (poolKeys) {
@@ -119,9 +119,8 @@ export async function handle_radyum_swap(
                 let extractAmountCounter: number = 0;
                 let extractAmount: number = 0;
 
-                if (await waitForConfirmation(ctx, txids[0])) {
+                if (await waitForConfirmation(ctx, txids[0])) { // get swap amountOut
                     while (extractAmount == 0 && extractAmountCounter < 11) { // it has to find it since its a transfer tx
-
                         extractAmountCounter++
                         console.log("extractAmountCounter", extractAmountCounter);
 
@@ -158,16 +157,15 @@ export async function handle_radyum_swap(
                     const cut_bot_fee = bot_fee.minus(referralAmmount);
 
                     if (referralRecord) {
-                        let updateEarnings = actualEarnings! + (refferalFeePay).toNumber();
-                        referralRecord.earnings = Number(updateEarnings.toFixed(0));
-                        await referralRecord?.save();
+                        let updateEarnings = actualEarnings && actualEarnings + (refferalFeePay).toNumber();
+                        referralRecord.earnings = Number(updateEarnings && updateEarnings.toFixed(0));
+                        await referralRecord.save();
                     }
 
                     if (side == 'buy') {
                         console.log('extractAmount', extractAmount);
-                        const isFinalized = await trackUntilFinalized(ctx, txids[0]);
-                        if (isFinalized) {
-                            await saveUserPosition(
+                        if (await trackUntilFinalized(ctx, txids[0])) {
+                            await saveUserPosition( // to display portfolio positions
                                 ctx,
                                 userWallet.publicKey.toString(), {
                                 baseMint: poolKeys.baseMint,
@@ -210,14 +208,8 @@ export async function handle_radyum_swap(
                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
 
                 } else {  // Tx not confirmed
-
-                    const priorityFeeLabel = getPriorityFeeLabel(ctx.session.priorityFees);
-                    const { dextoolsURL, birdeyeURL, dexscreenerURL } = getTokenExplorerURLS(poolKeys.baseMint instanceof PublicKey ? poolKeys.baseMint.toBase58() : poolKeys.baseMint);
-                    const checkLiquidityMsg = priorityFeeLabel == 'high' || priorityFeeLabel == 'max' ?
-                        `Verify token liquidity: \n` + `<a href="${birdeyeURL}">Birdeye</a> | ` + `<a href="${dextoolsURL}">Dextools</a> | ` + `<a href="${dexscreenerURL}">Dexscreener</a>` :
-                        `Consider increasing the priority fee level.`;
                     ctx.api.sendMessage(ctx.chat.id,
-                        `Transaction could not be confirmed within the ${priorityFeeLabel.toUpperCase()} priority fee. \n` + checkLiquidityMsg
+                        `Transaction could not be confirmed within the ${getPriorityFeeLabel(ctx.session.priorityFees).toUpperCase()} priority fee. \n`
                     );
                 }
 
