@@ -7,7 +7,7 @@ import { formatNumberToKOrM, getSolBalance } from '../service/util';
 import { RAYDIUM_POOL_TYPE } from '../service/util/types';
 import { jsonInfo2PoolKeys, Liquidity, LiquidityPoolKeys, SPL_ACCOUNT_LAYOUT, TOKEN_PROGRAM_ID, TokenAccount } from '@raydium-io/raydium-sdk';
 import { Keypair, Connection } from '@solana/web3.js';
-import { runAllLevels } from './util/getPriority';
+import { runHigh, runMax, runMedium, runMin } from './util/getPriority';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 
 export async function handleCloseKeyboard(ctx: any) {
@@ -65,13 +65,13 @@ export async function display_token_details(ctx: any) {
     
     async function getPriorityFees(ctx: any, raydiumId: string) {
         return await Promise.all([
-            runAllLevels(ctx, raydiumId),
-            // runMedium(ctx, raydiumId),
-            // runHigh(ctx, raydiumId),
-            // runMax(ctx, raydiumId)
+            runMin(ctx, raydiumId),
+            runMedium(ctx, raydiumId),
+            runHigh(ctx, raydiumId),
+            runMax(ctx, raydiumId)
         ]);
     }
-    const [resultsPriority] = await getPriorityFees(ctx, raydiumId);
+    const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
 
 
     // const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint , connection});
@@ -102,7 +102,7 @@ export async function display_token_details(ctx: any) {
                 `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
                 // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
                 `Price Impact (5.0 SOL) : <b>${priceImpact}%</b>  |  (1.0 SOL): <b> ${priceImpact_1}%</b>\n\n` +
-                `--<code>Priority fees</code>--\n Low: ${(Number(resultsPriority[0]) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(resultsPriority[1]) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(resultsPriority[2]) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(resultsPriority[3]) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
+                `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
                 `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
                 `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
 
@@ -135,7 +135,7 @@ export async function display_token_details(ctx: any) {
                 `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
                 // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
                 `Price Impact (5.0 SOL) : <b>${priceImpact}%</b>  |  (1.0 SOL): <b> ${priceImpact_1}%</b>\n\n` +
-                `--<code>Priority fees</code>--\n Low: ${(Number(resultsPriority[0]) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(resultsPriority[1]) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(resultsPriority[2]) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(resultsPriority[3]) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
+                `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
                 `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
                 `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
 
@@ -214,13 +214,13 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
 
         async function getPriorityFees(ctx: any, raydiumId: string) {
             return await Promise.all([
-                runAllLevels(ctx, raydiumId),
-                // runMedium(ctx, raydiumId),
-                // runHigh(ctx, raydiumId),
-                // runMax(ctx, raydiumId)
+                runMin(ctx, raydiumId),
+                runMedium(ctx, raydiumId),
+                runHigh(ctx, raydiumId),
+                runMax(ctx, raydiumId)
             ]);
         }
-        const [resultsPriority] = await getPriorityFees(ctx, raydiumId);
+        const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
 
 
         ctx.session.currentMode = 'snipe';
@@ -257,7 +257,7 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
             // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
             `price Impact (5.0 SOL) : <b>${priceImpact}%</b> | (1.0 SOL): <b>${priceImpact_1}%</b> \n\n` +
             `Pool Status: <b>${poolStatusMessage}</b>\n\n` +
-            `--<code>Priority fees</code>--\n Low: ${(Number(resultsPriority[0]) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(resultsPriority[1]) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(resultsPriority[2]) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(resultsPriority[3]) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
+            `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
             `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
             `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
     } else {
