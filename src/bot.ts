@@ -386,19 +386,9 @@ bot.on("message", async (ctx) => {
             }
             let rugCheckToken = new PublicKey(msgTxt);
             ctx.session.rugCheckToken = rugCheckToken;
-            // ctx.session.tokenHistory.push(rugCheckToken); // Add to the beginning of the history
-
-            // Keep only the last 5 tokens
-            // if (ctx.session.tokenHistory.length > 5) {
-            //     ctx.session.tokenHistory.shift();
-            // }
-
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
-
             // Synchronize buyToken and sellToken with the rugCheckToken
             ctx.session.buyToken = rugCheckToken;
-            // ctx.session.sellToken = rugCheckToken;
-
             await display_rugCheck(ctx);
           } else {
             ctx.api.sendMessage(chatId, "Invalid address");
@@ -519,11 +509,6 @@ bot.on("message", async (ctx) => {
 
             ctx.session.activeTradingPool = poolInfo;
             ctx.session.tokenRayPoolInfo[msgTxt] = poolInfo;
-            // if (!ctx.session.tokenHistory) ctx.session.tokenHistory = [];
-            // if (ctx.session.tokenHistory.indexOf(poolInfo.baseMint) === -1) {
-            //     ctx.session.tokenHistory.push(poolInfo.baseMint);
-            //     if (ctx.session.tokenHistory.length > 5) ctx.session.tokenHistory.shift();
-            // }
             await display_token_details(ctx);
           } else {
             ctx.api.sendMessage(chatId, "🔴 Invalid address");
