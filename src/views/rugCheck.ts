@@ -114,7 +114,7 @@ export async function display_rugCheck(ctx: any) {
         reply_markup: {
             inline_keyboard: [
                 [{ text: ' 🔂 Refresh ', callback_data: 'refrech_rug_check' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
-                [{ text: '🎯 Turbo Snipe', callback_data: 'snipe' },{ text: '💱 Buy', callback_data: 'buy' }],
+                [{ text: `🎯 Snipe  ${tokenMetadataResult.tokenData.symbol}`, callback_data: 'snipe' },{ text: `💱 Buy  ${tokenMetadataResult.tokenData.symbol}` , callback_data: 'buy' }],
                 [{ text: 'Close', callback_data: 'closing' }]
             ]
         }
