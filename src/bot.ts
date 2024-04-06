@@ -384,6 +384,7 @@ bot.on("message", async (ctx) => {
               ctx.api.sendMessage(chatId, "Invalid address");
               return;
             }
+            ctx.session.latestCommand = "rug_check";
             let rugCheckToken = new PublicKey(msgTxt);
             ctx.session.rugCheckToken = rugCheckToken;
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
@@ -915,11 +916,18 @@ bot.on("callback_query", async (ctx: any) => {
           ctx.session.referralCommision = referralRecord.commissionPercentage;
           ctx.session.generatorWallet = referralRecord.generatorWallet;
         }
-        ctx.session.latestCommand = "snipe";
-        await ctx.api.sendMessage(
-            ctx.chat.id,
-            "Enter the token Address you would like to snipe."
-          );
+        if(ctx.session.latestCommand != ''){
+            if(ctx.session.latestCommand === 'rug_check'){
+                await display_snipe_options(ctx,  ctx.session.rugCheckToken);
+            }
+        }else {
+            ctx.session.latestCommand = "snipe";
+            await ctx.api.sendMessage(
+                ctx.chat.id,
+                "Enter the token Address you would like to snipe."
+              );
+        }
+       
         break;
       }
       case "cancel_snipe": {
