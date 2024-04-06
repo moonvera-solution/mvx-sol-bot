@@ -410,11 +410,11 @@ bot.on('message', async (ctx) => {
 
                         ctx.session.activeTradingPool = poolInfo;
                         ctx.session.tokenRayPoolInfo[msgTxt] = poolInfo;
-                        if (!ctx.session.tokenHistory) ctx.session.tokenHistory = [];
-                        if (ctx.session.tokenHistory.indexOf(poolInfo.baseMint) === -1) {
-                            ctx.session.tokenHistory.push(poolInfo.baseMint);
-                            if (ctx.session.tokenHistory.length > 5) ctx.session.tokenHistory.shift();
-                        }
+                        // if (!ctx.session.tokenHistory) ctx.session.tokenHistory = [];
+                        // if (ctx.session.tokenHistory.indexOf(poolInfo.baseMint) === -1) {
+                        //     ctx.session.tokenHistory.push(poolInfo.baseMint);
+                        //     if (ctx.session.tokenHistory.length > 5) ctx.session.tokenHistory.shift();
+                        // }
                         await display_token_details(ctx);
                     } else {
                         ctx.api.sendMessage(chatId, "🔴 Invalid address");
