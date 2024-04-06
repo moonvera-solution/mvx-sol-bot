@@ -387,8 +387,7 @@ bot.on("message", async (ctx) => {
             let rugCheckToken = new PublicKey(msgTxt);
             ctx.session.rugCheckToken = rugCheckToken;
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
-            // Synchronize buyToken and sellToken with the rugCheckToken
-            // ctx.session.buyToken = rugCheckToken;
+            
             await display_rugCheck(ctx);
           } else {
             ctx.api.sendMessage(chatId, "Invalid address");
@@ -916,21 +915,17 @@ bot.on("callback_query", async (ctx: any) => {
           ctx.session.referralCommision = referralRecord.commissionPercentage;
           ctx.session.generatorWallet = referralRecord.generatorWallet;
         }
-        // let snipeToken = ctx.session.snipeToken;
-        ctx.session.latestCommand = "snipe";
-        // if (snipeToken == DEFAULT_PUBLIC_KEY) {
-        //   await ctx.api.sendMessage(chatId, "Enter token address to Snipe.");
-        // } else {
-        //   snipeToken =
-        //     snipeToken instanceof PublicKey
-        //       ? snipeToken.toBase58()
-        //       : snipeToken;
-        //   await display_snipe_options(ctx, snipeToken);
-        // }
-        await ctx.api.sendMessage(
-            ctx.chat.id,
-            "Enter the token Address you would like to snipe."
-          );
+        if(ctx.sessions.latestCommand === "rug_check"){
+            await display_rugCheck(ctx);
+            ctx.session.latestCommand = "snipe";
+
+        }else {
+            await ctx.api.sendMessage(
+                ctx.chat.id,
+                "Enter the token Address you would like to snipe."
+              );
+        }
+       
         break;
       }
       case "cancel_snipe": {
