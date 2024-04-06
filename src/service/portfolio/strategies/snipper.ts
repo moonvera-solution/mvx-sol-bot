@@ -76,7 +76,7 @@ export async function setSnipe(ctx: any, amountIn: any) {
         { parse_mode: 'HTML', disable_web_page_preview: true }
     );
 
-    await ctx.api.sendMessage(ctx.chat.id, `Setting sniper.`);
+    // await ctx.api.sendMessage(ctx.chat.id, `Setting sniper.`);
 
     // Start the simulation without waiting for it to complete
     const poolStartTime = liqInfo.startTime.toNumber();
@@ -292,16 +292,16 @@ export async function startSnippeSimulation(
 
         if (simulationResult.value.err == null) {
             sim = false;
-            await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一   ${amountIn.dividedBy(1e9)} $${tokenData.symbol} Snipe set.`,
-                {
-                    parse_mode: 'HTML',
-                    disable_web_page_preview: true,
-                    reply_markup: {
-                        inline_keyboard: [
-                            [{ text: 'Cancel Snipe ', callback_data: 'cancel_snipe' }],
-                        ]
-                    },
-                });
+            await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一   ${amountIn.dividedBy(1e9)} $${tokenData.symbol} Snipe set.`);
+                // {
+                //     parse_mode: 'HTML',
+                //     disable_web_page_preview: true,
+                //     reply_markup: {
+                //         inline_keyboard: [
+                //             [{ text: 'Cancel Snipe ', callback_data: 'cancel_snipe' }],
+                //         ]
+                //     },
+                // });
             setTimeout(() => {
                 buildAndSendTx(userWallet, innerTransactions, connection, { preflightCommitment: 'processed' }).then(async (txids: any) => {
 
