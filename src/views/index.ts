@@ -146,7 +146,7 @@ export async function display_token_details(ctx: any) {
                     inline_keyboard: [
                         [{ text: ' 🔂 Refresh ', callback_data: 'refresh_trade' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
                         [{ text: '  Sell 25%  ', callback_data: 'sell_25_TOKEN' },{ text: '  Sell 50%  ', callback_data: 'sell_50_TOKEN' }, { text: 'Sell 75%', callback_data: '  sell_75_TOKEN  ' },],
-                        [{ text: '  Sell X Amount  ', callback_data: 'sell_X_TOKEN' }, { text: '  Sell 100%  ', callback_data: 'sell_100_TOKEN' }],
+                        [{ text: '  Sell 100%  ', callback_data: 'sell_100_TOKEN' },{ text: '  Sell X Amount  ', callback_data: 'sell_X_TOKEN' }],
                         [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: ' Buy Mode', callback_data: 'buy' }],
                         [{ text: '📈 Priority fees', callback_data: '_' }],
                         [

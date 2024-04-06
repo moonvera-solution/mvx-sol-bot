@@ -447,14 +447,14 @@ bot.on('message', async (ctx) => {
                         ctx.session.snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
 
                         // Synchronize buyToken and sellToken with snipeToken
-                        ctx.session.buyToken = ctx.session.snipeToken;
-                        ctx.session.sellToken = ctx.session.snipeToken;
+                        // ctx.session.buyToken = ctx.session.snipeToken;
+                        // ctx.session.sellToken = ctx.session.snipeToken;
 
-                        // Add snipeToken to token history and update the current index
-                        ctx.session.tokenHistory.unshift(ctx.session.snipeToken);
-                        if (ctx.session.tokenHistory.length > 5) {
-                            ctx.session.tokenHistory.pop(); // Keep only the last 5 tokens
-                        }
+                        // // Add snipeToken to token history and update the current index
+                        // ctx.session.tokenHistory.unshift(ctx.session.snipeToken);
+                        // if (ctx.session.tokenHistory.length > 5) {
+                        //     ctx.session.tokenHistory.pop(); // Keep only the last 5 tokens
+                        // }
                         // Update current token index
                         // ctx.session.currentTokenIndex = 0; 
 
