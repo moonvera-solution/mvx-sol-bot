@@ -792,61 +792,61 @@ bot.on('callback_query', async (ctx: any) => {
                 ctx.api.sendMessage(chatId, "Please paste the recipient's wallet address.");
                 break;
             }
-            case 'previous_token': {
-                let history = ctx.session.tokenHistory;
-                let currentToken: PublicKey = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
-                let currentTokenStr = currentToken instanceof PublicKey ? currentToken.toBase58() : currentToken;
-                let historyStr = history.map((token: any) => token.toBase58());
-                let currentIndex = historyStr.indexOf(currentTokenStr);
+            // case 'previous_token': {
+            //     let history = ctx.session.tokenHistory;
+            //     let currentToken: PublicKey = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
+            //     let currentTokenStr = currentToken instanceof PublicKey ? currentToken.toBase58() : currentToken;
+            //     let historyStr = history.map((token: any) => token.toBase58());
+            //     let currentIndex = historyStr.indexOf(currentTokenStr);
 
-                if (currentIndex > 0) {
-                    let previousTokenStr = historyStr[currentIndex - 1];
-                    let previousToken = new PublicKey(previousTokenStr);
+            //     if (currentIndex > 0) {
+            //         let previousTokenStr = historyStr[currentIndex - 1];
+            //         let previousToken = new PublicKey(previousTokenStr);
 
-                    // Update both buyToken and sellToken regardless of the latest command
-                    ctx.session.buyToken = previousToken;
-                    ctx.session.sellToken = previousToken;
+            //         // Update both buyToken and sellToken regardless of the latest command
+            //         ctx.session.buyToken = previousToken;
+            //         ctx.session.sellToken = previousToken;
 
-                    // Check if the pool info is already in the session
-                    let poolInfo = ctx.session.tokenRayPoolInfo[previousTokenStr];
-                    if (!poolInfo) {
-                        poolInfo = await getRayPoolKeys(ctx, previousTokenStr);
-                        ctx.session.tokenRayPoolInfo[previousTokenStr] = poolInfo;
-                    }
+            //         // Check if the pool info is already in the session
+            //         let poolInfo = ctx.session.tokenRayPoolInfo[previousTokenStr];
+            //         if (!poolInfo) {
+            //             poolInfo = await getRayPoolKeys(ctx, previousTokenStr);
+            //             ctx.session.tokenRayPoolInfo[previousTokenStr] = poolInfo;
+            //         }
 
-                    ctx.session.activeTradingPool = poolInfo;
-                    await refreshTokenDetails(ctx);
-                }
-                break;
-            }
+            //         ctx.session.activeTradingPool = poolInfo;
+            //         await refreshTokenDetails(ctx);
+            //     }
+            //     break;
+            // }
 
-            case 'next_token': {
-                let history = ctx.session.tokenHistory;
-                let currentToken = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
-                let currentTokenStr = currentToken instanceof PublicKey ? currentToken.toBase58() : currentToken;
-                let historyStr = history.map((token: any) => token.toBase58());
-                let currentIndex = historyStr.indexOf(currentTokenStr);
+            // case 'next_token': {
+            //     let history = ctx.session.tokenHistory;
+            //     let currentToken = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
+            //     let currentTokenStr = currentToken instanceof PublicKey ? currentToken.toBase58() : currentToken;
+            //     let historyStr = history.map((token: any) => token.toBase58());
+            //     let currentIndex = historyStr.indexOf(currentTokenStr);
 
-                if (currentIndex >= 0 && currentIndex < history.length - 1) {
-                    let nextTokenStr = historyStr[currentIndex + 1];
-                    let nextToken = new PublicKey(nextTokenStr);
+            //     if (currentIndex >= 0 && currentIndex < history.length - 1) {
+            //         let nextTokenStr = historyStr[currentIndex + 1];
+            //         let nextToken = new PublicKey(nextTokenStr);
 
-                    // Update both buyToken and sellToken regardless of the latest command
-                    ctx.session.buyToken = nextToken;
-                    ctx.session.sellToken = nextToken;
+            //         // Update both buyToken and sellToken regardless of the latest command
+            //         ctx.session.buyToken = nextToken;
+            //         ctx.session.sellToken = nextToken;
 
-                    // Check if the pool info is already in the session
-                    let poolInfo = ctx.session.tokenRayPoolInfo[nextTokenStr];
-                    if (!poolInfo) {
-                        poolInfo = await getRayPoolKeys(ctx, nextTokenStr);
-                        ctx.session.tokenRayPoolInfo[nextTokenStr] = poolInfo;
-                    }
+            //         // Check if the pool info is already in the session
+            //         let poolInfo = ctx.session.tokenRayPoolInfo[nextTokenStr];
+            //         if (!poolInfo) {
+            //             poolInfo = await getRayPoolKeys(ctx, nextTokenStr);
+            //             ctx.session.tokenRayPoolInfo[nextTokenStr] = poolInfo;
+            //         }
 
-                    ctx.session.activeTradingPool = poolInfo;
-                    await refreshTokenDetails(ctx);
-                }
-                break;
-            }
+            //         ctx.session.activeTradingPool = poolInfo;
+            //         await refreshTokenDetails(ctx);
+            //     }
+            //     break;
+            // }
 
             case 'buy_0.1_SOL': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'buy', '0.1'); break;
             case 'buy_0.2_SOL': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'buy', '0.2'); break;
