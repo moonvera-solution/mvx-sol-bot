@@ -916,12 +916,11 @@ bot.on("callback_query", async (ctx: any) => {
           ctx.session.referralCommision = referralRecord.commissionPercentage;
           ctx.session.generatorWallet = referralRecord.generatorWallet;
         }
-        if(ctx.session.latestCommand != ''){
+     
             if(ctx.session.latestCommand === 'rug_check'){
                 ctx.session.latestCommand = "snipe";
                 await display_snipe_options(ctx,  ctx.session.rugCheckToken);
-            }
-        }else {
+            } else {
             ctx.session.latestCommand = "snipe";
             await ctx.api.sendMessage(
                 ctx.chat.id,
