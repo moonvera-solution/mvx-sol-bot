@@ -175,6 +175,8 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
     let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
     const activePool = ctx.session.activeTradingPool;
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
+    const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
 
     if(!msgTxt && !activePool) {await ctx.api.sendMessage(ctx.chat.id, "Enter token address to snipe.", { parse_mode: 'HTML' }); return;}
 
@@ -182,7 +184,45 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
 
         const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
         const poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
-        let liqInfo = await Liquidity.fetchInfo({ connection, poolKeys });
+       
+
+        const baseVault = rayPoolKeys.baseVault;
+        const quoteVault = rayPoolKeys.quoteVault;
+        const baseDecimals = rayPoolKeys.baseDecimals;
+        const quoteDecimals = rayPoolKeys.quoteDecimals;
+        const baseMint = rayPoolKeys.baseMint;
+        const chatId = ctx.chat.id;
+        const tokenAddress = new PublicKey(ctx.session.snipeToken);
+
+        const [tokenMetadataResult, solPrice, tokenInfo, liqInfo, balanceInSOL, userTokenDetails] = await Promise.all([
+            getTokenMetadata(ctx, tokenAddress.toBase58()),
+            getSolanaDetails(),
+            quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
+            Liquidity.fetchInfo({ connection, poolKeys }),
+            getSolBalance(userPublicKey, connection),
+            getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection)
+        ]);
+    
+        const {
+            birdeyeURL,
+            dextoolsURL,
+            dexscreenerURL,
+            tokenData,
+        } = tokenMetadataResult;
+        const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
+        const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
+        const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
+
+        async function getPriorityFees(ctx: any, raydiumId: string) {
+            return await Promise.all([
+                runMin(ctx, raydiumId),
+                runMedium(ctx, raydiumId),
+                runHigh(ctx, raydiumId),
+                runMax(ctx, raydiumId)
+            ]);
+        }
+        const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
+
 
         ctx.session.currentMode = 'snipe';
         ctx.session.poolTime = liqInfo;
@@ -198,49 +238,15 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
             const countdown = new Date(timeDiff).toISOString().substr(11, 8);
             poolStatusMessage = `⏳ Opening in ${countdown}`;
         }
-
-        // const { baseVault, quoteVault, baseDecimals, quoteDecimals, baseMint } = ctx.session.buyTokenData;
-        const baseVault = rayPoolKeys.baseVault;
-        const quoteVault = rayPoolKeys.quoteVault;
-        const baseDecimals = rayPoolKeys.baseDecimals;
-        const quoteDecimals = rayPoolKeys.quoteDecimals;
-        const baseMint = rayPoolKeys.baseMint;
-        const chatId = ctx.chat.id;
-        const tokenAddress = new PublicKey(ctx.session.snipeToken);
-        const [tokenMetadataResult, solPrice, tokenInfo] = await Promise.all([
-            getTokenMetadata(ctx, tokenAddress.toBase58()),
-            getSolanaDetails(),
-            quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection })
-        ]);
-    
-        const {
-            birdeyeURL,
-            dextoolsURL,
-            dexscreenerURL,
-            tokenData,
-        } = tokenMetadataResult;
-        async function getPriorityFees(ctx: any, raydiumId: string) {
-            return await Promise.all([
-                runMin(ctx, raydiumId),
-                runMedium(ctx, raydiumId),
-                runHigh(ctx, raydiumId),
-                runMax(ctx, raydiumId)
-            ]);
-        }
-        const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
     
         const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
         const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
-        const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
+ 
         const priceImpact = tokenInfo.priceImpact.toFixed(2);
         const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
-        const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
-        const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
-        const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
 
-        const balanceInSOL = await getSolBalance(userPublicKey,connection);
+
         const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
-        const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress,connection);
 
         messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
             `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
@@ -252,7 +258,7 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
             `price Impact (5.0 SOL) : <b>${priceImpact}%</b> | (1.0 SOL): <b>${priceImpact_1}%</b> \n\n` +
             `Pool Status: <b>${poolStatusMessage}</b>\n\n` +
             `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
-            `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
+            `Token Balance: <b>${userTokenDetails.userTokenBalance.toFixed(3)} $${userTokenDetails.userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
             `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
     } else {
         const { tokenData } = await getTokenMetadata(ctx, ctx.session.snipeToken);

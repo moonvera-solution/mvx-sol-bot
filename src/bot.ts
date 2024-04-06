@@ -45,8 +45,8 @@ bot.start();
 // Set the webhook
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
-console.log("botToken", botToken);
-const webhookUrl = 'https://drib.ngrok.app'; 
+// console.log("botToken", botToken);
+// const webhookUrl = 'https://drib.ngrok.app'; 
 
 // bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
 //   .then(() => console.log("Webhook set successfully"))
@@ -305,6 +305,11 @@ bot.on('message', async (ctx) => {
             case 'rug_check': {
                 if (msgTxt) {
                     if (PublicKey.isOnCurve(msgTxt!)) {
+                        const isTOken = await checkAccountType(ctx, msgTxt)
+                        if(!isTOken){
+                          ctx.api.sendMessage(chatId, "Invalid address");
+                          return;
+                        }
                         let rugCheckToken = new PublicKey(msgTxt);
                         ctx.session.rugCheckToken = rugCheckToken;
                         ctx.session.tokenHistory.push(rugCheckToken); // Add to the beginning of the history
@@ -390,6 +395,12 @@ bot.on('message', async (ctx) => {
             case 'buy': {
                 try {
                     if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
+                        //to avoid crashin with wron address
+                        const isTOken = await checkAccountType(ctx, msgTxt)
+                        if(!isTOken){
+                          ctx.api.sendMessage(chatId, "Invalid address");
+                          return;
+                        }
                         let poolInfo = ctx.session.tokenRayPoolInfo[msgTxt] ?? await getRayPoolKeys(ctx, msgTxt);
 
                         if (!poolInfo) {
@@ -414,7 +425,17 @@ bot.on('message', async (ctx) => {
                 break;
             }
             case 'snipe': {
+                try{
+
+            
                 if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
+                  const isTOken = await checkAccountType(ctx, msgTxt)
+                  if(!isTOken){
+                    ctx.api.sendMessage(chatId, "Invalid address");
+                    return;
+                  }
+                   
+                
                     // ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
                     ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
 
@@ -439,10 +460,15 @@ bot.on('message', async (ctx) => {
 
                         display_snipe_options(ctx, ctx.session.snipeToken.toBase58());
                     }
-                } else {
+                } else if(msgTxt && !PublicKey.isOnCurve(msgTxt)){
+
                     ctx.api.sendMessage(chatId, "Invalid address");
                 }
-                break;
+              
+            } catch (error: any) {
+                console.error("Error in 'snipe' command:", error.message);
+            }
+            break;
             }
             case 'refer_friends': {
                 ctx.session.awaitingWalletAddress = false; // Reset the flag
@@ -925,7 +951,12 @@ bot.on('callback_query', async (ctx: any) => {
         }
     } catch (e: any) {
         logErrorToFile("callback_query", e);
-        console.error(e);
+        if (e instanceof GrammyError && e.error_code === 400) {
+            console.error("Callback query failed due to timeout or invalid ID.");
+        } else {
+            console.error(e);
+
+        }
     }
 });
 
@@ -944,3 +975,23 @@ bot.catch((err) => {
         console.error("Unknown error:", e);
     }
 });
+
+async function checkAccountType(ctx: any,address: any) {
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const publicKey = new PublicKey(address);
+    const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+
+   try {
+        const accountInfo = await connection.getAccountInfo(publicKey);
+        if (accountInfo) {
+         
+            return accountInfo.owner.equals(TOKEN_PROGRAM_ID);
+        } else {
+            console.log('Account not found');
+            return false;
+        }
+    } catch (error) {
+        console.error('Error in fetching account info:', error);
+        return false;
+    }
+}

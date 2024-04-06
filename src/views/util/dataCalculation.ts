@@ -1,8 +1,6 @@
 import { PublicKey, Connection } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
-import { getSolanaDetails } from '../../api';
-import { token } from '@metaplex-foundation/js';
-import Percent from 'bignumber.js';
+
 
 
 

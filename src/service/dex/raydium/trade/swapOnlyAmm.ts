@@ -6,19 +6,17 @@ import {
   LiquidityPoolKeys,
   Percent,
   Token,
-  TokenAmount, SPL_ACCOUNT_LAYOUT, InnerSimpleV0Transaction,
-  LiquidityPoolKeysV4, TOKEN_PROGRAM_ID
+  TokenAmount
 } from "@raydium-io/raydium-sdk";
 import BigNumber from "bignumber.js";
 import {
-  SystemProgram, TransactionMessage,
-  ComputeBudgetProgram, TransactionInstruction,
+  SystemProgram,
+  ComputeBudgetProgram,
   Connection,
 } from "@solana/web3.js";
 import {
   Keypair,
-  PublicKey,
-  ComputeBudgetInstruction
+  PublicKey
 } from "@solana/web3.js";
 import base58 from "bs58";
 import {
@@ -27,9 +25,8 @@ import {
   TIP_VALIDATOR,
   WALLET_MVX
 } from "../../../../../config";
-
 import { formatAmmKeysById } from "../raydium-utils/formatAmmKeysById";
-import { getSimulationUnits, getMaxPrioritizationFeeByPercentile, PriotitizationFeeLevels } from "../../../fees/priorityFees";
+import { getSimulationUnits, getMaxPrioritizationFeeByPercentile } from "../../../fees/priorityFees";
 import {
   buildAndSendTx,
   getWalletTokenAccount,
@@ -54,8 +51,6 @@ export type TxInputInfo = {
   wallet: Keypair;
   commitment: any;
 };
-
-
 
 export async function swapOnlyAmm(input: TxInputInfo) {
   const connection = new Connection(`${input.ctx.session.env.tritonRPC}${input.ctx.session.env.tritonToken}`);
@@ -169,7 +164,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     ], percentile: input.ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
     fallback: true
   });
-
+  console.log("maxPriorityFee: ", maxPriorityFee);
 
   minSwapAmountBalance += input.ctx.session.priorityFee;
   const balanceInSOL = await getSolBalance(input.wallet.publicKey.toBase58(), connection);
@@ -184,13 +179,12 @@ export async function swapOnlyAmm(input: TxInputInfo) {
 
   if (units) {
     console.log("units: ",units);
-    units = Math.ceil(units * 2); // margin of error
+    units = Math.ceil(units * 1.1); // margin of error
     innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: units }));
   }
 
   innerTransactions[0].instructions.push(priorityFeeInstruction);
   // console.log("Inx #", innerTransactions[0].instructions.length);
-
 
   return {
     txids: await buildAndSendTx(

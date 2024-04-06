@@ -56,32 +56,28 @@ export async function display_rugCheck(ctx: any) {
         connection.getParsedAccountInfo(new PublicKey(baseVault), "processed"),
         connection.getParsedAccountInfo(new PublicKey(lpMint), "processed"),
     ]);
+    //Geting the data from the responses
     const getPooledSol= processData(responses[0]);
     const getBaseSupply= processData(responses[1]);
     const circulatingSupply = processData(responses[2]);
     const aMM = processData(responses[3]);
     const creatorAddress = tokenData.updateAuthorityAddress.toBase58();
-    const [getCreatorPercentage, lpSupplyOwner] = await Promise.all([
-        getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint), connection),
-        getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint), connection)
-    ]);
-
-    const MutableInfo = tokenData.isMutable? '⚠️ Mutable' : '✅ Immutable';
-    const renounced = tokenData.mint.mintAuthorityAddress?.toString() !== tokenData.updateAuthorityAddress.toString()? "✅" : "❌ No";
-    // const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint),connection);
-
     const circulatedSupply = Number(((Number(circulatingSupply.tokenAmount.amount)) / Math.pow(10, baseDecimals)).toFixed(2));
     const baseTokenSupply = Number(((Number(getBaseSupply.supply)) / Math.pow(10, baseDecimals)).toFixed(2));
-    // const formattedmac= await formatNumberToKOrM(marketCap) ?? "NA";
-    // const formattedLiquidity = await formatNumberToKOrM((tokenInfo.liquidity * solPrice) / 0.5 ) ?? "N/A";
-
-    let [formattedCirculatingSupply, formattedSupply,formattedLiquidity,formattedmac] = await Promise.all([
+    
+    //Get the user balance
+    let [getCreatorPercentage, lpSupplyOwner, formattedCirculatingSupply, formattedSupply,formattedLiquidity,formattedmac] = await Promise.all([
+        getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint), connection),
+        getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(lpMint), connection),
         formatNumberToKOrM(Number(circulatedSupply)),
         formatNumberToKOrM(Number(baseTokenSupply)),
         formatNumberToKOrM((tokenInfo.liquidity * solPrice) / 0.5 ),
         formatNumberToKOrM(marketCap)
-
     ]);
+
+    const MutableInfo = tokenData.isMutable? '⚠️ Mutable' : '✅ Immutable';
+    const renounced = tokenData.mint.mintAuthorityAddress?.toString() !== tokenData.updateAuthorityAddress.toString()? "✅" : "❌ No";
+   
     formattedmac = formattedmac ? formattedmac:  "NA";
     formattedLiquidity = formattedLiquidity ? formattedLiquidity : "N/A";
     const circulatingPercentage = (Number(circulatedSupply) / Number(baseTokenSupply) * 100).toFixed(2);
