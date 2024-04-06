@@ -920,17 +920,21 @@ bot.on("callback_query", async (ctx: any) => {
           ctx.session.referralCommision = referralRecord.commissionPercentage;
           ctx.session.generatorWallet = referralRecord.generatorWallet;
         }
-        let snipeToken = ctx.session.snipeToken;
-        ctx.session.latestCommand = "snipe";
-        if (snipeToken == DEFAULT_PUBLIC_KEY) {
-          await ctx.api.sendMessage(chatId, "Enter token address to Snipe.");
-        } else {
-          snipeToken =
-            snipeToken instanceof PublicKey
-              ? snipeToken.toBase58()
-              : snipeToken;
-          await display_snipe_options(ctx, snipeToken);
-        }
+        // let snipeToken = ctx.session.snipeToken;
+        // ctx.session.latestCommand = "snipe";
+        // if (snipeToken == DEFAULT_PUBLIC_KEY) {
+        //   await ctx.api.sendMessage(chatId, "Enter token address to Snipe.");
+        // } else {
+        //   snipeToken =
+        //     snipeToken instanceof PublicKey
+        //       ? snipeToken.toBase58()
+        //       : snipeToken;
+        //   await display_snipe_options(ctx, snipeToken);
+        // }
+        await ctx.api.sendMessage(
+            ctx.chat.id,
+            "Enter the token Address you would like to snipe."
+          );
         break;
       }
       case "cancel_snipe": {
