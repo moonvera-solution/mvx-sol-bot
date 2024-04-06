@@ -292,7 +292,7 @@ export async function startSnippeSimulation(
 
         if (simulationResult.value.err == null) {
             sim = false;
-            await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一   ${amountIn.dividedBy(1e9)} $${tokenData.symbol} Snipe set.`);
+            await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一 $${tokenData.symbol} with ${amountIn.dividedBy(1e9)} SOL.`);
                 // {
                 //     parse_mode: 'HTML',
                 //     disable_web_page_preview: true,
