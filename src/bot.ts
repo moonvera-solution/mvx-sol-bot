@@ -312,12 +312,12 @@ bot.on('message', async (ctx) => {
                         }
                         let rugCheckToken = new PublicKey(msgTxt);
                         ctx.session.rugCheckToken = rugCheckToken;
-                        ctx.session.tokenHistory.push(rugCheckToken); // Add to the beginning of the history
+                        // ctx.session.tokenHistory.push(rugCheckToken); // Add to the beginning of the history
 
                         // Keep only the last 5 tokens
-                        if (ctx.session.tokenHistory.length > 5) {
-                            ctx.session.tokenHistory.shift();
-                        }
+                        // if (ctx.session.tokenHistory.length > 5) {
+                        //     ctx.session.tokenHistory.shift();
+                        // }
 
                         ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
 
