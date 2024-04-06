@@ -921,7 +921,7 @@ bot.on("callback_query", async (ctx: any) => {
           ctx.session.generatorWallet = referralRecord.generatorWallet;
         }
         // let snipeToken = ctx.session.snipeToken;
-        // ctx.session.latestCommand = "snipe";
+        ctx.session.latestCommand = "snipe";
         // if (snipeToken == DEFAULT_PUBLIC_KEY) {
         //   await ctx.api.sendMessage(chatId, "Enter token address to Snipe.");
         // } else {
