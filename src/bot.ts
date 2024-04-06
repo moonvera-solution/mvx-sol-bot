@@ -918,6 +918,7 @@ bot.on("callback_query", async (ctx: any) => {
         }
         if(ctx.session.latestCommand != ''){
             if(ctx.session.latestCommand === 'rug_check'){
+                ctx.session.latestCommand = "snipe";
                 await display_snipe_options(ctx,  ctx.session.rugCheckToken);
             }
         }else {
