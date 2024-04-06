@@ -915,22 +915,11 @@ bot.on("callback_query", async (ctx: any) => {
           ctx.session.referralCommision = referralRecord.commissionPercentage;
           ctx.session.generatorWallet = referralRecord.generatorWallet;
         }
-        if(ctx.sessions.latestCommand != undefined) {
-            if(ctx.sessions.latestCommand == "rug_check"){
-                await display_rugCheck(ctx);
-                ctx.session.latestCommand = "snipe";
-            }
-           
-
-        }else {
-            ctx.session.latestCommand = "snipe";
-
-            await ctx.api.sendMessage(
-                ctx.chat.id,
-                "Enter the token Address you would like to snipe."
-              );
-        }
-       
+        ctx.session.latestCommand = "snipe";
+        await ctx.api.sendMessage(
+            ctx.chat.id,
+            "Enter the token Address you would like to snipe."
+          );
         break;
       }
       case "cancel_snipe": {
