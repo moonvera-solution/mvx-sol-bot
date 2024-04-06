@@ -3,53 +3,53 @@ import { UserPositions } from '../../db';
 import { quoteToken } from "../../views/util/dataCalculation";
 type Commitment = 'processed' | 'confirmed' | 'finalized' | 'recent' | 'single' | 'singleGossip' | 'root' | 'max';
 
-// export async function saveUserPosition(ctx: any, walletId: String, newPosition:
-//     {
-//         baseMint: string;
-//         name: string;
-//         symbol: string;
-//         tradeType: string;
-//         amountIn: number;
-//         amountOut: number | undefined;
-//     }) {
-//      const chatId = ctx.chat.id;
-//         console.log("saveUserPosition",saveUserPosition);
-//     try {
-//         const userPosition = await UserPositions.findOne({positionChatId: chatId, walletId: walletId});
-//         if (userPosition) {
-//             console.log("userPosition",userPosition);
-//             const existingPositionIndex = userPosition.positions.findIndex(
-//                 position => position.baseMint === newPosition.baseMint.toString()
-//             );
-//             console.log("saveUserPosition: existingPositionIndex",existingPositionIndex);
+export async function saveUserPosition(ctx: any, walletId: String, newPosition:
+    {
+        baseMint: string;
+        name: string;
+        symbol: string;
+        tradeType: string;
+        amountIn: number;
+        amountOut: number | undefined;
+    }) {
+     const chatId = ctx.chat.id;
+        console.log("saveUserPosition",saveUserPosition);
+    try {
+        const userPosition = await UserPositions.findOne({positionChatId: chatId, walletId: walletId});
+        if (userPosition) {
+            console.log("userPosition",userPosition);
+            const existingPositionIndex = userPosition.positions.findIndex(
+                position => position.baseMint === newPosition.baseMint.toString()
+            );
+            console.log("saveUserPosition: existingPositionIndex",existingPositionIndex);
 
-//             if (existingPositionIndex === -1) {
-//                 // console.log("newPosition",newPosition);
-//                 userPosition.positions.push(newPosition);
-//                 await userPosition.save();
-//                 console.log('adding new position', )
+            if (existingPositionIndex === -1) {
+                // console.log("newPosition",newPosition);
+                userPosition.positions.push(newPosition);
+                await userPosition.save();
+                console.log('adding new position', )
                 
-//             } else {
-//                 userPosition.positions[existingPositionIndex] = newPosition;
-//                 console.log('update existing position', )
-//                 await userPosition.save();
-//             }
-//         } else {
-//             // console.log("newPosition",newPosition);
-//             const savePosition = new UserPositions({
-//                 positionChatId: chatId,
-//                 walletId: walletId ,
-//                 positions: newPosition,
+            } else {
+                userPosition.positions[existingPositionIndex] = newPosition;
+                console.log('update existing position', )
+                await userPosition.save();
+            }
+        } else {
+            // console.log("newPosition",newPosition);
+            const savePosition = new UserPositions({
+                positionChatId: chatId,
+                walletId: walletId ,
+                positions: newPosition,
                
-//                });
-//             //    console.log("savePosition",savePosition);
-//                await savePosition.save();
-//                console.log('saved new position', )
-//         }
-//     } catch (err) {
-//         console.error(err);
-//     }
-// }
+               });
+            //    console.log("savePosition",savePosition);
+               await savePosition.save();
+               console.log('saved new position', )
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
 
 
 // async function getPositionsFromRaydium(wallet: string) {
