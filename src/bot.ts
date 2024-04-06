@@ -878,38 +878,38 @@ bot.on("callback_query", async (ctx: any) => {
           // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
         }
 
-        let tokenToBuy =
-          ctx.session.buyToken instanceof PublicKey
-            ? ctx.session.buyToken
-            : undefined;
+        // let tokenToBuy =
+        //   ctx.session.buyToken instanceof PublicKey
+        //     ? ctx.session.buyToken
+        //     : undefined;
 
-        if (!tokenToBuy || tokenToBuy == DEFAULT_PUBLIC_KEY) {
-          tokenToBuy =
-            ctx.session.sellToken instanceof PublicKey &&
-            ctx.session.sellToken != DEFAULT_PUBLIC_KEY
-              ? ctx.session.sellToken
-              : undefined;
-        }
+        // if (!tokenToBuy || tokenToBuy == DEFAULT_PUBLIC_KEY) {
+        //   tokenToBuy =
+        //     ctx.session.sellToken instanceof PublicKey &&
+        //     ctx.session.sellToken != DEFAULT_PUBLIC_KEY
+        //       ? ctx.session.sellToken
+        //       : undefined;
+        // }
 
-        if (tokenToBuy) {
-          const tokenString = tokenToBuy.toBase58();
-          let poolInfo = ctx.session.tokenRayPoolInfo[tokenString];
+        // if (tokenToBuy) {
+        //   const tokenString = tokenToBuy.toBase58();
+        //   let poolInfo = ctx.session.tokenRayPoolInfo[tokenString];
 
-          if (!poolInfo) {
-            poolInfo = await getRayPoolKeys(ctx, tokenString);
-            ctx.session.tokenRayPoolInfo[tokenString] = poolInfo;
-          }
+        //   if (!poolInfo) {
+        //     poolInfo = await getRayPoolKeys(ctx, tokenString);
+        //     ctx.session.tokenRayPoolInfo[tokenString] = poolInfo;
+        //   }
 
-          ctx.session.buyToken = tokenToBuy;
-          ctx.session.activeTradingPool = poolInfo;
+        //   ctx.session.buyToken = tokenToBuy;
+        //   ctx.session.activeTradingPool = poolInfo;
 
-          await display_token_details(ctx);
-        } else {
+        //   await display_token_details(ctx);
+        // } else {
           await ctx.api.sendMessage(
             chatId,
             "Enter the token Address you would like to Buy."
           );
-        }
+        // }
         break;
       }
       case "snipe": {
