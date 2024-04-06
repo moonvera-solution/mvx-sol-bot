@@ -508,7 +508,7 @@ bot.on("message", async (ctx) => {
             }
 
             ctx.session.activeTradingPool = poolInfo;
-            ctx.session.tokenRayPoolInfo[msgTxt] = poolInfo;
+            // ctx.session.tokenRayPoolInfo[msgTxt] = poolInfo;
             await display_token_details(ctx);
           } else {
             ctx.api.sendMessage(chatId, "🔴 Invalid address");
