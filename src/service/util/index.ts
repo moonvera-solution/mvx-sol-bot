@@ -592,7 +592,7 @@ export function isValidBase58(str: any) {
 
 export async function waitForConfirmation(ctx: any, txid: string): Promise<boolean> {
     let isConfirmed = false;
-    const maxAttempts = 50;
+    const maxAttempts = 100;
     let attempts = 0;
 
     while (!isConfirmed && attempts < maxAttempts) {
