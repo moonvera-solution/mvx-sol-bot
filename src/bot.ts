@@ -920,6 +920,8 @@ bot.on("callback_query", async (ctx: any) => {
             ctx.session.latestCommand = "snipe";
 
         }else {
+            ctx.session.latestCommand = "snipe";
+
             await ctx.api.sendMessage(
                 ctx.chat.id,
                 "Enter the token Address you would like to snipe."
