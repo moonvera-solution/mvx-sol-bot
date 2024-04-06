@@ -514,7 +514,7 @@ bot.on("message", async (ctx) => {
             ctx.api.sendMessage(chatId, "🔴 Invalid address");
           }
         } catch (e) {
-          ctx.api.sendMessage(chatId, "🔴 Invalid address");
+          ctx.api.sendMessage(chatId, "🔴 Please entre a valid address");
         }
         break;
       }
@@ -902,9 +902,6 @@ bot.on("callback_query", async (ctx: any) => {
 
           ctx.session.buyToken = tokenToBuy;
           ctx.session.activeTradingPool = poolInfo;
-
-          // Synchronize sellToken with the current buyToken
-          ctx.session.sellToken = tokenToBuy;
 
           await display_token_details(ctx);
         } else {
