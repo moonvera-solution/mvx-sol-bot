@@ -170,7 +170,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   const balanceInSOL = await getSolBalance(input.wallet.publicKey.toBase58(), connection);
   if (balanceInSOL < minSwapAmountBalance) await input.ctx.api.sendMessage(input.ctx.portfolio.chatId, '🔴 Insufficient balance for transaction.', { parse_mode: 'HTML', disable_web_page_preview: true });
 
-  const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee, });
+  const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: (maxPriorityFee * 10) });
 
   // Simulate the transaction and add the compute unit limit instruction to your transaction
   let [units] = await Promise.all([
