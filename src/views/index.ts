@@ -42,14 +42,7 @@ export async function display_token_details(ctx: any) {
     const baseMint = rayPoolKeys.baseMint;
     const tokenAddress = new PublicKey(baseMint);
     const chatId = ctx.chat.id;
-    // const messageId = ctx.msg.message_id;
-    // const {
-    //     birdeyeURL,
-    //     dextoolsURL,
-    //     dexscreenerURL,
-    //     tokenData,
-    // } = await getTokenMetadata(ctx, tokenAddress.toBase58()); // Convert tokenAddress to string using toBase58()
-    // const solprice = await getSolanaDetails();
+
     const [tokenMetadataResult, solPrice, tokenInfo] = await Promise.all([
         getTokenMetadata(ctx, tokenAddress.toBase58()),
         getSolanaDetails(),

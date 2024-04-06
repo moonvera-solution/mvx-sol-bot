@@ -864,7 +864,6 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "buy": {
-        ctx.session.latestCommand = "buy";
         const referralRecord = await Referrals.findOne({
           referredUsers: chatId,
         });
