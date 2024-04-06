@@ -497,9 +497,7 @@ bot.on("message", async (ctx) => {
               ctx.api.sendMessage(chatId, "Invalid address");
               return;
             }
-            let poolInfo =
-              ctx.session.tokenRayPoolInfo[msgTxt] ??
-              (await getRayPoolKeys(ctx, msgTxt));
+            let poolInfo = await getRayPoolKeys(ctx, msgTxt);
 
             if (!poolInfo) {
               ctx.api.sendMessage(chatId, "🔴 Invalid address");
