@@ -388,7 +388,7 @@ bot.on("message", async (ctx) => {
             ctx.session.rugCheckToken = rugCheckToken;
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
             // Synchronize buyToken and sellToken with the rugCheckToken
-            ctx.session.buyToken = rugCheckToken;
+            // ctx.session.buyToken = rugCheckToken;
             await display_rugCheck(ctx);
           } else {
             ctx.api.sendMessage(chatId, "Invalid address");
@@ -504,9 +504,7 @@ bot.on("message", async (ctx) => {
               ctx.api.sendMessage(chatId, "🔴 Pool not found for this token.");
               return;
             }
-
             ctx.session.activeTradingPool = poolInfo;
-            // ctx.session.tokenRayPoolInfo[msgTxt] = poolInfo;
             await display_token_details(ctx);
           } else {
             ctx.api.sendMessage(chatId, "🔴 Invalid address");

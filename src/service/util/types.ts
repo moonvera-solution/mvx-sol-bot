@@ -28,21 +28,15 @@ export interface ISESSION_DATA {
   portfolio: PORTFOLIO_TYPE,
   activeWalletIndex: number | 0,
   activeTradingPool: RAYDIUM_POOL_TYPE;
-  tokenRayPoolInfo: Record<string, RAYDIUM_POOL_TYPE>;
   latestCommand: string;
   currentMode: string;
   latestSlippage: number
   metadataMessageId: number;
-  buyToken: PublicKey; // New field to store metadata message ID
-  sellToken: PublicKey; // New field to store metadata message ID
   snipeToken: PublicKey;
   snipeAmount: number;
   snipeSlippage: number;
   snipeStatus: boolean;
   snipperLookup: boolean;
-  buyTokenHistory: PublicKey[];
-  sellTokenHistory: PublicKey[];
-  tokenHistory: PublicKey[];
   rugCheckToken: PublicKey;
   recipientAddress: PublicKey;
   solAmount: number;
@@ -106,18 +100,15 @@ export const DefaultSessionData: ISESSION_DATA = {
   rugCheckToken: DEFAULT_PUBLIC_KEY,
   solAmount: 0,
   recipientAddress: DEFAULT_PUBLIC_KEY,
-  tokenHistory: [],
-  tokenRayPoolInfo: {},
-  buyTokenHistory: [],
-  sellTokenHistory: [],
+
   activeWalletIndex: 0,
   activeTradingPool: DefaultPoolInfoData,
   latestCommand: '',
   currentMode: '',
   latestSlippage: 5,
   metadataMessageId: 0,
-  buyToken: DEFAULT_PUBLIC_KEY,
-  sellToken: DEFAULT_PUBLIC_KEY,
+  // buyToken: DEFAULT_PUBLIC_KEY,
+  // sellToken: DEFAULT_PUBLIC_KEY,
   snipeToken: DEFAULT_PUBLIC_KEY,
   snipeStatus: true,
   snipperLookup: false,
