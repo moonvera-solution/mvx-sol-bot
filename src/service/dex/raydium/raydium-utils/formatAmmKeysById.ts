@@ -25,6 +25,7 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
   ctx.session.poolTime = (await liqInfo).startTime.toNumber() * 1000;
   if (!keys) {
     keys = await _getRayPoolKeys({ t1: quoteMint, t2: shitcoin, connection });
+    console.log('keys', keys);
     const rayPoolKeys = keys as RAYDIUM_POOL_TYPE;
 
     const poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
