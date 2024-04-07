@@ -193,7 +193,8 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
             getSolBalance(userPublicKey, connection),
             getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection)
         ]);
-    
+        console.log('activePool',activePool)
+
         const {
             birdeyeURL,
             dextoolsURL,
@@ -256,7 +257,6 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         messageText = `<b>${tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${msgTxt}</code> <a href="copy:${msgTxt}">🅲</a>\n` +
             `No pool available for this token yet. \nSet Sniper by selecting slippage and amount.`;
      }
-     console.log('activePool',activePool)
 
       await ctx.api.sendMessage(ctx.chat.id, messageText, {
         parse_mode: 'HTML',
