@@ -176,7 +176,6 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
         const poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
        
-        console.log('activePool',activePool)
 
         const baseVault = rayPoolKeys.baseVault;
         const quoteVault = rayPoolKeys.quoteVault;
@@ -194,6 +193,7 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
             getSolBalance(userPublicKey, connection),
             getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection)
         ]);
+        console.log('activePool',activePool)
 
         const {
             birdeyeURL,
