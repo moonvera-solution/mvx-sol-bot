@@ -49,7 +49,7 @@ export async function display_token_details(ctx: any) {
         getSolanaDetails(),
         quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection })
     ]);
-    console.log(tokenInfo.price.toNumber(), solPrice);
+    // console.log(tokenInfo.price.toNumber(), solPrice);
 
     const {
         birdeyeURL,
@@ -73,7 +73,7 @@ export async function display_token_details(ctx: any) {
     // const formattedLiquidity = await formatNumberToKOrM(tokenInfo.liquidity * solprice * 2 ?? "N/A");
     const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
     const tokenPriceUSD = (Number(tokenInfo.price.toNumber()) * (solPrice)).toFixed(quoteDecimals);
-    console.log('tokenPriceUSD', tokenPriceUSD)
+    // console.log('tokenPriceUSD', tokenPriceUSD)
     const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
     const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
     const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
