@@ -42,7 +42,7 @@ import {
 import { refreshTokenDetails } from "./views/refreshData/refreshBuy";
 import { handleWallets } from "./views/util/dbWallet";
 import { RefreshAllWallets } from "./views/refreshData/RefresHandleWallets";
-import { getRayPoolKeys, getRayPoolKeys_2 } from "./service/dex/raydium/raydium-utils/formatAmmKeysById";
+import { getRayPoolKeys } from "./service/dex/raydium/raydium-utils/formatAmmKeysById";
 import { sendHelpMessage, sendReferMessage } from "./views/util/helpMessage";
 import { display_rugCheck } from "./views/rugCheck";
 import { Refresh_rugCheck } from "./views/refreshData/refreshRug";
@@ -523,12 +523,8 @@ bot.on("message", async (ctx) => {
               return;
             }
 
-            // ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
-            if(!ctx.session.activeTradingPool){
-              console.log("Alt", await getRayPoolKeys_2(ctx, msgTxt));
-            }
-            console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
+
             if (!ctx.session.activeTradingPool) {
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);

@@ -27,7 +27,6 @@ export async function display_token_details(ctx: any) {
     const priority_Level = ctx.session.priorityFees;
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
-    // const tokenString = ctx.session.activeTradingPool.baseMint;
     const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
 
     if (!rayPoolKeys) {
