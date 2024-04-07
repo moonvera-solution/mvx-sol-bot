@@ -43,11 +43,14 @@ export async function display_token_details(ctx: any) {
     console.log("rayPoolKeys",rayPoolKeys)
     const tokenAddress = new PublicKey(baseMint);
     const chatId = ctx.chat.id;
-
-    const [tokenMetadataResult, solPrice, tokenInfo] = await Promise.all([
+    const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
+    const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
+    const [tokenMetadataResult, solPrice, tokenInfo,balanceInSOL ] = await Promise.all([
         getTokenMetadata(ctx, tokenAddress.toBase58()),
         getSolanaDetails(),
-        quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection })
+        quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
+        getSolBalance(userPublicKey,connection),
+
     ]);
     // console.log(tokenInfo.price.toNumber(), solPrice);
 
@@ -57,30 +60,24 @@ export async function display_token_details(ctx: any) {
         dexscreenerURL,
         tokenData,
     } = tokenMetadataResult;
-    
+    const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
+
     async function getPriorityFees(ctx: any, raydiumId: string) {
         return await Promise.all([
             runMin(ctx, raydiumId),
             runMedium(ctx, raydiumId),
             runHigh(ctx, raydiumId),
-            runMax(ctx, raydiumId)
+            runMax(ctx, raydiumId),
         ]);
     }
+    const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
     const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
 
-
-    // const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint , connection});
-    // const formattedLiquidity = await formatNumberToKOrM(tokenInfo.liquidity * solprice * 2 ?? "N/A");
     const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
     const tokenPriceUSD = (Number(tokenInfo.price.toNumber()) * (solPrice)).toFixed(quoteDecimals);
-    // console.log('tokenPriceUSD', tokenPriceUSD)
-    const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
-    const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
-    const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
-    const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
+
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
-    const balanceInSOL = await getSolBalance(userPublicKey,connection);
     const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
     const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress,connection);
     try {
