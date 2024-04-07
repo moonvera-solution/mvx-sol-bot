@@ -16,7 +16,7 @@ export async function getRayPoolKeys(ctx:any,shitcoin: string) {
   const commitment = "confirmed"
   const AMMV4 = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8');
   const quoteMint = new PublicKey(shitcoin);
-
+  
   const baseMint = new PublicKey('So11111111111111111111111111111111111111112');
   const accounts = await connection.getProgramAccounts(
     AMMV4,
@@ -49,6 +49,9 @@ export async function getRayPoolKeys(ctx:any,shitcoin: string) {
   // console.log('keys:', keys);
   return keys;
 }
+
+
+
 
 export async function formatAmmKeysById(id: string, connection: Connection): Promise<ApiPoolInfoV4> {
   const account = await connection.getAccountInfo(new PublicKey(id), 'processed')
