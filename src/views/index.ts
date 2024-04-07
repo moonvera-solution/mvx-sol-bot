@@ -172,11 +172,11 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
     if(!msgTxt && !activePool) {await ctx.api.sendMessage(ctx.chat.id, "Enter token address to snipe.", { parse_mode: 'HTML' }); return;}
 
     if (activePool && activePool.baseMint != DEFAULT_PUBLIC_KEY) {
-        console.log('activePool',activePool)
 
         const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
         const poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
        
+        console.log('activePool',activePool)
 
         const baseVault = rayPoolKeys.baseVault;
         const quoteVault = rayPoolKeys.quoteVault;
