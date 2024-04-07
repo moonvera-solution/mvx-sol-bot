@@ -49,6 +49,7 @@ export async function display_token_details(ctx: any) {
         getSolanaDetails(),
         quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection })
     ]);
+    console.log(tokenInfo.price.toNumber(), solPrice);
 
     const {
         birdeyeURL,
