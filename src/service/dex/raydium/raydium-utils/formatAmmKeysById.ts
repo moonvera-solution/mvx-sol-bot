@@ -15,9 +15,49 @@ export async function getRayPoolKeys(ctx:any,shitcoin: string) {
   // console.log('connection:', connection);
   const commitment = "confirmed"
   const AMMV4 = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8');
-  const quoteMint = new PublicKey(shitcoin);
+  const baseMint = new PublicKey(shitcoin);
   
-  const baseMint = new PublicKey('So11111111111111111111111111111111111111112');
+  const quoteMint = new PublicKey('So11111111111111111111111111111111111111112');
+  const accounts = await connection.getProgramAccounts(
+    AMMV4,
+    {
+      commitment,
+      filters: [
+        { dataSize: LIQUIDITY_STATE_LAYOUT_V4.span },
+        {
+          memcmp: {
+            offset: LIQUIDITY_STATE_LAYOUT_V4.offsetOf("baseMint"),
+            bytes: baseMint.toBase58(),
+          },
+        },
+        {
+          memcmp: {
+            offset: LIQUIDITY_STATE_LAYOUT_V4.offsetOf("quoteMint"),
+            bytes: quoteMint.toBase58(),
+          },
+        },
+      ],
+    }
+  );
+
+  const ammId = accounts && accounts[0] && accounts[0].pubkey;
+  let keys: any = null;
+  // ammid exists and keys still null
+  while (ammId && keys == undefined) {
+    keys = await formatAmmKeysById(ammId.toString(),connection);
+  }
+  // console.log('keys:', keys);
+  return keys;
+}
+
+export async function getRayPoolKeys_2(ctx:any,shitcoin: string) {
+  const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+  // console.log('connection:', connection);
+  const commitment = "confirmed"
+  const AMMV4 = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8');
+  const baseMint = new PublicKey(shitcoin);
+  
+  const quoteMint = new PublicKey('So11111111111111111111111111111111111111112');
   const accounts = await connection.getProgramAccounts(
     AMMV4,
     {
