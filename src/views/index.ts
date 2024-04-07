@@ -40,7 +40,7 @@ export async function display_token_details(ctx: any) {
     const quoteDecimals = rayPoolKeys.quoteDecimals;
     const baseMint = rayPoolKeys.baseMint;
 
-    console.log("rayPoolKeys",rayPoolKeys)
+    // console.log("rayPoolKeys",rayPoolKeys)
     const tokenAddress = new PublicKey(baseMint);
     const chatId = ctx.chat.id;
     const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
@@ -175,7 +175,6 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
 
         const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
         const poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
-       console.log("poolKeys",poolKeys)
 
         const baseVault = rayPoolKeys.baseVault;
         const quoteVault = rayPoolKeys.quoteVault;
@@ -185,11 +184,11 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         const chatId = ctx.chat.id;
         const tokenAddress = new PublicKey(ctx.session.snipeToken);
 
-        const [tokenMetadataResult, solPrice, tokenInfo, liqInfo, balanceInSOL, userTokenDetails] = await Promise.all([
+        const [tokenMetadataResult, solPrice, tokenInfo, balanceInSOL, userTokenDetails] = await Promise.all([
             getTokenMetadata(ctx, tokenAddress.toBase58()),
             getSolanaDetails(),
             quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
-            Liquidity.fetchInfo({ connection, poolKeys }),
+            // Liquidity.fetchInfo({ connection, poolKeys }),
             getSolBalance(userPublicKey, connection),
             getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection)
         ]);
@@ -217,10 +216,10 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
 
 
         ctx.session.currentMode = 'snipe';
-        ctx.session.poolTime = liqInfo;
+        // ctx.session.poolTime = liqInfo;
         // showing the user the countdowm to the snipe
         const currentTime = new Date();
-        const poolStartTime = new Date(liqInfo.startTime.toNumber() * 1000);
+        const poolStartTime =  ctx.session.poolTime;
 
         let poolStatusMessage;
         if (currentTime >= poolStartTime) {
