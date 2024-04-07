@@ -15,8 +15,9 @@ export async function getRayPoolKeys(ctx:any,shitcoin: string) {
   // console.log('connection:', connection);
   const commitment = "confirmed"
   const AMMV4 = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8');
-  const baseMint = new PublicKey(shitcoin);
-  const quoteMint = new PublicKey('So11111111111111111111111111111111111111112');
+  const quoteMint = new PublicKey(shitcoin);
+
+  const baseMint = new PublicKey('So11111111111111111111111111111111111111112');
   const accounts = await connection.getProgramAccounts(
     AMMV4,
     {
