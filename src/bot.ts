@@ -416,7 +416,7 @@ bot.on("message", async (ctx) => {
         if (msgTxt) {
           ctx.session.latestCommand = "snipe";
           if (ctx.session.snipperLookup) {
-            snipperON(ctx, msgTxt);
+            await snipperON(ctx, msgTxt);
           } else {
             await setSnipe(ctx, msgTxt);
           }
@@ -900,7 +900,7 @@ bot.on("callback_query", async (ctx: any) => {
             await ctx.api.sendMessage(
                 ctx.chat.id,
                 "Enter the token Address you would like to snipe."
-              );
+            );
         }
        
         break;
@@ -1092,7 +1092,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "snipe_0.2_SOL": {
         if (ctx.session.snipperLookup) {
-          snipperON(ctx, "0.2");
+          await snipperON(ctx, "0.2");
         } else {
           await setSnipe(ctx, "0.2");
         }
@@ -1100,7 +1100,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "snipe_0.5_SOL": {
         if (ctx.session.snipperLookup) {
-          snipperON(ctx, "0.5");
+         await snipperON(ctx, "0.5");
         } else {
           await setSnipe(ctx, "0.5");
         }
@@ -1108,7 +1108,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "snipe_1_SOL": {
         if (ctx.session.snipperLookup) {
-          snipperON(ctx, "1");
+          await snipperON(ctx, "1");
         } else {
           await setSnipe(ctx, "1");
         }
@@ -1116,7 +1116,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "snipe_5_SOL": {
         if (ctx.session.snipperLookup) {
-          snipperON(ctx, "5");
+         await  snipperON(ctx, "5");
         } else {
           await setSnipe(ctx, "5");
         }

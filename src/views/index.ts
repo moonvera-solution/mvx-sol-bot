@@ -168,7 +168,7 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
     const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
-
+    console.log("activePool",activePool)
     if(!msgTxt && !activePool) {await ctx.api.sendMessage(ctx.chat.id, "Enter token address to snipe.", { parse_mode: 'HTML' }); return;}
 
     if (activePool && activePool.baseMint != DEFAULT_PUBLIC_KEY) {
