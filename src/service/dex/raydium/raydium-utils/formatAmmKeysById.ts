@@ -26,9 +26,9 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
   if (!keys) {
     keys = await _getRayPoolKeys({ t1: quoteMint, t2: shitcoin, connection });
     console.log('keys', keys);
-    const rayPoolKeys = keys as RAYDIUM_POOL_TYPE;
+    let rayPoolKeys = keys as RAYDIUM_POOL_TYPE;
 
-    const poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
+    let poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
 
     let liqInfo = Liquidity.fetchInfo({ connection, poolKeys })
     ctx.session.poolTime = (await liqInfo).startTime.toNumber() * 1000;
@@ -51,7 +51,7 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
     keys.marketBaseVault = _marketQuoteVault;
     keys.marketQuoteVault = _marketBaseVault;
   }
-  console.log('keys', keys);
+  // console.log('keys', keys);
   return keys;
 }
 
@@ -60,7 +60,7 @@ async function _getRayPoolKeys({ t1, t2, connection }: { t1: string, t2: string,
   const AMMV4 = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8');
   const baseMint = new PublicKey(t1);
   const quoteMint = new PublicKey(t2);
-  console.log(t1, t2)
+  // console.log(t1, t2)
 
   const accounts = await connection.getProgramAccounts(
     AMMV4,
