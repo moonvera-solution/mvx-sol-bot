@@ -26,13 +26,7 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
   if (!keys) {
     keys = await _getRayPoolKeys({ t1: quoteMint, t2: shitcoin, connection });
     console.log('keys', keys);
-    let rayPoolKeys = keys as RAYDIUM_POOL_TYPE;
-
-    let poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
-
-    let liqInfo = Liquidity.fetchInfo({ connection, poolKeys })
-    ctx.session.poolTime = (await liqInfo).startTime.toNumber() * 1000;
-    console.log('liqInfo', (await liqInfo).startTime)
+  
     let _quoteMint = keys.quoteMint;
     let _baseMint = keys.baseMint;
     let _baseVault = keys.baseVault;
@@ -87,6 +81,7 @@ async function _getRayPoolKeys({ t1, t2, connection }: { t1: string, t2: string,
 
   const ammId = accounts && accounts[0] && accounts[0].pubkey;
   let keys: any = null;
+  
   // ammid exists and keys still null
   while (ammId && keys == undefined) {
     keys = await formatAmmKeysById(ammId.toString(), connection);
