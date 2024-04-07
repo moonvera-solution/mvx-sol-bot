@@ -79,7 +79,7 @@ async function _getRayPoolKeys({ t1, t2, connection }: { t1: string, t2: string,
 
 export async function formatAmmKeysById(id: string, connection: Connection): Promise<ApiPoolInfoV4> {
   const account = await connection.getAccountInfo(new PublicKey(id), 'processed')
-
+  
   if (account === null) throw Error(' get id info error ')
   const info = LIQUIDITY_STATE_LAYOUT_V4.decode(account.data)
 

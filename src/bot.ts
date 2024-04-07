@@ -112,7 +112,7 @@ bot.command("start", async (ctx: any) => {
     const chatId = ctx.chat.id;
     const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
     let isNewUser = false;
-    ctx.session.env["tritonRPC"] = "https://moonvera.rpcpool.com/";
+    ctx.session.env["tritonRPC"] = "https://moonvera-pit.rpcpool.com/";
     ctx.session.env["tritonToken"] = process.env.TRITON_RPC_TOKEN!;
     const connection = new Connection(
       `${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`

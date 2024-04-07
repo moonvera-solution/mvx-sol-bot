@@ -38,6 +38,7 @@ export async function display_rugCheck(ctx: any) {
 
 
         const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
+        console.log(tokenInfo.price.toNumber(), solPrice);
         const tokenPriceUSD = (tokenInfo.price.times(solPrice)).toFixed(quoteDecimals);
         const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
         // pool ration is 0.5 so we multiply by 2 or divide by 0.5
