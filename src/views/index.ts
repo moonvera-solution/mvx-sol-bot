@@ -168,7 +168,7 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
     const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
-    console.log("activePool",activePool)
+    // console.log("activePool",activePool)
     if(!msgTxt && !activePool) {await ctx.api.sendMessage(ctx.chat.id, "Enter token address to snipe.", { parse_mode: 'HTML' }); return;}
 
     if (activePool && activePool.baseMint != DEFAULT_PUBLIC_KEY) {
@@ -256,7 +256,7 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         messageText = `<b>${tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${msgTxt}</code> <a href="copy:${msgTxt}">🅲</a>\n` +
             `No pool available for this token yet. \nSet Sniper by selecting slippage and amount.`;
      }
-
+     console.log('activePool',activePool)
 
       await ctx.api.sendMessage(ctx.chat.id, messageText, {
         parse_mode: 'HTML',
