@@ -525,7 +525,7 @@ bot.on("message", async (ctx) => {
 
             // ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
-            if(!ctx.session.activeTradingPool){
+            if(ctx.session.activeTradingPool == null){
               console.log("Alt", await getRayPoolKeys_2(ctx, msgTxt));
             }
             console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
