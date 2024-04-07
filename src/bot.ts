@@ -542,6 +542,7 @@ bot.on("message", async (ctx) => {
           }
         } catch (error: any) {
           console.error("Error in 'snipe' command:", error.message);
+          
         }
         break;
       }
