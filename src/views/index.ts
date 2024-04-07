@@ -39,6 +39,8 @@ export async function display_token_details(ctx: any) {
     const baseDecimals = rayPoolKeys.baseDecimals;
     const quoteDecimals = rayPoolKeys.quoteDecimals;
     const baseMint = rayPoolKeys.baseMint;
+
+    console.log("rayPoolKeys",rayPoolKeys)
     const tokenAddress = new PublicKey(baseMint);
     const chatId = ctx.chat.id;
 
