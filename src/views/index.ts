@@ -193,8 +193,10 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
             getSolBalance(userPublicKey, connection),
             getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection)
         ]);
-        console.log('activePool',activePool)
-
+        console.log('tokenInfo',tokenInfo)
+        console.log('tokenMetadataResult',tokenMetadataResult)
+        console.log('liqInfo',liqInfo)
+        
         const {
             birdeyeURL,
             dextoolsURL,
