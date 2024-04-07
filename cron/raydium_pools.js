@@ -17,7 +17,8 @@ const authMechanism = 'SCRAM-SHA-1';
 
 const local_url = `mongodb://${user}:${password}@localhost:35048/bot`;
 const ec2_url = `mongodb://${ec2_user}:${ec2_password}@localhost:35048/bot`;
-const connection = new Connection('')
+const connection = new Connection('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41')
+
 
 /**
  * All DB functions are prefized with an underscore (_)
@@ -128,7 +129,6 @@ async function seedRaydium_official_pools(pool) {
     raydium_official_pools.save();
 }
 
-
 function _getESTime() {
     const date = new Date();
     const utcDate = new Date(date.toUTCString());
@@ -144,24 +144,36 @@ async function _fetchJson() {
         console.info("Fetching Json file:", _getESTime());
         const response = await axios.get(url);
         let jsonData = response.data; // Store the data in the variable
-        console.info("Filtering duplicates...");
+        
+        console.info("finding token...");
+
         jsonData.unOfficial.forEach(async (pool) => {
-            const poolExists = await Raydium_unOfficial_pools.findOne({ id: pool.id });
-            // _deleteEmptyPools(pool);
-            poolExists == null ? seedRaydium_unOfficial_pools(pool) : null;
+             console.log('token: -----',pool.baseMint)
+            if(pool.baseMint == "6omGNaPWYbEy5H1F8BCjNeSoV34e6vdxxfdKeftCA2q8"){
+                console.log("pool: ", pool.id);
+            }
+            // const poolExists = await Raydium_unOfficial_pools.findOne({ id: pool.id });
+            // // _deleteEmptyPools(pool);
+            // poolExists == null ? seedRaydium_unOfficial_pools(pool) : null;
         });
         jsonData.official.forEach(async (pool) => {
-            const poolExists = await Raydium_official_pools.findOne({ id: pool.id });
-            // _deleteEmptyPools(pool);
-            poolExists == null ? seedRaydium_official_pools(pool) : null;
+            console.log('token: ----',pool.baseMint)
+            if(pool.baseMint == "6omGNaPWYbEy5H1F8BCjNeSoV34e6vdxxfdKeftCA2q8"){
+                console.log("pool: ", pool.id);
+            }
+            // const poolExists = await Raydium_official_pools.findOne({ id: pool.id });
+            // // _deleteEmptyPools(pool);
+            // poolExists == null ? seedRaydium_official_pools(pool) : null;
         });
+        console.log("done")
     } catch (err) {
         console.log("Cron error FetchJson: ", err);
     }
 }
 
-// Cleans db
+_fetchJson();
 
+// Cleans db
 const limiter = new Bottleneck({
     maxConcurrent: 10,
     minTime: 500
