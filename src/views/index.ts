@@ -27,8 +27,7 @@ export async function display_token_details(ctx: any) {
     const priority_Level = ctx.session.priorityFees;
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
-    const tokenString = ctx.session.activeTradingPool.baseMint;
-    const rayPoolKeys = ctx.session.tokenRayPoolInfo[tokenString] as RAYDIUM_POOL_TYPE;
+    const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
 
     if (!rayPoolKeys) {
         // Handle the case where the pool information is not available
@@ -40,21 +39,20 @@ export async function display_token_details(ctx: any) {
     const baseDecimals = rayPoolKeys.baseDecimals;
     const quoteDecimals = rayPoolKeys.quoteDecimals;
     const baseMint = rayPoolKeys.baseMint;
+
+    // console.log("rayPoolKeys",rayPoolKeys)
     const tokenAddress = new PublicKey(baseMint);
     const chatId = ctx.chat.id;
-    // const messageId = ctx.msg.message_id;
-    // const {
-    //     birdeyeURL,
-    //     dextoolsURL,
-    //     dexscreenerURL,
-    //     tokenData,
-    // } = await getTokenMetadata(ctx, tokenAddress.toBase58()); // Convert tokenAddress to string using toBase58()
-    // const solprice = await getSolanaDetails();
-    const [tokenMetadataResult, solPrice, tokenInfo] = await Promise.all([
+    const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
+    const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
+    const [tokenMetadataResult, solPrice, tokenInfo, balanceInSOL] = await Promise.all([
         getTokenMetadata(ctx, tokenAddress.toBase58()),
         getSolanaDetails(),
-        quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection })
+        quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
+        getSolBalance(userPublicKey, connection),
+
     ]);
+    // console.log(tokenInfo.price.toNumber(), solPrice);
 
     const {
         birdeyeURL,
@@ -62,31 +60,26 @@ export async function display_token_details(ctx: any) {
         dexscreenerURL,
         tokenData,
     } = tokenMetadataResult;
-    
+    const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
+
     async function getPriorityFees(ctx: any, raydiumId: string) {
         return await Promise.all([
             runMin(ctx, raydiumId),
             runMedium(ctx, raydiumId),
             runHigh(ctx, raydiumId),
-            runMax(ctx, raydiumId)
+            runMax(ctx, raydiumId),
         ]);
     }
+    const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
     const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
 
-
-    // const tokenInfo = await quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint , connection});
-    // const formattedLiquidity = await formatNumberToKOrM(tokenInfo.liquidity * solprice * 2 ?? "N/A");
     const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
-    const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
-    const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
-    const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
-    const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
-    const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
+    const tokenPriceUSD = (Number(tokenInfo.price.toNumber()) * (solPrice)).toFixed(quoteDecimals);
+
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
-    const balanceInSOL = await getSolBalance(userPublicKey,connection);
     const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
-    const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress,connection);
+    const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection);
     try {
         // Construct the message
         let options: any;
@@ -113,14 +106,13 @@ export async function display_token_details(ctx: any) {
                 reply_markup: {
                     inline_keyboard: [
                         [{ text: ' 🔂 Refresh ', callback_data: 'refresh_trade' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
-                        [{ text: 'Buy (X SOL)', callback_data: 'buy_X_SOL' }, { text: 'Buy (0.1 SOL)', callback_data: 'buy_0.1_SOL' }, { text: 'Buy (0.2 SOL)', callback_data: 'buy_0.2_SOL' }],
-                        [{ text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_SOL' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_SOL' }, { text: 'Buy (5 SOL)', callback_data: 'buy_5_SOL' }],
+                        [{ text: 'Buy (X SOL)', callback_data: 'buy_X_SOL' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_SOL' }, { text: 'Buy (5 SOL)', callback_data: 'buy_5_SOL' }],
                         // [{ text: '⏮️ Previous', callback_data: 'previous_token' }, { text: `${tokenData.name} (${tokenData.symbol})`, callback_data: 'current_token' }, { text: 'Next ⏭️', callback_data: 'next_token' }],
                         [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: 'Selling Mode 💸', callback_data: 'sell' }],
                         [{ text: '📈 Priority fees', callback_data: '_' }],
                         [
                             { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
-                            { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level ===  10000? '✅' : ''}`, callback_data: 'priority_max' }
+                            { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
                         ],
                         [{ text: 'Close', callback_data: 'closing' }]]
                 },
@@ -146,9 +138,8 @@ export async function display_token_details(ctx: any) {
                 reply_markup: {
                     inline_keyboard: [
                         [{ text: ' 🔂 Refresh ', callback_data: 'refresh_trade' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
-                        [{ text: '  Sell X Amount  ', callback_data: 'sell_X_TOKEN' }, { text: '  Sell 10%  ', callback_data: 'sell_10_TOKEN' }, { text: '  Sell 25%  ', callback_data: 'sell_25_TOKEN' }],
-                        [{ text: '  Sell 50%  ', callback_data: 'sell_50_TOKEN' }, { text: 'Sell 75%', callback_data: '  sell_75_TOKEN  ' }, { text: '  Sell 100%  ', callback_data: 'sell_100_TOKEN' }],
-                        // [{ text: '⏮️ Previous', callback_data: 'previous_token' }, { text: `${tokenData.name} (${tokenData.symbol})`, callback_data: 'current_token' }, { text: 'Next ⏭️', callback_data: 'next_token' }],
+                        [{ text: '  Sell 25%  ', callback_data: 'sell_25_TOKEN' }, { text: '  Sell 50%  ', callback_data: 'sell_50_TOKEN' }, { text: 'Sell 75%', callback_data: '  sell_75_TOKEN  ' },],
+                        [{ text: '  Sell 100%  ', callback_data: 'sell_100_TOKEN' }, { text: '  Sell X Amount  ', callback_data: 'sell_X_TOKEN' }],
                         [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: ' Buy Mode', callback_data: 'buy' }],
                         [{ text: '📈 Priority fees', callback_data: '_' }],
                         [
@@ -169,7 +160,7 @@ export async function display_token_details(ctx: any) {
     }
 }
 
-export async function display_snipe_options(ctx: any,msgTxt?: string) {
+export async function display_snipe_options(ctx: any, msgTxt?: string) {
     let messageText;
     const priority_Level = ctx.session.priorityFees;
     let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
@@ -177,14 +168,12 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
     const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
-
-    if(!msgTxt && !activePool) {await ctx.api.sendMessage(ctx.chat.id, "Enter token address to snipe.", { parse_mode: 'HTML' }); return;}
+    // console.log("activePool",activePool)
+    if (!msgTxt && !activePool) { await ctx.api.sendMessage(ctx.chat.id, "Enter token address to snipe.", { parse_mode: 'HTML' }); return; }
 
     if (activePool && activePool.baseMint != DEFAULT_PUBLIC_KEY) {
 
-        const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
-        const poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
-       
+        const rayPoolKeys: RAYDIUM_POOL_TYPE = ctx.session.activeTradingPool;
 
         const baseVault = rayPoolKeys.baseVault;
         const quoteVault = rayPoolKeys.quoteVault;
@@ -194,15 +183,16 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         const chatId = ctx.chat.id;
         const tokenAddress = new PublicKey(ctx.session.snipeToken);
 
-        const [tokenMetadataResult, solPrice, tokenInfo, liqInfo, balanceInSOL, userTokenDetails] = await Promise.all([
+        const liqInfo = ctx.session.env.poolSchedule;
+        const [tokenMetadataResult, solPrice, tokenInfo, balanceInSOL, userTokenDetails] = await Promise.all([
             getTokenMetadata(ctx, tokenAddress.toBase58()),
             getSolanaDetails(),
             quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
-            Liquidity.fetchInfo({ connection, poolKeys }),
             getSolBalance(userPublicKey, connection),
             getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection)
         ]);
-    
+
+
         const {
             birdeyeURL,
             dextoolsURL,
@@ -238,10 +228,10 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
             const countdown = new Date(timeDiff).toISOString().substr(11, 8);
             poolStatusMessage = `⏳ Opening in ${countdown}`;
         }
-    
+
         const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
         const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
- 
+
         const priceImpact = tokenInfo.priceImpact.toFixed(2);
         const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
 
@@ -264,28 +254,16 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         const { tokenData } = await getTokenMetadata(ctx, ctx.session.snipeToken);
         messageText = `<b>${tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${msgTxt}</code> <a href="copy:${msgTxt}">🅲</a>\n` +
             `No pool available for this token yet. \nSet Sniper by selecting slippage and amount.`;
-            // `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
-            // `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
-            // `Market Cap: <b>NaN USD</b>\n` +
-            // `Token Price: <b>NaN USD</b> | <b> NaN SOL</b> \n\n` +
-            // // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
-            // `price Impact (5.0 SOL) : <b>Nan%</b> | (1.0 SOL): <b>NaN%</b> \n\n` +
-            // `Pool Status: <b>${poolStatusMessage}</b>\n\n` +
-            // `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
-            // `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
-            // `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
-     }
+    }
 
-
-      await ctx.api.sendMessage(ctx.chat.id, messageText, {
+    await ctx.api.sendMessage(ctx.chat.id, messageText, {
         parse_mode: 'HTML',
         disable_web_page_preview: true,
         reply_markup: {
             inline_keyboard: [
                 [{ text: ' 🔂 Refresh ', callback_data: 'refresh_snipe' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
                 // [{ text: ' 🎯  Turbo Snipping ', callback_data: '_' }],
-                [{ text: '🎯 X SOL', callback_data: 'snipe_X_SOL' }, { text: '🎯 0.1 SOL', callback_data: 'snipe_0.1_SOL' }, { text: '🎯 0.2 SOL', callback_data: 'snipe_0.2_SOL' }],
-                [{ text: '🎯 0.5 SOL', callback_data: 'snipe_0.5_SOL' }, { text: '🎯 1 SOL', callback_data: 'snipe_1_SOL' }, { text: '🎯 5 SOL', callback_data: 'snipe_5_SOL' }],
+                [{ text: '🎯 X SOL', callback_data: 'snipe_X_SOL' }, { text: '🎯 1 SOL', callback_data: 'snipe_1_SOL' }, { text: '🎯 5 SOL', callback_data: 'snipe_5_SOL' }],
                 [{ text: `⛷️ Set Slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }, { text: 'Selling Mode 💸', callback_data: 'sell' }],
                 [{ text: '📈 Priority fees', callback_data: '_' }],
 

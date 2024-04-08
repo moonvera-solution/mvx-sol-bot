@@ -1,31 +1,59 @@
-import { createUserPortfolio, createNewWallet, handleGetPrivateKey, checkWalletsLength, confirmResetWalletAgain, resetWallet } from './service/portfolio/wallets';
-import { handle_radyum_swap } from './service/portfolio/strategies/swaps';
-import { Bot, Context, GrammyError, HttpError, session, SessionFlavor, webhookCallback } from "grammy";
-import { importWallet, getPortfolio } from './service/portfolio/wallets';
-import { ISESSION_DATA, DefaultSessionData, DEFAULT_PUBLIC_KEY, PORTFOLIO_TYPE, DefaultPortfolioData } from './service/util/types';
-import { Keypair, PublicKey, Connection } from '@solana/web3.js';
+import {
+  createUserPortfolio,
+  createNewWallet,
+  handleGetPrivateKey,
+  checkWalletsLength,
+  confirmResetWalletAgain,
+  resetWallet,
+} from "./service/portfolio/wallets";
+import { handle_radyum_swap } from "./service/portfolio/strategies/swaps";
+import {
+  Bot,
+  Context,
+  GrammyError,
+  HttpError,
+  session,
+  SessionFlavor,
+  webhookCallback,
+} from "grammy";
+import { importWallet, getPortfolio } from "./service/portfolio/wallets";
+import {
+  ISESSION_DATA,
+  DefaultSessionData,
+  DEFAULT_PUBLIC_KEY,
+  PORTFOLIO_TYPE,
+  DefaultPortfolioData,
+} from "./service/util/types";
+import { Keypair, PublicKey, Connection } from "@solana/web3.js";
 import { _initDbConnection } from "./db/mongo/crud";
-import { handleSettings } from './service/settings';
-import { getSolanaDetails } from './api';
-import { setSnipe, snipperON } from './service/portfolio/strategies/snipper';
-import { display_token_details, display_snipe_options, handleCloseKeyboard } from './views';
-import { getSolBalance, sendSol } from './service/util';
-import { handleRefreshStart, handleRereshWallet } from './views/refreshData/refreshStart';
-import { refreshTokenDetails } from './views/refreshData/refreshBuy';
-import { handleWallets } from './views/util/dbWallet';
-import { RefreshAllWallets } from './views/refreshData/RefresHandleWallets';
-import { getRayPoolKeys } from './service/dex/raydium/raydium-utils/formatAmmKeysById'
-import { sendHelpMessage, sendReferMessage } from './views/util/helpMessage';
-import { display_rugCheck } from './views/rugCheck';
-import { Refresh_rugCheck } from './views/refreshData/refreshRug';
-import { _generateReferralLink, _getReferralData } from '../src/db/mongo/crud';
-import { Referrals } from './db/mongo/schema';
-import { display_spl_positions } from './views/portfolioView';
-import { refreshSnipeDetails } from './views/refreshData/refereshSnipe';
+import { handleSettings } from "./service/settings";
+import { getSolanaDetails } from "./api";
+import { setSnipe, snipperON } from "./service/portfolio/strategies/snipper";
+import {
+  display_token_details,
+  display_snipe_options,
+  handleCloseKeyboard,
+} from "./views";
+import { getSolBalance, sendSol } from "./service/util";
+import {
+  handleRefreshStart,
+  handleRereshWallet,
+} from "./views/refreshData/refreshStart";
+import { refreshTokenDetails } from "./views/refreshData/refreshBuy";
+import { handleWallets } from "./views/util/dbWallet";
+import { RefreshAllWallets } from "./views/refreshData/RefresHandleWallets";
+import { getRayPoolKeys } from "./service/dex/raydium/raydium-utils/formatAmmKeysById";
+import { sendHelpMessage, sendReferMessage } from "./views/util/helpMessage";
+import { display_rugCheck } from "./views/rugCheck";
+import { Refresh_rugCheck } from "./views/refreshData/refreshRug";
+import { _generateReferralLink, _getReferralData } from "../src/db/mongo/crud";
+import { Referrals } from "./db/mongo/schema";
+import { display_spl_positions } from "./views/portfolioView";
+import { refreshSnipeDetails } from "./views/refreshData/refereshSnipe";
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
-import { refresh_spl_positions } from './views/refreshData/refreshPortfolio';
+import { refresh_spl_positions } from "./views/refreshData/refreshPortfolio";
 import { logErrorToFile } from "../error/logger";
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 // const express = require('express');
 // const app = express();
@@ -34,19 +62,20 @@ dotenv.config();
 /*                  BOT START & SET ENV                       */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 type MyContext = Context & SessionFlavor<ISESSION_DATA>;
-const isProd = process.env.NODE_ENV == 'PROD';
-
+const isProd = process.env.NODE_ENV == "DEV";
 
 _initDbConnection();
 const keys = process.env.TELEGRAM_BOT_TOKEN;
 const bot = new Bot<MyContext>(keys!);
-bot.use(session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) }));
+bot.use(
+  session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) })
+);
 bot.start();
 // Set the webhook
 
-const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
+const botToken = process.env.TELEGRAM_BOT_TOKEN || "";
 // console.log("botToken", botToken);
-// const webhookUrl = 'https://drib.ngrok.app'; 
+// const webhookUrl = 'https://drib.ngrok.app';
 
 // bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
 //   .then(() => console.log("Webhook set successfully"))
@@ -62,12 +91,18 @@ const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
 //   res.send('Hello from ngrok server!');
 // });
 // // const server = createServer(bot);
-// const port = process.env.PORT || 80; 
+// const port = process.env.PORT || 80;
 // app.listen(port, () => {
 //     console.log(`Server is running on port ${port}`);
 // });
 
-const allowedUsernames = ['tech_01010', 'daniellesifg', 'CryptoBoosie', 'swalefdao', 'coachalib']; // without the @
+const allowedUsernames = [
+  "tech_01010",
+  "daniellesifg",
+  "CryptoBoosie",
+  "swalefdao",
+  "coachalib",
+]; // without the @
 
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                      BOT START                             */
@@ -77,18 +112,20 @@ bot.command("start", async (ctx: any) => {
     const chatId = ctx.chat.id;
     const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
     let isNewUser = false;
-    ctx.session.env['tritonRPC'] = 'https://moonvera-pit.rpcpool.com/';
-    ctx.session.env['tritonToken'] = process.env.TRITON_RPC_TOKEN!;
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
-
+    ctx.session.env["tritonRPC"] = "https://moonvera-pit.rpcpool.com/";
+    ctx.session.env["tritonToken"] = process.env.TRITON_RPC_TOKEN!;
+    const connection = new Connection(
+      `${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`
+    );
 
     let referralCode = null;
     // Check if there's additional text with the /start command
-    if (ctx.message.text.includes(' ')) {
-      referralCode = ctx.message.text.split(' ')[1];
+    if (ctx.message.text.includes(" ")) {
+      referralCode = ctx.message.text.split(" ")[1];
     }
     // if user already exists
-    if (portfolio == DefaultPortfolioData) {// User is new
+    if (portfolio == DefaultPortfolioData) {
+      // User is new
       isNewUser = true;
     }
 
@@ -98,7 +135,9 @@ bot.command("start", async (ctx: any) => {
     const allowedUsers = allowedUsernames.includes(userName);
 
     if (referralCode || allowedUsers) {
-      const referralRecord = await Referrals.findOne({ referralCode: referralCode });
+      const referralRecord = await Referrals.findOne({
+        referralCode: referralCode,
+      });
       if (referralRecord && referralRecord.generatorChatId !== chatId) {
         if (!referralRecord.referredUsers.includes(chatId)) {
           // Add the user's chatId to the referredUsers array
@@ -107,7 +146,9 @@ bot.command("start", async (ctx: any) => {
           // Increment the referral count
           referralRecord.numberOfReferrals! += 1;
           await referralRecord.save();
-          ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
+          ctx.session.generatorWallet = new PublicKey(
+            referralRecord.generatorWallet
+          );
           ctx.session.referralCommision = referralRecord.commissionPercentage;
           // ctx.session.referralEarnings = referralRecord.earnings;
           // Optional: Notify the user that they have been referred successfully
@@ -119,7 +160,10 @@ bot.command("start", async (ctx: any) => {
       }
     } else if (isNewUser) {
       // New user without a referral code
-      await ctx.api.sendMessage(chatId, "Welcome to DRIBs bot. Please start the bot using a referral link.");
+      await ctx.api.sendMessage(
+        chatId,
+        "Welcome to DRIBs bot. Please start the bot using a referral link."
+      );
       return;
     }
 
@@ -137,10 +181,11 @@ bot.command("start", async (ctx: any) => {
     }
 
     // Retrieve the current SOL details
-    let solPriceMessage = '';
+    let solPriceMessage = "";
     const details = await getSolanaDetails();
-    const publicKeyString: PublicKey | String = userWallet ? userWallet.publicKey :
-      ctx.session.portfolio.wallets[ctx.session.activeWalletIndex].publicKey;
+    const publicKeyString: PublicKey | String = userWallet
+      ? userWallet.publicKey
+      : ctx.session.portfolio.wallets[ctx.session.activeWalletIndex].publicKey;
 
     // Fetch SOL balance
     const balanceInSOL = await getSolBalance(publicKeyString, connection);
@@ -149,24 +194,25 @@ bot.command("start", async (ctx: any) => {
       return;
     }
 
-    // solana price 
+    // solana price
     if (details) {
       const solData = details.toFixed(2);
       solPriceMessage = `\n\SOL Price: <b>${solData}</b> USD`;
     } else {
-      solPriceMessage = '\nError fetching current SOL price.';
+      solPriceMessage = "\nError fetching current SOL price.";
     }
 
     // Combine the welcome message, SOL price message, and instruction to create a wallet
-    const welcomeMessage = `✨ Welcome to <b>DRIBs bot</b> - Your Advanced Trading Companion! ✨\n` +
+    const welcomeMessage =
+      `✨ Welcome to <b>DRIBs bot</b> - Your Advanced Trading Companion! ✨\n` +
       `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
       `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
       `We're always working to bring you new features - stay tuned!\n\n` +
       `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
-      `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> USD\n\n` +
+      `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(
+        balanceInSOL * details
+      ).toFixed(2)}</b> USD\n\n` +
       `🖐🏼 For security, we recommend exporting your private key and keeping it paper.`;
-
-
 
     // Set the options for th e inline keyboard with social links
     const options: any = {
@@ -177,16 +223,25 @@ bot.command("start", async (ctx: any) => {
           //     { text: '𝚇', url: 'https://twitter.com/moonvera_' }
 
           // ],
-          [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
-          [{ text: '☑️ Rug Check', callback_data: 'rug_check' }],
-          [{ text: '🎯 Turbo Snipe', callback_data: 'snipe' }],
-          [{ text: '💱 Buy', callback_data: 'buy' }, { text: 'Sell 📈', callback_data: 'sell' }],
-          [{ text: 'ℹ️ Help', callback_data: 'help' }, { text: 'Refer Friends', callback_data: 'refer_friends' }],
-          [{ text: 'Refresh', callback_data: 'refresh_start' }],
-          [{ text: 'Positions', callback_data: 'display_spl_positions' }],
+          [
+            { text: "⬇️ Import Wallet", callback_data: "import_wallet" },
+            { text: "💼 Wallets & Settings⚙️", callback_data: "show_wallets" },
+          ],
+          [{ text: "☑️ Rug Check", callback_data: "rug_check" }],
+          [{ text: "🎯 Turbo Snipe", callback_data: "snipe" }],
+          [
+            { text: "💱 Buy", callback_data: "buy" },
+            { text: "Sell 📈", callback_data: "sell" },
+          ],
+          [
+            { text: "ℹ️ Help", callback_data: "help" },
+            { text: "Refer Friends", callback_data: "refer_friends" },
+          ],
+          [{ text: "Refresh", callback_data: "refresh_start" }],
+          [{ text: "Positions", callback_data: "display_spl_positions" }],
         ],
       }),
-      parse_mode: 'HTML'
+      parse_mode: "HTML",
     };
     // Send the message with the inline keyboard
     ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
@@ -196,11 +251,11 @@ bot.command("start", async (ctx: any) => {
   }
 });
 
-bot.command('help', async (ctx) => {
+bot.command("help", async (ctx) => {
   await sendHelpMessage(ctx);
 });
 
-bot.command('positions', async (ctx) => {
+bot.command("positions", async (ctx) => {
   try {
     await display_spl_positions(ctx);
   } catch (error: any) {
@@ -208,63 +263,79 @@ bot.command('positions', async (ctx) => {
   }
 });
 
-bot.command('rugchecking', async (ctx) => {
+bot.command("rugchecking", async (ctx) => {
   try {
-    await ctx.api.sendMessage(ctx.chat.id, "Please provide the token address for a rug pull analysis.");
-    ctx.session.latestCommand = 'rug_check';
+    await ctx.api.sendMessage(
+      ctx.chat.id,
+      "Please provide the token address for a rug pull analysis."
+    );
+    ctx.session.latestCommand = "rug_check";
   } catch (error: any) {
     logErrorToFile("bot on rugchecking cmd", error);
   }
 });
 
-bot.command('buy', async (ctx) => {
+bot.command("buy", async (ctx) => {
   try {
     const chatId = ctx.chat.id;
     const referralRecord = await Referrals.findOne({ referredUsers: chatId });
     if (referralRecord) {
       ctx.session.referralCommision = referralRecord.commissionPercentage;
-      ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
+      ctx.session.generatorWallet = new PublicKey(
+        referralRecord.generatorWallet
+      );
     }
-    ctx.session.latestCommand = 'buy';
-    await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to Buy.");
+    ctx.session.latestCommand = "buy";
+    await ctx.api.sendMessage(
+      ctx.chat.id,
+      "Enter the token Address you would like to Buy."
+    );
   } catch (error: any) {
     logErrorToFile("bot on buy cmd", error);
   }
 });
 
-bot.command('sell', async (ctx) => {
+bot.command("sell", async (ctx) => {
   try {
     const chatId = ctx.chat.id;
     const referralRecord = await Referrals.findOne({ referredUsers: chatId });
     if (referralRecord) {
       ctx.session.referralCommision = referralRecord.commissionPercentage;
-      ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
-
+      ctx.session.generatorWallet = new PublicKey(
+        referralRecord.generatorWallet
+      );
     }
-    ctx.session.latestCommand = 'sell';
-    await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to sell.");
+    ctx.session.latestCommand = "sell";
+    await ctx.api.sendMessage(
+      ctx.chat.id,
+      "Enter the token Address you would like to sell."
+    );
   } catch (error: any) {
     logErrorToFile("bot on sell cmd", error);
   }
 });
 
-bot.command('snipe', async (ctx) => {
+bot.command("snipe", async (ctx) => {
   try {
     const chatId = ctx.chat.id;
     const referralRecord = await Referrals.findOne({ referredUsers: chatId });
     if (referralRecord) {
       ctx.session.referralCommision = referralRecord.commissionPercentage;
-      ctx.session.generatorWallet = new PublicKey(referralRecord.generatorWallet);
+      ctx.session.generatorWallet = new PublicKey(
+        referralRecord.generatorWallet
+      );
     }
-    ctx.session.latestCommand = 'snipe';
-    await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to snipe.");
+    ctx.session.latestCommand = "snipe";
+    await ctx.api.sendMessage(
+      ctx.chat.id,
+      "Enter the token Address you would like to snipe."
+    );
   } catch (error: any) {
     logErrorToFile("bot on snipe cmd", error);
   }
-
 });
 
-bot.command('settings', async (ctx) => {
+bot.command("settings", async (ctx) => {
   try {
     await handleSettings(ctx);
   } catch (error: any) {
@@ -276,75 +347,84 @@ bot.command('settings', async (ctx) => {
 /*                      BOT ON MSG                            */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
-bot.on('message', async (ctx) => {
+bot.on("message", async (ctx) => {
   try {
     const chatId = ctx.chat.id;
     const latestCommand = ctx.session.latestCommand;
     const msgTxt = ctx.update.message.text;
     switch (latestCommand) {
-      case 'set_slippage': {
+      case "set_slippage": {
         ctx.session.latestSlippage = Number(msgTxt);
-        if (ctx.session.currentMode === 'buy') {
-          ctx.session.latestCommand = 'buy';
+        if (ctx.session.currentMode === "buy") {
+          ctx.session.latestCommand = "buy";
           await display_token_details(ctx);
-        } else if (ctx.session.currentMode === 'sell') {
-          ctx.session.latestCommand = 'sell';
+        } else if (ctx.session.currentMode === "sell") {
+          ctx.session.latestCommand = "sell";
           await display_token_details(ctx);
         } else {
           await handleSettings(ctx);
         }
         break;
       }
-      case 'set_snipe_slippage': {
+      case "set_snipe_slippage": {
         ctx.session.snipeSlippage = Number(msgTxt);
-        ctx.session.latestCommand = 'snipe';
-        let snipeToken: string = ctx.session.snipeToken instanceof PublicKey ? ctx.session.snipeToken.toBase58() : ctx.session.snipeToken;
+        ctx.session.latestCommand = "snipe";
+        let snipeToken: string =
+          ctx.session.snipeToken instanceof PublicKey
+            ? ctx.session.snipeToken.toBase58()
+            : ctx.session.snipeToken;
         await display_snipe_options(ctx, snipeToken);
         break;
       }
-      case 'rug_check': {
+      case "rug_check": {
         if (msgTxt) {
           if (PublicKey.isOnCurve(msgTxt!)) {
-            const isTOken = await checkAccountType(ctx, msgTxt)
+            const isTOken = await checkAccountType(ctx, msgTxt);
             if (!isTOken) {
               ctx.api.sendMessage(chatId, "Invalid address");
               return;
             }
+            ctx.session.latestCommand = "rug_check";
             let rugCheckToken = new PublicKey(msgTxt);
             ctx.session.rugCheckToken = rugCheckToken;
-            ctx.session.tokenHistory.push(rugCheckToken); // Add to the beginning of the history
-
-            // Keep only the last 5 tokens
-            if (ctx.session.tokenHistory.length > 5) {
-              ctx.session.tokenHistory.shift();
-            }
-
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
-
-            // Synchronize buyToken and sellToken with the rugCheckToken
-            ctx.session.buyToken = rugCheckToken;
-            ctx.session.sellToken = rugCheckToken;
-
+            
             await display_rugCheck(ctx);
           } else {
             ctx.api.sendMessage(chatId, "Invalid address");
           }
-
         }
         break;
       }
-      case 'buy_X_SOL': await handle_radyum_swap(ctx, (ctx.session.activeTradingPool.baseMint), 'buy', Number(msgTxt)); break;
-      case 'sell_X_TOKEN': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', Number(msgTxt)); break;
-      case 'snipe_X_SOL': {
+      case "buy_X_SOL":
+        await handle_radyum_swap(
+          ctx,
+          ctx.session.activeTradingPool.baseMint,
+          "buy",
+          Number(msgTxt)
+        );
+        break;
+      case "sell_X_TOKEN":
+        await handle_radyum_swap(
+          ctx,
+          ctx.session.activeTradingPool.baseMint,
+          "sell",
+          Number(msgTxt)
+        );
+        break;
+      case "snipe_X_SOL": {
         if (msgTxt) {
-          ctx.session.latestCommand = 'snipe';
-          if (ctx.session.snipperLookup) { snipperON(ctx, msgTxt) }
-          else { await setSnipe(ctx, msgTxt); }
+          ctx.session.latestCommand = "snipe";
+          if (ctx.session.snipperLookup) {
+            await snipperON(ctx, msgTxt);
+          } else {
+            await setSnipe(ctx, msgTxt);
+          }
           break;
         }
       }
-      case 'import_wallet': {
-        if (ctx.session.latestCommand === 'import_wallet') {
+      case "import_wallet": {
+        if (ctx.session.latestCommand === "import_wallet") {
           const walletImportResult = await importWallet(ctx, String(msgTxt));
 
           if (walletImportResult.status === "success") {
@@ -352,137 +432,141 @@ bot.on('message', async (ctx) => {
           } else if (walletImportResult.status === "wallet_exists") {
             await ctx.api.sendMessage(chatId, "Wallet already exists.");
           } else if (walletImportResult.status === "error") {
-            await ctx.api.sendMessage(chatId, `Error: ${walletImportResult.message}`);
+            await ctx.api.sendMessage(
+              chatId,
+              `Error: ${walletImportResult.message}`
+            );
           }
         }
         break;
       }
-      case 'send_sol': {
-        if (ctx.session.latestCommand === 'send_sol') {
+      case "send_sol": {
+        if (ctx.session.latestCommand === "send_sol") {
           // Handle recipient address input
           if (msgTxt) {
             try {
               const recipientAddress = new PublicKey(msgTxt); // Validate address
               ctx.session.recipientAddress = recipientAddress;
-              ctx.session.latestCommand = 'ask_for_sol_amount';
-              await ctx.api.sendMessage(chatId, "Enter the amount of SOL to send.");
+              ctx.session.latestCommand = "ask_for_sol_amount";
+              await ctx.api.sendMessage(
+                chatId,
+                "Enter the amount of SOL to send."
+              );
             } catch (error) {
-              await ctx.api.sendMessage(chatId, "Invalid recipient address. Please enter a valid Solana address.");
+              await ctx.api.sendMessage(
+                chatId,
+                "Invalid recipient address. Please enter a valid Solana address."
+              );
               return;
             }
           }
         }
         break;
       }
-      case 'ask_for_sol_amount': {
-        if (ctx.session.latestCommand === 'ask_for_sol_amount') {
+      case "ask_for_sol_amount": {
+        if (ctx.session.latestCommand === "ask_for_sol_amount") {
           if (msgTxt) {
             const solAmount = Number(msgTxt);
             ctx.session.solAmount = solAmount;
-            ctx.session.latestCommand = 'confirm_send_sol';
-            await ctx.api.sendMessage(chatId, `Send ${solAmount} SOL to ${ctx.session.recipientAddress}`, {
-              reply_markup: {
-                inline_keyboard: [
-                  [{ text: 'Yes', callback_data: 'confirm_send_sol' }, { text: 'No', callback_data: 'closing' }]
-                ]
+            ctx.session.latestCommand = "confirm_send_sol";
+            await ctx.api.sendMessage(
+              chatId,
+              `Send ${solAmount} SOL to ${ctx.session.recipientAddress}`,
+              {
+                reply_markup: {
+                  inline_keyboard: [
+                    [
+                      { text: "Yes", callback_data: "confirm_send_sol" },
+                      { text: "No", callback_data: "closing" },
+                    ],
+                  ],
+                },
               }
-            });
+            );
           }
         }
         break;
       }
-      case 'sell':
-      case 'buy': {
+      case "sell":
+      case "buy": {
         try {
           if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
             //to avoid crashin with wron address
-            const isTOken = await checkAccountType(ctx, msgTxt)
+            const isTOken = await checkAccountType(ctx, msgTxt);
             if (!isTOken) {
               ctx.api.sendMessage(chatId, "Invalid address");
               return;
             }
-            let poolInfo = ctx.session.tokenRayPoolInfo[msgTxt] ?? await getRayPoolKeys(ctx, msgTxt);
+            let poolInfo = await getRayPoolKeys(ctx, msgTxt);
 
             if (!poolInfo) {
               ctx.api.sendMessage(chatId, "🔴 Invalid address");
-              ctx.api.sendMessage(chatId, "🔴 Pool not found for this token."); return;
+              ctx.api.sendMessage(chatId, "🔴 Pool not found for this token.");
+              return;
             }
-
             ctx.session.activeTradingPool = poolInfo;
-            ctx.session.tokenRayPoolInfo[msgTxt] = poolInfo;
-            if (!ctx.session.tokenHistory) ctx.session.tokenHistory = [];
-            if (ctx.session.tokenHistory.indexOf(poolInfo.baseMint) === -1) {
-              ctx.session.tokenHistory.push(poolInfo.baseMint);
-              if (ctx.session.tokenHistory.length > 5) ctx.session.tokenHistory.shift();
-            }
             await display_token_details(ctx);
           } else {
             ctx.api.sendMessage(chatId, "🔴 Invalid address");
           }
         } catch (e) {
-          ctx.api.sendMessage(chatId, "🔴 Invalid address");
+          ctx.api.sendMessage(chatId, "🔴 Please entre a valid address");
         }
         break;
       }
-      case 'snipe': {
+      case "snipe": {
         try {
-
-
           if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
-            const isTOken = await checkAccountType(ctx, msgTxt)
+            const isTOken = await checkAccountType(ctx, msgTxt);
+            console.log("isTOken", isTOken);
             if (!isTOken) {
               ctx.api.sendMessage(chatId, "Invalid address");
               return;
             }
 
-
-            // ctx.session.activeTradingPool = await getRayPoolKeys(msgTxt)
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
-
+            // console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
             if (!ctx.session.activeTradingPool) {
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
               display_snipe_options(ctx, msgTxt);
             } else {
-              ctx.session.snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
-
-              // Synchronize buyToken and sellToken with snipeToken
-              ctx.session.buyToken = ctx.session.snipeToken;
-              ctx.session.sellToken = ctx.session.snipeToken;
-
-              // Add snipeToken to token history and update the current index
-              ctx.session.tokenHistory.unshift(ctx.session.snipeToken);
-              if (ctx.session.tokenHistory.length > 5) {
-                ctx.session.tokenHistory.pop(); // Keep only the last 5 tokens
-              }
-              // Update current token index
-              // ctx.session.currentTokenIndex = 0; 
+              ctx.session.snipeToken = new PublicKey(
+                ctx.session.activeTradingPool.baseMint
+              );
 
               display_snipe_options(ctx, ctx.session.snipeToken.toBase58());
             }
           } else if (msgTxt && !PublicKey.isOnCurve(msgTxt)) {
-
             ctx.api.sendMessage(chatId, "Invalid address");
           }
-
         } catch (error: any) {
           console.error("Error in 'snipe' command:", error.message);
+          
         }
         break;
       }
-      case 'refer_friends': {
+      case "refer_friends": {
         ctx.session.awaitingWalletAddress = false; // Reset the flag
         const walletAddress = ctx.message.text;
 
         // Generate the referral link with the wallet address
         if (walletAddress) {
-          const recipientAddress = new PublicKey(walletAddress)
-          const referralLink = await _generateReferralLink(ctx, recipientAddress);
+          const recipientAddress = new PublicKey(walletAddress);
+          const referralLink = await _generateReferralLink(
+            ctx,
+            recipientAddress
+          );
           const referralData = await _getReferralData(ctx); // Fetch referral data
-          const referEarningSol = (Number(referralData?.totalEarnings) / 1e9).toFixed(6);
+          const referEarningSol = (
+            Number(referralData?.totalEarnings) / 1e9
+          ).toFixed(6);
           const details = await getSolanaDetails();
-          const referEarningDollar = (Number(referEarningSol) * details).toFixed(2);
-          let responseMessage = `<b>Referral Program Details</b>\n\n` +
+          const referEarningDollar = (
+            Number(referEarningSol) * details
+          ).toFixed(2);
+          let responseMessage =
+            `<b>Referral Program Details</b>\n\n` +
             `🔗 <b>Your Referral Link:</b> ${referralLink}\n\n` +
             `👥 <b>Referrals Count:</b> ${referralData?.count}\n` +
             `💰 <b>Total Earnings:</b> ${referEarningSol} SOL/Token ($${referEarningDollar}) | 0.00 TOKEN\n` +
@@ -492,21 +576,16 @@ bot.on('message', async (ctx) => {
             `<i>Note: Rewards are updated and sent in real-time and reflect your active contributions to the referral program.</i>`;
           const options: any = {
             reply_markup: JSON.stringify({
-              inline_keyboard: [
-
-                [{ text: 'Close', callback_data: 'closing' }]
-              ],
+              inline_keyboard: [[{ text: "Close", callback_data: "closing" }]],
             }),
-            parse_mode: 'HTML',
+            parse_mode: "HTML",
             disable_web_page_preview: false,
-
           };
 
           await ctx.api.sendMessage(chatId, responseMessage, options);
         }
         break;
       }
-
     }
   } catch (e: any) {
     console.error("ERROR on bot.on txt msg", e);
@@ -514,11 +593,10 @@ bot.on('message', async (ctx) => {
   }
 });
 
-
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                      BOT ON CALLBACK                       */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
-bot.on('callback_query', async (ctx: any) => {
+bot.on("callback_query", async (ctx: any) => {
   try {
     const chatId = ctx.chat.id;
     const data = ctx.callbackQuery.data;
@@ -528,27 +606,30 @@ bot.on('callback_query', async (ctx: any) => {
     const positionNavigate = /^(prev_position|next_position)_\d+$/;
     ctx.api.answerCallbackQuery(ctx.callbackQuery.id);
 
-
     const matchSell = data.match(positionCallSell);
     const matchBuy = data.match(positionCallBuy);
     const matchNavigate = data.match(positionNavigate);
     if (matchSell) {
-      const parts = data.split('_');
+      const parts = data.split("_");
       const sellPercentage = parts[1]; // '25', '50', '75', or '100'
       const positionIndex = parts[2]; // Position index
       ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
-      await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', sellPercentage);
+      await handle_radyum_swap(
+        ctx,
+        ctx.session.activeTradingPool.baseMint,
+        "sell",
+        sellPercentage
+      );
       return;
     } else if (matchBuy) {
-      const parts = data.split('_');
+      const parts = data.split("_");
       const positionIndex = parts[2]; // Position index
       ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
       ctx.api.sendMessage(chatId, "Please enter SOL amount");
-      ctx.session.latestCommand = 'buy_X_SOL';
+      ctx.session.latestCommand = "buy_X_SOL";
       return;
-    }
-    else if (matchNavigate) {
-      const parts = data.split('_');
+    } else if (matchNavigate) {
+      const parts = data.split("_");
       const newPositionIndex = parseInt(parts[2]); // New position index
       // console.log("newPositionIndex", newPositionIndex);
       // console.log("ctx.session.positionPool", ctx.session.positionPool);
@@ -556,33 +637,44 @@ bot.on('callback_query', async (ctx: any) => {
       ctx.session.positionIndex = newPositionIndex;
       // console.log("ctx.session.positionIndex", ctx.session.positionIndex);
 
-      ctx.session.activeTradingPool = ctx.session.positionPool[ctx.session.positionIndex]
+      ctx.session.activeTradingPool =
+        ctx.session.positionPool[ctx.session.positionIndex];
       // console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
       // Redisplay the positions with the updated index
       await refresh_spl_positions(ctx);
     }
 
     switch (data) {
-      case 'refer_friends': {
+      case "refer_friends": {
         const chatId = ctx.chat.id;
         const username = ctx.update.callback_query.from.username; //ctx.from.username;
 
         // Check if the user is allowed to access the referral program
         if (allowedUsernames.includes(username)) {
-          ctx.session.latestCommand = 'refer_friends';
-          let existingReferral = await Referrals.findOne({ generatorChatId: chatId });
+          ctx.session.latestCommand = "refer_friends";
+          let existingReferral = await Referrals.findOne({
+            generatorChatId: chatId,
+          });
 
           if (!existingReferral) {
             // No existing referral found, ask for the wallet address
-            await ctx.api.sendMessage(chatId, "Please provide the wallet address to receive referral rewards.");
+            await ctx.api.sendMessage(
+              chatId,
+              "Please provide the wallet address to receive referral rewards."
+            );
           } else {
             // Existing referral found, display referral data
             const referralData = await _getReferralData(ctx);
             const referralLink = referralData?.referralLink;
-            const referEarningSol = (Number(referralData?.totalEarnings) / 1e9).toFixed(6);
+            const referEarningSol = (
+              Number(referralData?.totalEarnings) / 1e9
+            ).toFixed(6);
             const details = await getSolanaDetails();
-            const referEarningDollar = (Number(referEarningSol) * details).toFixed(6);
-            let responseMessage = `<b>Referral Program Details</b>\n\n` +
+            const referEarningDollar = (
+              Number(referEarningSol) * details
+            ).toFixed(6);
+            let responseMessage =
+              `<b>Referral Program Details</b>\n\n` +
               `🔗 <b>Your Referral Link:</b> ${referralLink}\n\n` +
               `👥 <b>Referrals Count:</b> ${referralData?.count}\n` +
               `💰 <b>Total Earnings:</b> ${referEarningSol} SOL/Token ($${referEarningDollar}) | 0.00 TOKEN \n` +
@@ -595,42 +687,52 @@ bot.on('callback_query', async (ctx: any) => {
             const options = {
               reply_markup: JSON.stringify({
                 inline_keyboard: [
-                  [{ text: 'Close', callback_data: 'closing' }]
+                  [{ text: "Close", callback_data: "closing" }],
                 ],
               }),
-              parse_mode: 'HTML',
+              parse_mode: "HTML",
               disable_web_page_preview: false,
-
             };
             await ctx.api.sendMessage(chatId, responseMessage, options);
           }
         } else {
           // User is not allowed to access the referral program
-          await ctx.api.sendMessage(chatId, "Access to the referral program is currently restricted. Please wait for future updates.");
+          await ctx.api.sendMessage(
+            chatId,
+            "Access to the referral program is currently restricted. Please wait for future updates."
+          );
         }
         break;
       }
-      case 'refresh_start': await handleRefreshStart(ctx);
+      case "refresh_start":
+        await handleRefreshStart(ctx);
         break;
-      case 'refresh_portfolio': await refresh_spl_positions(ctx); break;
-      case 'refrech_rug_check': await Refresh_rugCheck(ctx); break;
-      case 'select_wallet_0':
+      case "refresh_portfolio":
+        await refresh_spl_positions(ctx);
+        break;
+      case "refrech_rug_check":
+        await Refresh_rugCheck(ctx);
+        break;
+      case "select_wallet_0":
         ctx.session.activeWalletIndex = 0;
         await handleSettings(ctx);
         await RefreshAllWallets(ctx);
 
         break;
-      case 'select_wallet_1':
+      case "select_wallet_1":
         ctx.session.activeWalletIndex = 1;
         await handleSettings(ctx);
         await RefreshAllWallets(ctx);
 
         break;
-      case 'refresh_wallet': await handleRereshWallet(ctx);
+      case "refresh_wallet":
+        await handleRereshWallet(ctx);
         break;
-      case 'show_wallets': await handleWallets(ctx);
+      case "show_wallets":
+        await handleWallets(ctx);
         break;
-      case 'refresh_db_wallets': await RefreshAllWallets(ctx);
+      case "refresh_db_wallets":
+        await RefreshAllWallets(ctx);
         break;
       // case 'refresh_trade':
       //     const tokenAddress = ctx.session.activeTradingPool.baseMint;
@@ -640,26 +742,40 @@ bot.on('callback_query', async (ctx: any) => {
       //         await refreshTokenDetails(ctx, speficiPool);
       //         break;
       //     }
-      case 'delete_wallet': {
+      case "delete_wallet": {
         await resetWallet(ctx);
         break;
       }
-      case 'refresh_wallet': await handleRereshWallet(ctx); break;
-      case 'show_wallets': await handleWallets(ctx); break;
-      case 'refresh_trade': await refreshTokenDetails(ctx); break;
-      case 'delete_wallet': await resetWallet(ctx); break;
-      case 'refresh_snipe': await refreshSnipeDetails(ctx); break;
-      case 'import_wallet': {
-        ctx.session.latestCommand = 'import_wallet';
+      case "refresh_wallet":
+        await handleRereshWallet(ctx);
+        break;
+      case "show_wallets":
+        await handleWallets(ctx);
+        break;
+      case "refresh_trade":
+        await refreshTokenDetails(ctx);
+        break;
+      case "delete_wallet":
+        await resetWallet(ctx);
+        break;
+      case "refresh_snipe":
+        await refreshSnipeDetails(ctx);
+        break;
+      case "import_wallet": {
+        ctx.session.latestCommand = "import_wallet";
         const allowed = await checkWalletsLength(ctx);
         if (allowed) {
-          await ctx.api.sendMessage(chatId, "Please enter your private/secret key.");
+          await ctx.api.sendMessage(
+            chatId,
+            "Please enter your private/secret key."
+          );
         }
         break;
       }
-      case 'help': await sendHelpMessage(ctx);
+      case "help":
+        await sendHelpMessage(ctx);
         break;
-      case 'create_new_wallet':
+      case "create_new_wallet":
         const allowed = await checkWalletsLength(ctx);
 
         if (allowed) {
@@ -667,284 +783,392 @@ bot.on('callback_query', async (ctx: any) => {
         }
 
         break;
-      case 'settings': await handleSettings(ctx); break;
-      case 'get_private_key': await handleGetPrivateKey(ctx); break;
-      case 'cancel_reset_wallet': await handleCloseKeyboard(ctx); break;
-      case 'confirm_reset_wallet': await confirmResetWalletAgain(ctx); break;
-      case 'closing': await handleCloseKeyboard(ctx); break;
-      case 'confirm_send_sol': {
+      case "settings":
+        await handleSettings(ctx);
+        break;
+      case "get_private_key":
+        await handleGetPrivateKey(ctx);
+        break;
+      case "cancel_reset_wallet":
+        await handleCloseKeyboard(ctx);
+        break;
+      case "confirm_reset_wallet":
+        await confirmResetWalletAgain(ctx);
+        break;
+      case "closing":
+        await handleCloseKeyboard(ctx);
+        break;
+      case "confirm_send_sol": {
         const recipientAddress = ctx.session.recipientAddress;
         const solAmount = ctx.session.solAmount;
-        await ctx.api.sendMessage(chatId, `Sending ${solAmount} SOL to ${recipientAddress}...`);
+        await ctx.api.sendMessage(
+          chatId,
+          `Sending ${solAmount} SOL to ${recipientAddress}...`
+        );
         await sendSol(ctx, recipientAddress, solAmount);
         break;
       }
-      case 'rug_check': {
-        ctx.session.latestCommand = 'rug_check';
-        ctx.api.sendMessage(chatId, "Please provide the token address for a rug pull analysis.");
+      case "rug_check": {
+        ctx.session.latestCommand = "rug_check";
+        ctx.api.sendMessage(
+          chatId,
+          "Please provide the token address for a rug pull analysis."
+        );
         break;
       }
-      case 'sell': {
-        ctx.session.latestCommand = 'sell';
-        const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+      case "sell": {
+        ctx.session.latestCommand = "sell";
+        const referralRecord = await Referrals.findOne({
+          referredUsers: chatId,
+        });
         if (referralRecord) {
           ctx.session.referralCommision = referralRecord.commissionPercentage;
           ctx.session.generatorWallet = referralRecord.generatorWallet;
         }
 
-        let tokenToSell = ctx.session.sellToken instanceof PublicKey ? ctx.session.sellToken : undefined;
+        // let tokenToSell =
+        //   ctx.session.sellToken instanceof PublicKey
+        //     ? ctx.session.sellToken
+        //     : undefined;
 
-        if (!tokenToSell || tokenToSell == DEFAULT_PUBLIC_KEY) {
-          tokenToSell = ctx.session.buyToken instanceof PublicKey && ctx.session.buyToken != DEFAULT_PUBLIC_KEY ? ctx.session.buyToken : undefined;
-        }
+        // if (!tokenToSell || tokenToSell == DEFAULT_PUBLIC_KEY) {
+        //   tokenToSell =
+        //     ctx.session.buyToken instanceof PublicKey &&
+        //     ctx.session.buyToken != DEFAULT_PUBLIC_KEY
+        //       ? ctx.session.buyToken
+        //       : undefined;
+        // }
 
-        if (tokenToSell) {
-          const tokenString = tokenToSell.toBase58();
+        // if (tokenToSell) {
+        //   const tokenString = tokenToSell.toBase58();
 
-          let poolInfo = ctx.session.tokenRayPoolInfo[tokenString];
+        //   let poolInfo = ctx.session.tokenRayPoolInfo[tokenString];
 
-          if (!poolInfo) {
-            poolInfo = await getRayPoolKeys(ctx, tokenString);
-            ctx.session.tokenRayPoolInfo[tokenString] = poolInfo;
-          }
+        //   if (!poolInfo) {
+        //     poolInfo = await getRayPoolKeys(ctx, tokenString);
+        //     ctx.session.tokenRayPoolInfo[tokenString] = poolInfo;
+        //   }
 
-          ctx.session.sellToken = tokenToSell;
-          ctx.session.activeTradingPool = poolInfo;
+        //   ctx.session.sellToken = tokenToSell;
+        //   ctx.session.activeTradingPool = poolInfo;
 
-          // Synchronize buyToken with the current sellToken
-          ctx.session.buyToken = tokenToSell;
+        //   // Synchronize buyToken with the current sellToken
+        //   ctx.session.buyToken = tokenToSell;
 
-          await display_token_details(ctx);
-        } else {
-          await ctx.api.sendMessage(chatId, "Enter the token Address you would like to sell.");
-        }
+        //   await display_token_details(ctx);
+        // } else {
+          await ctx.api.sendMessage(
+            chatId,
+            "Enter the token Address you would like to sell."
+          );
+        // }
         break;
       }
-      case 'buy': {
-        ctx.session.latestCommand = 'buy';
-        const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+      case "buy": {
+        const referralRecord = await Referrals.findOne({
+          referredUsers: chatId,
+        });
         if (referralRecord) {
           ctx.session.referralCommision = referralRecord.commissionPercentage;
           ctx.session.generatorWallet = referralRecord.generatorWallet;
           // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
         }
-
-        let tokenToBuy = ctx.session.buyToken instanceof PublicKey ? ctx.session.buyToken : undefined;
-
-        if (!tokenToBuy || tokenToBuy == DEFAULT_PUBLIC_KEY) {
-          tokenToBuy = ctx.session.sellToken instanceof PublicKey && ctx.session.sellToken != DEFAULT_PUBLIC_KEY ? ctx.session.sellToken : undefined;
+        if(ctx.session.latestCommand === 'rug_check'){
+            ctx.session.latestCommand = "buy";
+            await display_token_details(ctx);
+        } else{
+            ctx.session.latestCommand = "buy";
+            await ctx.api.sendMessage(
+                chatId,
+                "Enter the token Address you would like to Buy."
+              );
         }
 
-        if (tokenToBuy) {
-          const tokenString = tokenToBuy.toBase58();
-          let poolInfo = ctx.session.tokenRayPoolInfo[tokenString];
-
-          if (!poolInfo) {
-            poolInfo = await getRayPoolKeys(ctx, tokenString);
-            ctx.session.tokenRayPoolInfo[tokenString] = poolInfo;
-          }
-
-          ctx.session.buyToken = tokenToBuy;
-          ctx.session.activeTradingPool = poolInfo;
-
-          // Synchronize sellToken with the current buyToken
-          ctx.session.sellToken = tokenToBuy;
-
-          await display_token_details(ctx);
-        } else {
-          await ctx.api.sendMessage(chatId, "Enter the token Address you would like to Buy.");
-        }
         break;
       }
-      case 'snipe': {
-        const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+      case "snipe": {
+        const referralRecord = await Referrals.findOne({
+          referredUsers: chatId,
+        });
         if (referralRecord) {
           ctx.session.referralCommision = referralRecord.commissionPercentage;
           ctx.session.generatorWallet = referralRecord.generatorWallet;
         }
-        let snipeToken = ctx.session.snipeToken;
-        ctx.session.latestCommand = 'snipe';
-        if (snipeToken == DEFAULT_PUBLIC_KEY) {
-          await ctx.api.sendMessage(chatId, "Enter token address to Snipe.");
-        } else {
-          snipeToken = snipeToken instanceof PublicKey ? snipeToken.toBase58() : snipeToken;
-          await display_snipe_options(ctx, snipeToken);
+     
+            if(ctx.session.latestCommand === 'rug_check'){
+                ctx.session.latestCommand = "snipe";
+                await display_snipe_options(ctx,  ctx.session.rugCheckToken);
+            } else {
+            ctx.session.latestCommand = "snipe";
+            await ctx.api.sendMessage(
+                ctx.chat.id,
+                "Enter the token Address you would like to snipe."
+            );
         }
+       
         break;
       }
-      case 'cancel_snipe': {
+      case "cancel_snipe": {
         ctx.session.snipeStatus = false;
         await ctx.api.sendMessage(chatId, "Sniper cancelled.");
         break;
       }
-      case 'set_slippage': {
-        ctx.session.latestCommand = 'set_slippage';
+      case "set_slippage": {
+        ctx.session.latestCommand = "set_slippage";
         ctx.api.sendMessage(chatId, "Please enter slippage % amount");
         break;
       }
-      case 'set_snipe_slippage': {
-        ctx.session.latestCommand = 'set_snipe_slippage';
+      case "set_snipe_slippage": {
+        ctx.session.latestCommand = "set_snipe_slippage";
         ctx.api.sendMessage(chatId, "Please enter slippage % amount");
         break;
       }
-      case 'send_sol': {
-        ctx.session.latestCommand = 'send_sol';
-        ctx.api.sendMessage(chatId, "Please paste the recipient's wallet address.");
+      case "send_sol": {
+        ctx.session.latestCommand = "send_sol";
+        ctx.api.sendMessage(
+          chatId,
+          "Please paste the recipient's wallet address."
+        );
         break;
       }
-      case 'previous_token': {
-        let history = ctx.session.tokenHistory;
-        let currentToken: PublicKey = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
-        let currentTokenStr = currentToken instanceof PublicKey ? currentToken.toBase58() : currentToken;
-        let historyStr = history.map((token: any) => token.toBase58());
-        let currentIndex = historyStr.indexOf(currentTokenStr);
+      // case 'previous_token': {
+      //     let history = ctx.session.tokenHistory;
+      //     let currentToken: PublicKey = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
+      //     let currentTokenStr = currentToken instanceof PublicKey ? currentToken.toBase58() : currentToken;
+      //     let historyStr = history.map((token: any) => token.toBase58());
+      //     let currentIndex = historyStr.indexOf(currentTokenStr);
 
-        if (currentIndex > 0) {
-          let previousTokenStr = historyStr[currentIndex - 1];
-          let previousToken = new PublicKey(previousTokenStr);
+      //     if (currentIndex > 0) {
+      //         let previousTokenStr = historyStr[currentIndex - 1];
+      //         let previousToken = new PublicKey(previousTokenStr);
 
-          // Update both buyToken and sellToken regardless of the latest command
-          ctx.session.buyToken = previousToken;
-          ctx.session.sellToken = previousToken;
+      //         // Update both buyToken and sellToken regardless of the latest command
+      //         ctx.session.buyToken = previousToken;
+      //         ctx.session.sellToken = previousToken;
 
-          // Check if the pool info is already in the session
-          let poolInfo = ctx.session.tokenRayPoolInfo[previousTokenStr];
-          if (!poolInfo) {
-            poolInfo = await getRayPoolKeys(ctx, previousTokenStr);
-            ctx.session.tokenRayPoolInfo[previousTokenStr] = poolInfo;
-          }
+      //         // Check if the pool info is already in the session
+      //         let poolInfo = ctx.session.tokenRayPoolInfo[previousTokenStr];
+      //         if (!poolInfo) {
+      //             poolInfo = await getRayPoolKeys(ctx, previousTokenStr);
+      //             ctx.session.tokenRayPoolInfo[previousTokenStr] = poolInfo;
+      //         }
 
-          ctx.session.activeTradingPool = poolInfo;
-          await refreshTokenDetails(ctx);
-        }
+      //         ctx.session.activeTradingPool = poolInfo;
+      //         await refreshTokenDetails(ctx);
+      //     }
+      //     break;
+      // }
+
+      // case 'next_token': {
+      //     let history = ctx.session.tokenHistory;
+      //     let currentToken = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
+      //     let currentTokenStr = currentToken instanceof PublicKey ? currentToken.toBase58() : currentToken;
+      //     let historyStr = history.map((token: any) => token.toBase58());
+      //     let currentIndex = historyStr.indexOf(currentTokenStr);
+
+      //     if (currentIndex >= 0 && currentIndex < history.length - 1) {
+      //         let nextTokenStr = historyStr[currentIndex + 1];
+      //         let nextToken = new PublicKey(nextTokenStr);
+
+      //         // Update both buyToken and sellToken regardless of the latest command
+      //         ctx.session.buyToken = nextToken;
+      //         ctx.session.sellToken = nextToken;
+
+      //         // Check if the pool info is already in the session
+      //         let poolInfo = ctx.session.tokenRayPoolInfo[nextTokenStr];
+      //         if (!poolInfo) {
+      //             poolInfo = await getRayPoolKeys(ctx, nextTokenStr);
+      //             ctx.session.tokenRayPoolInfo[nextTokenStr] = poolInfo;
+      //         }
+
+      //         ctx.session.activeTradingPool = poolInfo;
+      //         await refreshTokenDetails(ctx);
+      //     }
+      //     break;
+      // }
+
+      case "buy_0.1_SOL":
+        await handle_radyum_swap(
+          ctx,
+          ctx.session.activeTradingPool.baseMint,
+          "buy",
+          "0.1"
+        );
         break;
-      }
-
-      case 'next_token': {
-        let history = ctx.session.tokenHistory;
-        let currentToken = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
-        let currentTokenStr = currentToken instanceof PublicKey ? currentToken.toBase58() : currentToken;
-        let historyStr = history.map((token: any) => token.toBase58());
-        let currentIndex = historyStr.indexOf(currentTokenStr);
-
-        if (currentIndex >= 0 && currentIndex < history.length - 1) {
-          let nextTokenStr = historyStr[currentIndex + 1];
-          let nextToken = new PublicKey(nextTokenStr);
-
-          // Update both buyToken and sellToken regardless of the latest command
-          ctx.session.buyToken = nextToken;
-          ctx.session.sellToken = nextToken;
-
-          // Check if the pool info is already in the session
-          let poolInfo = ctx.session.tokenRayPoolInfo[nextTokenStr];
-          if (!poolInfo) {
-            poolInfo = await getRayPoolKeys(ctx, nextTokenStr);
-            ctx.session.tokenRayPoolInfo[nextTokenStr] = poolInfo;
-          }
-
-          ctx.session.activeTradingPool = poolInfo;
-          await refreshTokenDetails(ctx);
-        }
+      case "buy_0.2_SOL":
+        await handle_radyum_swap(
+          ctx,
+          ctx.session.activeTradingPool.baseMint,
+          "buy",
+          "0.2"
+        );
         break;
-      }
-
-      case 'buy_0.1_SOL': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'buy', '0.1'); break;
-      case 'buy_0.2_SOL': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'buy', '0.2'); break;
-      case 'buy_0.5_SOL': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'buy', '0.5'); break;
-      case 'buy_1_SOL': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'buy', '1'); break;
-      case 'buy_5_SOL': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'buy', '5'); break;
-      case 'buy_X_SOL': {
-        ctx.session.latestCommand = 'buy_X_SOL';
+      case "buy_0.5_SOL":
+        await handle_radyum_swap(
+          ctx,
+          ctx.session.activeTradingPool.baseMint,
+          "buy",
+          "0.5"
+        );
+        break;
+      case "buy_1_SOL":
+        await handle_radyum_swap(
+          ctx,
+          ctx.session.activeTradingPool.baseMint,
+          "buy",
+          "1"
+        );
+        break;
+      case "buy_5_SOL":
+        await handle_radyum_swap(
+          ctx,
+          ctx.session.activeTradingPool.baseMint,
+          "buy",
+          "5"
+        );
+        break;
+      case "buy_X_SOL": {
+        ctx.session.latestCommand = "buy_X_SOL";
         ctx.api.sendMessage(chatId, "Please enter SOL amount");
         break;
       }
-      case 'sell_10_TOKEN': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', '10',); break;
-      case 'sell_25_TOKEN': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', '25',); break;
-      case 'sell_30_TOKEN': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', '30',); break;
-      case 'sell_50_TOKEN': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', '50',); break;
-      case 'sell_75_TOKEN': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', '75',); break;
-      case 'sell_100_TOKEN': await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, 'sell', '100',); break;
-      case 'sell_X_TOKEN': {
-        ctx.session.latestCommand = 'sell_X_TOKEN';
+      case "sell_10_TOKEN":
+        await handle_radyum_swap(
+          ctx,
+          ctx.session.activeTradingPool.baseMint,
+          "sell",
+          "10"
+        );
+        break;
+      case "sell_25_TOKEN":
+        await handle_radyum_swap(
+          ctx,
+          ctx.session.activeTradingPool.baseMint,
+          "sell",
+          "25"
+        );
+        break;
+      case "sell_30_TOKEN":
+        await handle_radyum_swap(
+          ctx,
+          ctx.session.activeTradingPool.baseMint,
+          "sell",
+          "30"
+        );
+        break;
+      case "sell_50_TOKEN":
+        await handle_radyum_swap(
+          ctx,
+          ctx.session.activeTradingPool.baseMint,
+          "sell",
+          "50"
+        );
+        break;
+      case "sell_75_TOKEN":
+        await handle_radyum_swap(
+          ctx,
+          ctx.session.activeTradingPool.baseMint,
+          "sell",
+          "75"
+        );
+        break;
+      case "sell_100_TOKEN":
+        await handle_radyum_swap(
+          ctx,
+          ctx.session.activeTradingPool.baseMint,
+          "sell",
+          "100"
+        );
+        break;
+      case "sell_X_TOKEN": {
+        ctx.session.latestCommand = "sell_X_TOKEN";
         ctx.api.sendMessage(chatId, "Please enter amount to sell.");
         break;
       }
-      case 'snipe_0.1_SOL': {
-        if (ctx.session.snipperLookup) { await snipperON(ctx, '0.1') }
-        else { await setSnipe(ctx, '0.1'); }
+      case "snipe_0.1_SOL": {
+        if (ctx.session.snipperLookup) {
+          await snipperON(ctx, "0.1");
+        } else {
+          await setSnipe(ctx, "0.1");
+        }
         break;
       }
-      case 'snipe_0.2_SOL': {
-        if (ctx.session.snipperLookup) { snipperON(ctx, '0.2') }
-        else { await setSnipe(ctx, '0.2'); }
+      case "snipe_0.2_SOL": {
+        if (ctx.session.snipperLookup) {
+          await snipperON(ctx, "0.2");
+        } else {
+          await setSnipe(ctx, "0.2");
+        }
         break;
       }
-      case 'snipe_0.5_SOL': {
-        if (ctx.session.snipperLookup) { snipperON(ctx, '0.5') }
-        else { await setSnipe(ctx, '0.5'); }
+      case "snipe_0.5_SOL": {
+        if (ctx.session.snipperLookup) {
+         await snipperON(ctx, "0.5");
+        } else {
+          await setSnipe(ctx, "0.5");
+        }
         break;
       }
-      case 'snipe_1_SOL': {
-        if (ctx.session.snipperLookup) { snipperON(ctx, '1') }
-        else { await setSnipe(ctx, '1'); }
+      case "snipe_1_SOL": {
+        if (ctx.session.snipperLookup) {
+          await snipperON(ctx, "1");
+        } else {
+          await setSnipe(ctx, "1");
+        }
         break;
       }
-      case 'snipe_5_SOL': {
-        if (ctx.session.snipperLookup) { snipperON(ctx, '5') }
-        else { await setSnipe(ctx, '5'); }
+      case "snipe_5_SOL": {
+        if (ctx.session.snipperLookup) {
+         await  snipperON(ctx, "5");
+        } else {
+          await setSnipe(ctx, "5");
+        }
         break;
       }
-      case 'snipe_X_SOL': {
-        ctx.session.latestCommand = 'snipe_X_SOL';
+      case "snipe_X_SOL": {
+        ctx.session.latestCommand = "snipe_X_SOL";
         ctx.api.sendMessage(chatId, "Please enter amount to snipe.");
         break;
       }
-      case 'display_spl_positions': { await display_spl_positions(ctx); break; }
-      case 'priority_low': {
+      case "display_spl_positions": {
+        await display_spl_positions(ctx);
+        break;
+      }
+      case "priority_low": {
         ctx.session.priorityFees = PriotitizationFeeLevels.LOW;
-        if (ctx.session.latestCommand === 'snipe') {
+        if (ctx.session.latestCommand === "snipe") {
           await refreshSnipeDetails(ctx);
-
         } else {
           await refreshTokenDetails(ctx);
         }
-        // console.log('ctx.session.priorityFees', ctx.session.priorityFees);
         break;
       }
-      case 'priority_medium': {
+      case "priority_medium": {
         ctx.session.priorityFees = PriotitizationFeeLevels.MEDIUM;
-        if (ctx.session.latestCommand === 'snipe') {
+        if (ctx.session.latestCommand === "snipe") {
           await refreshSnipeDetails(ctx);
-
         } else {
           await refreshTokenDetails(ctx);
         }
-        // console.log('ctx.session.priorityFees', ctx.session.priorityFees);
         break;
       }
-      case 'priority_high': {
+      case "priority_high": {
         ctx.session.priorityFees = PriotitizationFeeLevels.HIGH;
-        if (ctx.session.latestCommand === 'snipe') {
+        if (ctx.session.latestCommand === "snipe") {
           await refreshSnipeDetails(ctx);
-
         } else {
           await refreshTokenDetails(ctx);
         }
-
-        // console.log('ctx.session.priorityFees', ctx.session.priorityFees);
 
         break;
       }
-      case 'priority_max': {
+      case "priority_max": {
         ctx.session.priorityFees = PriotitizationFeeLevels.MAX;
-        if (ctx.session.latestCommand === 'snipe') {
+        if (ctx.session.latestCommand === "snipe") {
           await refreshSnipeDetails(ctx);
-
         } else {
           await refreshTokenDetails(ctx);
         }
-
-        // console.log('ctx.session.priorityFees', ctx.session.priorityFees);
 
         break;
       }
@@ -955,7 +1179,6 @@ bot.on('callback_query', async (ctx: any) => {
       console.error("Callback query failed due to timeout or invalid ID.");
     } else {
       console.error(e);
-
     }
   }
 });
@@ -977,32 +1200,24 @@ bot.catch((err) => {
 });
 
 async function checkAccountType(ctx: any, address: any) {
-  const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+  const connection = new Connection(
+    `${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`
+  );
   const publicKey = new PublicKey(address);
-  const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+  const TOKEN_PROGRAM_ID = new PublicKey(
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+  );
 
   try {
     const accountInfo = await connection.getAccountInfo(publicKey);
     if (accountInfo) {
-
       return accountInfo.owner.equals(TOKEN_PROGRAM_ID);
     } else {
-      console.log('Account not found');
+      console.log("Account not found");
       return false;
     }
   } catch (error) {
-    console.error('Error in fetching account info:', error);
+    console.error("Error in fetching account info:", error);
     return false;
   }
 }
-
-process.on('uncaughtException', (err) => {
-  logErrorToFile("uncaughtException: ", err);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled rejection at: ', promise, 'reason:', reason);
-  logErrorToFile("unhandledRejection", reason);
-  process.exit(1);
-});

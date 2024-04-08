@@ -220,6 +220,8 @@ export async function getSimulationUnits(
     ...instructions,
   ];
 
+
+
   const testVersionedTxn = new VersionedTransaction(
     new TransactionMessage({
       instructions: testInstructions,
