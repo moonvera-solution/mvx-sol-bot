@@ -16,7 +16,7 @@ import { connect } from 'node:http2';
 
 export async function fetchPoolSchedule(keys: any, connection: Connection) {
   let poolKeys = jsonInfo2PoolKeys(keys) as LiquidityPoolKeys;
-  // return await Liquidity.fetchInfo({ connection, poolKeys })
+  return await Liquidity.fetchInfo({ connection, poolKeys })
 }
 
 export async function getRayPoolKeys(ctx: any, shitcoin: string) {
