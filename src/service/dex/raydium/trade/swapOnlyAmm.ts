@@ -75,7 +75,6 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                      MAKE RAYIDUM INX                      */
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
-
   const { innerTransactions } = await Liquidity.makeSwapInstructionSimple({
     connection,
     poolKeys,

@@ -12,19 +12,27 @@ import {
   PublicKey, Connection
 } from '@solana/web3.js';
 import { RAYDIUM_POOL_TYPE } from '../../../../service/util/types';
+import { connect } from 'node:http2';
+
+export async function fetchPoolSchedule(keys: any, connection: Connection) {
+  let poolKeys = jsonInfo2PoolKeys(keys) as LiquidityPoolKeys;
+  return await Liquidity.fetchInfo({ connection, poolKeys })
+}
 
 export async function getRayPoolKeys(ctx: any, shitcoin: string) {
   const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
   const quoteMint = 'So11111111111111111111111111111111111111112';
   let keys = await _getRayPoolKeys({ t1: shitcoin, t2: quoteMint, connection });
-  
-  if (!keys) {
+
+  if (keys) {
+    ctx.session.env["poolSchedule"] = await fetchPoolSchedule(keys, connection);
+    // ctx.session.env["originalBaseMint"] = keys.baseMint.toBase58();
+  } else {
     keys = await _getRayPoolKeys({ t1: quoteMint, t2: shitcoin, connection });
-    let  poolKeys = jsonInfo2PoolKeys(keys) as LiquidityPoolKeys;
-    console.log('poolKeys', poolKeys);
-    console.log('poolKeysID', poolKeys.id);
-   let timeTest = Liquidity.fetchInfo({ connection, poolKeys })
-   console.log('timeTest', timeTest);
+    ctx.session.env["originalBaseMint"] = keys.baseMint;
+
+    ctx.session.env["poolSchedule"] = await fetchPoolSchedule(keys, connection);
+    console.log("inverting keys");
     let _quoteMint = keys.quoteMint;
     let _baseMint = keys.baseMint;
     let _baseVault = keys.baseVault;
@@ -79,7 +87,7 @@ async function _getRayPoolKeys({ t1, t2, connection }: { t1: string, t2: string,
 
   const ammId = accounts && accounts[0] && accounts[0].pubkey;
   let keys: any = null;
-  
+
   // ammid exists and keys still null
   while (ammId && keys == undefined) {
     keys = await formatAmmKeysById(ammId.toString(), connection);
@@ -90,7 +98,7 @@ async function _getRayPoolKeys({ t1, t2, connection }: { t1: string, t2: string,
 
 export async function formatAmmKeysById(id: string, connection: Connection): Promise<ApiPoolInfoV4> {
   const account = await connection.getAccountInfo(new PublicKey(id), 'processed')
-  
+
   if (account === null) throw Error(' get id info error ')
   const info = LIQUIDITY_STATE_LAYOUT_V4.decode(account.data)
 

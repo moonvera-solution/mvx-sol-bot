@@ -10,7 +10,7 @@ import { buildAndSendTx, trackUntilFinalized, getPriorityFeeLabel } from '../../
 import { saveUserPosition } from '../positions';
 const log = (k: any, v: any) => console.log(k, v);
 import base58 from 'bs58';
-import { getRayPoolKeys } from "../../dex/raydium/raydium-utils/formatAmmKeysById";
+import { getRayPoolKeys, formatAmmKeysById } from "../../dex/raydium/raydium-utils/formatAmmKeysById";
 import { getTokenMetadata } from "../../feeds";
 import { waitForConfirmation, getSolBalance, getTokenExplorerURLS } from '../../util';
 import { Referrals, UserPositions } from "../../../db/mongo/schema";
@@ -44,7 +44,7 @@ export async function snipperON(ctx: any, amount: string) {
         console.log('Snipe lookup on.');
         poolKeys = await getRayPoolKeys(ctx, snipeToken);
     }
-    ctx.session.activeTradingPool = poolKeys;
+    ctx.session.activeTradingPool = jsonInfo2PoolKeys(poolKeys.id) as LiquidityPoolKeys;;
     console.log('Snipe lookup end, keys found.');
     poolKeys && ctx.session.snipeStatus && await setSnipe(ctx, amount);
 }
@@ -54,12 +54,9 @@ export async function setSnipe(ctx: any, amountIn: any) {
     console.log('Snipe set ...');
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     const snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
-    const rayPoolKeys = await getRayPoolKeys(ctx, snipeToken.toBase58());
 
-    const poolKeys = jsonInfo2PoolKeys(rayPoolKeys) as LiquidityPoolKeys;
-    let liqInfo = await Liquidity.fetchInfo({ connection, poolKeys });
-    // console.log('liqInfo', liqInfo);
-    // console.log('liqInfo', liqInfo.startTime.toNumber());
+    console.log('baseMint on setSnipe', ctx.session.activeTradingPool.baseMint);
+
     const amountInLamports = new BigNumber(Number.parseFloat(amountIn)).times(1e9);
     const snipeSlippage = ctx.session.snipeSlippage;
     console.log('snipeSlippage', snipeSlippage);
@@ -76,11 +73,9 @@ export async function setSnipe(ctx: any, amountIn: any) {
         { parse_mode: 'HTML', disable_web_page_preview: true }
     );
 
-    // await ctx.api.sendMessage(ctx.chat.id, `Setting sniper.`);
-
-    // Start the simulation without waiting for it to complete
+    const liqInfo = ctx.session.env.poolSchedule;
     const poolStartTime = liqInfo.startTime.toNumber();
-    const simulationPromise = startSnippeSimulation(ctx, poolKeys, userKeypair, amountInLamports, snipeSlippage, poolStartTime, tokenData);
+    const simulationPromise = startSnippeSimulation(ctx, userKeypair, amountInLamports, snipeSlippage, poolStartTime, tokenData);
     simulationPromise.catch(async (error: any) => {
         console.log("Error setting snipper", error);
         await ctx.api.sendMessage(ctx.chat.id, `🔴 Snipe fail: ${error}`);
@@ -91,7 +86,6 @@ export async function setSnipe(ctx: any, amountIn: any) {
 
 export async function startSnippeSimulation(
     ctx: any,
-    poolKeys: any,
     userWallet: Keypair,
     amountIn: BigNumber,
     snipeSlippage: number,
@@ -101,23 +95,23 @@ export async function startSnippeSimulation(
     const chatId = ctx.chat.id;
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     const walletTokenAccounts = await _getWalletTokenAccount(connection, userWallet.publicKey);
-    const _tokenIn: Token = new Token(TOKEN_PROGRAM_ID, poolKeys.quoteMint, poolKeys.quoteDecimals, '', '');
-    const _tokenOut: Token = new Token(TOKEN_PROGRAM_ID, poolKeys.baseMint, poolKeys.baseDecimals, '', '');
+    const poolKeys = ctx.session.activeTradingPool;
 
-    const amountOut = await _quote({ amountIn: amountIn, baseVault: poolKeys.quoteVault, quoteVault: poolKeys.baseVault, connection });
+    const _tokenIn: Token = new Token(TOKEN_PROGRAM_ID, new PublicKey(poolKeys.quoteMint), poolKeys.quoteDecimals, '', '');
+    const _tokenOut: Token = new Token(TOKEN_PROGRAM_ID, new PublicKey(poolKeys.baseMint), poolKeys.baseDecimals, '', '');
+
+    const amountOut = await _quote({ amountIn: amountIn, baseVault: new PublicKey(poolKeys.quoteVault), quoteVault: new PublicKey(poolKeys.baseVault), connection });
     const amountOut_with_slippage = new BigNumber(amountOut.minus(amountOut.times(snipeSlippage).div(100)).toFixed(0));
-    console.log('amountOut_with_slippage', amountOut_with_slippage);
-    // console.log('snipeSlippage', snipeSlippage);
+
     const inputTokenAmount = new TokenAmount(_tokenIn, amountIn.toFixed(0), true);
     const minOutTokenAmount = new TokenAmount(_tokenOut, amountOut_with_slippage.toFixed(0), true);
     const computeBudgetUnits = ctx.session.priorityFees.units;
     const computeBudgetMicroLamports = ctx.session.priorityFees.microLamports;
     const totalComputeBudget = computeBudgetMicroLamports * (computeBudgetUnits / 1e6);
-    // console.log('totalComputeBudget', totalComputeBudget);
+
     // ------- check user balanace in DB --------
     const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
-    //   console.log('userPosition', userPosition);
-    // console.log('_tokenOut', _tokenOut.mint.toBase58());
+
     let oldPositionSol: number = 0;
     let oldPositionToken: number = 0;
     if (userPosition) {
@@ -134,9 +128,12 @@ export async function startSnippeSimulation(
     //-------------- Update Earnings referal on Db ----------------
     const referralRecord = await Referrals.findOne({ referredUsers: chatId });
     let actualEarnings = referralRecord && referralRecord.earnings;
+
+    const targetPoolInfo = await formatAmmKeysById(ctx.session.activeTradingPool.id, connection);
+
     const { innerTransactions } = await Liquidity.makeSwapInstructionSimple({
         connection: connection,
-        poolKeys: poolKeys,
+        poolKeys: jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys,
         userKeys: {
             tokenAccounts: walletTokenAccounts,
             owner: userWallet.publicKey,
@@ -216,18 +213,17 @@ export async function startSnippeSimulation(
         return;
     }
     let maxPriorityFee;
-    const raydiumId = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8')
     if (poolKeys) {
         maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
             lockedWritableAccounts: [
-                new PublicKey(poolKeys.id.toBase58()),
+                new PublicKey(poolKeys.id),
             ], percentile: ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
             fallback: true
         });
     } else {
         maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
             lockedWritableAccounts: [
-                new PublicKey(raydiumId.toBase58()),
+                new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'),
             ], percentile: ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
             fallback: true
         });
@@ -293,15 +289,15 @@ export async function startSnippeSimulation(
         if (simulationResult.value.err == null) {
             sim = false;
             await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一 $${tokenData.symbol} with ${amountIn.dividedBy(1e9)} SOL.`);
-                // {
-                //     parse_mode: 'HTML',
-                //     disable_web_page_preview: true,
-                //     reply_markup: {
-                //         inline_keyboard: [
-                //             [{ text: 'Cancel Snipe ', callback_data: 'cancel_snipe' }],
-                //         ]
-                //     },
-                // });
+            // {
+            //     parse_mode: 'HTML',
+            //     disable_web_page_preview: true,
+            //     reply_markup: {
+            //         inline_keyboard: [
+            //             [{ text: 'Cancel Snipe ', callback_data: 'cancel_snipe' }],
+            //         ]
+            //     },
+            // });
             setTimeout(() => {
                 buildAndSendTx(userWallet, innerTransactions, connection, { preflightCommitment: 'processed' }).then(async (txids: any) => {
 
@@ -353,7 +349,7 @@ export async function startSnippeSimulation(
                             saveUserPosition(
                                 ctx,
                                 userWallet.publicKey.toString(), {
-                                baseMint: poolKeys.baseMint,
+                                baseMint: ctx.session.env.originalBaseMint,
                                 name: tokenData.name,
                                 symbol: tokenData.symbol,
                                 tradeType: `ray_swap_buy`,
@@ -363,7 +359,7 @@ export async function startSnippeSimulation(
                         }
                     } else {  // Tx not confirmed
                         const priorityFeeLabel = getPriorityFeeLabel(ctx.session.priorityFees);
-                        const checkLiquidityMsg = priorityFeeLabel 
+                        const checkLiquidityMsg = priorityFeeLabel
                         ctx.api.sendMessage(ctx.chat.id,
                             `Transaction could not be confirmed within the ${priorityFeeLabel.toUpperCase()} priority fee. \n` + checkLiquidityMsg
                         );
