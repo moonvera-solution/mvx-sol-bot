@@ -17,9 +17,12 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
   const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
   const quoteMint = 'So11111111111111111111111111111111111111112';
   let keys = await _getRayPoolKeys({ t1: shitcoin, t2: quoteMint, connection });
- 
+  
   if (!keys) {
     keys = await _getRayPoolKeys({ t1: quoteMint, t2: shitcoin, connection });
+    let  poolKeys = jsonInfo2PoolKeys(keys) as LiquidityPoolKeys;
+   let timeTest = Liquidity.fetchInfo({ connection, poolKeys })
+   console.log('timeTest', timeTest);
     let _quoteMint = keys.quoteMint;
     let _baseMint = keys.baseMint;
     let _baseVault = keys.baseVault;
@@ -38,7 +41,7 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
     keys.marketBaseVault = _marketQuoteVault;
     keys.marketQuoteVault = _marketBaseVault;
   }
-  console.log('keys', keys);
+  // console.log('keys', keys);
   return keys;
 }
 
