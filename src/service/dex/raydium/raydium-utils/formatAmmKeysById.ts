@@ -21,6 +21,8 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
   if (!keys) {
     keys = await _getRayPoolKeys({ t1: quoteMint, t2: shitcoin, connection });
     let  poolKeys = jsonInfo2PoolKeys(keys) as LiquidityPoolKeys;
+    console.log('poolKeys', poolKeys);
+    console.log('poolKeysID', poolKeys.id);
    let timeTest = Liquidity.fetchInfo({ connection, poolKeys })
    console.log('timeTest', timeTest);
     let _quoteMint = keys.quoteMint;
