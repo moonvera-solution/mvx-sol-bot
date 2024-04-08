@@ -62,7 +62,7 @@ dotenv.config();
 /*                  BOT START & SET ENV                       */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 type MyContext = Context & SessionFlavor<ISESSION_DATA>;
-const isProd = process.env.NODE_ENV == "PROD";
+const isProd = process.env.NODE_ENV == "DEV";
 
 _initDbConnection();
 const keys = process.env.TELEGRAM_BOT_TOKEN;
@@ -525,7 +525,7 @@ bot.on("message", async (ctx) => {
             }
 
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
-            console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
+            // console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
             if (!ctx.session.activeTradingPool) {
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
