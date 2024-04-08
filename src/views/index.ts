@@ -219,7 +219,7 @@ export async function display_snipe_options(ctx: any,msgTxt?: string) {
         ctx.session.poolTime = liqInfo;
         // showing the user the countdowm to the snipe
         const currentTime = new Date();
-        const poolStartTime =  ctx.session.poolTime;
+        const poolStartTime = new Date(liqInfo.startTime.toNumber() * 1000);
 
         let poolStatusMessage;
         if (currentTime >= poolStartTime) {
