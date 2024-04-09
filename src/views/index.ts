@@ -283,8 +283,4 @@ export async function display_snipe_options(ctx: any, msgTxt?: string) {
         console.log('display_snipe_options:',error);
         logErrorToFile("display_snipe_options", error);
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/stage
