@@ -22,37 +22,42 @@ export async function fetchPoolSchedule(keys: any, connection: Connection) {
 export async function getRayPoolKeys(ctx: any, shitcoin: string) {
   const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
   const quoteMint = 'So11111111111111111111111111111111111111112';
-  let keys = await _getRayPoolKeys({ t1: shitcoin, t2: quoteMint, connection });
-
-  if (keys) {
-    ctx.session.env["poolSchedule"] = await fetchPoolSchedule(keys, connection);
-    // ctx.session.env["originalBaseMint"] = keys.baseMint.toBase58();
-  } else {
-    keys = await _getRayPoolKeys({ t1: quoteMint, t2: shitcoin, connection });
-    ctx.session.env["originalBaseMint"] = keys.baseMint;
-    ctx.session.isInverted = true;
-    ctx.session.env["poolSchedule"] = await fetchPoolSchedule(keys, connection);
-    console.log("inverting keys");
-    let _quoteMint = keys.quoteMint;
-    let _baseMint = keys.baseMint;
-    let _baseVault = keys.baseVault;
-    let _quoteVault = keys.quoteVault;
-    let _baseDecimals = keys.baseDecimals;
-    let _quoteDecimals = keys.quoteDecimals;
-    let _marketQuoteVault = keys.marketQuoteVault;
-    let _marketBaseVault = keys.marketBaseVault;
-
-    keys.baseMint = _quoteMint;
-    keys.quoteMint = _baseMint;
-    keys.quoteVault = _baseVault;
-    keys.baseVault = _quoteVault;
-    keys.quoteDecimals = _baseDecimals;
-    keys.baseDecimals = _quoteDecimals;
-    keys.marketBaseVault = _marketQuoteVault;
-    keys.marketQuoteVault = _marketBaseVault;
+  try{
+    let keys = await _getRayPoolKeys({ t1: shitcoin, t2: quoteMint, connection });
+    // console.log('keys', keys);
+    if (keys) {
+      ctx.session.env["poolSchedule"] = await fetchPoolSchedule(keys, connection);
+      // console.log('keys', keys);
+    } else {
+      keys = await _getRayPoolKeys({ t1: quoteMint, t2: shitcoin, connection });
+      ctx.session.env["originalBaseMint"] = keys.baseMint;
+      ctx.session.isInverted = true;
+      ctx.session.env["poolSchedule"] = await fetchPoolSchedule(keys, connection);
+      // console.log("inverting keys");
+      let _quoteMint = keys.quoteMint;
+      let _baseMint = keys.baseMint;
+      let _baseVault = keys.baseVault;
+      let _quoteVault = keys.quoteVault;
+      let _baseDecimals = keys.baseDecimals;
+      let _quoteDecimals = keys.quoteDecimals;
+      let _marketQuoteVault = keys.marketQuoteVault;
+      let _marketBaseVault = keys.marketBaseVault;
+  
+      keys.baseMint = _quoteMint;
+      keys.quoteMint = _baseMint;
+      keys.quoteVault = _baseVault;
+      keys.baseVault = _quoteVault;
+      keys.quoteDecimals = _baseDecimals;
+      keys.baseDecimals = _quoteDecimals;
+      keys.marketBaseVault = _marketQuoteVault;
+      keys.marketQuoteVault = _marketBaseVault;
+    } 
+    // console.log('keys', keys);
+    return keys;
+  }catch(e){
+    console.log(e);
   }
-  // console.log('keys', keys);
-  return keys;
+ 
 }
 
 async function _getRayPoolKeys({ t1, t2, connection }: { t1: string, t2: string, connection: Connection }) {

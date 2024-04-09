@@ -10,7 +10,7 @@ export async function handleRefreshStart(ctx: any) {
     const details = await getSolanaDetails();
     let solPriceMessage = '';
     let userWallet: any;
-    
+    try {
     if (details) {
         const solData = details.toFixed(2);
         solPriceMessage = `\n\SOL Price: <b>${solData}</b> USD`;
@@ -61,7 +61,7 @@ export async function handleRefreshStart(ctx: any) {
     parse_mode: 'HTML'
 };
     // Edit the existing message with the updated information and the inline keyboard
-    try {
+ 
         await ctx.editMessageText(welcomeMessage, options);
     } catch (error) {
         console.error("Error updating message: ", error);
@@ -79,6 +79,7 @@ export async function handleRereshWallet(ctx: any){
 
     // Fetch SOL balance
     const balanceInSOL = await getSolBalance(publicKeyString,connection);
+    try {
     if (balanceInSOL === null) {
         await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
         return;
@@ -114,7 +115,7 @@ export async function handleRereshWallet(ctx: any){
     };
 
  // Edit the existing message with the updated information and the inline keyboard
- try {
+
     await ctx.editMessageText(updatedWelcomeMessage, options);
     } catch (error) {
     console.error("Error updating message: ", error);

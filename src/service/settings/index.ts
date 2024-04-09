@@ -14,40 +14,46 @@ export async function handleSettings(ctx:any) {
     // Fetch SOL balance
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     const balanceInSOL = await getSolBalance(publicKeyString,connection);
-    if (balanceInSOL === null) {
-        await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
-        return;
+    try{
+
+        if (balanceInSOL === null) {
+            await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
+            return;
+        }
+        const solanaDetails = await getSolanaDetails();
+        const balanceInUSD = (balanceInSOL * (solanaDetails)).toFixed(2);
+    
+    
+        // Fetch the user's wallet data from the JSON file
+        if (!userWallet || !userWallet.publicKey) {
+            await ctx.api.sendMessage(chatId, "No wallet found. Please create a wallet first.");
+            return;
+        }
+    
+        // Create a message with the wallet information
+        const walletInfoMessage = `Your Wallet:  ` +
+            `<code>${publicKeyString}</code>\n` +
+            `Balance: ` +
+            `<b>${balanceInSOL.toFixed(3)}</b> SOL | <b>${balanceInUSD}</b> USD\n`;
+    
+        // Inline keyboard options
+        const options: any = {
+            reply_markup: JSON.stringify({
+                inline_keyboard: [
+                    [{ text: 'Get Private Key', callback_data: 'get_private_key' }, { text: `✏ Slippage (${ctx.session.latestSlippage}%)`, callback_data: 'set_slippage' }],
+                    [{ text: '🔂 Refresh', callback_data: 'refresh_wallet' }, { text: 'Reset Wallet', callback_data: 'confirm_reset_wallet' }],
+                    [{ text: '↗️ Send SOL', callback_data: 'send_sol' }],
+                    [{ text: 'Close', callback_data: 'closing' }]
+                ]
+            }),
+            parse_mode: 'HTML'
+        };
+        // Send the wallet information and options to the user
+        ctx.api.sendMessage(chatId, walletInfoMessage, options);
+
+    }catch(err){
+        console.error(err);
+        console.log("Error fetching wallet balance.");
     }
-    const solanaDetails = await getSolanaDetails();
-    const balanceInUSD = (balanceInSOL * (solanaDetails)).toFixed(2);
-
-
-    // Fetch the user's wallet data from the JSON file
-    if (!userWallet || !userWallet.publicKey) {
-        await ctx.api.sendMessage(chatId, "No wallet found. Please create a wallet first.");
-        return;
-    }
-
-    // Create a message with the wallet information
-    const walletInfoMessage = `Your Wallet:  ` +
-        `<code>${publicKeyString}</code>\n` +
-        `Balance: ` +
-        `<b>${balanceInSOL.toFixed(3)}</b> SOL | <b>${balanceInUSD}</b> USD\n`;
-
-    // Inline keyboard options
-    const options: any = {
-        reply_markup: JSON.stringify({
-            inline_keyboard: [
-                [{ text: 'Get Private Key', callback_data: 'get_private_key' }, { text: `✏ Slippage (${ctx.session.latestSlippage}%)`, callback_data: 'set_slippage' }],
-                [{ text: '🔂 Refresh', callback_data: 'refresh_wallet' }, { text: 'Reset Wallet', callback_data: 'confirm_reset_wallet' }],
-                [{ text: '↗️ Send SOL', callback_data: 'send_sol' }],
-                [{ text: 'Close', callback_data: 'closing' }]
-            ]
-        }),
-        parse_mode: 'HTML'
-    };
-
- 
-    // Send the wallet information and options to the user
-    ctx.api.sendMessage(chatId, walletInfoMessage, options);
+  
 }

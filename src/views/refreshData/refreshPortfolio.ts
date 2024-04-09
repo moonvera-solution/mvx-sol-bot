@@ -16,20 +16,18 @@ export async function refresh_spl_positions(ctx: any) {
     
     const solprice = await getSolanaDetails();
     // console.log(userPosition[0]?.positions.length)
-    if(!userPosition[0]) {
-            // await UserPositions.deleteOne({ positionChatId: chatId, walletId: userWallet });
-            await ctx.api.sendMessage(ctx.chat.id, "No positions found", { parse_mode: 'HTML' });
-            return;
+    if (userPosition[0].positions.length == 0) {
+        // await UserPositions.deleteOne({ positionChatId: chatId, walletId: userWallet });
+        await ctx.api.sendMessage(ctx.chat.id, "No positions found.", { parse_mode: 'HTML' });
+        return;
     }
     let currentIndex = ctx.session.positionIndex;
     ctx.session.activeTradingPool = await getRayPoolKeys(ctx,userPosition[0].positions[currentIndex].baseMint);
 
     // Function to create keyboard for a given position
-    const createKeyboardForPosition = (index: any) => {
-        let prevIndex = index - 1 < 0 ? userPosition[0].positions.length - 1 : index - 1;
-        let nextIndex = index + 1 >= userPosition[0].positions.length ? 0 : index + 1;
+    const createKeyboardForPosition = () => {
+       
 
-        let posSymbol = userPosition[0].positions[index].symbol; // Get the symbol for the current position
 
         return [
             [{ text: 'Manage Positions', callback_data: `manage_positions` }, 
@@ -96,7 +94,7 @@ export async function refresh_spl_positions(ctx: any) {
             `Token Balance in Wallet: ${Number(userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).toFixed(3)} <b>${pos.symbol}</b> | ${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n\n`;
         }
     };
-    let keyboardButtons = createKeyboardForPosition(currentIndex);
+    let keyboardButtons = createKeyboardForPosition();
 
     let options = {
         parse_mode: 'HTML',

@@ -71,6 +71,8 @@ export async function display_token_details(ctx: any) {
             runMax(ctx, raydiumId),
         ]);
     }
+    try {
+
     const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
     const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
 
@@ -81,7 +83,6 @@ export async function display_token_details(ctx: any) {
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
     const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection);
-    try {
         // Construct the message
         let options: any;
         let messageText: any;
@@ -282,4 +283,8 @@ export async function display_snipe_options(ctx: any, msgTxt?: string) {
         console.log('display_snipe_options:',error);
         logErrorToFile("display_snipe_options", error);
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/stage
