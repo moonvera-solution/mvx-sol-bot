@@ -63,7 +63,7 @@ export async function setSnipe(ctx: any, amountIn: any) {
     const currentWalletIdx = ctx.session.activeWalletIndex;
     const currentWallet = ctx.session.portfolio.wallets[currentWalletIdx];
     const { tokenData } = await getTokenMetadata(ctx, snipeToken.toBase58());
-
+    console.log('tokenData', tokenData);
     const userKeypair = await Keypair.fromSecretKey(base58.decode(String(currentWallet.secretKey)));
     ctx.session.snipeStatus = true;
 
@@ -96,7 +96,7 @@ export async function startSnippeSimulation(
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     const walletTokenAccounts = await _getWalletTokenAccount(connection, userWallet.publicKey);
     const poolKeys = ctx.session.activeTradingPool;
-
+    console.log('poolKeysQuote', poolKeys.quoteMint);
     const _tokenIn: Token = new Token(TOKEN_PROGRAM_ID, new PublicKey(poolKeys.quoteMint), poolKeys.quoteDecimals, '', '');
     const _tokenOut: Token = new Token(TOKEN_PROGRAM_ID, new PublicKey(poolKeys.baseMint), poolKeys.baseDecimals, '', '');
 
@@ -229,7 +229,7 @@ export async function startSnippeSimulation(
         });
     }
 
-    const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: (maxPriorityFee * 100), });
+    const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: (maxPriorityFee * 10), });
     //      // Simulate the transaction and add the compute unit limit instruction to your transaction
     let [Units, recentBlockhash] = await Promise.all([
         getSimulationUnits(connection, innerTransactions[0].instructions, userWallet.publicKey),
@@ -328,7 +328,7 @@ export async function startSnippeSimulation(
 
                         if (extractAmount > 0) {
                             console.log('extractAmount', extractAmount);
-                            solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
+                            solAmount = Number(extractAmount) / Math.pow(10, Number(tokenData.mint.decimals)); // Convert amount to SOL
                             tokenAmount = amountIn.div(Math.pow(10, tokenData.decimals));
                             await ctx.api.sendMessage(chatId,
                                 `✅ <b>Snipe Tx Confirmed:</b> You sniped ${solAmount.toFixed(3)} <b>${_symbol}</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`,
