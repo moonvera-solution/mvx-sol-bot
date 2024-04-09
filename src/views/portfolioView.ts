@@ -16,7 +16,7 @@ export async function display_spl_positions(ctx: any) {
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
     const solprice = await getSolanaDetails();
-    if (!userPosition[0]) {
+    if (userPosition[0].positions.length == 0) {
         // await UserPositions.deleteOne({ positionChatId: chatId, walletId: userWallet });
         await ctx.api.sendMessage(ctx.chat.id, "No positions found.", { parse_mode: 'HTML' });
         return;
@@ -46,6 +46,8 @@ export async function display_spl_positions(ctx: any) {
 
                 const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
                 let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
+                    console.log('userBalance', userBalance);
+
                 if (pos.amountIn == 0 || pos.amountOut == 0 || pos.amountOut < 0 || pos.amountIn < 0 || userBalance.toNumber() == 0) {
                     await UserPositions.updateOne(
                         { walletId: userWallet },
@@ -172,6 +174,7 @@ export async function display_single_spl_positions(ctx: any) {
 
                 const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
                 let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
+                console.log("userBalance:: ", userBalance.toNumber());
                 if (pos.amountIn == 0 || pos.amountOut == 0 || pos.amountOut < 0 || pos.amountIn < 0 || userBalance.toNumber() == 0) {
                     await UserPositions.updateOne({ walletId: userWallet },{$pull: { positions: { baseMint: pos.baseMint } }});
                     return;

@@ -16,10 +16,10 @@ export async function refresh_spl_positions(ctx: any) {
     
     const solprice = await getSolanaDetails();
     // console.log(userPosition[0]?.positions.length)
-    if(!userPosition[0]) {
-            // await UserPositions.deleteOne({ positionChatId: chatId, walletId: userWallet });
-            await ctx.api.sendMessage(ctx.chat.id, "No positions found", { parse_mode: 'HTML' });
-            return;
+    if (userPosition[0].positions.length == 0) {
+        // await UserPositions.deleteOne({ positionChatId: chatId, walletId: userWallet });
+        await ctx.api.sendMessage(ctx.chat.id, "No positions found.", { parse_mode: 'HTML' });
+        return;
     }
     let currentIndex = ctx.session.positionIndex;
     ctx.session.activeTradingPool = await getRayPoolKeys(ctx,userPosition[0].positions[currentIndex].baseMint);

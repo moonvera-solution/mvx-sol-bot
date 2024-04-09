@@ -227,7 +227,7 @@ bot.command("help", async (ctx) => {
 
 bot.command("positions", async (ctx) => {
   try {
-    await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
+    // await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
     await display_spl_positions(ctx);
   } catch (error: any) {
     logErrorToFile("bot on positions cmd", error);
@@ -489,15 +489,15 @@ bot.on("message", async (ctx) => {
         try {
           if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
             const isTOken = await checkAccountType(ctx, msgTxt);
-            console.log("isTOken", isTOken);
+            // console.log("isTOken", isTOken);
             if (!isTOken) {
               ctx.api.sendMessage(chatId, "Invalid address");
               return;
             }
-
+           
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
-            // console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
-            if (!ctx.session.activeTradingPool) {
+            
+            if (!ctx.session.activeTradingPool ){
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
               display_snipe_options(ctx, msgTxt);
@@ -513,6 +513,7 @@ bot.on("message", async (ctx) => {
           }
         } catch (error: any) {
           console.error("Error in 'snipe' command:", error.message);
+          logErrorToFile("bot.on('message'", error);
 
         }
         break;
@@ -1109,7 +1110,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "display_spl_positions": {
-        await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
+        // await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
         await display_spl_positions(ctx);
         break;
       }
