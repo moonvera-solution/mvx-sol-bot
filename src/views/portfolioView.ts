@@ -30,7 +30,6 @@ export async function display_spl_positions(ctx: any) {
         let prevIndex = index - 1 < 0 ? userPosition[0].positions.length - 1 : index - 1;
         let nextIndex = index + 1 >= userPosition[0].positions.length ? 0 : index + 1;
 
-        let posSymbol = userPosition[0].positions[currentIndex].symbol; // Get the symbol for the current position
         return [
             [{ text: 'Manage Positions', callback_data: `display_single_spl_positions` }, 
             { text: 'Refresh Psitions', callback_data: `display_refresh_single_spl_positions` }],
@@ -154,7 +153,6 @@ export async function display_single_spl_positions(ctx: any) {
         let prevIndex = index - 1 < 0 ? userPosition[0].positions.length - 1 : index - 1;
         let nextIndex = index + 1 >= userPosition[0].positions.length ? 0 : index + 1;
 
-        let posSymbol = userPosition[0].positions[currentIndex].symbol; // Get the symbol for the current position
         return [
             [{ text: 'Sell 25%', callback_data: `sellpos_25_${currentIndex}` }, { text: `Sell 50%`, callback_data: `sellpos_50_${currentIndex}` }],
             [{ text: 'Sell 75%', callback_data: `sellpos_75_${currentIndex}` }, { text: `Sell 100%`, callback_data: `sellpos_100_${currentIndex}` }],
@@ -273,7 +271,6 @@ export async function display_refresh_single_spl_positions(ctx: any) {
         let prevIndex = index - 1 < 0 ? userPosition[0].positions.length - 1 : index - 1;
         let nextIndex = index + 1 >= userPosition[0].positions.length ? 0 : index + 1;
 
-        let posSymbol = userPosition[0].positions[currentIndex].symbol; // Get the symbol for the current position
         return [
             [{ text: 'Sell 25%', callback_data: `sellpos_25_${currentIndex}` }, { text: `Sell 50%`, callback_data: `sellpos_50_${currentIndex}` }],
             [{ text: 'Sell 75%', callback_data: `sellpos_75_${currentIndex}` }, { text: `Sell 100%`, callback_data: `sellpos_100_${currentIndex}` }],
