@@ -15,6 +15,7 @@ import { getTokenMetadata } from "../../feeds";
 import { waitForConfirmation, getSolBalance, getTokenExplorerURLS } from '../../util';
 import { Referrals, UserPositions } from "../../../db/mongo/schema";
 import { getMaxPrioritizationFeeByPercentile, getSimulationUnits } from "../../../service/fees/priorityFees";
+import { display_token_details } from '../../../views';
 
 export async function snipperON(ctx: any, amount: string) {
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
@@ -357,6 +358,8 @@ export async function startSnippeSimulation(
                                 amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount)
                             });
                         }
+                        ctx.session.latestCommand == 'sell'
+                        await display_token_details(ctx);
                     } else {  // Tx not confirmed
                         const priorityFeeLabel = getPriorityFeeLabel(ctx.session.priorityFees);
                         const checkLiquidityMsg = priorityFeeLabel

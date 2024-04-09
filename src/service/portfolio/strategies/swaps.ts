@@ -206,6 +206,11 @@ export async function handle_radyum_swap(
                     }
                     ctx.session.latestCommand = side;
                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
+                    if(side === 'buy'){
+                        ctx.session.latestCommand == 'sell'
+                        await display_token_details(ctx);
+                    }
+                 
 
                 } else {  // Tx not confirmed
                     ctx.api.sendMessage(ctx.chat.id,
