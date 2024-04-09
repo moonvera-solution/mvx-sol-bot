@@ -71,7 +71,6 @@ bot.start();
 const allowedUsernames = [
   "tech_01010",
   "daniellesifg",
-  "CryptoBoosie",
   "swalefdao",
   "coachalib",
 ]; // without the @

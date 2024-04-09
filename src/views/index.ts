@@ -9,6 +9,7 @@ import { jsonInfo2PoolKeys, Liquidity, LiquidityPoolKeys, SPL_ACCOUNT_LAYOUT, TO
 import { Keypair, Connection } from '@solana/web3.js';
 import { runHigh, runMax, runMedium, runMin } from './util/getPriority';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
+import { logErrorToFile } from "../../error/logger";
 
 export async function handleCloseKeyboard(ctx: any) {
     const chatId = ctx.chat.id;
@@ -161,120 +162,124 @@ export async function display_token_details(ctx: any) {
 }
 
 export async function display_snipe_options(ctx: any, msgTxt?: string) {
-    let messageText;
-    const priority_Level = ctx.session.priorityFees;
-    let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
-    const activePool = ctx.session.activeTradingPool;
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
-    const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
-    const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
-    // console.log("activePool",activePool)
-    if (!msgTxt && !activePool) { await ctx.api.sendMessage(ctx.chat.id, "Enter token address to snipe.", { parse_mode: 'HTML' }); return; }
-
-    if (activePool && activePool.baseMint != DEFAULT_PUBLIC_KEY) {
-
-        const rayPoolKeys: RAYDIUM_POOL_TYPE = ctx.session.activeTradingPool;
-
-        const baseVault = rayPoolKeys.baseVault;
-        const quoteVault = rayPoolKeys.quoteVault;
-        const baseDecimals = rayPoolKeys.baseDecimals;
-        const quoteDecimals = rayPoolKeys.quoteDecimals;
-        const baseMint = rayPoolKeys.baseMint;
-        const chatId = ctx.chat.id;
-        const tokenAddress = new PublicKey(ctx.session.snipeToken);
-
-        const liqInfo = ctx.session.env.poolSchedule;
-        const [tokenMetadataResult, solPrice, tokenInfo, balanceInSOL, userTokenDetails] = await Promise.all([
-            getTokenMetadata(ctx, tokenAddress.toBase58()),
-            getSolanaDetails(),
-            quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
-            getSolBalance(userPublicKey, connection),
-            getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection)
-        ]);
-
-
-        const {
-            birdeyeURL,
-            dextoolsURL,
-            dexscreenerURL,
-            tokenData,
-        } = tokenMetadataResult;
-        const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
-        const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
-        const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
-
-        async function getPriorityFees(ctx: any, raydiumId: string) {
-            return await Promise.all([
-                runMin(ctx, raydiumId),
-                runMedium(ctx, raydiumId),
-                runHigh(ctx, raydiumId),
-                runMax(ctx, raydiumId)
+    try {
+        let messageText;
+        const priority_Level = ctx.session.priorityFees;
+        let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
+        const activePool = ctx.session.activeTradingPool;
+        const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+        const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
+        const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
+        // console.log("activePool",activePool)
+        if (!msgTxt && !activePool) { await ctx.api.sendMessage(ctx.chat.id, "Enter token address to snipe.", { parse_mode: 'HTML' }); return; }
+    
+        if (activePool && activePool.baseMint != DEFAULT_PUBLIC_KEY) {
+    
+            const rayPoolKeys: RAYDIUM_POOL_TYPE = ctx.session.activeTradingPool;
+    
+            const baseVault = rayPoolKeys.baseVault;
+            const quoteVault = rayPoolKeys.quoteVault;
+            const baseDecimals = rayPoolKeys.baseDecimals;
+            const quoteDecimals = rayPoolKeys.quoteDecimals;
+            const baseMint = rayPoolKeys.baseMint;
+            const chatId = ctx.chat.id;
+            const tokenAddress = new PublicKey(ctx.session.snipeToken);
+    
+            const liqInfo = ctx.session.env.poolSchedule;
+            const [tokenMetadataResult, solPrice, tokenInfo, balanceInSOL, userTokenDetails] = await Promise.all([
+                getTokenMetadata(ctx, tokenAddress.toBase58()),
+                getSolanaDetails(),
+                quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
+                getSolBalance(userPublicKey, connection),
+                getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection)
             ]);
-        }
-        const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
-
-
-        ctx.session.currentMode = 'snipe';
-        ctx.session.poolTime = liqInfo;
-        // showing the user the countdowm to the snipe
-        const currentTime = new Date();
-        const poolStartTime = new Date(liqInfo.startTime.toNumber() * 1000);
-
-        let poolStatusMessage;
-        if (currentTime >= poolStartTime) {
-            poolStatusMessage = "✅ Opened";
+    
+    
+            const {
+                birdeyeURL,
+                dextoolsURL,
+                dexscreenerURL,
+                tokenData,
+            } = tokenMetadataResult;
+            const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
+            const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
+            const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
+    
+            async function getPriorityFees(ctx: any, raydiumId: string) {
+                return await Promise.all([
+                    runMin(ctx, raydiumId),
+                    runMedium(ctx, raydiumId),
+                    runHigh(ctx, raydiumId),
+                    runMax(ctx, raydiumId)
+                ]);
+            }
+            const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
+    
+    
+            ctx.session.currentMode = 'snipe';
+            ctx.session.poolTime = liqInfo;
+            // showing the user the countdowm to the snipe
+            const currentTime = new Date();
+            const poolStartTime = new Date(liqInfo.startTime.toNumber() * 1000);
+    
+            let poolStatusMessage;
+            if (currentTime >= poolStartTime) {
+                poolStatusMessage = "✅ Opened";
+            } else {
+                const timeDiff = Number(poolStartTime) - Number(currentTime);
+                const countdown = new Date(timeDiff).toISOString().substr(11, 8);
+                poolStatusMessage = `⏳ Opening in ${countdown}`;
+            }
+    
+            const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
+            const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
+    
+            const priceImpact = tokenInfo.priceImpact.toFixed(2);
+            const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
+    
+    
+            const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
+    
+            messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
+                `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
+                `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
+                `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
+                `Market Cap: <b>${formattedmac} USD</b>\n` +
+                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
+                // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
+                `price Impact (5.0 SOL) : <b>${priceImpact}%</b> | (1.0 SOL): <b>${priceImpact_1}%</b> \n\n` +
+                `Pool Status: <b>${poolStatusMessage}</b>\n\n` +
+                `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
+                `Token Balance: <b>${userTokenDetails.userTokenBalance.toFixed(3)} $${userTokenDetails.userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
+                `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
         } else {
-            const timeDiff = Number(poolStartTime) - Number(currentTime);
-            const countdown = new Date(timeDiff).toISOString().substr(11, 8);
-            poolStatusMessage = `⏳ Opening in ${countdown}`;
+            const { tokenData } = await getTokenMetadata(ctx, ctx.session.snipeToken);
+            messageText = `<b>${tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${msgTxt}</code> <a href="copy:${msgTxt}">🅲</a>\n` +
+                `No pool available for this token yet. \nSet Sniper by selecting slippage and amount.`;
         }
-
-        const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
-        const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
-
-        const priceImpact = tokenInfo.priceImpact.toFixed(2);
-        const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
-
-
-        const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
-
-        messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
-            `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
-            `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
-            `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
-            `Market Cap: <b>${formattedmac} USD</b>\n` +
-            `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
-            // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
-            `price Impact (5.0 SOL) : <b>${priceImpact}%</b> | (1.0 SOL): <b>${priceImpact_1}%</b> \n\n` +
-            `Pool Status: <b>${poolStatusMessage}</b>\n\n` +
-            `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
-            `Token Balance: <b>${userTokenDetails.userTokenBalance.toFixed(3)} $${userTokenDetails.userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
-            `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
-    } else {
-        const { tokenData } = await getTokenMetadata(ctx, ctx.session.snipeToken);
-        messageText = `<b>${tokenData.name} (${tokenData.symbol})</b> | 📄 CA: <code>${msgTxt}</code> <a href="copy:${msgTxt}">🅲</a>\n` +
-            `No pool available for this token yet. \nSet Sniper by selecting slippage and amount.`;
+    
+        await ctx.api.sendMessage(ctx.chat.id, messageText, {
+            parse_mode: 'HTML',
+            disable_web_page_preview: true,
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: ' 🔂 Refresh ', callback_data: 'refresh_snipe' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
+                    // [{ text: ' 🎯  Turbo Snipping ', callback_data: '_' }],
+                    [{ text: '🎯 X SOL', callback_data: 'snipe_X_SOL' }, { text: '🎯 1 SOL', callback_data: 'snipe_1_SOL' }, { text: '🎯 5 SOL', callback_data: 'snipe_5_SOL' }],
+                    [{ text: `⛷️ Set Slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }, { text: 'Selling Mode 💸', callback_data: 'sell' }],
+                    [{ text: '📈 Priority fees', callback_data: '_' }],
+    
+                    [
+                        { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
+                        { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
+                    ],
+                    [{ text: 'Cancel', callback_data: 'closing' }]
+                ]
+    
+            },
+        });
+    }catch (error: any) {
+        console.log('display_snipe_options:',error);
+        logErrorToFile("display_snipe_options", error);
     }
-
-    await ctx.api.sendMessage(ctx.chat.id, messageText, {
-        parse_mode: 'HTML',
-        disable_web_page_preview: true,
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: ' 🔂 Refresh ', callback_data: 'refresh_snipe' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
-                // [{ text: ' 🎯  Turbo Snipping ', callback_data: '_' }],
-                [{ text: '🎯 X SOL', callback_data: 'snipe_X_SOL' }, { text: '🎯 1 SOL', callback_data: 'snipe_1_SOL' }, { text: '🎯 5 SOL', callback_data: 'snipe_5_SOL' }],
-                [{ text: `⛷️ Set Slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }, { text: 'Selling Mode 💸', callback_data: 'sell' }],
-                [{ text: '📈 Priority fees', callback_data: '_' }],
-
-                [
-                    { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
-                    { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
-                ],
-                [{ text: 'Cancel', callback_data: 'closing' }]
-            ]
-
-        },
-    });
-
 }
