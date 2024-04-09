@@ -48,7 +48,7 @@ import { display_rugCheck } from "./views/rugCheck";
 import { Refresh_rugCheck } from "./views/refreshData/refreshRug";
 import { _generateReferralLink, _getReferralData } from "../src/db/mongo/crud";
 import { Referrals } from "./db/mongo/schema";
-import { display_spl_positions } from "./views/portfolioView";
+import { display_spl_positions, display_single_spl_positions, display_refresh_single_spl_positions } from "./views/portfolioView";
 import { refreshSnipeDetails } from "./views/refreshData/refereshSnipe";
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { refresh_spl_positions } from "./views/refreshData/refreshPortfolio";
@@ -227,7 +227,7 @@ bot.command("help", async (ctx) => {
 
 bot.command("positions", async (ctx) => {
   try {
-    await ctx.api.sendMessage(ctx.chat.id, `Loading your positions`);
+    await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
     await display_spl_positions(ctx);
   } catch (error: any) {
     logErrorToFile("bot on positions cmd", error);
@@ -359,7 +359,7 @@ bot.on("message", async (ctx) => {
             let rugCheckToken = new PublicKey(msgTxt);
             ctx.session.rugCheckToken = rugCheckToken;
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
-            
+
             await display_rugCheck(ctx);
           } else {
             ctx.api.sendMessage(chatId, "Invalid address");
@@ -513,7 +513,7 @@ bot.on("message", async (ctx) => {
           }
         } catch (error: any) {
           console.error("Error in 'snipe' command:", error.message);
-          
+
         }
         break;
       }
@@ -612,7 +612,7 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.positionPool[ctx.session.positionIndex];
       // console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
       // Redisplay the positions with the updated index
-      await refresh_spl_positions(ctx);
+      await display_refresh_single_spl_positions(ctx);
     }
 
     switch (data) {
@@ -828,10 +828,10 @@ bot.on("callback_query", async (ctx: any) => {
 
         //   await display_token_details(ctx);
         // } else {
-          await ctx.api.sendMessage(
-            chatId,
-            "Enter the token Address you would like to sell."
-          );
+        await ctx.api.sendMessage(
+          chatId,
+          "Enter the token Address you would like to sell."
+        );
         // }
         break;
       }
@@ -844,15 +844,15 @@ bot.on("callback_query", async (ctx: any) => {
           ctx.session.generatorWallet = referralRecord.generatorWallet;
           // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
         }
-        if(ctx.session.latestCommand === 'rug_check'){
-            ctx.session.latestCommand = "buy";
-            await display_token_details(ctx);
-        } else{
-            ctx.session.latestCommand = "buy";
-            await ctx.api.sendMessage(
-                chatId,
-                "Enter the token Address you would like to Buy."
-              );
+        if (ctx.session.latestCommand === 'rug_check') {
+          ctx.session.latestCommand = "buy";
+          await display_token_details(ctx);
+        } else {
+          ctx.session.latestCommand = "buy";
+          await ctx.api.sendMessage(
+            chatId,
+            "Enter the token Address you would like to Buy."
+          );
         }
 
         break;
@@ -865,18 +865,18 @@ bot.on("callback_query", async (ctx: any) => {
           ctx.session.referralCommision = referralRecord.commissionPercentage;
           ctx.session.generatorWallet = referralRecord.generatorWallet;
         }
-     
-            if(ctx.session.latestCommand === 'rug_check'){
-                ctx.session.latestCommand = "snipe";
-                await display_snipe_options(ctx,  ctx.session.rugCheckToken);
-            } else {
-            ctx.session.latestCommand = "snipe";
-            await ctx.api.sendMessage(
-                ctx.chat.id,
-                "Enter the token Address you would like to snipe."
-            );
+
+        if (ctx.session.latestCommand === 'rug_check') {
+          ctx.session.latestCommand = "snipe";
+          await display_snipe_options(ctx, ctx.session.rugCheckToken);
+        } else {
+          ctx.session.latestCommand = "snipe";
+          await ctx.api.sendMessage(
+            ctx.chat.id,
+            "Enter the token Address you would like to snipe."
+          );
         }
-       
+
         break;
       }
       case "cancel_snipe": {
@@ -1074,7 +1074,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "snipe_0.5_SOL": {
         if (ctx.session.snipperLookup) {
-         await snipperON(ctx, "0.5");
+          await snipperON(ctx, "0.5");
         } else {
           await setSnipe(ctx, "0.5");
         }
@@ -1090,7 +1090,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "snipe_5_SOL": {
         if (ctx.session.snipperLookup) {
-         await  snipperON(ctx, "5");
+          await snipperON(ctx, "5");
         } else {
           await setSnipe(ctx, "5");
         }
@@ -1102,8 +1102,16 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "display_spl_positions": {
-        await ctx.api.sendMessage(ctx.chat.id, `Loading your positions`);
+        await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
         await display_spl_positions(ctx);
+        break;
+      }
+      case "display_refresh_spl_positions": {
+        await display_refresh_single_spl_positions(ctx);
+        break;
+      }
+      case "display_single_spl_positions": {
+        await display_single_spl_positions(ctx);
         break;
       }
       case "priority_low": {

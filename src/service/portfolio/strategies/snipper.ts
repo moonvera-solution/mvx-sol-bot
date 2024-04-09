@@ -405,6 +405,7 @@ async function _getReservers(_baseVault: PublicKey, _quoteVault: PublicKey, conn
         quoteTokenVaultSupply: new BigNumber(quoteVault.value?.data.parsed.info.tokenAmount.amount)
     }
 }
+
 async function _quote({ amountIn, baseVault, quoteVault, connection }: { amountIn: BigNumber, baseVault: PublicKey, quoteVault: PublicKey, connection: Connection }): Promise<BigNumber> {
     let { baseTokenVaultSupply, quoteTokenVaultSupply } = await _getReservers(baseVault, quoteVault, connection);
     // base SOL & quote SHIT
