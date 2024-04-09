@@ -53,10 +53,6 @@ import { refreshSnipeDetails } from "./views/refreshData/refereshSnipe";
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { refresh_spl_positions } from "./views/refreshData/refreshPortfolio";
 import { logErrorToFile } from "../error/logger";
-import dotenv from "dotenv";
-dotenv.config();
-// const express = require('express');
-// const app = express();
 
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                  BOT START & SET ENV                       */
@@ -71,30 +67,6 @@ bot.use(
   session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) })
 );
 bot.start();
-// Set the webhook
-
-const botToken = process.env.TELEGRAM_BOT_TOKEN || "";
-// console.log("botToken", botToken);
-// const webhookUrl = 'https://drib.ngrok.app';
-
-// bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
-//   .then(() => console.log("Webhook set successfully"))
-//   .catch(err => console.error("Error setting webhook:", err)
-// );
-// const handleUpdate = webhookCallback(bot, 'express');
-// // Create the HTTP server and define request handling logic
-// app.use(express.json()); // for parsing application/json
-
-// app.post(`/bot${botToken}`, handleUpdate);
-
-// app.get('/', (req: any, res: any) => {
-//   res.send('Hello from ngrok server!');
-// });
-// // const server = createServer(bot);
-// const port = process.env.PORT || 80;
-// app.listen(port, () => {
-//     console.log(`Server is running on port ${port}`);
-// });
 
 const allowedUsernames = [
   "tech_01010",
@@ -112,8 +84,6 @@ bot.command("start", async (ctx: any) => {
     const chatId = ctx.chat.id;
     const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
     let isNewUser = false;
-    ctx.session.env["tritonRPC"] = "https://moonvera-pit.rpcpool.com/";
-    ctx.session.env["tritonToken"] = process.env.TRITON_RPC_TOKEN!;
     const connection = new Connection(
       `${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`
     );
@@ -257,6 +227,7 @@ bot.command("help", async (ctx) => {
 
 bot.command("positions", async (ctx) => {
   try {
+    await ctx.api.sendMessage(ctx.chat.id, `Loading your positions`);
     await display_spl_positions(ctx);
   } catch (error: any) {
     logErrorToFile("bot on positions cmd", error);
@@ -1131,6 +1102,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "display_spl_positions": {
+        await ctx.api.sendMessage(ctx.chat.id, `Loading your positions`);
         await display_spl_positions(ctx);
         break;
       }
