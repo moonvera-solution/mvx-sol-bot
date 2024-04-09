@@ -619,8 +619,8 @@ bot.on("callback_query", async (ctx: any) => {
       case "refer_friends": {
         const chatId = ctx.chat.id;
         const username = ctx.update.callback_query.from.username; //ctx.from.username;
-
-        // Check if the user is allowed to access the referral program
+        try{
+          // Check if the user is allowed to access the referral program
         if (allowedUsernames.includes(username)) {
           ctx.session.latestCommand = "refer_friends";
           let existingReferral = await Referrals.findOne({
@@ -674,6 +674,13 @@ bot.on("callback_query", async (ctx: any) => {
           );
         }
         break;
+
+        }catch(e){
+          console.error("ERROR on bot.on callback refer_friends", e);
+          logErrorToFile("bot.on('callback_query refer_friends'", e);
+        }
+
+        
       }
       case "refresh_start":
         await handleRefreshStart(ctx);

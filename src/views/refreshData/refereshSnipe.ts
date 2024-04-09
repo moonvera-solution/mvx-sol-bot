@@ -7,6 +7,7 @@ import { formatNumberToKOrM, getSolBalance } from '../../service/util';
 import { runMin, runMedium, runHigh, runMax } from '../util/getPriority';
 
 export async function refreshSnipeDetails(ctx: any) {
+    try{
     let options: any;
     let messageText: any;
 
@@ -117,5 +118,9 @@ export async function refreshSnipeDetails(ctx: any) {
                 };
 
                 await ctx.editMessageText(messageText, options);
+            }catch(err){
+                console.error(err);
+                console.log("Error fetching wallet balance.");
+            }
             
         }
