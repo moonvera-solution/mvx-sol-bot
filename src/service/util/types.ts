@@ -1,5 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
+import dotenv from "dotenv";
+dotenv.config();
 
 // DB MODELS
 export type PORTFOLIO_TYPE = {
@@ -100,7 +102,6 @@ export const DefaultSessionData: ISESSION_DATA = {
   rugCheckToken: DEFAULT_PUBLIC_KEY,
   solAmount: 0,
   recipientAddress: DEFAULT_PUBLIC_KEY,
-
   activeWalletIndex: 0,
   activeTradingPool: DefaultPoolInfoData,
   latestCommand: '',
@@ -119,7 +120,10 @@ export const DefaultSessionData: ISESSION_DATA = {
   priorityFees: PriotitizationFeeLevels.LOW,
   positionIndex: 0,
   // txTip:5_000
-  env: {}
+  env: {
+    'tritonRPC' : 'https://moonvera-pit.rpcpool.com/',
+    'tritonToken' : process.env.TRITON_RPC_TOKEN!
+  }
 }
 
 export type RAYDIUM_POOL_TYPE = {

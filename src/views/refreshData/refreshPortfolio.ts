@@ -11,7 +11,7 @@ import { getRayPoolKeys } from '../../service/dex/raydium/raydium-utils/formatAm
 export async function refresh_spl_positions(ctx: any) {
     const chatId = ctx.chat.id;
     const userWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex]?.publicKey;
-    const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userWallet });
+    const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userWallet },  { positions: { $slice: -5} } );
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     
     const solprice = await getSolanaDetails();
@@ -32,13 +32,8 @@ export async function refresh_spl_positions(ctx: any) {
         let posSymbol = userPosition[0].positions[index].symbol; // Get the symbol for the current position
 
         return [
-            [ { text: `${posSymbol}`, callback_data: `current_position` }],
-            [{ text: `Sell 25%`, callback_data: `sellpos_25_${index}` },{ text: `Sell 50%`, callback_data: `sellpos_50_${index}` }],
-            [{ text: `Sell 75%`, callback_data: `sellpos_75_${index}` },{ text: `Sell 100%`, callback_data: `sellpos_100_${index}` }],
-            [{ text: `Buy more`, callback_data: `buypos_x_${index}` }],
-            [{ text: '⏮️ Previous', callback_data: `prev_position_${prevIndex}` }, 
-            { text: 'Next ⏭️', callback_data: `next_position_${nextIndex}` }],
-            [{ text: `Refresh Positions`, callback_data: 'refresh_portfolio' }]
+            [{ text: 'Manage Positions', callback_data: `manage_positions` }, 
+            { text: 'Refresh Psitions', callback_data: `refresh_portfolio` }],
         ];
     };
     try {
