@@ -360,8 +360,7 @@ export async function startSnippeSimulation(
                                 amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount)
                             });
                         }
-                        ctx.session.latestCommand == 'sell'
-                        await display_token_details(ctx);
+     
                     } else {  // Tx not confirmed
                         const priorityFeeLabel = getPriorityFeeLabel(ctx.session.priorityFees);
                         const checkLiquidityMsg = priorityFeeLabel
@@ -369,6 +368,8 @@ export async function startSnippeSimulation(
                             `Transaction could not be confirmed within the ${priorityFeeLabel.toUpperCase()} priority fee. \n` + checkLiquidityMsg
                         );
                     }
+                    // ctx.session.latestCommand == 'sell'
+                    // await display_token_details(ctx);
                 }).catch(async (error: any) => {
                     let msg = `🔴 Snipe fail, busy Network, try again.`;
                     await ctx.api.sendMessage(chatId, msg); console.info('error', error);
