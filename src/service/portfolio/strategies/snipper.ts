@@ -309,24 +309,21 @@ export async function startSnippeSimulation(
 
                     let msg = `🟢 Snipe <a href="https://solscan.io/tx/${txids[0]}">transaction</a> sent. Please wait for confirmation...`
                     await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-                    let extractAmountCounter: number = 0;
                     let extractAmount: number = 0;
                     if (await waitForConfirmation(ctx, txids[0])) {
 
-                        while (extractAmount == 0 && extractAmountCounter < 11) { // it has to find it since its a transfer tx
-                            extractAmountCounter++;
-                            console.log("extractAmountCounter", extractAmountCounter);
-
+                        while (extractAmount == 0) { // it has to find it since its a transfer tx
                             const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
                             let txAmount: Array<any> | undefined;
-
-                            if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions[0].instructions) {
-                                txAmount = JSON.parse(JSON.stringify(txxs.meta.innerInstructions[0].instructions));
-                                txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
-                                txAmount.forEach((tx) => {
-                                    if (tx.parsed.info.authority == RAYDIUM_AUTHORITY) { extractAmount = tx.parsed.info.amount; }
-                                    console.log('inner tx: ', JSON.parse(JSON.stringify(tx)));
-                                });
+                            if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions) {
+                                txxs.meta.innerInstructions.forEach((tx) => {
+                                    txAmount = JSON.parse(JSON.stringify(tx.instructions));
+                                    txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
+                                    txAmount.forEach((tx) => {
+                                        if (tx.parsed.info.authority == RAYDIUM_AUTHORITY) { extractAmount = tx.parsed.info.amount; }
+                                        console.log('inner tx: ', JSON.parse(JSON.stringify(tx)));
+                                    });
+                                })
                             }
                         }
 

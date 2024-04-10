@@ -12,7 +12,7 @@ import BigNumber from 'bignumber.js';
 export async function display_spl_positions(ctx: any) {
     const chatId = ctx.chat.id;
     const userWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex]?.publicKey;
-    const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userWallet },  { positions: { $slice: -5} } )
+    const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userWallet },  { positions: { $slice: -7} } )
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
     const solprice = await getSolanaDetails();
@@ -135,7 +135,7 @@ export async function display_spl_positions(ctx: any) {
 export async function display_single_spl_positions(ctx: any) {
     const chatId = ctx.chat.id;
     const userWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex]?.publicKey;
-    const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userWallet },  { positions: { $slice: -5} } );
+    const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userWallet },  { positions: { $slice: -7} } );
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
     const solprice = await getSolanaDetails();
@@ -249,7 +249,7 @@ export async function display_single_spl_positions(ctx: any) {
 export async function display_refresh_single_spl_positions(ctx: any) {
     const chatId = ctx.chat.id;
     const userWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex]?.publicKey;
-    const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userWallet },  { positions: { $slice: -5} } );
+    const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userWallet },  { positions: { $slice: -7} } );
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
     const solprice = await getSolanaDetails();
