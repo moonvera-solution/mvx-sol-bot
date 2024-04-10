@@ -28,6 +28,7 @@ export async function handle_radyum_swap(
     try {
         const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
         const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection);
+        console.log("userTokenBalanceAndDetails",userTokenBalanceAndDetails)
         const poolKeys = ctx.session.activeTradingPool;
         const OUTPUT_TOKEN = new RayddiumToken(TOKEN_PROGRAM_ID, tokenOut, userTokenBalanceAndDetails.decimals);
         const walletTokenAccounts = await getWalletTokenAccount(connection, new PublicKey(userWallet.publicKey));
@@ -49,8 +50,8 @@ export async function handle_radyum_swap(
                 position => position.baseMint === tokenOut.toString()
             );
             if (userPosition.positions[existingPositionIndex]) {
-                oldPositionSol = userPosition?.positions[existingPositionIndex].amountIn
-                oldPositionToken = userPosition?.positions[existingPositionIndex].amountOut!
+                oldPositionSol = userPosition.positions[existingPositionIndex].amountIn
+                oldPositionToken = userPosition.positions[existingPositionIndex].amountOut!
             }
         }
 

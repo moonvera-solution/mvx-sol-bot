@@ -66,6 +66,18 @@ const bot = new Bot<MyContext>(keys!);
 bot.use(
   session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) })
 );
+
+bot.use(async (ctx, next) => {
+  const messageTimestamp = ctx.message?.date;
+  const currentTimestamp = Math.floor(Date.now() / 1000);
+  const threshold = 20;
+  if (messageTimestamp && (currentTimestamp - messageTimestamp) > threshold) {
+    console.error("This message was sent while I was offline and is now too old. Please resend your message if it's still relevant.");
+  } else {
+    return next();
+  }
+});
+
 bot.start();
 
 const allowedUsernames = [
@@ -880,8 +892,9 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "cancel_snipe": {
-        ctx.session.snipeStatus = false;
         await ctx.api.sendMessage(chatId, "Sniper cancelled.");
+        ctx.session.snipeStatus = false;
+        console.log("cancel_snipe.", ctx.session.snipeStatus);
         break;
       }
       case "set_slippage": {
@@ -1201,3 +1214,11 @@ async function checkAccountType(ctx: any, address: any) {
     return false;
   }
 }
+process.on('uncaughtException', (err, origin) => {
+  console.error(`Caught exception: ${err}\n` +
+    `Exception origin: ${origin}`);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});

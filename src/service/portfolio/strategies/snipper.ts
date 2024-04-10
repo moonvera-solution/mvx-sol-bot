@@ -20,7 +20,6 @@ import { display_token_details } from '../../../views';
 export async function snipperON(ctx: any, amount: string) {
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     let snipeToken = ctx.session.snipeToken instanceof String ? ctx.session.snipeToken : ctx.session.snipeToken.toBase58();
-    ctx.session.snipeStatus = true;
     const currentWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex];
 
     const balanceInSOL = await getSolBalance(currentWallet.publicKey, connection);
@@ -29,8 +28,7 @@ export async function snipperON(ctx: any, amount: string) {
         return;
     }
 
-    await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一 Snipper set for ${amount} SOL, on ${snipeToken}`,
-        {
+    await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一 Snipper set for ${amount} SOL, on ${snipeToken}`, {
             parse_mode: 'HTML',
             disable_web_page_preview: true,
             reply_markup: {
@@ -41,10 +39,17 @@ export async function snipperON(ctx: any, amount: string) {
         });
 
     let poolKeys = await getRayPoolKeys(ctx, snipeToken);
-    while (!poolKeys && ctx.session.snipeStatus && poolKeys === null) {
-        console.log('Snipe lookup on.');
-        poolKeys = await getRayPoolKeys(ctx, snipeToken);
-    }
+
+    let intervalId = setInterval(async () => {
+        if (!poolKeys && ctx.session.snipeStatus) {
+            console.log('Snipe lookup on.');
+            poolKeys = await getRayPoolKeys(ctx, snipeToken);
+            console.log('snipe status: ',ctx.session.snipeStatus);
+        } else {
+            clearInterval(intervalId); // Stop the interval when the condition is no longer met
+        }
+    }, 300); // Adjust the interval time as needed
+
     ctx.session.activeTradingPool = jsonInfo2PoolKeys(poolKeys.id) as LiquidityPoolKeys;;
     console.log('Snipe lookup end, keys found.');
     poolKeys && ctx.session.snipeStatus && await setSnipe(ctx, amount);

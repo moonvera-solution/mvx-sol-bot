@@ -281,7 +281,7 @@ export async function display_refresh_single_spl_positions(ctx: any) {
  
 
         let fullMessage = '';
-        if (userPosition && userPosition[0]?.positions) {
+        if (userPosition && userPosition[0].positions) {
             // for (let index in userPosition[0].positions) {
 
                 let pos = userPosition[0].positions[currentIndex];

@@ -33,7 +33,8 @@
     "./spl-swap.ts",
     "src/service/**/*.ts",
     "src/service/*.ts",
-    "src/db/*.ts"
+    "src/db/*.ts",
+    "test/"
   ],
   "exclude": [
     "node_modules",

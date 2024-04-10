@@ -17,7 +17,7 @@ export async function saveUserPosition(ctx: any, walletId: String, newPosition:
     try {
         const userPosition = await UserPositions.findOne({positionChatId: chatId});
         if (userPosition) {
-            console.log("userPosition",userPosition);
+
             const existingPositionIndex = userPosition.positions.findIndex(
                 position => position.baseMint === newPosition.baseMint.toString()
             );
