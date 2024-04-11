@@ -35,6 +35,7 @@ export const DEFAULT_TOKEN = {
   'SOLFI': new Token(TOKEN_PROGRAM_ID, new PublicKey('FvVDc6gZmYho6DLLuJ3ptHS6rxb797Cxf1insiUnu2BL'), 8, 'SOLFI', 'SOLFI'),
   'WEN': new Token(TOKEN_PROGRAM_ID, new PublicKey('WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk'), 5, 'WEN', 'WEN'),
   'JUP': new Token(TOKEN_PROGRAM_ID, new PublicKey('JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN'), 6, 'JUP', 'JUP'),
+
 }
 
 export const MVXBOT_FEES = BigNumber(0.008) // this is %

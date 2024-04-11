@@ -35,7 +35,6 @@ export async function getTokenMetadata(ctx: any, tokenAddress: string): Promise<
 export async function getUserTokenBalanceAndDetails(userWallet: PublicKey, tokenAddress: PublicKey,connection:Connection) : Promise<any> {
     let userBalance = 0;
     try {
-
         const metaplex = Metaplex.make(connection);
         const mintAddress = (tokenAddress instanceof PublicKey) ? tokenAddress : new PublicKey(tokenAddress);
         const tokenD = await metaplex.nfts().findByMint({ mintAddress });

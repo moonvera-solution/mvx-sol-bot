@@ -70,15 +70,14 @@ bot.use(
 bot.use(async (ctx, next) => {
   const messageTimestamp = ctx.message?.date;
   const currentTimestamp = Math.floor(Date.now() / 1000);
-
-  const threshold = 10;
-
+  const threshold = 20;
   if (messageTimestamp && (currentTimestamp - messageTimestamp) > threshold) {
-      console.log("This message was sent while I was offline and is now too old. Please resend your message if it's still relevant.");
+    console.error("This message was sent while I was offline and is now too old. Please resend your message if it's still relevant.");
   } else {
-      return next();  
+    return next();
   }
 });
+
 bot.start();
 
 const allowedUsernames = [
@@ -246,7 +245,7 @@ bot.command("help", async (ctx) => {
 
 bot.command("positions", async (ctx) => {
   try {
-    // await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
+    await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
     await display_spl_positions(ctx);
   } catch (error: any) {
     logErrorToFile("bot on positions cmd", error);
@@ -508,15 +507,15 @@ bot.on("message", async (ctx) => {
         try {
           if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
             const isTOken = await checkAccountType(ctx, msgTxt);
-            // console.log("isTOken", isTOken);
+            console.log("isTOken", isTOken);
             if (!isTOken) {
               ctx.api.sendMessage(chatId, "Invalid address");
               return;
             }
-           
+
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
-            
-            if (!ctx.session.activeTradingPool ){
+            // console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
+            if (!ctx.session.activeTradingPool) {
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
               display_snipe_options(ctx, msgTxt);
@@ -532,7 +531,6 @@ bot.on("message", async (ctx) => {
           }
         } catch (error: any) {
           console.error("Error in 'snipe' command:", error.message);
-          logErrorToFile("bot.on('message'", error);
 
         }
         break;
@@ -639,8 +637,8 @@ bot.on("callback_query", async (ctx: any) => {
       case "refer_friends": {
         const chatId = ctx.chat.id;
         const username = ctx.update.callback_query.from.username; //ctx.from.username;
-        try{
-          // Check if the user is allowed to access the referral program
+
+        // Check if the user is allowed to access the referral program
         if (allowedUsernames.includes(username)) {
           ctx.session.latestCommand = "refer_friends";
           let existingReferral = await Referrals.findOne({
@@ -694,13 +692,6 @@ bot.on("callback_query", async (ctx: any) => {
           );
         }
         break;
-
-        }catch(e){
-          console.error("ERROR on bot.on callback refer_friends", e);
-          logErrorToFile("bot.on('callback_query refer_friends'", e);
-        }
-
-        
       }
       case "refresh_start":
         await handleRefreshStart(ctx);
@@ -910,6 +901,8 @@ bot.on("callback_query", async (ctx: any) => {
     
           ctx.session.snipeStatus = false;
         await ctx.api.sendMessage(chatId, "Sniper cancelled.");
+        ctx.session.snipeStatus = false;
+        console.log("cancel_snipe.", ctx.session.snipeStatus);
         break;
    
         
@@ -1132,7 +1125,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "display_spl_positions": {
-        // await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
+        await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
         await display_spl_positions(ctx);
         break;
       }
@@ -1234,3 +1227,11 @@ async function checkAccountType(ctx: any, address: any) {
     return false;
   }
 }
+process.on('uncaughtException', (err, origin) => {
+  console.error(`Caught exception: ${err}\n` +
+    `Exception origin: ${origin}`);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});

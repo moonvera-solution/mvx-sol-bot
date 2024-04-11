@@ -1,281 +1,57 @@
-4/9/2024, 4:00:50 AM - bot.on('message'
+4/9/2024, 11:57:13 AM - bot.on('message'
  TypeError 
- Cannot read properties of null (reading 'baseMint')
- TypeError: Cannot read properties of null (reading 'baseMint')
-    at getRayPoolKeys (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/raydium/raydium-utils/formatAmmKeysById.ts:32:48)
+ Cannot read properties of undefined (reading '_bn')
+ TypeError: Cannot read properties of undefined (reading '_bn')
+    at isPublicKeyData (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/@solana/web3.js/src/publickey.ts:39:35)
+    at new PublicKey (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/@solana/web3.js/src/publickey.ts:58:9)
+    at setSnipe (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/service/portfolio/strategies/snipper.ts:57:24)
+    at snipperON (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/service/portfolio/strategies/snipper.ts:50:50)
     at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:498:45
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 4:01:30 AM - bot.on('message'
- TypeError 
- Cannot read properties of null (reading 'baseMint')
- TypeError: Cannot read properties of null (reading 'baseMint')
-    at getRayPoolKeys (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/raydium/raydium-utils/formatAmmKeysById.ts:32:48)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:498:45
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 4:02:01 AM - bot.on('message'
- TypeError 
- Cannot read properties of null (reading 'baseMint')
- TypeError: Cannot read properties of null (reading 'baseMint')
-    at getRayPoolKeys (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/raydium/raydium-utils/formatAmmKeysById.ts:32:48)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:498:45
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 4:03:23 AM - bot.on('message'
- TypeError 
- Cannot read properties of null (reading 'baseMint')
- TypeError: Cannot read properties of null (reading 'baseMint')
-    at getRayPoolKeys (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/raydium/raydium-utils/formatAmmKeysById.ts:32:48)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:498:45
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 4:04:03 AM - bot.on('message'
- TypeError 
- Cannot read properties of null (reading 'baseMint')
- TypeError: Cannot read properties of null (reading 'baseMint')
-    at getRayPoolKeys (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/raydium/raydium-utils/formatAmmKeysById.ts:32:48)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:498:45
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 4:15:44 AM - bot.on('message'
- TypeError 
- Cannot read properties of null (reading 'baseMint')
- TypeError: Cannot read properties of null (reading 'baseMint')
-    at getRayPoolKeys (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/raydium/raydium-utils/formatAmmKeysById.ts:32:48)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:498:45
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 4:16:27 AM - bot.on('message'
- TypeError 
- Cannot read properties of null (reading 'baseMint')
- TypeError: Cannot read properties of null (reading 'baseMint')
-    at getRayPoolKeys (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/raydium/raydium-utils/formatAmmKeysById.ts:32:48)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:498:45
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 4:17:01 AM - bot.on('message'
- TypeError 
- Cannot read properties of null (reading 'baseMint')
- TypeError: Cannot read properties of null (reading 'baseMint')
-    at getRayPoolKeys (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/raydium/raydium-utils/formatAmmKeysById.ts:32:48)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:498:45
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 4:17:40 AM - bot.on('message'
- TypeError 
- Cannot read properties of null (reading 'baseMint')
- TypeError: Cannot read properties of null (reading 'baseMint')
-    at getRayPoolKeys (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/raydium/raydium-utils/formatAmmKeysById.ts:32:48)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:498:45
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 4:20:00 AM - bot.on('message'
- TypeError 
- Cannot read properties of null (reading 'baseMint')
- TypeError: Cannot read properties of null (reading 'baseMint')
-    at getRayPoolKeys (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/raydium/raydium-utils/formatAmmKeysById.ts:32:48)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:498:45
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 4:20:43 AM - bot.on('message'
- TypeError 
- Cannot read properties of null (reading 'baseMint')
- TypeError: Cannot read properties of null (reading 'baseMint')
-    at getRayPoolKeys (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/raydium/raydium-utils/formatAmmKeysById.ts:32:48)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:498:45
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 4:21:36 AM - bot.on('message'
- TypeError 
- Cannot read properties of null (reading 'baseMint')
- TypeError: Cannot read properties of null (reading 'baseMint')
-    at getRayPoolKeys (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/raydium/raydium-utils/formatAmmKeysById.ts:32:48)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:498:45
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 4:22:59 AM - bot on positions cmd
- TypeError 
- Cannot read properties of undefined (reading 'positions')
- TypeError: Cannot read properties of undefined (reading 'positions')
-    at display_spl_positions (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:19:25)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:231:5
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/convenience/session.js:65:9
- 4/9/2024, 4:23:04 AM - bot.on('message'
- TypeError 
- Cannot read properties of null (reading 'baseMint')
- TypeError: Cannot read properties of null (reading 'baseMint')
-    at getRayPoolKeys (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/raydium/raydium-utils/formatAmmKeysById.ts:32:48)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:498:45
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 4:24:08 AM - bot.on('message'
- TypeError 
- Cannot read properties of null (reading 'baseMint')
- TypeError: Cannot read properties of null (reading 'baseMint')
-    at getRayPoolKeys (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/raydium/raydium-utils/formatAmmKeysById.ts:32:48)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:498:58
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 4:26:33 AM - bot.on('message'
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:390:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+ 4/9/2024, 11:33:08 PM - bot.on('message'
  TypeError 
  Cannot read properties of undefined (reading 'id')
  TypeError: Cannot read properties of undefined (reading 'id')
-    at snipperON (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:47:64)
+    at snipperON (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/service/portfolio/strategies/snipper.ts:48:64)
     at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:390:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 5:21:16 AM - bot.on('message'
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:390:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 4/10/2024, 12:14:07 AM - bot.on('message'
  TypeError 
- Cannot read properties of undefined (reading 'id')
- TypeError: Cannot read properties of undefined (reading 'id')
-    at snipperON (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:48:64)
+ Cannot read properties of null (reading 'id')
+ TypeError: Cannot read properties of null (reading 'id')
+    at snipperON (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/service/portfolio/strategies/snipper.ts:53:64)
     at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:390:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 5:22:30 AM - bot.on('message'
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:402:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 4/10/2024, 12:15:26 AM - bot.on('message'
  TypeError 
- Cannot read properties of undefined (reading 'id')
- TypeError: Cannot read properties of undefined (reading 'id')
-    at snipperON (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:49:64)
+ Cannot read properties of null (reading 'id')
+ TypeError: Cannot read properties of null (reading 'id')
+    at snipperON (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/service/portfolio/strategies/snipper.ts:53:64)
     at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:390:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 5:23:28 AM - bot.on('message'
- TypeError 
- Cannot read properties of undefined (reading 'id')
- TypeError: Cannot read properties of undefined (reading 'id')
-    at snipperON (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:48:64)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:390:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
- 4/9/2024, 6:44:33 AM - bot on snipperON
- TypeError 
- Cannot read properties of undefined (reading 'id')
- TypeError: Cannot read properties of undefined (reading 'id')
-    at snipperON (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:50:68)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:410:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
-    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:402:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
  

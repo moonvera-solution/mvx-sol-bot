@@ -17,22 +17,20 @@ export async function saveUserPosition(ctx: any, walletId: String, newPosition:
     try {
         const userPosition = await UserPositions.findOne({positionChatId: chatId});
         if (userPosition) {
-            console.log("userPosition",userPosition);
+
             const existingPositionIndex = userPosition.positions.findIndex(
                 position => position.baseMint === newPosition.baseMint.toString()
             );
-            // console.log("saveUserPosition: existingPositionIndex",existingPositionIndex);
-
             if (existingPositionIndex === -1) {
                 // console.log("newPosition",newPosition);
                 userPosition.positions.push(newPosition);
-                // await userPosition.save();
+                await userPosition.save();
                 console.log('adding new position', )
                 
             } else {
                 userPosition.positions[existingPositionIndex] = newPosition;
                 console.log('update existing position', )
-                // await userPosition.save();
+                await userPosition.save();
             }
         } else {
             // console.log("newPosition",newPosition);
@@ -40,9 +38,7 @@ export async function saveUserPosition(ctx: any, walletId: String, newPosition:
                 positionChatId: chatId,
                 walletId: walletId ,
                 positions: newPosition,
-               
                });
-            //    console.log("savePosition",savePosition);
                await savePosition.save();
                console.log('saved new position', )
         }
