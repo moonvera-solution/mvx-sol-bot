@@ -204,6 +204,7 @@ export async function handle_radyum_swap(
                     }
                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
                     if (side == 'buy') {
+                        ctx.session.latestCommand = 'display_after_Snipe_Buy';
                         await display_after_Snipe_Buy(ctx);
                     }
                 } else {  // Tx not confirmed

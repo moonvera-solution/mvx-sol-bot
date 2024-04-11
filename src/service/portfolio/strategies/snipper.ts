@@ -243,8 +243,7 @@ export async function startSnippeSimulation(
 
     if(ctx.session.priorityFee == PriotitizationFeeLevels.HIGH) maxPriorityFee = maxPriorityFee * 10;
     if(ctx.session.priorityFee == PriotitizationFeeLevels.MAX) maxPriorityFee = maxPriorityFee * 1.5;
-
-    const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: (maxPriorityFee ), });
+    const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: (maxPriorityFee), });
     //      // Simulate the transaction and add the compute unit limit instruction to your transaction
     let [Units, recentBlockhash] = await Promise.all([
         getSimulationUnits(connection, innerTransactions[0].instructions, userWallet.publicKey),
@@ -377,6 +376,7 @@ export async function startSnippeSimulation(
                             `Transaction could not be confirmed within the ${priorityFeeLabel.toUpperCase()} priority fee. \n` + checkLiquidityMsg
                         );
                     }
+                    ctx.session.latestCommand = 'display_after_Snipe_Buy';
                     await display_after_Snipe_Buy(ctx);
                 }).catch(async (error: any) => {
                     let msg = `🔴 Snipe fail, busy Network, try again.`;

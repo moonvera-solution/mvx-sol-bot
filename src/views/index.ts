@@ -367,7 +367,7 @@ export async function display_after_Snipe_Buy(ctx: any) {
                 disable_web_page_preview: true,
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: ' 🔂 Refresh ', callback_data: 'refresh_trade' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
+                        [{ text: ' 🔂 Refresh ', callback_data: 'Refresh_display_after_Snipe_Buy' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
                         [{ text: 'Buy (X SOL)', callback_data: 'buy_X_SOL' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_SOL' }, { text: 'Buy (5 SOL)', callback_data: 'buy_5_SOL' }],
                         [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }],
                         [{ text: '  Sell 25%  ', callback_data: 'sell_25_TOKEN' }, { text: '  Sell 50%  ', callback_data: 'sell_50_TOKEN' }, { text: 'Sell 75%', callback_data: '  sell_75_TOKEN  ' },],

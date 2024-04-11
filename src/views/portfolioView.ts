@@ -94,15 +94,25 @@ export async function display_spl_positions(ctx: any) {
                 const userBalanceUSD = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceUSD).toFixed(2);
                 const userBalanceSOL = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceSOL).toFixed(3);
 
-                const valueInUSD = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10, poolKeys.baseDecimals) * Number(tokenPriceUSD) : 'N/A';
                 // console.log('valueInUSD', valueInUSD);
                 const valueInSOL = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10, poolKeys.baseDecimals) * Number(tokenPriceSOL) : 'N/A';
+                const valueInUSD = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10, poolKeys.baseDecimals) * Number(tokenPriceUSD) : 'N/A';
+                // console.log('valueInUSD', valueInUSD);
+                // console.log('valueInSOL', valueInSOL);
+                // console.log('tokenPriceUSD', tokenPriceUSD);
+                // console.log('tokenPriceSOL', tokenPriceSOL);
+                // console.log('solprice', solprice);
+                // console.log('userBalanceUSD', userBalanceUSD);
+                // console.log('userBalanceSOL', userBalanceSOL);
+                // console.log('userbalance', userBalance.toNumber());
+                // console.log('initialInUSD', (pos.amountIn / 1e9) * Number(solprice));
+                // console.log('initialInSOL', (pos.amountIn / 1e9));
                 // console.log('valueInSOL', valueInSOL);
                 const initialInUSD = (pos.amountIn / 1e9) * Number(solprice);
                 // console.log('initialInUSD', initialInUSD);
                 const initialInSOL = (pos.amountIn / 1e9);
                 // console.log('initialInSOL', initialInSOL);
-                const profitPercentage = valueInUSD != 'N/A' ? (valueInUSD - (pos.amountIn / 1e9 * solprice)) / (pos.amountIn / 1e9 * solprice) * 100 : 'N/A';
+                const profitPercentage = valueInSOL != 'N/A' ? (valueInSOL - (pos.amountIn / 1e9 )) / (pos.amountIn / 1e9 ) * 100 : 'N/A';
                 const profitInUSD = valueInUSD != 'N/A' ? valueInUSD - initialInUSD : 'N/A';
                 const profitInSol = valueInSOL != 'N/A' ? valueInSOL - initialInSOL : 'N/A';
                 const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);

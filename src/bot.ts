@@ -84,6 +84,7 @@ bot.start();
 const allowedUsernames = [
   "tech_01010",
   "daniellesifg",
+  "CryptoBoosie",
   "swalefdao",
   "coachalib",
 ]; // without the @
@@ -1145,7 +1146,13 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.priorityFees = PriotitizationFeeLevels.LOW;
         if (ctx.session.latestCommand === "snipe") {
           await refreshSnipeDetails(ctx);
-        } else {
+        } else if(ctx.session.latestCommand === 'display_single_spl_positions'){
+          await display_refresh_single_spl_positions(ctx);
+        } else if(ctx.session.latestCommand === 'display_after_Snipe_Buy'){
+          await Refresh_display_after_Snipe_Buy(ctx);
+
+        }
+        else {
           await refreshTokenDetails(ctx);
         }
         break;
