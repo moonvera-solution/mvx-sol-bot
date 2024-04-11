@@ -241,7 +241,7 @@ export async function startSnippeSimulation(
         });
     }
 
-    if(ctx.session.priorityFee == PriotitizationFeeLevels.HIGH) maxPriorityFee = maxPriorityFee * 10;
+    if(ctx.session.priorityFee == PriotitizationFeeLevels.HIGH) maxPriorityFee = maxPriorityFee * 3;
     if(ctx.session.priorityFee == PriotitizationFeeLevels.MAX) maxPriorityFee = maxPriorityFee * 1.5;
     const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: (maxPriorityFee), });
     //      // Simulate the transaction and add the compute unit limit instruction to your transaction
