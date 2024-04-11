@@ -9,3 +9,7 @@ bot.on("message:text"); // only text messages
 bot.on("message:photo"); // only photo messages
 bot.on("messa(press aouto complete (TAB))")
 etc....
+
+
+ts-mocha --paths -p src/ src/**/*.spec.ts
+ts-mocha -p src/tsconfig.json src/**/*.spec.ts

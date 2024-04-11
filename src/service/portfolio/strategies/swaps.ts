@@ -1,9 +1,9 @@
 import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken, publicKey } from '@raydium-io/raydium-sdk';
-import { PublicKey, Keypair, Connection } from '@solana/web3.js';
+import { PublicKey, Keypair, Connection, SendTransactionError } from '@solana/web3.js';
 import { getWalletTokenAccount, getSolBalance, waitForConfirmation, getPriorityFeeLabel, getTokenExplorerURLS, trackUntilFinalized } from '../../util';
 import { DEFAULT_TOKEN, MVXBOT_FEES, RAYDIUM_AUTHORITY } from '../../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
-import { display_token_details } from '../../../views';
+import { display_after_Snipe_Buy, display_token_details } from '../../../views';
 import { ISESSION_DATA } from '../../util/types';
 import { saveUserPosition } from "../positions";
 import { raydium_amm_swap } from '../../dex';
@@ -28,6 +28,7 @@ export async function handle_radyum_swap(
     try {
         const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
         const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection);
+        console.log("userTokenBalanceAndDetails", userTokenBalanceAndDetails)
         const poolKeys = ctx.session.activeTradingPool;
         const OUTPUT_TOKEN = new RayddiumToken(TOKEN_PROGRAM_ID, tokenOut, userTokenBalanceAndDetails.decimals);
         const walletTokenAccounts = await getWalletTokenAccount(connection, new PublicKey(userWallet.publicKey));
@@ -49,8 +50,8 @@ export async function handle_radyum_swap(
                 position => position.baseMint === tokenOut.toString()
             );
             if (userPosition.positions[existingPositionIndex]) {
-                oldPositionSol = userPosition?.positions[existingPositionIndex].amountIn
-                oldPositionToken = userPosition?.positions[existingPositionIndex].amountOut!
+                oldPositionSol = userPosition.positions[existingPositionIndex].amountIn
+                oldPositionToken = userPosition.positions[existingPositionIndex].amountOut!
             }
         }
 
@@ -116,27 +117,23 @@ export async function handle_radyum_swap(
             }).then(async ({ txids }) => {
                 let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing with ${getPriorityFeeLabel(ctx.session.priorityFees)} priotity fee. <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>. Please wait for confirmation...`
                 await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-                let extractAmountCounter: number = 0;
                 let extractAmount: number = 0;
 
                 if (await waitForConfirmation(ctx, txids[0])) { // get swap amountOut
-                    while (extractAmount == 0 && extractAmountCounter < 11) { // it has to find it since its a transfer tx
-                        extractAmountCounter++
-                        console.log("extractAmountCounter", extractAmountCounter);
-
+                    while (extractAmount == 0) { // it has to find it since its a transfer tx
                         const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
                         let txAmount: Array<any> | undefined;
-
-                        if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions[0].instructions) {
-                            txAmount = JSON.parse(JSON.stringify(txxs.meta.innerInstructions[0].instructions));
-                            txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
-                            txAmount.forEach((tx) => {
-                                if (tx.parsed.info.authority == RAYDIUM_AUTHORITY) { extractAmount = tx.parsed.info.amount; }
-                                console.log('inner tx: ', JSON.parse(JSON.stringify(tx)));
-                            });
+                        if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions) {
+                            txxs.meta.innerInstructions.forEach((tx) => {
+                                txAmount = JSON.parse(JSON.stringify(tx.instructions));
+                                txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
+                                txAmount.forEach((tx) => {
+                                    if (tx.parsed.info.authority == RAYDIUM_AUTHORITY) { extractAmount = tx.parsed.info.amount; }
+                                    console.log('inner tx: ', JSON.parse(JSON.stringify(tx)));
+                                });
+                            })
                         }
                     }
-
 
                     let confirmedMsg, solAmount, tokenAmount, _symbol = userTokenBalanceAndDetails.userTokenSymbol;
                     let solFromSell = new BigNumber(0);
@@ -176,6 +173,7 @@ export async function handle_radyum_swap(
                                 amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
                             });
                         }
+
                     } else if (side == 'sell') {
                         if (referralFee > 0) {
                             mvxFee = new BigNumber(cut_bot_fee);
@@ -204,14 +202,10 @@ export async function handle_radyum_swap(
                             amountOut: newAmountOut,
                         });
                     }
-                    ctx.session.latestCommand = side;
                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
-                    if(side === 'buy'){
-                        ctx.session.latestCommand == 'sell'
-                        await display_token_details(ctx);
+                    if (side == 'buy') {
+                        await display_after_Snipe_Buy(ctx);
                     }
-                 
-
                 } else {  // Tx not confirmed
                     ctx.api.sendMessage(ctx.chat.id,
                         `Transaction could not be confirmed within the ${getPriorityFeeLabel(ctx.session.priorityFees).toUpperCase()} priority fee. \n`
@@ -219,8 +213,28 @@ export async function handle_radyum_swap(
                 }
 
             }).catch(async (error: any) => {
-                let msg = `🔴 ${side.toUpperCase()} Swap failed, please try again.`;
-                await ctx.api.sendMessage(chatId, msg);
+        
+                const TRANSFER_ERROR = /Transfer: insufficient lamports/;
+                if (error.logs.find((logMsg: any) => TRANSFER_ERROR.test(logMsg))) {
+                    console.log(error.logs)
+                    ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction.`);
+                    return;
+                }
+                const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
+                if (error.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) {
+                    console.log(error.logs)
+                    ctx.api.sendMessage(ctx.chat.id, `🔴 Slippage error, try increasing your slippage %.`);
+                    return;
+                }
+                
+                const FEES_ERROR = 'InsufficientFundsForFee';
+                if (error.logs === FEES_ERROR) {
+                    console.log(error.logs)
+                    ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction fees.`);
+                    return;
+                }
+
+                await ctx.api.sendMessage(chatId, error.message);
                 console.info('error', error);
                 return error;
             });

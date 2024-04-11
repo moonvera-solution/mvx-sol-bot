@@ -1,0 +1,61 @@
+
+import { PublicKey } from "@solana/web3.js";
+
+
+export const test_poolKeys = {
+  id: '5WGx6mE9Xww3ocYzSenGVQMJLCVVwK7ePnYV6cXcpJtK',
+  baseMint: 'WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk',
+  quoteMint: 'So11111111111111111111111111111111111111112',
+  lpMint: '69CYtMfM6z2i5psBJywJeGy5LQ2DHvbLAj8UvdjUuJpY',
+  baseDecimals: 5,
+  quoteDecimals: 9,
+  lpDecimals: 5,
+  version: 4,
+  programId: '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8',
+  authority: '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1',
+  openOrders: '7bT5Jgzbf4apkm7TrUZtZGhufnjzQR2Js1bBcQsjUtzD',
+  targetOrders: '4NbnmLjCTZ6X6FgWKS3UPiDLTB3vkWAv1jr84Ads7cFv',
+  baseVault: '46Bk4BaXzAsLYbrf3UQvGZLPdEwt5nkeb2wHjiqpa5VG',
+  quoteVault: 'G86oqnqDH4NxsnhJEtMBPURwUfuJ8yd43ecsgg3kgRW4',
+  withdrawQueue: '11111111111111111111111111111111',
+  lpVault: '11111111111111111111111111111111',
+  marketVersion: 3,
+  marketProgramId: 'srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX',
+  marketId: '3tuVqGQuxNN2JnAjmhQk35VVwVyGG4BNBZHvZUWszLUT',
+  marketAuthority: '9J6qig4xY1P3PV9dZ7MP43p4DBEw33DQjiT4CrbxC9jr',
+  marketBaseVault: '8LBBhAr7sLtTP9rUVvVMMXawM2hhTHUjoXzr6UEAzC7J',
+  marketQuoteVault: '32U8ZnVQFMfYVmeeykP7pD55Xanrv9CTvCrcamCSsWWX',
+  marketBids: '2HusKEBAdXAt1tnvGBqf8sSdruMpJ8q3R5vCYya9KhGp',
+  marketAsks: 'GYqsaNtywgNeFc8sa7bycsmciDTCjmMimLR3SKzswCRZ',
+  marketEventQueue: 'DXWQWJ12NyPmX18Umc5nkKvZ63H19YAzrEzk19odPKpd',
+  lookupTableAccount: '11111111111111111111111111111111'
+}
+
+export const test_poolKeys_PK = {
+  id: new PublicKey('5WGx6mE9Xww3ocYzSenGVQMJLCVVwK7ePnYV6cXcpJtK'),
+  baseMint: new PublicKey('WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk'),
+  quoteMint: new PublicKey('So11111111111111111111111111111111111111112'),
+  lpMint: new PublicKey('69CYtMfM6z2i5psBJywJeGy5LQ2DHvbLAj8UvdjUuJpY'),
+  baseDecimals: 5,
+  quoteDecimals: 9,
+  lpDecimals: 5,
+  version: 4,
+  programId: new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'),
+  authority: new PublicKey('5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1'),
+  openOrders: new PublicKey('7bT5Jgzbf4apkm7TrUZtZGhufnjzQR2Js1bBcQsjUtzD'),
+  targetOrders: new PublicKey('4NbnmLjCTZ6X6FgWKS3UPiDLTB3vkWAv1jr84Ads7cFv'),
+  baseVault: new PublicKey('46Bk4BaXzAsLYbrf3UQvGZLPdEwt5nkeb2wHjiqpa5VG'),
+  quoteVault: new PublicKey('G86oqnqDH4NxsnhJEtMBPURwUfuJ8yd43ecsgg3kgRW4'),
+  withdrawQueue: new PublicKey('11111111111111111111111111111111'),
+  lpVault: new PublicKey('11111111111111111111111111111111'),
+  marketVersion: 3,
+  marketProgramId: new PublicKey('srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX'),
+  marketId: new PublicKey('3tuVqGQuxNN2JnAjmhQk35VVwVyGG4BNBZHvZUWszLUT'),
+  marketAuthority: new PublicKey('9J6qig4xY1P3PV9dZ7MP43p4DBEw33DQjiT4CrbxC9jr'),
+  marketBaseVault: new PublicKey('8LBBhAr7sLtTP9rUVvVMMXawM2hhTHUjoXzr6UEAzC7J'),
+  marketQuoteVault: new PublicKey('32U8ZnVQFMfYVmeeykP7pD55Xanrv9CTvCrcamCSsWWX'),
+  marketBids: new PublicKey('2HusKEBAdXAt1tnvGBqf8sSdruMpJ8q3R5vCYya9KhGp'),
+  marketAsks: new PublicKey('GYqsaNtywgNeFc8sa7bycsmciDTCjmMimLR3SKzswCRZ'),
+  marketEventQueue: new PublicKey('DXWQWJ12NyPmX18Umc5nkKvZ63H19YAzrEzk19odPKpd'),
+  lookupTableAccount: new PublicKey('11111111111111111111111111111111')
+}

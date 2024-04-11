@@ -53,11 +53,13 @@ export async function _initDbConnection(): Promise<any> {
   });
 
   console.log("isProd",isProd);
+
   const db = mongoose.connection;
   db.on('error', console.error.bind(console, 'ERR connection error:'));
   db.once('open', function () {
     console.log("Connected to DB");
   });
+  console.log("db state: ",db.readyState)
 
   return _anon;
 }
