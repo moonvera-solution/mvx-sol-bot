@@ -172,7 +172,7 @@ export async function display_single_spl_positions(ctx: any) {
              { text: 'Next ⏭️', callback_data: `next_position_${nextIndex}` }],
              [{ text: '📈 Priority fees', callback_data: '_' }],
              [
-                 { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
+                 { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Med ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
                  { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
              ],
             [{ text: 'Refresh Positions', callback_data: 'display_refresh_single_spl_positions' }]
@@ -293,7 +293,7 @@ export async function display_refresh_single_spl_positions(ctx: any) {
              { text: 'Next ⏭️', callback_data: `next_position_${nextIndex}` }],
              [{ text: '📈 Priority fees', callback_data: '_' }],
              [
-                 { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
+                 { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Med ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
                  { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
              ],
             [{ text: 'Refresh Positions', callback_data: 'display_refresh_single_spl_positions' }]
