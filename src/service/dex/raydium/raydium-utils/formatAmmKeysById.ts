@@ -52,7 +52,7 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
       keys.marketBaseVault = _marketQuoteVault;
       keys.marketQuoteVault = _marketBaseVault;
     } 
-    console.log('keys', keys);
+    // console.log('keys', keys);
     return keys;
   }catch(e){
     console.log(e);

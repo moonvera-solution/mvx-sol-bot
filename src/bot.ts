@@ -66,6 +66,19 @@ const bot = new Bot<MyContext>(keys!);
 bot.use(
   session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) })
 );
+
+bot.use(async (ctx, next) => {
+  const messageTimestamp = ctx.message?.date;
+  const currentTimestamp = Math.floor(Date.now() / 1000);
+
+  const threshold = 10;
+
+  if (messageTimestamp && (currentTimestamp - messageTimestamp) > threshold) {
+      console.log("This message was sent while I was offline and is now too old. Please resend your message if it's still relevant.");
+  } else {
+      return next();  
+  }
+});
 bot.start();
 
 const allowedUsernames = [
@@ -218,6 +231,12 @@ bot.command("start", async (ctx: any) => {
     ctx.session.portfolio = await getPortfolio(chatId);
   } catch (error: any) {
     logErrorToFile("bot on start cmd", error);
+    if (error instanceof GrammyError || error instanceof HttpError || error instanceof Error || error instanceof TypeError || error instanceof RangeError) {
+      console.error("Callback query failed due to timeout or invalid ID.");
+    
+    } else {
+      console.error(error.message);
+    }
   }
 });
 
@@ -888,9 +907,12 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "cancel_snipe": {
-        ctx.session.snipeStatus = false;
+    
+          ctx.session.snipeStatus = false;
         await ctx.api.sendMessage(chatId, "Sniper cancelled.");
         break;
+   
+        
       }
       case "set_slippage": {
         ctx.session.latestCommand = "set_slippage";
@@ -1163,9 +1185,12 @@ bot.on("callback_query", async (ctx: any) => {
     }
   } catch (e: any) {
     logErrorToFile("callback_query", e);
-    if (e instanceof GrammyError && e.error_code === 400) {
+    
+    if  (e instanceof GrammyError || e instanceof HttpError || e instanceof Error || e instanceof TypeError || e instanceof RangeError) {
       console.error("Callback query failed due to timeout or invalid ID.");
-    } else {
+    
+    } 
+    else {
       console.error(e);
     }
   }

@@ -18,36 +18,44 @@ import { getMaxPrioritizationFeeByPercentile, getSimulationUnits } from "../../.
 import { display_token_details } from '../../../views';
 
 export async function snipperON(ctx: any, amount: string) {
+    try{
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     let snipeToken = ctx.session.snipeToken instanceof String ? ctx.session.snipeToken : ctx.session.snipeToken.toBase58();
-    ctx.session.snipeStatus = true;
     const currentWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex];
 
     const balanceInSOL = await getSolBalance(currentWallet.publicKey, connection);
-    if (balanceInSOL * 1e9 < new BigNumber(amount).toNumber() * 1e9) {
-        await ctx.api.sendMessage(ctx.chat.id, '🔴 Insufficient balance for snipe transaction.', { parse_mode: 'HTML', disable_web_page_preview: true });
-        return;
+  
+        if (balanceInSOL * 1e9 < new BigNumber(amount).toNumber() * 1e9) {
+            await ctx.api.sendMessage(ctx.chat.id, '🔴 Insufficient balance for snipe transaction.', { parse_mode: 'HTML', disable_web_page_preview: true });
+            return;
+        }
+    
+        await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一 Snipper set for ${amount} SOL, on ${snipeToken}`,
+            {
+                parse_mode: 'HTML',
+                disable_web_page_preview: true,
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: '❌ Cancel Snipe ', callback_data: 'cancel_snipe' }],
+                    ]
+                },
+            });
+        let poolKeys = await getRayPoolKeys(ctx, snipeToken);
+            
+        while (!poolKeys && ctx.session.snipeStatus && poolKeys === null) {
+            console.log('ctx.session.snipeStatus', ctx.session.snipeStatus);
+            console.log('Snipe lookup on.');
+            poolKeys = await getRayPoolKeys(ctx, snipeToken);
+        }
+        ctx.session.activeTradingPool = jsonInfo2PoolKeys(poolKeys.id) as LiquidityPoolKeys;;
+        console.log('Snipe lookup end, keys found.');
+        poolKeys && ctx.session.snipeStatus && await setSnipe(ctx, amount);
+    }catch(e){
+        console.log('Error on snipperON', e);
+        await ctx.api.sendMessage(ctx.chat.id, '🔴 Snipe fail, try again.', { parse_mode: 'HTML', disable_web_page_preview: true });
+        logErrorToFile("bot on snipperON", e);
     }
-
-    await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一 Snipper set for ${amount} SOL, on ${snipeToken}`,
-        {
-            parse_mode: 'HTML',
-            disable_web_page_preview: true,
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: '❌ Cancel Snipe ', callback_data: 'cancel_snipe' }],
-                ]
-            },
-        });
-
-    let poolKeys = await getRayPoolKeys(ctx, snipeToken);
-    while (!poolKeys && ctx.session.snipeStatus && poolKeys === null) {
-        console.log('Snipe lookup on.');
-        poolKeys = await getRayPoolKeys(ctx, snipeToken);
-    }
-    ctx.session.activeTradingPool = jsonInfo2PoolKeys(poolKeys.id) as LiquidityPoolKeys;;
-    console.log('Snipe lookup end, keys found.');
-    poolKeys && ctx.session.snipeStatus && await setSnipe(ctx, amount);
+  
 }
 
 export async function setSnipe(ctx: any, amountIn: any) {
