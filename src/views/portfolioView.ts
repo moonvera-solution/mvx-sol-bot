@@ -89,7 +89,7 @@ export async function display_spl_positions(ctx: any) {
                     connection
                 });
                 const tokenPriceSOL = tokenInfo.price.toNumber();
-                const tokenPriceUSD = tokenInfo.price.times(solprice).toFixed(2);
+                const tokenPriceUSD = Number(tokenInfo.price) * (solprice).toFixed(2);
                 const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
                 const userBalanceUSD = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceUSD).toFixed(2);
                 const userBalanceSOL = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceSOL).toFixed(3);
