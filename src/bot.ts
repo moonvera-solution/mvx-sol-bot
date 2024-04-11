@@ -33,6 +33,7 @@ import {
   display_token_details,
   display_snipe_options,
   handleCloseKeyboard,
+  Refresh_display_after_Snipe_Buy,
 } from "./views";
 import { getSolBalance, sendSol } from "./service/util";
 import {
@@ -1130,6 +1131,10 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "display_refresh_spl_positions": {
         await display_refresh_single_spl_positions(ctx);
+        break;
+      }
+      case "Refresh_display_after_Snipe_Buy": {
+        await Refresh_display_after_Snipe_Buy(ctx);
         break;
       }
       case "display_single_spl_positions": {
