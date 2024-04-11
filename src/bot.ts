@@ -1139,6 +1139,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "display_single_spl_positions": {
+        ctx.session.latestCommand = 'display_single_spl_positions'
         await display_single_spl_positions(ctx);
         break;
       }
@@ -1161,7 +1162,13 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.priorityFees = PriotitizationFeeLevels.MEDIUM;
         if (ctx.session.latestCommand === "snipe") {
           await refreshSnipeDetails(ctx);
-        } else {
+        } else if(ctx.session.latestCommand === 'display_single_spl_positions'){
+          await display_refresh_single_spl_positions(ctx);
+        } else if(ctx.session.latestCommand === 'display_after_Snipe_Buy'){
+          await Refresh_display_after_Snipe_Buy(ctx);
+
+        }
+        else {
           await refreshTokenDetails(ctx);
         }
         break;
@@ -1170,20 +1177,30 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.priorityFees = PriotitizationFeeLevels.HIGH;
         if (ctx.session.latestCommand === "snipe") {
           await refreshSnipeDetails(ctx);
-        } else {
+        } else if(ctx.session.latestCommand === 'display_single_spl_positions'){
+          await display_refresh_single_spl_positions(ctx);
+        } else if(ctx.session.latestCommand === 'display_after_Snipe_Buy'){
+          await Refresh_display_after_Snipe_Buy(ctx);
+
+        }
+        else {
           await refreshTokenDetails(ctx);
         }
-
         break;
       }
       case "priority_max": {
         ctx.session.priorityFees = PriotitizationFeeLevels.MAX;
         if (ctx.session.latestCommand === "snipe") {
           await refreshSnipeDetails(ctx);
-        } else {
+        } else if(ctx.session.latestCommand === 'display_single_spl_positions'){
+          await display_refresh_single_spl_positions(ctx);
+        } else if(ctx.session.latestCommand === 'display_after_Snipe_Buy'){
+          await Refresh_display_after_Snipe_Buy(ctx);
+
+        }
+        else {
           await refreshTokenDetails(ctx);
         }
-
         break;
       }
     }
