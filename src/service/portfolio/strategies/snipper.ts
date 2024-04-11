@@ -15,7 +15,7 @@ import { getTokenMetadata } from "../../feeds";
 import { waitForConfirmation, getSolBalance, getTokenExplorerURLS } from '../../util';
 import { Referrals, UserPositions } from "../../../db/mongo/schema";
 import { getMaxPrioritizationFeeByPercentile, getSimulationUnits } from "../../../service/fees/priorityFees";
-import { display_token_details } from '../../../views';
+import { display_after_Snipe_Buy, display_token_details } from '../../../views';
 
 export async function snipperON(ctx: any, amount: string) {
     try{
@@ -374,8 +374,7 @@ export async function startSnippeSimulation(
                             `Transaction could not be confirmed within the ${priorityFeeLabel.toUpperCase()} priority fee. \n` + checkLiquidityMsg
                         );
                     }
-                    // ctx.session.latestCommand == 'sell'
-                    // await display_token_details(ctx);
+                    await display_after_Snipe_Buy(ctx);
                 }).catch(async (error: any) => {
                     let msg = `🔴 Snipe fail, busy Network, try again.`;
                     await ctx.api.sendMessage(chatId, msg); console.info('error', error);

@@ -1,9 +1,9 @@
 import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken, publicKey } from '@raydium-io/raydium-sdk';
-import { PublicKey, Keypair, Connection } from '@solana/web3.js';
+import { PublicKey, Keypair, Connection, SendTransactionError } from '@solana/web3.js';
 import { getWalletTokenAccount, getSolBalance, waitForConfirmation, getPriorityFeeLabel, getTokenExplorerURLS, trackUntilFinalized } from '../../util';
 import { DEFAULT_TOKEN, MVXBOT_FEES, RAYDIUM_AUTHORITY } from '../../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
-import { display_token_details } from '../../../views';
+import { display_after_Snipe_Buy, display_token_details } from '../../../views';
 import { ISESSION_DATA } from '../../util/types';
 import { saveUserPosition } from "../positions";
 import { raydium_amm_swap } from '../../dex';
@@ -173,7 +173,7 @@ export async function handle_radyum_swap(
                                 amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
                             });
                         }
-                        ctx.session.latestCommand == 'sell'
+
                     } else if (side == 'sell') {
                         if (referralFee > 0) {
                             mvxFee = new BigNumber(cut_bot_fee);
@@ -203,8 +203,9 @@ export async function handle_radyum_swap(
                         });
                     }
                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
-                    await display_token_details(ctx);
-
+                    if (side == 'buy') {
+                        await display_after_Snipe_Buy(ctx);
+                    }
                 } else {  // Tx not confirmed
                     ctx.api.sendMessage(ctx.chat.id,
                         `Transaction could not be confirmed within the ${getPriorityFeeLabel(ctx.session.priorityFees).toUpperCase()} priority fee. \n`
@@ -212,8 +213,28 @@ export async function handle_radyum_swap(
                 }
 
             }).catch(async (error: any) => {
-                let msg = `🔴 ${side.toUpperCase()} Swap failed, please try again.`;
-                await ctx.api.sendMessage(chatId, msg);
+        
+                const TRANSFER_ERROR = /Transfer: insufficient lamports/;
+                if (error.logs.find((logMsg: any) => TRANSFER_ERROR.test(logMsg))) {
+                    console.log(error.logs)
+                    ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction.`);
+                    return;
+                }
+                const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
+                if (error.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) {
+                    console.log(error.logs)
+                    ctx.api.sendMessage(ctx.chat.id, `🔴 Slippage error, try increasing your slippage %.`);
+                    return;
+                }
+                
+                const FEES_ERROR = 'InsufficientFundsForFee';
+                if (error.logs === FEES_ERROR) {
+                    console.log(error.logs)
+                    ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction fees.`);
+                    return;
+                }
+
+                await ctx.api.sendMessage(chatId, error.message);
                 console.info('error', error);
                 return error;
             });
