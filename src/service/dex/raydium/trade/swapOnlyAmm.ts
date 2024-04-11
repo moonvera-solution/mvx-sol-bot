@@ -26,7 +26,7 @@ import {
   WALLET_MVX
 } from "../../../../../config";
 import { formatAmmKeysById } from "../raydium-utils/formatAmmKeysById";
-import { getSimulationUnits, getMaxPrioritizationFeeByPercentile } from "../../../fees/priorityFees";
+import { getSimulationUnits, getMaxPrioritizationFeeByPercentile, PriotitizationFeeLevels } from "../../../fees/priorityFees";
 import {
   buildAndSendTx,
   getWalletTokenAccount,
@@ -169,6 +169,9 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   const balanceInSOL = await getSolBalance(input.wallet.publicKey.toBase58(), connection);
   if (balanceInSOL < minSwapAmountBalance) await input.ctx.api.sendMessage(input.ctx.portfolio.chatId, '🔴 Insufficient balance for transaction.', { parse_mode: 'HTML', disable_web_page_preview: true });
 
+  if(input.ctx.priorityFee == PriotitizationFeeLevels.HIGH) maxPriorityFee = maxPriorityFee * 10;
+  if(input.ctx.priorityFee == PriotitizationFeeLevels.MAX) maxPriorityFee = maxPriorityFee * 1.5;
+  
   const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee });
 
   // Simulate the transaction and add the compute unit limit instruction to your transaction

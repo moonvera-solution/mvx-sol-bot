@@ -14,7 +14,7 @@ import { getRayPoolKeys, formatAmmKeysById } from "../../dex/raydium/raydium-uti
 import { getTokenMetadata } from "../../feeds";
 import { waitForConfirmation, getSolBalance, getTokenExplorerURLS } from '../../util';
 import { Referrals, UserPositions } from "../../../db/mongo/schema";
-import { getMaxPrioritizationFeeByPercentile, getSimulationUnits } from "../../../service/fees/priorityFees";
+import { PriotitizationFeeLevels, getMaxPrioritizationFeeByPercentile, getSimulationUnits } from "../../../service/fees/priorityFees";
 import { display_after_Snipe_Buy, display_token_details } from '../../../views';
 
 export async function snipperON(ctx: any, amount: string) {
@@ -241,7 +241,9 @@ export async function startSnippeSimulation(
         });
     }
 
-    const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: (maxPriorityFee * 10), });
+    if(ctx.session.priorityFee == PriotitizationFeeLevels.HIGH) maxPriorityFee = maxPriorityFee * 10;
+    if(ctx.session.priorityFee == PriotitizationFeeLevels.MAX) maxPriorityFee = maxPriorityFee * 1.5;
+    const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: (maxPriorityFee), });
     //      // Simulate the transaction and add the compute unit limit instruction to your transaction
     let [Units, recentBlockhash] = await Promise.all([
         getSimulationUnits(connection, innerTransactions[0].instructions, userWallet.publicKey),
