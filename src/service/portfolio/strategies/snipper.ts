@@ -376,6 +376,7 @@ export async function startSnippeSimulation(
                             `Transaction could not be confirmed within the ${priorityFeeLabel.toUpperCase()} priority fee. \n` + checkLiquidityMsg
                         );
                     }
+                    ctx.session.latestCommand = 'display_after_Snipe_Buy';
                     await display_after_Snipe_Buy(ctx);
                 }).catch(async (error: any) => {
                     let msg = `🔴 Snipe fail, busy Network, try again.`;

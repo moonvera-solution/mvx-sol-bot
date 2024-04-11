@@ -102,12 +102,10 @@ export async function refresh_spl_positions(ctx: any) {
         reply_markup: { inline_keyboard: keyboardButtons },
     };
 
-    if(userPosition[0].positions.length !== 0) {
+  
         await ctx.editMessageText(fullMessage, options);
-        } else {
-            await ctx.api.sendMessage(ctx.chat.id, "No positions found", { parse_mode: 'HTML' });
-        
-        }
+
+      
 } catch (err) {
     console.error(err);
 

@@ -97,16 +97,16 @@ export async function display_spl_positions(ctx: any) {
                 // console.log('valueInUSD', valueInUSD);
                 const valueInSOL = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10, poolKeys.baseDecimals) * Number(tokenPriceSOL) : 'N/A';
                 const valueInUSD = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10, poolKeys.baseDecimals) * Number(tokenPriceUSD) : 'N/A';
-                console.log('valueInUSD', valueInUSD);
-                console.log('valueInSOL', valueInSOL);
-                console.log('tokenPriceUSD', tokenPriceUSD);
-                console.log('tokenPriceSOL', tokenPriceSOL);
-                console.log('solprice', solprice);
-                console.log('userBalanceUSD', userBalanceUSD);
-                console.log('userBalanceSOL', userBalanceSOL);
-                console.log('userbalance', userBalance.toNumber());
-                console.log('initialInUSD', (pos.amountIn / 1e9) * Number(solprice));
-                console.log('initialInSOL', (pos.amountIn / 1e9));
+                // console.log('valueInUSD', valueInUSD);
+                // console.log('valueInSOL', valueInSOL);
+                // console.log('tokenPriceUSD', tokenPriceUSD);
+                // console.log('tokenPriceSOL', tokenPriceSOL);
+                // console.log('solprice', solprice);
+                // console.log('userBalanceUSD', userBalanceUSD);
+                // console.log('userBalanceSOL', userBalanceSOL);
+                // console.log('userbalance', userBalance.toNumber());
+                // console.log('initialInUSD', (pos.amountIn / 1e9) * Number(solprice));
+                // console.log('initialInSOL', (pos.amountIn / 1e9));
                 // console.log('valueInSOL', valueInSOL);
                 const initialInUSD = (pos.amountIn / 1e9) * Number(solprice);
                 // console.log('initialInUSD', initialInUSD);
@@ -162,6 +162,7 @@ export async function display_single_spl_positions(ctx: any) {
     const createKeyboardForPosition = (index: any) => {
         let prevIndex = index - 1 < 0 ? userPosition[0].positions.length - 1 : index - 1;
         let nextIndex = index + 1 >= userPosition[0].positions.length ? 0 : index + 1;
+        const priority_Level = ctx.session.priorityFees;
 
         return [
             [{ text: 'Sell 25%', callback_data: `sellpos_25_${currentIndex}` }, { text: `Sell 50%`, callback_data: `sellpos_50_${currentIndex}` }],
@@ -169,7 +170,12 @@ export async function display_single_spl_positions(ctx: any) {
             [{ text: 'Buy more', callback_data: `buypos_x_${currentIndex}` }],
             [{ text: '⏮️ Previous', callback_data: `prev_position_${prevIndex}` }, 
              { text: 'Next ⏭️', callback_data: `next_position_${nextIndex}` }],
-            [{ text: 'Refresh Positions', callback_data: 'refresh_single_portfolio' }]
+             [{ text: '📈 Priority fees', callback_data: '_' }],
+             [
+                 { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
+                 { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
+             ],
+            [{ text: 'Refresh Positions', callback_data: 'display_refresh_single_spl_positions' }]
         ];
     };
     
@@ -277,6 +283,7 @@ export async function display_refresh_single_spl_positions(ctx: any) {
     const createKeyboardForPosition = (index: any) => {
         let prevIndex = index - 1 < 0 ? userPosition[0].positions.length - 1 : index - 1;
         let nextIndex = index + 1 >= userPosition[0].positions.length ? 0 : index + 1;
+        const priority_Level = ctx.session.priorityFees;
 
         return [
             [{ text: 'Sell 25%', callback_data: `sellpos_25_${currentIndex}` }, { text: `Sell 50%`, callback_data: `sellpos_50_${currentIndex}` }],
@@ -284,6 +291,11 @@ export async function display_refresh_single_spl_positions(ctx: any) {
             [{ text: 'Buy more', callback_data: `buypos_x_${currentIndex}` }],
             [{ text: '⏮️ Previous', callback_data: `prev_position_${prevIndex}` }, 
              { text: 'Next ⏭️', callback_data: `next_position_${nextIndex}` }],
+             [{ text: '📈 Priority fees', callback_data: '_' }],
+             [
+                 { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
+                 { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
+             ],
             [{ text: 'Refresh Positions', callback_data: 'display_refresh_single_spl_positions' }]
         ];
     };
