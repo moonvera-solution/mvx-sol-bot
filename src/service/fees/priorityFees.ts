@@ -1,8 +1,9 @@
 import type { RecentPrioritizationFees } from "@solana/web3.js";
-import { Connection, type GetRecentPrioritizationFeesConfig,
-    SystemProgram, TransactionMessage,ComputeBudgetProgram, TransactionInstruction,
-   VersionedTransaction,PublicKey
-  } from "@solana/web3.js";
+import {
+  Connection, type GetRecentPrioritizationFeesConfig,
+  SystemProgram, TransactionMessage, ComputeBudgetProgram, TransactionInstruction,
+  VersionedTransaction, PublicKey
+} from "@solana/web3.js";
 
 // easy to use values for user convenience
 export const enum PriotitizationFeeLevels {
@@ -57,8 +58,8 @@ export const getMaxPrioritizationFeeByPercentile = async (
       config,
       slotsToReturn
     );
-    
-      // console.log('recentPrioritizationFees', recentPrioritizationFees);
+
+  // console.log('recentPrioritizationFees', recentPrioritizationFees);
   const maxPriorityFee = recentPrioritizationFees.reduce((max, current) => {
     return current.prioritizationFee > max.prioritizationFee ? current : max;
   });
@@ -113,7 +114,7 @@ export const getMedianPrioritizationFeeByPercentile = async (
   return Math.ceil(
     (recentPrioritizationFees[half - 1].prioritizationFee +
       recentPrioritizationFees[half].prioritizationFee) /
-      2
+    2
   );
 };
 
@@ -129,7 +130,7 @@ export const getRecentPrioritizationFeesFromRpc = async (
   config.percentile && args.push({ percentile: config.percentile });
 
   const response = await rpcRequest("getRecentPrioritizationFees", args);
-// console.log('response', response)
+  // console.log('response', response)
   return response;
 };
 
@@ -208,9 +209,9 @@ export const getRecentPrioritizationFeesByPercentile = async (
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                      SIMULATE INX 4 UNITS                  */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
-  
+
 export async function getSimulationUnits(
-  ctx:any,
+  ctx: any,
   connection: Connection,
   instructions: TransactionInstruction[],
   payer: PublicKey
@@ -220,8 +221,6 @@ export async function getSimulationUnits(
     ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
     ...instructions,
   ];
-
-
 
   const testVersionedTxn = new VersionedTransaction(
     new TransactionMessage({
@@ -236,28 +235,40 @@ export async function getSimulationUnits(
     sigVerify: false,
   });
 
-  if (simulation.value.err ) {
-    console.log('simulation.value',simulation.value);
+  if (simulation) {
     const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
     if (simulation.value.logs && simulation.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) {
-        console.log(simulation.value.logs)
-        ctx.api.sendMessage(ctx.chat.id, `🔴 Slippage error, try increasing your slippage %.`);
-        return;
+      console.log(simulation.value.logs)
+      ctx.api.sendMessage(ctx.chat.id, `🔴 Slippage error, try increasing your slippage %.`);
+      return;
     }
     const BALANCE_ERROR = /Transfer: insufficient lamports/;
     if (simulation.value.logs && simulation.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
-        console.log(simulation.value.logs)
-        ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction.`);
-        return;
+      console.log(simulation.value.logs)
+      ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction.`);
+      return;
     }
+    const INSUFFICIENT_FUNDS = /insufficient funds/;
+    if (simulation.value.logs && simulation.value.logs.find((logMsg: any) => INSUFFICIENT_FUNDS.test(logMsg))) {
+      console.log(simulation.value.logs)
+      ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient funds`);
+      return;
+    }
+
     const FEES_ERROR = 'InsufficientFundsForFee';
     if (simulation.value.err === FEES_ERROR) {
-        console.log(simulation.value.logs)
-        ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction fees.`);
-        return;
+      console.log(simulation.value.logs)
+      ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction fees.`);
+      return;
     }
-    return undefined;
+
+    if(simulation.value.err){
+      const err = (JSON.stringify(simulation.value.err));
+      ctx.api.sendMessage(ctx.chat.id, `🔴 - ${err}`);
+      return;
+    }
+
+    console.log("simulation.value.unitsConsumed", simulation.value.unitsConsumed);
+    return simulation.value.unitsConsumed;
   }
-  console.log("simulation.value.unitsConsumed",simulation.value.unitsConsumed);
-  return simulation.value.unitsConsumed;
 }
