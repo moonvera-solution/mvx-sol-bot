@@ -156,11 +156,19 @@ export async function display_single_spl_positions(ctx: any) {
     }
     let currentIndex = ctx.session.positionIndex;
     if(userPosition[0].positions[currentIndex]){
+        if(userPosition[0].positions[currentIndex].id !== ctx.session.positionPool[currentIndex].id){
+            ctx.session.positionPool.unshift();
+            console.log('position.length', ctx.session.positionPool.length);
+        }
         ctx.session.activeTradingPool = await getRayPoolKeys(ctx,userPosition[0].positions[currentIndex].baseMint);
+        console.log('current index', currentIndex);
+        console.log('activeTradingPool', ctx.session.activeTradingPool);
+        console.log('ctx.session.positionPool[positionIndex]', ctx.session.positionPool[currentIndex])
+     
     }
-    if (!userPosition[0].positions[currentIndex]) {
-        currentIndex = currentIndex -1; // Reset to the first position or handle appropriately
-    }
+    // if (!userPosition[0].positions[currentIndex]) {
+    //     currentIndex = currentIndex -1; // Reset to the first position or handle appropriately
+    // }
     // Function to create keyboard for a given position
     const createKeyboardForPosition = (index: any) => {
         let prevIndex = index - 1 < 0 ? userPosition[0].positions.length - 1 : index - 1;
@@ -185,12 +193,12 @@ export async function display_single_spl_positions(ctx: any) {
     try {
 
         let fullMessage = '';
-        if (userPosition && userPosition[0]?.positions) {
+        if (userPosition && userPosition[0].positions) {
             // for (let index in userPosition[0].positions) {
 
                 let pos = userPosition[0].positions[currentIndex];
                 const token = String(pos.baseMint);
-
+                console.log('token', token);
                 const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
                 let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
                 console.log("userBalance:: ", userBalance.toNumber());
@@ -283,11 +291,20 @@ export async function display_refresh_single_spl_positions(ctx: any) {
     let currentIndex = ctx.session.positionIndex;
     
     if(userPosition[0].positions[currentIndex]){
+        if(userPosition[0].positions[currentIndex].id !== ctx.session.positionPool[currentIndex].id){
+            ctx.session.positionPool.splice(currentIndex, 1);
+            console.log('position.length', ctx.session.positionPool.length);
+        }
         ctx.session.activeTradingPool = await getRayPoolKeys(ctx,userPosition[0].positions[currentIndex].baseMint);
+        console.log('current ', currentIndex);
+        console.log('activePool', ctx.session.activeTradingPool);
+        console.log('ctx.session.positionPool[positionIndex]', ctx.session.positionPool[currentIndex]);
+      
+
     } 
-    if (!userPosition[0].positions[currentIndex]) {
-        currentIndex = currentIndex -1; // Reset to the first position or handle appropriately
-    }
+    // if (!userPosition[0].positions[currentIndex]) {
+    //     currentIndex = currentIndex -1; // Reset to the first position or handle appropriately
+    // }
     // Function to create keyboard for a given position
     const createKeyboardForPosition = (index: any) => {
         let prevIndex = index - 1 < 0 ? userPosition[0].positions.length - 1 : index - 1;
@@ -317,7 +334,7 @@ export async function display_refresh_single_spl_positions(ctx: any) {
 
                 let pos = userPosition[0].positions[currentIndex];
                 const token = String(pos.baseMint);
-
+                console.log('tokenzzz', token);
                 const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
                 let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
                 if (pos.amountIn == 0 || pos.amountOut == 0 || pos.amountOut < 0 || pos.amountIn < 0 || userBalance.toNumber() == 0) {

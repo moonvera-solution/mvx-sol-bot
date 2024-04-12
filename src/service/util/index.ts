@@ -583,7 +583,7 @@ export function isValidBase58(str: any) {
 
 export async function waitForConfirmation(ctx: any, txid: string): Promise<boolean> {
     let isConfirmed = false;
-    const maxAttempts = 100;
+    const maxAttempts = 150;
     let attempts = 0;
 
     while (!isConfirmed && attempts < maxAttempts) {
@@ -624,7 +624,7 @@ export function getPriorityFeeLabel(fee: number) : string{
 }
 export async function trackUntilFinalized(ctx: any, txid: string): Promise<boolean> {
     let isFinalized = false;
-    const maxAttempts = 100;
+    const maxAttempts = 150;
     let attempts = 0;
 
     while (!isFinalized && attempts < maxAttempts) {

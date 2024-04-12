@@ -246,7 +246,7 @@ export async function startSnippeSimulation(
     const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: (maxPriorityFee), });
     //      // Simulate the transaction and add the compute unit limit instruction to your transaction
     let [Units, recentBlockhash] = await Promise.all([
-        getSimulationUnits(connection, innerTransactions[0].instructions, userWallet.publicKey),
+        getSimulationUnits(  ctx,connection, innerTransactions[0].instructions, userWallet.publicKey),
         connection.getLatestBlockhash(),
     ]);
 

@@ -236,15 +236,16 @@ export async function getSimulationUnits(
     sigVerify: false,
   });
 
-  if (simulation.value.err && simulation.value.logs) {
+  if (simulation.value.err ) {
+    console.log('simulation.value',simulation.value);
     const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
-    if (simulation.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) {
+    if (simulation.value.logs && simulation.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) {
         console.log(simulation.value.logs)
         ctx.api.sendMessage(ctx.chat.id, `🔴 Slippage error, try increasing your slippage %.`);
         return;
     }
     const BALANCE_ERROR = /Transfer: insufficient lamports/;
-    if (simulation.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
+    if (simulation.value.logs && simulation.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
         console.log(simulation.value.logs)
         ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction.`);
         return;

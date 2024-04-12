@@ -40,7 +40,7 @@ export async function handle_radyum_swap(
 
         // ------- check user balanace in DB --------
         const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
-        console.log("userPosition", userPosition);
+        // console.log("userPosition", userPosition);
 
         let oldPositionSol: number = 0;
         let oldPositionToken: number = 0;
