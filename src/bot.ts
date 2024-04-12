@@ -1130,7 +1130,7 @@ bot.on("callback_query", async (ctx: any) => {
         await display_spl_positions(ctx);
         break;
       }
-      case "display_refresh_spl_positions": {
+      case "display_refresh_single_spl_positions": {
         await display_refresh_single_spl_positions(ctx);
         break;
       }

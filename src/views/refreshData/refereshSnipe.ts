@@ -71,8 +71,7 @@ export async function refreshSnipeDetails(ctx: any) {
     const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
  
     const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
-    const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
-    const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
+    const tokenPriceUSD = (Number(tokenInfo.price.toNumber()) * (solPrice)).toFixed(quoteDecimals);const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     const formattedmac= await formatNumberToKOrM(marketCap) ?? "NA";
@@ -109,7 +108,7 @@ export async function refreshSnipeDetails(ctx: any) {
                             [{ text: `⛷️ Set Slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' },{ text: 'Selling Mode 💸', callback_data: 'sell' }],
                             [{ text: '📈 Priority fees', callback_data: '_' }],
                             [ 
-                                { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Med ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
+                                { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
                                 { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
                             ],
                             [{ text: 'Cancel', callback_data: 'closing' }]

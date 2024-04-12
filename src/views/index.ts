@@ -113,7 +113,7 @@ export async function display_token_details(ctx: any) {
                         [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: 'Selling Mode 💸', callback_data: 'sell' }],
                         [{ text: '📈 Priority fees', callback_data: '_' }],
                         [
-                            { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Med ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
+                            { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
                             { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
                         ],
                         [{ text: 'Close', callback_data: 'closing' }]]
@@ -145,7 +145,7 @@ export async function display_token_details(ctx: any) {
                         [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: ' Buy Mode', callback_data: 'buy' }],
                         [{ text: '📈 Priority fees', callback_data: '_' }],
                         [
-                            { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Med ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
+                            { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
                             { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
                         ],
                         [{ text: 'Close', callback_data: 'closing' }]
@@ -233,7 +233,7 @@ export async function display_snipe_options(ctx: any, msgTxt?: string) {
             }
     
             const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
-            const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
+            const tokenPriceUSD = (Number(tokenInfo.price.toNumber()) * (solPrice)).toFixed(quoteDecimals);
     
             const priceImpact = tokenInfo.priceImpact.toFixed(2);
             const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
@@ -264,14 +264,14 @@ export async function display_snipe_options(ctx: any, msgTxt?: string) {
             disable_web_page_preview: true,
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: ' 🔂 Refresh ', callback_data: 'Refresh_display_after_Snipe_Buy' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
+                    [{ text: ' 🔂 Refresh ', callback_data: 'refresh_snipe' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
                     // [{ text: ' 🎯  Turbo Snipping ', callback_data: '_' }],
                     [{ text: '🎯 X SOL', callback_data: 'snipe_X_SOL' }, { text: '🎯 1 SOL', callback_data: 'snipe_1_SOL' }, { text: '🎯 5 SOL', callback_data: 'snipe_5_SOL' }],
                     [{ text: `⛷️ Set Slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }, { text: 'Selling Mode 💸', callback_data: 'sell' }],
                     [{ text: '📈 Priority fees', callback_data: '_' }],
     
                     [
-                        { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Med ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
+                        { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
                         { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
                     ],
                     [{ text: 'Cancel', callback_data: 'closing' }]
@@ -374,7 +374,7 @@ export async function display_after_Snipe_Buy(ctx: any) {
                         [{ text: '  Sell 100%  ', callback_data: 'sell_100_TOKEN' }, { text: '  Sell X Amount  ', callback_data: 'sell_X_TOKEN' }],
                         [{ text: '📈 Priority fees', callback_data: '_' }],
                         [
-                            { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Med ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
+                            { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
                             { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
                         ],
                         [{ text: 'Close', callback_data: 'closing' }]]
@@ -478,7 +478,7 @@ export async function Refresh_display_after_Snipe_Buy(ctx: any) {
                         [{ text: '  Sell 100%  ', callback_data: 'sell_100_TOKEN' }, { text: '  Sell X Amount  ', callback_data: 'sell_X_TOKEN' }],
                         [{ text: '📈 Priority fees', callback_data: '_' }],
                         [
-                            { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Med ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
+                            { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Medium ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
                             { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
                         ],
                         [{ text: 'Close', callback_data: 'closing' }]]
