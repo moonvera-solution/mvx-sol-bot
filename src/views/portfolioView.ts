@@ -31,7 +31,7 @@ export async function display_spl_positions(ctx: any) {
 
         return [
             [{ text: 'Manage Positions', callback_data: `display_single_spl_positions` }, 
-            { text: 'Refresh Psitions', callback_data: `display_refresh_single_spl_positions` }],
+            { text: 'Refresh Psitions', callback_data: `refresh_portfolio` }],
         ];
     };
 
@@ -223,9 +223,11 @@ export async function display_single_spl_positions(ctx: any) {
                     connection
                 });
                 const tokenPriceSOL = tokenInfo.price.toNumber();
-                const tokenPriceUSD = tokenInfo.price.times(solprice).toFixed(2);
+                console.log('tokenPriceSOL', tokenPriceSOL);
+                const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(poolKeys.quoteDecimals);
+                console.log('tokenPriceUSD', tokenPriceUSD);
                 const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
-                const userBalanceUSD = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceUSD).toFixed(2);
+                const userBalanceUSD = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceUSD).toFixed(3);
                 const userBalanceSOL = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceSOL).toFixed(3);
 
                 const valueInUSD = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10, poolKeys.baseDecimals) * Number(tokenPriceUSD) : 'N/A';
@@ -343,7 +345,9 @@ export async function display_refresh_single_spl_positions(ctx: any) {
                     connection
                 });
                 const tokenPriceSOL = tokenInfo.price.toNumber();
-                const tokenPriceUSD = tokenInfo.price.times(solprice).toFixed(2);
+                console.log('tokenPriceSOL', tokenPriceSOL);
+                const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(poolKeys.quoteDecimals);
+                console.log('tokenPriceUSD', tokenPriceUSD);
                 const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
                 const userBalanceUSD = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceUSD).toFixed(2);
                 const userBalanceSOL = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceSOL).toFixed(3);
@@ -374,7 +378,7 @@ export async function display_refresh_single_spl_positions(ctx: any) {
             disable_web_page_preview: true,
             reply_markup: { inline_keyboard: keyboardButtons },
         };
-
+        console.log('fullMessage', fullMessage);
         await ctx.editMessageText(fullMessage, options);
     } catch (err) {
         console.error(err);

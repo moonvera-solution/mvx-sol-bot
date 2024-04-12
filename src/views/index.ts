@@ -233,7 +233,7 @@ export async function display_snipe_options(ctx: any, msgTxt?: string) {
             }
     
             const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
-            const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
+            const tokenPriceUSD = (Number(tokenInfo.price.toNumber()) * (solPrice)).toFixed(quoteDecimals);
     
             const priceImpact = tokenInfo.priceImpact.toFixed(2);
             const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
