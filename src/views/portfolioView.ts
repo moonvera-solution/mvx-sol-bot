@@ -223,9 +223,9 @@ export async function display_single_spl_positions(ctx: any) {
                     connection
                 });
                 const tokenPriceSOL = tokenInfo.price.toNumber();
-                console.log('tokenPriceSOL', tokenPriceSOL);
+                // console.log('tokenPriceSOL', tokenPriceSOL);
                 const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(poolKeys.quoteDecimals);
-                console.log('tokenPriceUSD', tokenPriceUSD);
+                // console.log('tokenPriceUSD', tokenPriceUSD);
                 const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
                 const userBalanceUSD = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceUSD).toFixed(3);
                 const userBalanceSOL = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceSOL).toFixed(3);
