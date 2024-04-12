@@ -158,6 +158,9 @@ export async function display_single_spl_positions(ctx: any) {
     if(userPosition[0].positions[currentIndex]){
         ctx.session.activeTradingPool = await getRayPoolKeys(ctx,userPosition[0].positions[currentIndex].baseMint);
     }
+    if (!userPosition[0].positions[currentIndex]) {
+        currentIndex = currentIndex -1; // Reset to the first position or handle appropriately
+    }
     // Function to create keyboard for a given position
     const createKeyboardForPosition = (index: any) => {
         let prevIndex = index - 1 < 0 ? userPosition[0].positions.length - 1 : index - 1;
@@ -280,6 +283,9 @@ export async function display_refresh_single_spl_positions(ctx: any) {
     let currentIndex = ctx.session.positionIndex;
     if(userPosition[0].positions[currentIndex]){
         ctx.session.activeTradingPool = await getRayPoolKeys(ctx,userPosition[0].positions[currentIndex].baseMint);
+    }
+    if (!userPosition[0].positions[currentIndex]) {
+        currentIndex = currentIndex -1; // Reset to the first position or handle appropriately
     }
     // Function to create keyboard for a given position
     const createKeyboardForPosition = (index: any) => {
