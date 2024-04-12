@@ -210,6 +210,7 @@ export const getRecentPrioritizationFeesByPercentile = async (
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
   
 export async function getSimulationUnits(
+  ctx:any,
   connection: Connection,
   instructions: TransactionInstruction[],
   payer: PublicKey
@@ -235,7 +236,25 @@ export async function getSimulationUnits(
     sigVerify: false,
   });
 
-  if (simulation.value.err) {
+  if (simulation.value.err && simulation.value.logs) {
+    const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
+    if (simulation.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) {
+        console.log(simulation.value.logs)
+        ctx.api.sendMessage(ctx.chat.id, `🔴 Slippage error, try increasing your slippage %.`);
+        return;
+    }
+    const BALANCE_ERROR = /Transfer: insufficient lamports/;
+    if (simulation.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
+        console.log(simulation.value.logs)
+        ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction.`);
+        return;
+    }
+    const FEES_ERROR = 'InsufficientFundsForFee';
+    if (simulation.value.err === FEES_ERROR) {
+        console.log(simulation.value.logs)
+        ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction fees.`);
+        return;
+    }
     return undefined;
   }
   console.log("simulation.value.unitsConsumed",simulation.value.unitsConsumed);
