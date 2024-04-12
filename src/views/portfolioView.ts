@@ -158,6 +158,9 @@ export async function display_single_spl_positions(ctx: any) {
     if(userPosition[0].positions[currentIndex]){
         ctx.session.activeTradingPool = await getRayPoolKeys(ctx,userPosition[0].positions[currentIndex].baseMint);
     }
+    if (!userPosition[0].positions[currentIndex]) {
+        currentIndex = currentIndex -1; // Reset to the first position or handle appropriately
+    }
     // Function to create keyboard for a given position
     const createKeyboardForPosition = (index: any) => {
         let prevIndex = index - 1 < 0 ? userPosition[0].positions.length - 1 : index - 1;
@@ -223,9 +226,9 @@ export async function display_single_spl_positions(ctx: any) {
                     connection
                 });
                 const tokenPriceSOL = tokenInfo.price.toNumber();
-                console.log('tokenPriceSOL', tokenPriceSOL);
+                // console.log('tokenPriceSOL', tokenPriceSOL);
                 const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(poolKeys.quoteDecimals);
-                console.log('tokenPriceUSD', tokenPriceUSD);
+                // console.log('tokenPriceUSD', tokenPriceUSD);
                 const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
                 const userBalanceUSD = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceUSD).toFixed(3);
                 const userBalanceSOL = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceSOL).toFixed(3);
@@ -278,8 +281,12 @@ export async function display_refresh_single_spl_positions(ctx: any) {
         return;
     }
     let currentIndex = ctx.session.positionIndex;
+    
     if(userPosition[0].positions[currentIndex]){
         ctx.session.activeTradingPool = await getRayPoolKeys(ctx,userPosition[0].positions[currentIndex].baseMint);
+    } 
+    if (!userPosition[0].positions[currentIndex]) {
+        currentIndex = currentIndex -1; // Reset to the first position or handle appropriately
     }
     // Function to create keyboard for a given position
     const createKeyboardForPosition = (index: any) => {
@@ -345,9 +352,9 @@ export async function display_refresh_single_spl_positions(ctx: any) {
                     connection
                 });
                 const tokenPriceSOL = tokenInfo.price.toNumber();
-                console.log('tokenPriceSOL', tokenPriceSOL);
+                // console.log('tokenPriceSOL', tokenPriceSOL);
                 const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(poolKeys.quoteDecimals);
-                console.log('tokenPriceUSD', tokenPriceUSD);
+                // console.log('tokenPriceUSD', tokenPriceUSD);
                 const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
                 const userBalanceUSD = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceUSD).toFixed(2);
                 const userBalanceSOL = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceSOL).toFixed(3);
