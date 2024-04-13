@@ -141,6 +141,14 @@ export async function display_spl_positions(ctx: any) {
 
     }
 }
+async function synchronizePools(userPositions: any, ctx: any) {
+    let updatedPools = [];
+    for (let pos of userPositions) {
+        let poolKeys = await getRayPoolKeys(ctx, pos.baseMint);
+        updatedPools.push(poolKeys);
+    }
+    return updatedPools;
+}
 
 export async function display_single_spl_positions(ctx: any) {
     const chatId = ctx.chat.id;
@@ -149,27 +157,29 @@ export async function display_single_spl_positions(ctx: any) {
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
     const solprice = await getSolanaDetails();
-    if (!userPosition[0]) {
-        // await UserPositions.deleteOne({ positionChatId: chatId, walletId: userWallet });
+    if (!userPosition[0] || userPosition[0].positions.length === 0) {
         await ctx.api.sendMessage(ctx.chat.id, "No positions found.", { parse_mode: 'HTML' });
         return;
     }
+    ctx.session.positionPool = await synchronizePools(userPosition[0].positions, ctx);
+
     let currentIndex = ctx.session.positionIndex;
     if(userPosition[0].positions[currentIndex]){
-        if(userPosition[0].positions[currentIndex].id !== ctx.session.positionPool[currentIndex].id){
-            ctx.session.positionPool.unshift();
-            console.log('position.length', ctx.session.positionPool.length);
+        currentIndex = 0; 
+        ctx.session.positionIndex = currentIndex;  // Update session index
+        let pos = userPosition[0].positions[currentIndex];
+        const token = String(pos.baseMint);
+        console.log('tokenzzz', token);
+        const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
+        let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
+        if (pos.amountIn == 0 || pos.amountOut == 0 || pos.amountOut < 0 || pos.amountIn < 0 || userBalance.toNumber() == 0) {
+            await UserPositions.updateOne({ walletId: userWallet },{$pull: { positions: { baseMint: pos.baseMint } }});
         }
+      
         ctx.session.activeTradingPool = await getRayPoolKeys(ctx,userPosition[0].positions[currentIndex].baseMint);
-        console.log('current index', currentIndex);
-        console.log('activeTradingPool', ctx.session.activeTradingPool);
-        console.log('ctx.session.positionPool[positionIndex]', ctx.session.positionPool[currentIndex])
-     
+      
     }
-    // if (!userPosition[0].positions[currentIndex]) {
-    //     currentIndex = currentIndex -1; // Reset to the first position or handle appropriately
-    // }
-    // Function to create keyboard for a given position
+
     const createKeyboardForPosition = (index: any) => {
         let prevIndex = index - 1 < 0 ? userPosition[0].positions.length - 1 : index - 1;
         let nextIndex = index + 1 >= userPosition[0].positions.length ? 0 : index + 1;
@@ -191,20 +201,16 @@ export async function display_single_spl_positions(ctx: any) {
     };
     
     try {
-
         let fullMessage = '';
         if (userPosition && userPosition[0].positions) {
-            // for (let index in userPosition[0].positions) {
-
+ 
                 let pos = userPosition[0].positions[currentIndex];
                 const token = String(pos.baseMint);
-                console.log('token', token);
                 const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
                 let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
-                console.log("userBalance:: ", userBalance.toNumber());
                 if (pos.amountIn == 0 || pos.amountOut == 0 || pos.amountOut < 0 || pos.amountIn < 0 || userBalance.toNumber() == 0) {
                     await UserPositions.updateOne({ walletId: userWallet },{$pull: { positions: { baseMint: pos.baseMint } }});
-                    return;
+                  
                 }
 
                 if (!userBalance.gt(0)) {
@@ -224,7 +230,6 @@ export async function display_single_spl_positions(ctx: any) {
                 if (!poolKeysExists(ctx.session.positionPool, poolKeys)) {
                     ctx.session.positionPool.push(poolKeys);
                 }
-                // console.log('poolKeys', ctx.session.positionPool.length);
                 const tokenInfo = await quoteToken({
                     baseVault: poolKeys.baseVault,
                     quoteVault: poolKeys.quoteVault,
@@ -234,9 +239,7 @@ export async function display_single_spl_positions(ctx: any) {
                     connection
                 });
                 const tokenPriceSOL = tokenInfo.price.toNumber();
-                // console.log('tokenPriceSOL', tokenPriceSOL);
                 const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(poolKeys.quoteDecimals);
-                // console.log('tokenPriceUSD', tokenPriceUSD);
                 const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
                 const userBalanceUSD = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceUSD).toFixed(3);
                 const userBalanceSOL = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceSOL).toFixed(3);
@@ -258,7 +261,7 @@ export async function display_single_spl_positions(ctx: any) {
                     `Current value: ${valueInSOL != 'N/A' ? valueInSOL.toFixed(4) : 'N/A'} <b>SOL</b> | ${valueInUSD != 'N/A' ? valueInUSD.toFixed(4) : 'N/A'} <b>USD </b>\n` +
                     `Profit: ${profitInSol != 'N/A' ? profitInSol.toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? profitInUSD.toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? profitPercentage.toFixed(2) : 'N/A'}%\n\n` +
                     `Token Balance in Wallet: ${Number(userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).toFixed(3)} <b>${pos.symbol}</b> | ${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n\n`;
-            // }
+     
         };
         let keyboardButtons = createKeyboardForPosition(currentIndex);
 
@@ -284,33 +287,31 @@ export async function display_refresh_single_spl_positions(ctx: any) {
     const solprice = await getSolanaDetails();
     try {
     if (!userPosition[0]) {
-        // await UserPositions.deleteOne({ positionChatId: chatId, walletId: userWallet });
         await ctx.api.sendMessage(ctx.chat.id, "No positions found.", { parse_mode: 'HTML' });
         return;
     }
-    let currentIndex = ctx.session.positionIndex;
-    
-    if(userPosition[0].positions[currentIndex]){
-        if(userPosition[0].positions[currentIndex].id !== ctx.session.positionPool[currentIndex].id){
-            ctx.session.positionPool.splice(currentIndex, 1);
-            console.log('position.length', ctx.session.positionPool.length);
-        }
-        ctx.session.activeTradingPool = await getRayPoolKeys(ctx,userPosition[0].positions[currentIndex].baseMint);
-        console.log('current ', currentIndex);
-        console.log('activePool', ctx.session.activeTradingPool);
-        console.log('ctx.session.positionPool[positionIndex]', ctx.session.positionPool[currentIndex]);
-      
+    ctx.session.positionPool = await synchronizePools(userPosition[0].positions, ctx);
 
+    let currentIndex = ctx.session.positionIndex;
+    if(userPosition[0].positions[currentIndex]){
+        ctx.session.positionIndex = currentIndex;  // Update session index
+
+        let pos = userPosition[0].positions[currentIndex];
+        const token = String(pos.baseMint);
+        // console.log('tokenzzz', token);
+        const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
+        let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
+        if (pos.amountIn == 0 || pos.amountOut == 0 || pos.amountOut < 0 || pos.amountIn < 0 || userBalance.toNumber() == 0) {
+            await UserPositions.updateOne({ walletId: userWallet },{$pull: { positions: { baseMint: pos.baseMint } }});
+        }
+     
+        ctx.session.activeTradingPool = await getRayPoolKeys(ctx,userPosition[0].positions[currentIndex].baseMint);
     } 
-    // if (!userPosition[0].positions[currentIndex]) {
-    //     currentIndex = currentIndex -1; // Reset to the first position or handle appropriately
-    // }
-    // Function to create keyboard for a given position
+
     const createKeyboardForPosition = (index: any) => {
         let prevIndex = index - 1 < 0 ? userPosition[0].positions.length - 1 : index - 1;
         let nextIndex = index + 1 >= userPosition[0].positions.length ? 0 : index + 1;
         const priority_Level = ctx.session.priorityFees;
-
         return [
             [{ text: 'Sell 25%', callback_data: `sellpos_25_${currentIndex}` }, { text: `Sell 50%`, callback_data: `sellpos_50_${currentIndex}` }],
             [{ text: 'Sell 75%', callback_data: `sellpos_75_${currentIndex}` }, { text: `Sell 100%`, callback_data: `sellpos_100_${currentIndex}` }],
@@ -330,7 +331,6 @@ export async function display_refresh_single_spl_positions(ctx: any) {
 
         let fullMessage = '';
         if (userPosition && userPosition[0].positions) {
-            // for (let index in userPosition[0].positions) {
 
                 let pos = userPosition[0].positions[currentIndex];
                 const token = String(pos.baseMint);
@@ -341,11 +341,7 @@ export async function display_refresh_single_spl_positions(ctx: any) {
                     await UserPositions.updateOne({ walletId: userWallet },{$pull: { positions: { baseMint: pos.baseMint } }});
                     return;
                 }
-
-                if (!userBalance.gt(0)) {
-                    await UserPositions.updateOne({ walletId: userWallet },{ $pull: { positions: { baseMint: token } } });
-                    return;
-                }
+             
                 function poolKeysExists(poolKeysArray: any, newPoolKeys: any) {
                     return poolKeysArray.some((existingKeys: any) =>
                         existingKeys.baseVault === newPoolKeys.baseVault &&
@@ -359,7 +355,6 @@ export async function display_refresh_single_spl_positions(ctx: any) {
                 if (!poolKeysExists(ctx.session.positionPool, poolKeys)) {
                     ctx.session.positionPool.push(poolKeys);
                 }
-                // console.log('poolKeys', ctx.session.positionPool.length);
                 const tokenInfo = await quoteToken({
                     baseVault: poolKeys.baseVault,
                     quoteVault: poolKeys.quoteVault,
@@ -369,9 +364,8 @@ export async function display_refresh_single_spl_positions(ctx: any) {
                     connection
                 });
                 const tokenPriceSOL = tokenInfo.price.toNumber();
-                // console.log('tokenPriceSOL', tokenPriceSOL);
                 const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(poolKeys.quoteDecimals);
-                // console.log('tokenPriceUSD', tokenPriceUSD);
+           
                 const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
                 const userBalanceUSD = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceUSD).toFixed(2);
                 const userBalanceSOL = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceSOL).toFixed(3);
@@ -393,7 +387,7 @@ export async function display_refresh_single_spl_positions(ctx: any) {
                     `Current value: ${valueInSOL != 'N/A' ? valueInSOL.toFixed(4) : 'N/A'} <b>SOL</b> | ${valueInUSD != 'N/A' ? valueInUSD.toFixed(4) : 'N/A'} <b>USD </b>\n` +
                     `Profit: ${profitInSol != 'N/A' ? profitInSol.toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? profitInUSD.toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? profitPercentage.toFixed(2) : 'N/A'}%\n\n` +
                     `Token Balance in Wallet: ${Number(userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).toFixed(3)} <b>${pos.symbol}</b> | ${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n\n`;
-            // }
+
         };
         let keyboardButtons = createKeyboardForPosition(currentIndex);
 
