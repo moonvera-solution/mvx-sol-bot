@@ -57,7 +57,7 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
   } catch (e) {
     console.log(e);
   }
-  console.log('keys', keys);
+  // console.log('keys', keys);
   return keys;
 }
 

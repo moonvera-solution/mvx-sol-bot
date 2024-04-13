@@ -604,12 +604,15 @@ bot.on("callback_query", async (ctx: any) => {
       const sellPercentage = parts[1]; // '25', '50', '75', or '100'
       const positionIndex = parts[2]; // Position index
       ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
+      // console.log("positionIndex", positionIndex);
+      // console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool.baseMint);
       await handle_radyum_swap(
         ctx,
         ctx.session.activeTradingPool.baseMint,
         "sell",
         sellPercentage
       );
+
       return;
     } else if (matchBuy) {
       const parts = data.split("_");
@@ -617,20 +620,16 @@ bot.on("callback_query", async (ctx: any) => {
       ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
       ctx.api.sendMessage(chatId, "Please enter SOL amount");
       ctx.session.latestCommand = "buy_X_SOL";
+
       return;
     } else if (matchNavigate) {
       const parts = data.split("_");
       const newPositionIndex = parseInt(parts[2]); // New position index
-      // console.log("newPositionIndex", newPositionIndex);
-      // console.log("ctx.session.positionPool", ctx.session.positionPool);
-      // Update the current position index
-      ctx.session.positionIndex = newPositionIndex;
-      // console.log("ctx.session.positionIndex", ctx.session.positionIndex);
 
+      ctx.session.positionIndex = newPositionIndex;
       ctx.session.activeTradingPool =
-        ctx.session.positionPool[ctx.session.positionIndex];
-      // console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
-      // Redisplay the positions with the updated index
+      ctx.session.positionPool[ctx.session.positionIndex];
+
       await display_refresh_single_spl_positions(ctx);
     }
 
@@ -816,37 +815,6 @@ bot.on("callback_query", async (ctx: any) => {
           ctx.session.generatorWallet = referralRecord.generatorWallet;
         }
 
-        // let tokenToSell =
-        //   ctx.session.sellToken instanceof PublicKey
-        //     ? ctx.session.sellToken
-        //     : undefined;
-
-        // if (!tokenToSell || tokenToSell == DEFAULT_PUBLIC_KEY) {
-        //   tokenToSell =
-        //     ctx.session.buyToken instanceof PublicKey &&
-        //     ctx.session.buyToken != DEFAULT_PUBLIC_KEY
-        //       ? ctx.session.buyToken
-        //       : undefined;
-        // }
-
-        // if (tokenToSell) {
-        //   const tokenString = tokenToSell.toBase58();
-
-        //   let poolInfo = ctx.session.tokenRayPoolInfo[tokenString];
-
-        //   if (!poolInfo) {
-        //     poolInfo = await getRayPoolKeys(ctx, tokenString);
-        //     ctx.session.tokenRayPoolInfo[tokenString] = poolInfo;
-        //   }
-
-        //   ctx.session.sellToken = tokenToSell;
-        //   ctx.session.activeTradingPool = poolInfo;
-
-        //   // Synchronize buyToken with the current sellToken
-        //   ctx.session.buyToken = tokenToSell;
-
-        //   await display_token_details(ctx);
-        // } else {
         await ctx.api.sendMessage(
           chatId,
           "Enter the token Address you would like to sell."
@@ -926,61 +894,7 @@ bot.on("callback_query", async (ctx: any) => {
         );
         break;
       }
-      // case 'previous_token': {
-      //     let history = ctx.session.tokenHistory;
-      //     let currentToken: PublicKey = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
-      //     let currentTokenStr = currentToken instanceof PublicKey ? currentToken.toBase58() : currentToken;
-      //     let historyStr = history.map((token: any) => token.toBase58());
-      //     let currentIndex = historyStr.indexOf(currentTokenStr);
-
-      //     if (currentIndex > 0) {
-      //         let previousTokenStr = historyStr[currentIndex - 1];
-      //         let previousToken = new PublicKey(previousTokenStr);
-
-      //         // Update both buyToken and sellToken regardless of the latest command
-      //         ctx.session.buyToken = previousToken;
-      //         ctx.session.sellToken = previousToken;
-
-      //         // Check if the pool info is already in the session
-      //         let poolInfo = ctx.session.tokenRayPoolInfo[previousTokenStr];
-      //         if (!poolInfo) {
-      //             poolInfo = await getRayPoolKeys(ctx, previousTokenStr);
-      //             ctx.session.tokenRayPoolInfo[previousTokenStr] = poolInfo;
-      //         }
-
-      //         ctx.session.activeTradingPool = poolInfo;
-      //         await refreshTokenDetails(ctx);
-      //     }
-      //     break;
-      // }
-
-      // case 'next_token': {
-      //     let history = ctx.session.tokenHistory;
-      //     let currentToken = ctx.session.latestCommand === 'buy' ? ctx.session.buyToken : ctx.session.sellToken;
-      //     let currentTokenStr = currentToken instanceof PublicKey ? currentToken.toBase58() : currentToken;
-      //     let historyStr = history.map((token: any) => token.toBase58());
-      //     let currentIndex = historyStr.indexOf(currentTokenStr);
-
-      //     if (currentIndex >= 0 && currentIndex < history.length - 1) {
-      //         let nextTokenStr = historyStr[currentIndex + 1];
-      //         let nextToken = new PublicKey(nextTokenStr);
-
-      //         // Update both buyToken and sellToken regardless of the latest command
-      //         ctx.session.buyToken = nextToken;
-      //         ctx.session.sellToken = nextToken;
-
-      //         // Check if the pool info is already in the session
-      //         let poolInfo = ctx.session.tokenRayPoolInfo[nextTokenStr];
-      //         if (!poolInfo) {
-      //             poolInfo = await getRayPoolKeys(ctx, nextTokenStr);
-      //             ctx.session.tokenRayPoolInfo[nextTokenStr] = poolInfo;
-      //         }
-
-      //         ctx.session.activeTradingPool = poolInfo;
-      //         await refreshTokenDetails(ctx);
-      //     }
-      //     break;
-      // }
+ 
 
       case "buy_0.1_SOL":
         await handle_radyum_swap(
@@ -1132,6 +1046,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "display_refresh_single_spl_positions": {
         await display_refresh_single_spl_positions(ctx);
+        await display_refresh_single_spl_positions(ctx);
         break;
       }
       case "Refresh_display_after_Snipe_Buy": {
@@ -1149,6 +1064,7 @@ bot.on("callback_query", async (ctx: any) => {
           await refreshSnipeDetails(ctx);
         } else if(ctx.session.latestCommand === 'display_single_spl_positions'){
           await display_refresh_single_spl_positions(ctx);
+          
         } else if(ctx.session.latestCommand === 'display_after_Snipe_Buy'){
           await Refresh_display_after_Snipe_Buy(ctx);
 
