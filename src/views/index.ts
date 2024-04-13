@@ -366,16 +366,13 @@ export async function display_after_Snipe_Buy(ctx: any) {
      initialInUSD = (specificPosition.amountIn / 1e9) * Number(solPrice);
      initialInSOL = (specificPosition.amountIn / 1e9);
      valueInUSD = (specificPosition.amountOut - (userTokenBalance *  Math.pow(10,baseDecimals) )) < 5 ? userTokenBalance * Number(tokenPriceUSD) : 'N/A';
-     console.log('valueinsol',(Number(specificPosition.amountOut) - Number(userTokenBalance * Math.pow(10,baseDecimals))))
 
      valueInSOL = (specificPosition.amountOut - (userTokenBalance * Math.pow(10,baseDecimals))) < 5 ? Number(((userTokenBalance.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)) : 'N/A';
     profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(specificPosition.amountIn) / 1e9 )) / (Number(specificPosition.amountIn) / 1e9) * 100 : 'N/A';
     profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
      profitInSol = valueInSOL != 'N/A' ? Number(((userTokenBalance.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)) - initialInSOL : 'N/A';
 
-     console.log('valueInUSD',valueInUSD);
-     console.log('valueInSOL',valueInSOL);
-     console.log('profitPercentage',profitPercentage);
+
 
     }
   
@@ -506,15 +503,12 @@ export async function Refresh_display_after_Snipe_Buy(ctx: any) {
     initialInSOL = Number(specificPosition.amountIn) / 1e9;
     initialInUSD = initialInSOL * Number(solPrice);
     valueInUSD = (specificPosition.amountOut - (userTokenBalance *  Math.pow(10,baseDecimals) )) < 5 ? userTokenBalance * Number(tokenPriceUSD) : 'N/A';
-     console.log('valueinsol',(Number(specificPosition.amountOut) - Number(userTokenBalance * Math.pow(10,baseDecimals))))
 
      valueInSOL = (specificPosition.amountOut - (userTokenBalance * Math.pow(10,baseDecimals))) < 5 ? Number(((userTokenBalance.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)) : 'N/A';
     profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(specificPosition.amountIn) / 1e9 )) / (Number(specificPosition.amountIn) / 1e9) * 100 : 'N/A';
    profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
     profitInSol = valueInSOL != 'N/A' ? Number(((userTokenBalance.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)) - initialInSOL : 'N/A';
-    console.log('valueInUSD',valueInUSD);
-    console.log('valueInSOL',valueInSOL);
-    console.log('profitPercentage',profitPercentage);
+ 
    }
         let options: any;
         let messageText: any;
