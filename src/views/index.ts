@@ -10,6 +10,7 @@ import { Keypair, Connection } from '@solana/web3.js';
 import { runHigh, runMax, runMedium, runMin } from './util/getPriority';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import { logErrorToFile } from "../../error/logger";
+import { UserPositions } from '../db';
 
 export async function handleCloseKeyboard(ctx: any) {
     const chatId = ctx.chat.id;
@@ -76,8 +77,8 @@ export async function display_token_details(ctx: any) {
     const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
     const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
 
-    const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
-    const tokenPriceUSD = (Number(tokenInfo.price.toNumber()) * (solPrice)).toFixed(quoteDecimals);
+    const tokenPriceSOL = tokenInfo.price.toNumber();
+    const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
 
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
@@ -232,9 +233,8 @@ export async function display_snipe_options(ctx: any, msgTxt?: string) {
                 poolStatusMessage = `⏳ Opening in ${countdown}`;
             }
     
-            const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
-            const tokenPriceUSD = (Number(tokenInfo.price.toNumber()) * (solPrice)).toFixed(quoteDecimals);
-    
+            const tokenPriceSOL = tokenInfo.price.toNumber();
+            const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
             const priceImpact = tokenInfo.priceImpact.toFixed(2);
             const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     
@@ -287,6 +287,9 @@ export async function display_snipe_options(ctx: any, msgTxt?: string) {
 
 export async function display_after_Snipe_Buy(ctx: any) {
     const priority_Level = ctx.session.priorityFees;
+    const chatId = ctx.chat.id;
+    const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
+    const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
     const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
@@ -304,16 +307,17 @@ export async function display_after_Snipe_Buy(ctx: any) {
 
     // console.log("rayPoolKeys",rayPoolKeys)
     const tokenAddress = new PublicKey(baseMint);
-    const chatId = ctx.chat.id;
-    const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
-    const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
-    const [tokenMetadataResult, solPrice, tokenInfo, balanceInSOL] = await Promise.all([
+   
+    const [tokenMetadataResult, solPrice, tokenInfo, balanceInSOL,userPosition] = await Promise.all([
         getTokenMetadata(ctx, tokenAddress.toBase58()),
         getSolanaDetails(),
         quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
         getSolBalance(userPublicKey, connection),
+        UserPositions.find({ positionChatId: chatId, walletId: userPublicKey },  { positions: { $slice: -7} } )
 
     ]);
+    // const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userPublicKey },  { positions: { $slice: -7} } );
+
     // console.log(tokenInfo.price.toNumber(), solPrice);
 
     const {
@@ -337,13 +341,44 @@ export async function display_after_Snipe_Buy(ctx: any) {
     const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
     const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
 
-    const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
-    const tokenPriceUSD = (Number(tokenInfo.price.toNumber()) * (solPrice)).toFixed(quoteDecimals);
+    const tokenPriceSOL = tokenInfo.price.toNumber();
+    const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
 
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
     const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection);
+    console.log('usertokenbalance',userTokenBalance)
+    //Trade psition after buying and sniping
+
+    const specificPosition = userPosition[0].positions.find((pos: any) => new PublicKey(pos.baseMint).equals(tokenAddress));
+    let initialInUSD = 0;
+    let initialInSOL = 0;
+    let valueInUSD: any ;
+    let valueInSOL: any ;
+    let profitPercentage ;
+    let profitInUSD ;
+    let profitInSol ;
+
+   
+    if(specificPosition && specificPosition.amountOut ){
+
+     initialInUSD = (specificPosition.amountIn / 1e9) * Number(solPrice);
+     initialInSOL = (specificPosition.amountIn / 1e9);
+     valueInUSD = (specificPosition.amountOut - (userTokenBalance *  Math.pow(10,baseDecimals) )) < 5 ? userTokenBalance * Number(tokenPriceUSD) : 'N/A';
+     console.log('valueinsol',(Number(specificPosition.amountOut) - Number(userTokenBalance * Math.pow(10,baseDecimals))))
+
+     valueInSOL = (specificPosition.amountOut - (userTokenBalance * Math.pow(10,baseDecimals))) < 5 ? Number(((userTokenBalance.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)) : 'N/A';
+    profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(specificPosition.amountIn) / 1e9 )) / (Number(specificPosition.amountIn) / 1e9) * 100 : 'N/A';
+    profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
+     profitInSol = valueInSOL != 'N/A' ? Number(((userTokenBalance.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)) - initialInSOL : 'N/A';
+
+     console.log('valueInUSD',valueInUSD);
+     console.log('valueInSOL',valueInSOL);
+     console.log('profitPercentage',profitPercentage);
+
+    }
+  
         // Construct the message
         let options: any;
         let messageText: any;
@@ -357,8 +392,11 @@ export async function display_after_Snipe_Buy(ctx: any) {
                 `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
                 // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
                 `Price Impact (5.0 SOL) : <b>${priceImpact}%</b>  |  (1.0 SOL): <b> ${priceImpact_1}%</b>\n\n` +
+                `---<code>Trade Position</code>---\n` +
+                `Initial : <b>${(initialInSOL).toFixed(3)} SOL</b> | <b>${(initialInUSD.toFixed(3))} USD</b>\n` +
+                `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n` +
+                `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${(Number(userTokenBalance) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${(Number(userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n\n` +
                 `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
-                `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
                 `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
 
             // Define buy mode inline keyboard
@@ -391,6 +429,9 @@ export async function display_after_Snipe_Buy(ctx: any) {
 
 export async function Refresh_display_after_Snipe_Buy(ctx: any) {
     const priority_Level = ctx.session.priorityFees;
+    const chatId = ctx.chat.id;
+    const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
+    const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
     const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
@@ -408,16 +449,17 @@ export async function Refresh_display_after_Snipe_Buy(ctx: any) {
 
     // console.log("rayPoolKeys",rayPoolKeys)
     const tokenAddress = new PublicKey(baseMint);
-    const chatId = ctx.chat.id;
-    const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
-    const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
-    const [tokenMetadataResult, solPrice, tokenInfo, balanceInSOL] = await Promise.all([
+   
+    const [tokenMetadataResult, solPrice, tokenInfo, balanceInSOL,userPosition] = await Promise.all([
         getTokenMetadata(ctx, tokenAddress.toBase58()),
         getSolanaDetails(),
         quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
         getSolBalance(userPublicKey, connection),
+        UserPositions.find({ positionChatId: chatId, walletId: userPublicKey },  { positions: { $slice: -7} } )
 
     ]);
+    // const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userPublicKey },  { positions: { $slice: -7} } );
+
     // console.log(tokenInfo.price.toNumber(), solPrice);
 
     const {
@@ -441,29 +483,58 @@ export async function Refresh_display_after_Snipe_Buy(ctx: any) {
     const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
     const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
 
-    const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
-    const tokenPriceUSD = (Number(tokenInfo.price.toNumber()) * (solPrice)).toFixed(quoteDecimals);
-
+    const tokenPriceSOL = tokenInfo.price.toNumber();
+    const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
     const { userTokenBalance, decimals, userTokenSymbol } = await getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection);
-        // Construct the message
+    //Trade psition after buying and sniping
+
+    const specificPosition = userPosition[0].positions.find((pos: any) => new PublicKey(pos.baseMint).equals(tokenAddress));
+    let initialInUSD = 0;
+    let initialInSOL = 0;
+    let valueInUSD: any ;
+    let valueInSOL: any ;
+    let profitPercentage ;
+    let profitInUSD ;
+    let profitInSol ;
+   
+   
+   if(specificPosition && specificPosition.amountOut ){
+ 
+    initialInSOL = Number(specificPosition.amountIn) / 1e9;
+    initialInUSD = initialInSOL * Number(solPrice);
+    valueInUSD = (specificPosition.amountOut - (userTokenBalance *  Math.pow(10,baseDecimals) )) < 5 ? userTokenBalance * Number(tokenPriceUSD) : 'N/A';
+     console.log('valueinsol',(Number(specificPosition.amountOut) - Number(userTokenBalance * Math.pow(10,baseDecimals))))
+
+     valueInSOL = (specificPosition.amountOut - (userTokenBalance * Math.pow(10,baseDecimals))) < 5 ? Number(((userTokenBalance.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)) : 'N/A';
+    profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(specificPosition.amountIn) / 1e9 )) / (Number(specificPosition.amountIn) / 1e9) * 100 : 'N/A';
+   profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
+    profitInSol = valueInSOL != 'N/A' ? Number(((userTokenBalance.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)) - initialInSOL : 'N/A';
+    console.log('valueInUSD',valueInUSD);
+    console.log('valueInSOL',valueInSOL);
+    console.log('profitPercentage',profitPercentage);
+   }
         let options: any;
         let messageText: any;
 
 
-            messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
-                `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
-                `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
-                `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
-                `Market Cap: <b>${formattedmac} USD</b>\n` +
-                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
-                // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
-                `Price Impact (5.0 SOL) : <b>${priceImpact}%</b>  |  (1.0 SOL): <b> ${priceImpact_1}%</b>\n\n` +
-                `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
-                `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance?.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
-                `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
+        messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
+        `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
+        `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
+        `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
+        `Market Cap: <b>${formattedmac} USD</b>\n` +
+        `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
+        // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
+        `Price Impact (5.0 SOL) : <b>${priceImpact}%</b>  |  (1.0 SOL): <b> ${priceImpact_1}%</b>\n\n` +
+        `---<code>Trade Position</code>---\n` +
+        `Initial : <b>${(initialInSOL).toFixed(3)} SOL</b> | <b>${(initialInUSD.toFixed(3))} USD</b>\n` +
+        `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n` +
+        `Token Balance: <b>${userTokenBalance?.toFixed(3)} $${userTokenSymbol} </b> | <b>${(Number(userTokenBalance) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${(Number(userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n\n` +
+
+        `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
+        `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
 
             // Define buy mode inline keyboard
             options = {

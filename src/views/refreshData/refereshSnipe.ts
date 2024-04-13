@@ -70,8 +70,8 @@ export async function refreshSnipeDetails(ctx: any) {
     }
     const [lowPriorityFee, mediumPriorityFee, highPriorityFee, maxPriorityFee] = await getPriorityFees(ctx, raydiumId);
  
-    const tokenPriceSOL = tokenInfo.price.toNumber().toFixed(quoteDecimals);
-    const tokenPriceUSD = (Number(tokenInfo.price.toNumber()) * (solPrice)).toFixed(quoteDecimals);const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
+    const tokenPriceSOL = tokenInfo.price.toNumber();
+    const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);    const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     const formattedmac= await formatNumberToKOrM(marketCap) ?? "NA";
