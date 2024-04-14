@@ -95,7 +95,7 @@ export async function display_token_details(ctx: any) {
                 `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
                 `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
                 `Market Cap: <b>${formattedmac} USD</b>\n` +
-                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
+                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL.toFixed(9)} SOL</b> \n\n` +
                 // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
                 `Price Impact (5.0 SOL) : <b>${priceImpact}%</b>  |  (1.0 SOL): <b> ${priceImpact_1}%</b>\n\n` +
                 `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
@@ -127,7 +127,7 @@ export async function display_token_details(ctx: any) {
                 `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
                 `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
                 `Market Cap: <b>${formattedmac} USD</b>\n` +
-                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
+                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL.toFixed(9)} SOL</b> \n\n` +
                 // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
                 `Price Impact (5.0 SOL) : <b>${priceImpact}%</b>  |  (1.0 SOL): <b> ${priceImpact_1}%</b>\n\n` +
                 `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) / 1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
@@ -246,7 +246,7 @@ export async function display_snipe_options(ctx: any, msgTxt?: string) {
                 `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
                 `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
                 `Market Cap: <b>${formattedmac} USD</b>\n` +
-                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
+                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL.toFixed(9)} SOL</b> \n\n` +
                 // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
                 `price Impact (5.0 SOL) : <b>${priceImpact}%</b> | (1.0 SOL): <b>${priceImpact_1}%</b> \n\n` +
                 `Pool Status: <b>${poolStatusMessage}</b>\n\n` +
@@ -366,16 +366,16 @@ export async function display_after_Snipe_Buy(ctx: any) {
      initialInUSD = (specificPosition.amountIn / 1e9) * Number(solPrice);
      initialInSOL = (specificPosition.amountIn / 1e9);
      valueInUSD = (specificPosition.amountOut - (userTokenBalance *  Math.pow(10,baseDecimals) )) < 5 ? userTokenBalance * Number(tokenPriceUSD) : 'N/A';
-     console.log('valueinsol',(Number(specificPosition.amountOut) - Number(userTokenBalance * Math.pow(10,baseDecimals))))
+    //  console.log('valueinsol',(Number(specificPosition.amountOut) - Number(userTokenBalance * Math.pow(10,baseDecimals))))
 
      valueInSOL = (specificPosition.amountOut - (userTokenBalance * Math.pow(10,baseDecimals))) < 5 ? Number(((userTokenBalance.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)) : 'N/A';
     profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(specificPosition.amountIn) / 1e9 )) / (Number(specificPosition.amountIn) / 1e9) * 100 : 'N/A';
     profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
      profitInSol = valueInSOL != 'N/A' ? Number(((userTokenBalance.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)) - initialInSOL : 'N/A';
 
-     console.log('valueInUSD',valueInUSD);
-     console.log('valueInSOL',valueInSOL);
-     console.log('profitPercentage',profitPercentage);
+    //  console.log('valueInUSD',valueInUSD);
+    //  console.log('valueInSOL',valueInSOL);
+    //  console.log('profitPercentage',profitPercentage);
 
     }
   
@@ -389,7 +389,7 @@ export async function display_after_Snipe_Buy(ctx: any) {
                 `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
                 `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
                 `Market Cap: <b>${formattedmac} USD</b>\n` +
-                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
+                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL.toFixed(9)} SOL</b> \n\n` +
                 // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
                 `Price Impact (5.0 SOL) : <b>${priceImpact}%</b>  |  (1.0 SOL): <b> ${priceImpact_1}%</b>\n\n` +
                 `---<code>Trade Position</code>---\n` +
@@ -525,7 +525,7 @@ export async function Refresh_display_after_Snipe_Buy(ctx: any) {
         `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
         `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
         `Market Cap: <b>${formattedmac} USD</b>\n` +
-        `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
+        `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL.toFixed(9)} SOL</b> \n\n` +
         // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
         `Price Impact (5.0 SOL) : <b>${priceImpact}%</b>  |  (1.0 SOL): <b> ${priceImpact_1}%</b>\n\n` +
         `---<code>Trade Position</code>---\n` +

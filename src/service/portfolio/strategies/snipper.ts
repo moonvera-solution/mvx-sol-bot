@@ -160,12 +160,12 @@ export async function startSnippeSimulation(
         // }
     });
     //0.005  0.01 0.05 0.1 0.2
-    //low   medium high very high extreme
-    //MVXBOT_FEES
-    //mvxFeeInx is the amount of fees to be paid to the bot, it is calculated as a percentage of the amountIn
+    //low medium high very high extreme
+    // MVXBOT_FEES
+    // mvxFeeInx is the amount of fees to be paid to the bot, it is calculated as a percentage of the amountIn
     // we need to calculate the referral fee and send it to the referral wallet
-    //the fees sent to the referral wallet is calculated as a percentage of the mvxFeeInx
-    //referralFee
+    // the fees sent to the referral wallet is calculated as a percentage of the mvxFeeInx
+    // referralFee
     const referralWallet = ctx.session.generatorWallet;
     const referralFee = ctx.session.referralCommision / 100;
 
@@ -216,9 +216,7 @@ export async function startSnippeSimulation(
 
 
     const userSolBalance = await getSolBalance(userWallet.publicKey, connection);
-    // console.log('userSolBalance', userSolBalance);
     minimumBalanceNeeded += totalComputeBudget;
-    // console.log('minimumBalanceNeeded', minimumBalanceNeeded);
 
     if ((userSolBalance * 1e9) < minimumBalanceNeeded) {
         await ctx.api.sendMessage(chatId, `🔴 Insufficient balance for Turbo Snipping. Your balance is ${userSolBalance} SOL.`);
@@ -234,9 +232,7 @@ export async function startSnippeSimulation(
         });
     } else {
         maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
-            lockedWritableAccounts: [
-                new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'),
-            ], percentile: ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
+            lockedWritableAccounts: [ new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8')], percentile: ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
             fallback: true
         });
     }
@@ -244,19 +240,10 @@ export async function startSnippeSimulation(
     if(ctx.session.priorityFee == PriotitizationFeeLevels.HIGH) maxPriorityFee = maxPriorityFee * 3;
     if(ctx.session.priorityFee == PriotitizationFeeLevels.MAX) maxPriorityFee = maxPriorityFee * 1.5;
     const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: (maxPriorityFee), });
-    //      // Simulate the transaction and add the compute unit limit instruction to your transaction
-    let [Units, recentBlockhash] = await Promise.all([
-        getSimulationUnits(  ctx,connection, innerTransactions[0].instructions, userWallet.publicKey),
-        connection.getLatestBlockhash(),
-    ]);
 
-    if (Units) {
-        console.log("units: ", Units);
-        Units = Math.ceil(Units * 2); // margin of error
-        console.log("Units", Units);
-        innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Units }));
-    }
-    console.log("maxPriorityFee", maxPriorityFee);
+    let units = await getSimulationUnits(connection, innerTransactions[0].instructions, userWallet.publicKey);
+    
+    if (units) innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(units * 2) }));
 
     innerTransactions[0].instructions.push(priorityFeeInstruction);
 

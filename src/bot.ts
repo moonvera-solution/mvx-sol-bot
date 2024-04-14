@@ -599,13 +599,13 @@ bot.on("callback_query", async (ctx: any) => {
     const matchSell = data.match(positionCallSell);
     const matchBuy = data.match(positionCallBuy);
     const matchNavigate = data.match(positionNavigate);
+
     if (matchSell) {
       const parts = data.split("_");
       const sellPercentage = parts[1]; // '25', '50', '75', or '100'
       const positionIndex = parts[2]; // Position index
       ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
-      // console.log("positionIndex", positionIndex);
-      // console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool.baseMint);
+      
       await handle_radyum_swap(
         ctx,
         ctx.session.activeTradingPool.baseMint,

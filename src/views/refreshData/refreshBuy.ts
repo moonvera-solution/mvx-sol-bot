@@ -72,7 +72,7 @@ export async function refreshTokenDetails(ctx: any) {
                 `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
                 `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
                 `Market Cap: <b>${formattedmac} USD</b>\n` +
-                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
+                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL.toFixed(9)} SOL</b> \n\n` +
                 // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
                 `Price Impact (5.0 SOL) : <b>${priceImpact}%</b>  |  (1.0 SOL): <b> ${priceImpact_1}%</b>\n\n` +
                 `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) /1e9).toFixed(7)} <b>SOL</b> \n\n` +
@@ -103,7 +103,7 @@ export async function refreshTokenDetails(ctx: any) {
             `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
             `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
             `Market Cap: <b>${formattedmac} USD</b>\n` +
-            `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
+            `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL.toFixed(9)} SOL</b> \n\n` +
             // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
             `Price Impact (5.0 SOL) : <b>${priceImpact}%</b>  |  (1.0 SOL): <b> ${priceImpact_1}%</b>\n\n` +
             `--<code>Priority fees</code>--\n Low: ${(Number(lowPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(mediumPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(highPriorityFee) /1e9).toFixed(7)} <b>SOL</b>\n Max: ${(Number(maxPriorityFee) /1e9).toFixed(7)} <b>SOL</b> \n\n` +

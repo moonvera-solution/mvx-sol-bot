@@ -26,7 +26,7 @@ import {
   WALLET_MVX
 } from "../../../../../config";
 import { formatAmmKeysById } from "../raydium-utils/formatAmmKeysById";
-import { getSimulationUnits, getMaxPrioritizationFeeByPercentile, PriotitizationFeeLevels } from "../../../fees/priorityFees";
+import { getSimulationUnits,simulateTx, getMaxPrioritizationFeeByPercentile, PriotitizationFeeLevels } from "../../../fees/priorityFees";
 import {
   buildAndSendTx,
   getWalletTokenAccount,
@@ -150,7 +150,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
       toPubkey: new PublicKey(WALLET_MVX),
       lamports: input.mvxFee.toNumber(), // 5_000 || 6_000
     });
-    // innerTransactions[0].instructions.push(transferIx);
+
     innerTransactions[0].instructions.push(mvxFeeInx);
     minSwapAmountBalance += input.mvxFee.toNumber();
   }
@@ -163,30 +163,20 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     ], percentile: input.ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
     fallback: true
   });
-  console.log("maxPriorityFee: ", maxPriorityFee);
 
   minSwapAmountBalance += input.ctx.session.priorityFee;
+
   const balanceInSOL = await getSolBalance(input.wallet.publicKey.toBase58(), connection);
   if (balanceInSOL < minSwapAmountBalance) await input.ctx.api.sendMessage(input.ctx.portfolio.chatId, '🔴 Insufficient balance for transaction.', { parse_mode: 'HTML', disable_web_page_preview: true });
 
   if(input.ctx.priorityFee == PriotitizationFeeLevels.HIGH) maxPriorityFee = maxPriorityFee * 3;
   if(input.ctx.priorityFee == PriotitizationFeeLevels.MAX) maxPriorityFee = maxPriorityFee * 1.5;
   
-  const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee });
+  innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee }));
 
   // Simulate the transaction and add the compute unit limit instruction to your transaction
-  let [units] = await Promise.all([
-    getSimulationUnits(input.ctx,connection, innerTransactions[0].instructions, input.wallet.publicKey),
-  ]);
-
-  if (units) {
-    console.log("units: ",units);
-    units = Math.ceil(units * 1.1); // margin of error
-    innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: units }));
-  }
-
-  innerTransactions[0].instructions.push(priorityFeeInstruction);
-  // console.log("Inx #", innerTransactions[0].instructions.length);
+  let units = await simulateTx(connection, innerTransactions[0].instructions, input.wallet.publicKey);
+  if (units) innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(units * 1.1) }));
 
   return {
     txids: await buildAndSendTx(
