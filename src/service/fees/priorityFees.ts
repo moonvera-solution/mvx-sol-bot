@@ -227,7 +227,7 @@ export async function getSimulationUnits(
       recentBlockhash: PublicKey.default.toString(),
     }).compileToV0Message()
   );
- 
+
   const simulation = await connection.simulateTransaction(testVersionedTxn, { replaceRecentBlockhash: true, commitment: 'processed' });
   console.info("units consumed", simulation.value.unitsConsumed);
   return simulation.value.unitsConsumed;
@@ -251,10 +251,21 @@ export async function simulateTx(
       recentBlockhash: PublicKey.default.toString(),
     }).compileToV0Message()
   );
- 
-  const simulation = await connection.simulateTransaction(testVersionedTxn, { replaceRecentBlockhash: true, commitment: 'processed' });
-  if (simulation.value.err) throw Error(simulation.value.err.toString());
 
-  console.info("units consumed", simulation.value.unitsConsumed);
-  return simulation.value.unitsConsumed;
+  const sim = await connection.simulateTransaction(testVersionedTxn, { replaceRecentBlockhash: true, commitment: 'processed' });
+  let msg;
+  const TRANSFER_ERROR = /Transfer: insufficient lamports/;
+  const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
+  const FEES_ERROR = /InsufficientFundsForFee/;
+
+  if (sim.value && sim.value.err && sim.value.logs) {
+    if (sim.value.logs.find((logMsg: any) => TRANSFER_ERROR.test(logMsg))) { msg = `🔴 Insufficient balance for transaction.`; };
+    if (sim.value.logs && sim.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) { msg = `🔴 Slippage error, try increasing your slippage %.`; };
+    if (sim.value.logs.find((logMsg: any) => FEES_ERROR.test(logMsg))) { msg = `🔴 Insufficient balance for transaction fees.`; };
+    if (!msg) { msg = sim.value.err }
+    throw Error(msg.toString());
+  }
+
+  console.info("units consumed", sim.value.unitsConsumed);
+  return sim.value.unitsConsumed;
 }
