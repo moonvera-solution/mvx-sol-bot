@@ -176,7 +176,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
 
   // Simulate the transaction and add the compute unit limit instruction to your transaction
   let [units] = await Promise.all([
-    getSimulationUnits(input.ctx,connection, innerTransactions[0].instructions, input.wallet.publicKey),
+    getSimulationUnits(connection, innerTransactions[0].instructions, input.wallet.publicKey),
   ]);
 
   if (units) {
