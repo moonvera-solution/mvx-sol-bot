@@ -214,30 +214,19 @@ export async function handle_radyum_swap(
                 }
 
             }).catch(async (error: any) => {
-        
+                let msg;
                 const TRANSFER_ERROR = /Transfer: insufficient lamports/;
-                if (error.logs.find((logMsg: any) => TRANSFER_ERROR.test(logMsg))) {
-                    console.log(error.logs)
-                    ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction.`);
-                    return;
-                }
                 const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
-                if (error.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) {
-                    console.log(error.logs)
-                    ctx.api.sendMessage(ctx.chat.id, `🔴 Slippage error, try increasing your slippage %.`);
-                    return;
-                }
-                
                 const FEES_ERROR = 'InsufficientFundsForFee';
-                if (error.logs === FEES_ERROR) {
-                    console.log(error.logs)
-                    ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction fees.`);
-                    return;
+                if (error.value && error.value.logs) {
+                    if (error.value.logs.find((logMsg: any) => TRANSFER_ERROR.test(logMsg))) { msg = `🔴 Insufficient balance for transaction.`; };
+                    if (error.value.logs && error.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) { msg = `🔴 Slippage error, try increasing your slippage %.`; };
+                    if (error.value.los === FEES_ERROR) { msg = `🔴 Insufficient balance for transaction fees.`; };
+                }else{
+                    msg = `🔴 ${side.toUpperCase()} ${error.message}`;
                 }
-
-                await ctx.api.sendMessage(chatId, error.message);
-                console.info('error', error);
-                return error;
+                await ctx.api.sendMessage(chatId, msg);
+                return;
             });
         }
     } catch (e: any) {
