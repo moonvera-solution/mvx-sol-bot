@@ -8,7 +8,7 @@ import { ISESSION_DATA } from '../../util/types';
 import { saveUserPosition } from "../positions";
 import { raydium_amm_swap } from '../../dex';
 import BigNumber from 'bignumber.js';
-import { syncDisplayPositions } from '../../../views/portfolioView';
+import axios from 'axios';
 import bs58 from 'bs58';
 import { Referrals, UserPositions } from '../../../db/mongo/schema';
 
@@ -121,7 +121,6 @@ export async function handle_radyum_swap(
 
                 if (await waitForConfirmation(ctx, txids[0])) { // get swap amountOut
                     while (extractAmount == 0) { // it has to find it since its a transfer tx
-                        console.log('extractAmount', extractAmount);
                         const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
                         let txAmount: Array<any> | undefined;
                         if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions) {
@@ -173,7 +172,6 @@ export async function handle_radyum_swap(
                                 amountIn: oldPositionSol ? oldPositionSol + swapAmountIn : swapAmountIn,
                                 amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
                             });
-                            await syncDisplayPositions(ctx);
                         }
 
                     } else if (side == 'sell') {
@@ -203,7 +201,6 @@ export async function handle_radyum_swap(
                             amountIn: newAmountIn,
                             amountOut: newAmountOut,
                         });
-                        await syncDisplayPositions(ctx);
                     }
                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
                     if (side == 'buy') {

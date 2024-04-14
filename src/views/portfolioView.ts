@@ -405,26 +405,3 @@ export async function display_refresh_single_spl_positions(ctx: any) {
 
     }
 }
-
-
-
-/**
- * In this code, we first convert the number to a string and extract the first 5 digits. 
- * Then, we round the last digit of these 5 digits. If the last digit is 5 or more, 
- * it gets rounded up to 10, otherwise it gets rounded down to 0.
- * Finally, we concatenate the first 4 digits with the rounded last digit and convert the result back to a number.
- */
-function roundLargeNumber(num: string) {
-    let strNum = num.toString();
-    let firstFiveDigits = strNum.substring(0, 5);
-    let lastDigit = Number(firstFiveDigits[4]);
-    let roundedLastDigit = Math.round(lastDigit / 5) * 5;
-    let res = Number(firstFiveDigits.substring(0, 4) + roundedLastDigit);
-    return String(res).length < 5 ? res : String(res).substring(0, 4)
-}
-
-
-// formatSubscriptNumber(new BigNumber('0.00000004566')).then((r) => (console.log("=>",r)));
-// formatSubscriptNumber(new BigNumber('234540.0000000004566')).then((r) => (console.log("=>",r)));
-// formatSubscriptNumber(new BigNumber('20.4566')).then((r) => (console.log("=>",r)));
-// display_spl_positions('').then().catch(console.error);
