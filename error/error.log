@@ -54,4 +54,60 @@
     at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
     at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
     at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 4/12/2024, 3:04:59 PM - bot on positions cmd
+ TypeError 
+ Cannot read properties of undefined (reading 'positions')
+ TypeError: Cannot read properties of undefined (reading 'positions')
+    at display_spl_positions (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:19:25)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:250:5
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 4/12/2024, 4:06:59 PM - callback_query
+ TypeError 
+ Cannot read properties of undefined (reading 'baseMint')
+ TypeError: Cannot read properties of undefined (reading 'baseMint')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:608:82
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:51:41
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:51:41
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:48
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 4/13/2024, 12:34:00 AM - callback_query
+ TypeError 
+ Cannot read properties of undefined (reading 'positions')
+ TypeError: Cannot read properties of undefined (reading 'positions')
+    at display_spl_positions (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:19:25)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:1044:9
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/13/2024, 12:34:00 AM - callback_query
+ TypeError 
+ Cannot read properties of undefined (reading 'positions')
+ TypeError: Cannot read properties of undefined (reading 'positions')
+    at display_spl_positions (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:19:25)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:1044:9
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
  
