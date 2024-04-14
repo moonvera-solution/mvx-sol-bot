@@ -118,9 +118,11 @@ export async function handle_radyum_swap(
                 let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing with ${getPriorityFeeLabel(ctx.session.priorityFees)} priotity fee. <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>. Please wait for confirmation...`
                 await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
                 let extractAmount: number = 0;
+                let counter = 0;
 
                 if (await waitForConfirmation(ctx, txids[0])) { // get swap amountOut
-                    while (extractAmount == 0) { // it has to find it since its a transfer tx
+                    while (extractAmount == 0 && counter < 30) { // it has to find it since its a transfer tx
+                        counter++;
                         const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
                         let txAmount: Array<any> | undefined;
                         if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions) {
