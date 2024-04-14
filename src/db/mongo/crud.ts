@@ -8,7 +8,7 @@ import bs58 from "bs58";
 import { ISESSION_DATA, RAYDIUM_POOL_TYPE, DEFAULT_PUBLIC_KEY, DefaultPoolInfoData } from '../../service/util/types';
 import { SecretsManagerClient, GetSecretValueCommand, } from "@aws-sdk/client-secrets-manager";
 const user = 'mvxKing'//encodeURIComponent(process.env.DB_USER!);
-const password = 'kingstonEmpireOfTheSun'// encodeURIComponent(process.env.DB_PASSWORD!);
+const password = 'kingstonEmpireOfTheSun'//encodeURIComponent(process.env.DB_PASSWORD!); // mvxKing
 const isProd = process.env.NODE_ENV == 'PROD';
 const local_url = `mongodb://127.0.0.1:27017/test`;
 

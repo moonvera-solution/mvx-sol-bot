@@ -54,4 +54,18 @@
     at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
     at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
     at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 4/13/2024, 2:56:34 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:711:9
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
  

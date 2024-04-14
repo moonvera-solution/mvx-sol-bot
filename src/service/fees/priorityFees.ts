@@ -200,8 +200,7 @@ export const getRecentPrioritizationFeesByPercentile = async (
   recentPrioritizationFees.sort((a, b) => a.slot - b.slot);
 
   // return the first n prioritization fees
-  if (slotsToReturn > 0)
-    return recentPrioritizationFees.slice(0, slotsToReturn);
+  if (slotsToReturn > 0) return recentPrioritizationFees.slice(0, slotsToReturn);
 
   return recentPrioritizationFees;
 };
@@ -211,7 +210,6 @@ export const getRecentPrioritizationFeesByPercentile = async (
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
 export async function getSimulationUnits(
-  ctx: any,
   connection: Connection,
   instructions: TransactionInstruction[],
   payer: PublicKey
@@ -229,46 +227,34 @@ export async function getSimulationUnits(
       recentBlockhash: PublicKey.default.toString(),
     }).compileToV0Message()
   );
+ 
+  const simulation = await connection.simulateTransaction(testVersionedTxn, { replaceRecentBlockhash: true, commitment: 'processed' });
+  console.info("units consumed", simulation.value.unitsConsumed);
+  return simulation.value.unitsConsumed;
+}
 
-  const simulation = await connection.simulateTransaction(testVersionedTxn, {
-    replaceRecentBlockhash: true,
-    sigVerify: false,
-  });
+export async function simulateTx(
+  connection: Connection,
+  instructions: TransactionInstruction[],
+  payer: PublicKey
+): Promise<number | undefined> {
 
-  if (simulation) {
-    const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
-    if (simulation.value.logs && simulation.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) {
-      console.log(simulation.value.logs)
-      ctx.api.sendMessage(ctx.chat.id, `🔴 Slippage error, try increasing your slippage %.`);
-      return;
-    }
-    const BALANCE_ERROR = /Transfer: insufficient lamports/;
-    if (simulation.value.logs && simulation.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
-      console.log(simulation.value.logs)
-      ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction.`);
-      return;
-    }
-    const INSUFFICIENT_FUNDS = /insufficient funds/;
-    if (simulation.value.logs && simulation.value.logs.find((logMsg: any) => INSUFFICIENT_FUNDS.test(logMsg))) {
-      console.log(simulation.value.logs)
-      ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient funds`);
-      return;
-    }
+  const testInstructions = [
+    ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
+    ...instructions,
+  ];
 
-    const FEES_ERROR = 'InsufficientFundsForFee';
-    if (simulation.value.err === FEES_ERROR) {
-      console.log(simulation.value.logs)
-      ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction fees.`);
-      return;
-    }
+  const testVersionedTxn = new VersionedTransaction(
+    new TransactionMessage({
+      instructions: testInstructions,
+      payerKey: payer,
+      recentBlockhash: PublicKey.default.toString(),
+    }).compileToV0Message()
+  );
+ 
+  const simulation = await connection.simulateTransaction(testVersionedTxn, { replaceRecentBlockhash: true, commitment: 'processed' });
+  if (simulation.value.err) throw Error(simulation.value.err.toString());
 
-    if(simulation.value.err){
-      const err = (JSON.stringify(simulation.value.err));
-      ctx.api.sendMessage(ctx.chat.id, `🔴 - ${err}`);
-      return;
-    }
-
-    console.log("simulation.value.unitsConsumed", simulation.value.unitsConsumed);
-    return simulation.value.unitsConsumed;
-  }
+  console.info("units consumed", simulation.value.unitsConsumed);
+  return simulation.value.unitsConsumed;
 }

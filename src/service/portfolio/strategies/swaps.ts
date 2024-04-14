@@ -8,7 +8,7 @@ import { ISESSION_DATA } from '../../util/types';
 import { saveUserPosition } from "../positions";
 import { raydium_amm_swap } from '../../dex';
 import BigNumber from 'bignumber.js';
-import axios from 'axios';
+import { syncDisplayPositions } from '../../../views/portfolioView';
 import bs58 from 'bs58';
 import { Referrals, UserPositions } from '../../../db/mongo/schema';
 
@@ -121,6 +121,7 @@ export async function handle_radyum_swap(
 
                 if (await waitForConfirmation(ctx, txids[0])) { // get swap amountOut
                     while (extractAmount == 0) { // it has to find it since its a transfer tx
+                        console.log('extractAmount', extractAmount);
                         const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
                         let txAmount: Array<any> | undefined;
                         if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions) {
@@ -172,6 +173,7 @@ export async function handle_radyum_swap(
                                 amountIn: oldPositionSol ? oldPositionSol + swapAmountIn : swapAmountIn,
                                 amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
                             });
+                            await syncDisplayPositions(ctx);
                         }
 
                     } else if (side == 'sell') {
@@ -201,6 +203,7 @@ export async function handle_radyum_swap(
                             amountIn: newAmountIn,
                             amountOut: newAmountOut,
                         });
+                        await syncDisplayPositions(ctx);
                     }
                     await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
                     if (side == 'buy') {
@@ -214,30 +217,19 @@ export async function handle_radyum_swap(
                 }
 
             }).catch(async (error: any) => {
-        
+                let msg;
                 const TRANSFER_ERROR = /Transfer: insufficient lamports/;
-                if (error.logs.find((logMsg: any) => TRANSFER_ERROR.test(logMsg))) {
-                    console.log(error.logs)
-                    ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction.`);
-                    return;
-                }
                 const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
-                if (error.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) {
-                    console.log(error.logs)
-                    ctx.api.sendMessage(ctx.chat.id, `🔴 Slippage error, try increasing your slippage %.`);
-                    return;
-                }
-                
                 const FEES_ERROR = 'InsufficientFundsForFee';
-                if (error.logs === FEES_ERROR) {
-                    console.log(error.logs)
-                    ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction fees.`);
-                    return;
+                if (error.value && error.value.logs) {
+                    if (error.value.logs.find((logMsg: any) => TRANSFER_ERROR.test(logMsg))) { msg = `🔴 Insufficient balance for transaction.`; };
+                    if (error.value.logs && error.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) { msg = `🔴 Slippage error, try increasing your slippage %.`; };
+                    if (error.value.los === FEES_ERROR) { msg = `🔴 Insufficient balance for transaction fees.`; };
+                }else{
+                    msg = `🔴 ${side.toUpperCase()} ${error.message}`;
                 }
-
-                await ctx.api.sendMessage(chatId, error.message);
-                console.info('error', error);
-                return error;
+                await ctx.api.sendMessage(chatId, msg);
+                return;
             });
         }
     } catch (e: any) {
