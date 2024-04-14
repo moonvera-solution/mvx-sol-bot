@@ -85,7 +85,7 @@ export async function refreshSnipeDetails(ctx: any) {
                 `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
                 `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
                 `Market Cap: <b>${formattedmac} USD</b>\n` +
-                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
+                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL.toFixed(9)} SOL</b> \n\n` +
                 // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
                 `price Impact (5.0 SOL) : <b>${priceImpact}%</b> | (1.0 SOL): <b>${priceImpact_1}%</b> \n\n` +
                 `Pool Status: <b>${poolStatusMessage}</b>\n\n` +
