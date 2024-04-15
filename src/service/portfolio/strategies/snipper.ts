@@ -40,6 +40,7 @@ export async function snipperON(ctx: any, amount: string) {
         });
 
     let poolKeys = await getRayPoolKeys(ctx, snipeToken);
+    let isIntervalDone = false;
 
     let intervalId = setInterval(async () => {
         if (!poolKeys && ctx.session.snipeStatus) {
@@ -50,10 +51,22 @@ export async function snipperON(ctx: any, amount: string) {
             clearInterval(intervalId); // Stop the interval when the condition is no longer met
         }
     }, 300); // Adjust the interval time as needed
+    
+    setTimeout(() => {
+        clearInterval(intervalId);
+        isIntervalDone = true;
+    }, 300000); // 5 minutes in milliseconds
 
-    ctx.session.activeTradingPool = jsonInfo2PoolKeys(poolKeys.id) as LiquidityPoolKeys;;
-    console.log('Snipe lookup end, keys found.');
-    poolKeys && ctx.session.snipeStatus && await setSnipe(ctx, amount);
+    if(!poolKeys && isIntervalDone){
+        console.log('Snipe lookup end, keys not founda after 5 min.');
+        await ctx.api.sendMessage(ctx.chat.id, `🔴 Snipe 5min timeout, please set your snipper.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+    }else{
+        ctx.session.activeTradingPool = jsonInfo2PoolKeys(poolKeys.id) as LiquidityPoolKeys;;
+        console.log('Snipe lookup end, keys found.');
+        poolKeys && ctx.session.snipeStatus && await setSnipe(ctx, amount);
+    }
+
+
 } catch(e){
     console.log(e);
     logErrorToFile("bot on snipperON", e);
