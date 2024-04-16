@@ -233,7 +233,7 @@ export async function handle_radyum_swap(
         }
     } catch (e: any) {
         let msg;
-        if(e.message.match(/program error: 0x1/))msg = 'Unsifficient balance for transaction';
+        if(e.message.includes('program error: 0x1'))msg = 'Unsifficient balance for transaction';
         else msg = e.message;
 
         await ctx.api.sendMessage(chatId, `🔴 ${side.toUpperCase()} ${msg}`);
