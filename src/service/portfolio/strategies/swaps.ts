@@ -224,7 +224,7 @@ export async function handle_radyum_swap(
                     if (error.value.logs.find((logMsg: any) => TRANSFER_ERROR.test(logMsg))) { msg = `🔴 Insufficient balance for transaction.`; };
                     if (error.value.logs && error.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) { msg = `🔴 Slippage error, try increasing your slippage %.`; };
                     if (error.value.los === FEES_ERROR) { msg = `🔴 Insufficient balance for transaction fees.`; };
-                }else{
+                } else {
                     msg = `🔴 ${side.toUpperCase()} ${error.message}`;
                 }
                 await ctx.api.sendMessage(chatId, msg);
@@ -233,8 +233,9 @@ export async function handle_radyum_swap(
         }
     } catch (e: any) {
         let msg;
-        if(e.message.includes('program error: 0x1'))msg = 'Unsifficient balance for transaction';
-        else msg = e.message;
+        let regex = /program error: 0x1/;
+        if (regex.test(e.message)) { msg = 'Unsifficient balance for transaction';}
+        else { msg = e.message;}
 
         await ctx.api.sendMessage(chatId, `🔴 ${side.toUpperCase()} ${msg}`);
         console.error("ERROR on handle_radyum_trade: ", e);
