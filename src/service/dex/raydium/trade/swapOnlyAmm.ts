@@ -1,6 +1,7 @@
 
 import assert from "assert";
 import {
+  _100,
   jsonInfo2PoolKeys,
   Liquidity,
   LiquidityPoolKeys,
@@ -8,6 +9,8 @@ import {
   Token,
   TokenAmount
 } from "@raydium-io/raydium-sdk";
+
+import {getSimulationComputeUnits} from "@solana-developers/helpers";
 import BigNumber from "bignumber.js";
 import {
   SystemProgram,
@@ -16,7 +19,7 @@ import {
 } from "@solana/web3.js";
 import {
   Keypair,
-  PublicKey
+  PublicKey,
 } from "@solana/web3.js";
 import base58 from "bs58";
 import {
@@ -26,7 +29,7 @@ import {
   WALLET_MVX
 } from "../../../../../config";
 import { formatAmmKeysById } from "../raydium-utils/formatAmmKeysById";
-import { getSimulationUnits, getMaxPrioritizationFeeByPercentile, PriotitizationFeeLevels } from "../../../fees/priorityFees";
+import { getSimulationUnits, simulateTx, getMaxPrioritizationFeeByPercentile, PriotitizationFeeLevels } from "../../../fees/priorityFees";
 import {
   buildAndSendTx,
   getWalletTokenAccount,
@@ -59,7 +62,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys;
 
   let minSwapAmountBalance: number = 0;
-  // console.log("poolKeys", poolKeys);
+
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                       QUOTE SWAP                           */
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
@@ -150,7 +153,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
       toPubkey: new PublicKey(WALLET_MVX),
       lamports: input.mvxFee.toNumber(), // 5_000 || 6_000
     });
-    // innerTransactions[0].instructions.push(transferIx);
+
     innerTransactions[0].instructions.push(mvxFeeInx);
     minSwapAmountBalance += input.mvxFee.toNumber();
   }
@@ -163,30 +166,29 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     ], percentile: input.ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
     fallback: true
   });
-  console.log("maxPriorityFee: ", maxPriorityFee);
 
   minSwapAmountBalance += input.ctx.session.priorityFee;
+
   const balanceInSOL = await getSolBalance(input.wallet.publicKey.toBase58(), connection);
   if (balanceInSOL < minSwapAmountBalance) await input.ctx.api.sendMessage(input.ctx.portfolio.chatId, '🔴 Insufficient balance for transaction.', { parse_mode: 'HTML', disable_web_page_preview: true });
 
-  if(input.ctx.priorityFee == PriotitizationFeeLevels.HIGH) maxPriorityFee = maxPriorityFee * 3;
-  if(input.ctx.priorityFee == PriotitizationFeeLevels.MAX) maxPriorityFee = maxPriorityFee * 1.5;
+  if (input.ctx.priorityFee == PriotitizationFeeLevels.HIGH) maxPriorityFee = maxPriorityFee * 3;
+  if (input.ctx.priorityFee == PriotitizationFeeLevels.MAX) maxPriorityFee = maxPriorityFee * 1.5;
+  innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee }));
 
-  const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee });
+  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+  /*                       Tx Simulation                        */
+  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
-  // Simulate the transaction and add the compute unit limit instruction to your transaction
-  let [units] = await Promise.all([
-    getSimulationUnits(connection,innerTransactions[0].instructions, input.wallet.publicKey),
-  ]);
+  // 1.-  Simulate the transaction and add the compute unit limit instruction to your transaction
+  let units = await getSimulationComputeUnits(connection, innerTransactions[0].instructions, input.wallet.publicKey,[]);
+  console.log("units sol-helpers sdk",units);
+  innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil( units ?? 200_000 * 1.1) }));
 
-  if (units) {
-    console.log("units: ",units);
-    units = Math.ceil(units * 1.1); // margin of error
-    innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: units }));
-  }
 
-  innerTransactions[0].instructions.push(priorityFeeInstruction);
-  // console.log("Inx #", innerTransactions[0].instructions.length);
+  // 2.- Circular dependency on units so we need to   simulate again.
+  await simulateTx(connection, innerTransactions[0].instructions, input.wallet.publicKey);
+  console.log("after simulateTx...");
 
   return {
     txids: await buildAndSendTx(

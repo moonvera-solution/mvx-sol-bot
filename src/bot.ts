@@ -338,8 +338,9 @@ bot.command("settings", async (ctx) => {
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
 bot.on("message", async (ctx) => {
+  const chatId = ctx.chat.id;
+
   try {
-    const chatId = ctx.chat.id;
     const latestCommand = ctx.session.latestCommand;
     const msgTxt = ctx.update.message.text;
     switch (latestCommand) {
@@ -577,9 +578,10 @@ bot.on("message", async (ctx) => {
         break;
       }
     }
-  } catch (e: any) {
-    console.error("ERROR on bot.on txt msg", e);
-    logErrorToFile("bot.on('message'", e);
+  } catch (error: any) {
+    await ctx.api.sendMessage(chatId, `${error.message})`);
+    console.error("ERROR on bot.on txt msg",error, error.message);
+    logErrorToFile("bot.on('message'", error);
   }
 });
 
@@ -599,13 +601,13 @@ bot.on("callback_query", async (ctx: any) => {
     const matchSell = data.match(positionCallSell);
     const matchBuy = data.match(positionCallBuy);
     const matchNavigate = data.match(positionNavigate);
+
     if (matchSell) {
       const parts = data.split("_");
       const sellPercentage = parts[1]; // '25', '50', '75', or '100'
       const positionIndex = parts[2]; // Position index
       ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
-      // console.log("positionIndex", positionIndex);
-      // console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool.baseMint);
+      
       await handle_radyum_swap(
         ctx,
         ctx.session.activeTradingPool.baseMint,

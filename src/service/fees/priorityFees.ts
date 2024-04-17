@@ -214,7 +214,8 @@ export async function getSimulationUnits(
   instructions: TransactionInstruction[],
   payer: PublicKey
 ): Promise<number | undefined> {
-
+    // Set an arbitrarily high number in simulation so we can be sure the transaction will succeed
+    // and get the real compute units used
   const testInstructions = [
     ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
     ...instructions,
@@ -227,34 +228,49 @@ export async function getSimulationUnits(
       recentBlockhash: PublicKey.default.toString(),
     }).compileToV0Message()
   );
- 
   const simulation = await connection.simulateTransaction(testVersionedTxn, { replaceRecentBlockhash: true, commitment: 'processed' });
+  console.log("simulation", simulation);
+  // catchSimError(simulation);
   console.info("units consumed", simulation.value.unitsConsumed);
   return simulation.value.unitsConsumed;
 }
 
+/*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+/*                      SIMULATE FINAL SWAP                   */
+/*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
+// Throws an error if sim fails
 export async function simulateTx(
   connection: Connection,
   instructions: TransactionInstruction[],
   payer: PublicKey
-): Promise<number | undefined> {
-
-  const testInstructions = [
-    ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
-    ...instructions,
-  ];
-
+) {
   const testVersionedTxn = new VersionedTransaction(
     new TransactionMessage({
-      instructions: testInstructions,
-      payerKey: payer,
+      instructions: [...instructions], payerKey: payer,
       recentBlockhash: PublicKey.default.toString(),
     }).compileToV0Message()
   );
- 
-  const simulation = await connection.simulateTransaction(testVersionedTxn, { replaceRecentBlockhash: true, commitment: 'processed' });
-  if (simulation.value.err) throw Error(simulation.value.err.toString());
 
-  console.info("units consumed", simulation.value.unitsConsumed);
-  return simulation.value.unitsConsumed;
+  const sim = await connection.simulateTransaction(
+    testVersionedTxn, { replaceRecentBlockhash: true, commitment: 'processed'  }
+  );
+  catchSimError(sim);
+  console.log("Clear swap simulation...");
+}
+
+
+function catchSimError(sim:any){
+  let msg: any = null;
+  const TRANSFER_ERROR = /Transfer: insufficient lamports/;
+  const SLIPPAGE_ERROR = /exceeds desired slippage limit/;
+  const FEES_ERROR = /InsufficientFundsForFee/;
+  if (sim.value && sim.value.err && sim.value.logs) {
+    if (sim.value.logs.find((logMsg: any) => TRANSFER_ERROR.test(logMsg))) { msg = `🔴 Insufficient balance for transaction.`; };
+    if (sim.value.logs && sim.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) { msg = `🔴 Slippage error, try increasing your slippage %.`; };
+    if (sim.value.logs.find((logMsg: any) => FEES_ERROR.test(logMsg))) { msg = `🔴 Insufficient balance for transaction fees.`; };
+    if (!msg) { msg = `🔴 ${JSON.stringify(sim.value.err)}`; }
+    console.error(msg);
+    throw new Error(JSON.stringify(msg));
+  }
 }

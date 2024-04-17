@@ -44,12 +44,11 @@ test("Raydium Swapping", async () => {
   const ctx = _getCtxFixture();
   const tokenOut = new PublicKey('WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk');
 
-  // let b4Swap= await getUserTokenBalanceAndDetails(ctx.session.portfolio.wallets[0].publicKey, tokenOut, ctx.connection);
+  let b4Swap= await getUserTokenBalanceAndDetails(ctx.session.portfolio.wallets[0].publicKey, tokenOut, ctx.connection);
 
-  await handle_radyum_swap(ctx, tokenOut, 'buy', 0.0001);
-
-  // let afterSwap= await getUserTokenBalanceAndDetails(ctx.session.portfolio.wallets[0].publicKey, tokenOut, ctx.connection);
-
-  // expect(afterSwap.userTokenBalance).toBeGreaterThan(b4Swap.userTokenBalance);
-
+  await handle_radyum_swap(ctx, tokenOut, 'buy', 0.0001).then(() => {
+    getUserTokenBalanceAndDetails(ctx.session.portfolio.wallets[0].publicKey, tokenOut, ctx.connection).then((afterSwap) => {
+      expect(afterSwap.userTokenBalance).toBeGreaterThan(b4Swap.userTokenBalance);
+    });
+  });
 });
