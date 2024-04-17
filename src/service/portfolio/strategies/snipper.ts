@@ -94,7 +94,7 @@ export async function setSnipe(ctx: any, amountIn: any) {
 
     const balanceInSOL = await getSolBalance(currentWallet.publicKey, connection);
     if (balanceInSOL * 1e9 < amountInLamports.toNumber()) await ctx.api.sendMessage(
-        ctx.portfolio.chatId, '🔴 Insufficient balance for transaction.',
+        ctx.session.portfolio.chatId, '🔴 Insufficient balance for transaction.',
         { parse_mode: 'HTML', disable_web_page_preview: true }
     );
 

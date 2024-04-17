@@ -388,6 +388,7 @@ bot.on("message", async (ctx) => {
         break;
       }
       case "buy_X_SOL":
+        console.log(ctx.session.priorityFees)
         await handle_radyum_swap(
           ctx,
           ctx.session.activeTradingPool.baseMint,
@@ -1061,6 +1062,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "priority_low": {
+        console.log("LOW ")
         ctx.session.priorityFees = PriotitizationFeeLevels.LOW;
         if (ctx.session.latestCommand === "snipe") {
           await refreshSnipeDetails(ctx);
@@ -1077,6 +1079,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "priority_medium": {
+        console.log("MED ")
         ctx.session.priorityFees = PriotitizationFeeLevels.MEDIUM;
         if (ctx.session.latestCommand === "snipe") {
           await refreshSnipeDetails(ctx);
@@ -1092,6 +1095,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "priority_high": {
+        console.log("HIGH ")
         ctx.session.priorityFees = PriotitizationFeeLevels.HIGH;
         if (ctx.session.latestCommand === "snipe") {
           await refreshSnipeDetails(ctx);
@@ -1107,6 +1111,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "priority_max": {
+        console.log("MAX")
         ctx.session.priorityFees = PriotitizationFeeLevels.MAX;
         if (ctx.session.latestCommand === "snipe") {
           await refreshSnipeDetails(ctx);

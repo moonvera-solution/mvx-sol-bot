@@ -114,7 +114,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   snipeStatus: true,
   snipperLookup: false,
   snipeAmount: 0,
-  snipeSlippage: 20,
+  snipeSlippage: 80,
   poolTime: 0,
   positionPool: [],
   priorityFees: PriotitizationFeeLevels.LOW,

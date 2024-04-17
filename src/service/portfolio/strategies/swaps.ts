@@ -17,7 +17,6 @@ export async function handle_radyum_swap(
     tokenOut: PublicKey,
     side: 'buy' | 'sell',
     swapAmountIn: any) {
-
         const chatId = ctx.chat.id;
         const session: ISESSION_DATA = ctx.session;
         const userWallet = session.portfolio.wallets[session.activeWalletIndex];
@@ -101,6 +100,8 @@ export async function handle_radyum_swap(
             let actualEarnings = referralRecord && referralRecord.earnings;
 
             // referalRecord.earnings = updateEarnings;
+            console.log("pfee from swap",ctx.session.priorityFees);
+
             if (poolKeys) {
                 raydium_amm_swap({
                     ctx,

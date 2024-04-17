@@ -2,7 +2,7 @@ import type { RecentPrioritizationFees } from "@solana/web3.js";
 import {
   Connection, type GetRecentPrioritizationFeesConfig,
   SystemProgram, TransactionMessage, ComputeBudgetProgram, TransactionInstruction,
-  VersionedTransaction, PublicKey
+  VersionedTransaction, PublicKey,Transaction
 } from "@solana/web3.js";
 
 // easy to use values for user convenience

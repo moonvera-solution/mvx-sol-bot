@@ -10,7 +10,7 @@ import {
   TokenAmount
 } from "@raydium-io/raydium-sdk";
 
-import {getSimulationComputeUnits} from "@solana-developers/helpers";
+import { getSimulationComputeUnits } from "@solana-developers/helpers";
 import BigNumber from "bignumber.js";
 import {
   SystemProgram,
@@ -160,20 +160,17 @@ export async function swapOnlyAmm(input: TxInputInfo) {
 
   let maxPriorityFee;
   const raydiumId = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8')
+  
   maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
     lockedWritableAccounts: [
       new PublicKey(poolKeys ? poolKeys.id.toBase58() : raydiumId.toBase58()),
-    ], percentile: input.ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
+    ], percentile: input.ctx.session.priorityFees, //PriotitizationFeeLevels.LOW,
     fallback: true
   });
 
-  minSwapAmountBalance += input.ctx.session.priorityFee;
+  if (input.ctx.priorityFees == PriotitizationFeeLevels.HIGH) { maxPriorityFee = maxPriorityFee * 3; }
+  if (input.ctx.priorityFees == PriotitizationFeeLevels.MAX) { maxPriorityFee = maxPriorityFee * 1.5; }
 
-  const balanceInSOL = await getSolBalance(input.wallet.publicKey.toBase58(), connection);
-  if (balanceInSOL < minSwapAmountBalance) await input.ctx.api.sendMessage(input.ctx.portfolio.chatId, '🔴 Insufficient balance for transaction.', { parse_mode: 'HTML', disable_web_page_preview: true });
-
-  if (input.ctx.priorityFee == PriotitizationFeeLevels.HIGH) maxPriorityFee = maxPriorityFee * 3;
-  if (input.ctx.priorityFee == PriotitizationFeeLevels.MAX) maxPriorityFee = maxPriorityFee * 1.5;
   innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee }));
 
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
@@ -181,9 +178,9 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
   // 1.-  Simulate the transaction and add the compute unit limit instruction to your transaction
-  let units = await getSimulationComputeUnits(connection, innerTransactions[0].instructions, input.wallet.publicKey,[]);
-  console.log("units sol-helpers sdk",units);
-  innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil( units ?? 200_000 * 1.1) }));
+  let units = await getSimulationComputeUnits(connection, innerTransactions[0].instructions, input.wallet.publicKey, []);
+  console.log("units sol-helpers sdk", units);
+  innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(units ?? 200_000 * 1.1) }));
 
 
   // 2.- Circular dependency on units so we need to   simulate again.
