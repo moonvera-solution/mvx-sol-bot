@@ -1,4 +1,5 @@
 
+import { PublicKey } from '@metaplex-foundation/js';
 import { UserPositions } from '../../db';
 import { quoteToken } from "../../views/util/dataCalculation";
 type Commitment = 'processed' | 'confirmed' | 'finalized' | 'recent' | 'single' | 'singleGossip' | 'root' | 'max';
@@ -13,9 +14,13 @@ export async function saveUserPosition(ctx: any, walletId: String, newPosition:
         amountOut: number | undefined;
     }) {
      const chatId = ctx.chat.id;
-        // console.log("saveUserPosition",saveUserPosition);
+     const selectedWallet = ctx.session.activeWalletIndex;
+     let userWallet = ctx.session.portfolio.wallets[selectedWallet];
+     userWallet = userWallet.walletId instanceof PublicKey ? userWallet.walletId.toBase58() : userWallet.walletId;
+
     try {
-        const userPosition = await UserPositions.findOne({positionChatId: chatId});
+        const userPosition = await UserPositions.findOne({positionChatId: chatId, walletId: userWallet });
+
         if (userPosition) {
 
             const existingPositionIndex = userPosition.positions.findIndex(
