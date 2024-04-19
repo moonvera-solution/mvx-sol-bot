@@ -168,8 +168,8 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     fallback: true
   });
 
-  if (input.ctx.priorityFees == PriotitizationFeeLevels.HIGH) { maxPriorityFee = maxPriorityFee * 3; }
-  if (input.ctx.priorityFees == PriotitizationFeeLevels.MAX) { maxPriorityFee = maxPriorityFee * 1.5; }
+  // if (input.ctx.priorityFees == PriotitizationFeeLevels.HIGH) { maxPriorityFee = maxPriorityFee * 3; }
+  // if (input.ctx.priorityFees == PriotitizationFeeLevels.MAX) { maxPriorityFee = maxPriorityFee * 1.5; }
 
   innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee }));
 
@@ -179,7 +179,6 @@ export async function swapOnlyAmm(input: TxInputInfo) {
 
   // 1.-  Simulate the transaction and add the compute unit limit instruction to your transaction
   let units = await getSimulationComputeUnits(connection, innerTransactions[0].instructions, input.wallet.publicKey, []);
-  console.log("units sol-helpers sdk", units);
   innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(units ?? 200_000 * 1.1) }));
 
 
