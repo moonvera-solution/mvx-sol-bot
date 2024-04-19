@@ -179,7 +179,8 @@ export async function swapOnlyAmm(input: TxInputInfo) {
 
   // 1.-  Simulate the transaction and add the compute unit limit instruction to your transaction
   let units = await getSimulationComputeUnits(connection, innerTransactions[0].instructions, input.wallet.publicKey, []);
-  innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(units ?? 200_000 * 1.1) }));
+  console.log("swap units", units)
+  if(units) innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(units  * 1.1) }));
 
 
   // 2.- Circular dependency on units so we need to   simulate again.
