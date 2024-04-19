@@ -389,32 +389,41 @@ bot.on("message", async (ctx) => {
         break;
       }
       case "buy_X_SOL":
-        console.log(ctx.session.priorityFees)
-        await handle_radyum_swap(
-          ctx,
-          ctx.session.activeTradingPool.baseMint,
-          "buy",
-          Number(msgTxt)
-        );
-        break;
+        if (msgTxt) {
+          const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
+          if (!isNaN(amt)) {
+            await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "buy", Number(msgTxt));
+            break;
+          } else {
+            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+          }
+        }
       case "sell_X_TOKEN":
-        await handle_radyum_swap(
-          ctx,
-          ctx.session.activeTradingPool.baseMint,
-          "sell",
-          Number(msgTxt)
-        );
+        if (msgTxt) {
+          const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
+          if (!isNaN(amt)) {
+            await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", Number(msgTxt));
+            break;
+          } else {
+            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+          }
+        }
         break;
       case "snipe_X_SOL": {
         if (msgTxt) {
-          ctx.session.latestCommand = "snipe";
-          if (ctx.session.snipperLookup) {
-            await snipperON(ctx, msgTxt);
+          const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
+          if (!isNaN(amt)) {
+            ctx.session.latestCommand = "snipe";
+            if (ctx.session.snipperLookup) {
+              await snipperON(ctx, String(amt));
+            } else {
+              await setSnipe(ctx, String(amt));
+            } 
           } else {
-            await setSnipe(ctx, msgTxt);
+            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
-          break;
         }
+        break;
       }
       case "import_wallet": {
         if (ctx.session.latestCommand === "import_wallet") {
@@ -493,8 +502,12 @@ bot.on("message", async (ctx) => {
             let poolInfo = await getRayPoolKeys(ctx, msgTxt);
 
             if (!poolInfo) {
-              ctx.api.sendMessage(chatId, "🔴 Invalid address");
-              ctx.api.sendMessage(chatId, "🔴 Pool not found for this token.");
+              ctx.session.latestCommand = 'snipe';
+              ctx.session.snipperLookup = true;
+              ctx.session.snipeToken = new PublicKey(msgTxt);
+              display_snipe_options(ctx, msgTxt);
+              // ctx.api.sendMessage(chatId, "🔴 Invalid address");
+              // ctx.api.sendMessage(chatId, "🔴 Pool not found for this token.");
               return;
             }
             ctx.session.activeTradingPool = poolInfo;
@@ -851,7 +864,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "snipe": {
         ctx.session.snipeStatus = true;
-        const referralRecord = await Referrals.findOne({referredUsers: chatId});
+        const referralRecord = await Referrals.findOne({ referredUsers: chatId });
         if (referralRecord) {
           ctx.session.referralCommision = referralRecord.commissionPercentage;
           ctx.session.generatorWallet = referralRecord.generatorWallet;

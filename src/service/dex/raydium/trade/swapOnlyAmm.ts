@@ -29,7 +29,7 @@ import {
   WALLET_MVX
 } from "../../../../../config";
 import { formatAmmKeysById } from "../raydium-utils/formatAmmKeysById";
-import { getSimulationUnits, simulateTx, getMaxPrioritizationFeeByPercentile, PriotitizationFeeLevels } from "../../../fees/priorityFees";
+import { simulateTx, getMaxPrioritizationFeeByPercentile, PriotitizationFeeLevels } from "../../../fees/priorityFees";
 import {
   buildAndSendTx,
   getWalletTokenAccount,
@@ -160,7 +160,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
 
   let maxPriorityFee;
   const raydiumId = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8')
-  
+
   maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
     lockedWritableAccounts: [
       new PublicKey(poolKeys ? poolKeys.id.toBase58() : raydiumId.toBase58()),
@@ -178,10 +178,13 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
   // 1.-  Simulate the transaction and add the compute unit limit instruction to your transaction
-  let units = await getSimulationComputeUnits(connection, innerTransactions[0].instructions, input.wallet.publicKey, []);
-  console.log("swap units", units)
-  if(units) innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(units  * 1.1) }));
-
+  try {
+    let units = await getSimulationComputeUnits(connection, innerTransactions[0].instructions, input.wallet.publicKey, []);
+    console.log("swap units", units)
+    if (units) innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(units * 1.1) }));
+  } catch (e) { 
+    console.log(e) 
+  }
 
   // 2.- Circular dependency on units so we need to   simulate again.
   await simulateTx(connection, innerTransactions[0].instructions, input.wallet.publicKey);

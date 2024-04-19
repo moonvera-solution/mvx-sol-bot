@@ -230,7 +230,7 @@ export async function getSimulationUnits(
   );
   const simulation = await connection.simulateTransaction(testVersionedTxn, { replaceRecentBlockhash: true, commitment: 'processed' });
   console.log("simulation", simulation);
-  // catchSimError(simulation);
+  catchSimError(simulation);
   console.info("units consumed", simulation.value.unitsConsumed);
   return simulation.value.unitsConsumed;
 }

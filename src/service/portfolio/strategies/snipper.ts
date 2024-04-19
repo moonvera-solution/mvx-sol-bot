@@ -21,6 +21,8 @@ export async function snipperON(ctx: any, amount: string) {
     try {
         const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
         let snipeToken = ctx.session.snipeToken instanceof String ? ctx.session.snipeToken : ctx.session.snipeToken.toBase58();
+        ctx.session.snipeToken = ctx.session.snipeToken instanceof PublicKey ? ctx.session.snipeToken.toBase58() : ctx.session.snipeToken;
+
         const currentWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex];
 
         const balanceInSOL = await getSolBalance(currentWallet.publicKey, connection);
