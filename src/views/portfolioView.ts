@@ -27,8 +27,6 @@ export async function display_spl_positions(ctx: any) {
     }
     // Function to create keyboard for a given position
     const createKeyboardForPosition = () => {
-    
-
         return [
             [{ text: 'Manage Positions', callback_data: `display_single_spl_positions` }, 
             { text: 'Refresh Psitions', callback_data: `refresh_portfolio` }],
