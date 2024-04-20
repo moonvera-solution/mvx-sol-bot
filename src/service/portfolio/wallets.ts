@@ -2,7 +2,7 @@
 import bs58 from "bs58";
 import { Keypair } from '@solana/web3.js';
 import { _savePortfolio } from '../../db/mongo/crud';
-import { Portfolios } from '../../db/mongo/schema';
+import { Portfolios,UserPositions } from '../../db/mongo/schema';
 import { PORTFOLIO_TYPE, DefaultPortfolioData } from '../util/types';
 import { generateSolanaWallet, getSolBalance } from "../util";
 
@@ -187,6 +187,8 @@ export async function resetWallet(ctx: any) {
     await Portfolios.updateOne({ chatId }, { $unset: updateQuery });
     await Portfolios.updateOne({ chatId }, { $pull: { wallets: null } });
 
+    await UserPositions.deleteOne({positionChatId: chatId, walletId: userWallet.publicKey }).catch((err: any) => {  console.log("Error deleting user position", err.message); });
+    
     // Provide options for importing or creating a new wallet
     const options = {
       reply_markup: JSON.stringify({

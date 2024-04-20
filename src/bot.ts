@@ -233,7 +233,7 @@ bot.command("start", async (ctx: any) => {
     logErrorToFile("bot on start cmd", error);
     if (error instanceof GrammyError || error instanceof HttpError || error instanceof Error || error instanceof TypeError || error instanceof RangeError) {
       console.error("Callback query failed due to timeout or invalid ID.");
-    
+
     } else {
       console.error(error.message);
     }
@@ -308,6 +308,7 @@ bot.command("sell", async (ctx) => {
 bot.command("snipe", async (ctx) => {
   try {
     const chatId = ctx.chat.id;
+    ctx.session.snipeStatus = true;
     const referralRecord = await Referrals.findOne({ referredUsers: chatId });
     if (referralRecord) {
       ctx.session.referralCommision = referralRecord.commissionPercentage;
@@ -388,32 +389,41 @@ bot.on("message", async (ctx) => {
         break;
       }
       case "buy_X_SOL":
-        console.log(ctx.session.priorityFees)
-        await handle_radyum_swap(
-          ctx,
-          ctx.session.activeTradingPool.baseMint,
-          "buy",
-          Number(msgTxt)
-        );
-        break;
+        if (msgTxt) {
+          const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
+          if (!isNaN(amt)) {
+            await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "buy", Number(msgTxt));
+            break;
+          } else {
+            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+          }
+        }
       case "sell_X_TOKEN":
-        await handle_radyum_swap(
-          ctx,
-          ctx.session.activeTradingPool.baseMint,
-          "sell",
-          Number(msgTxt)
-        );
+        if (msgTxt) {
+          const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
+          if (!isNaN(amt)) {
+            await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", Number(msgTxt));
+            break;
+          } else {
+            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+          }
+        }
         break;
       case "snipe_X_SOL": {
         if (msgTxt) {
-          ctx.session.latestCommand = "snipe";
-          if (ctx.session.snipperLookup) {
-            await snipperON(ctx, msgTxt);
+          const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
+          if (!isNaN(amt)) {
+            ctx.session.latestCommand = "snipe";
+            if (ctx.session.snipperLookup) {
+              await snipperON(ctx, String(amt));
+            } else {
+              await setSnipe(ctx, String(amt));
+            } 
           } else {
-            await setSnipe(ctx, msgTxt);
+            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
-          break;
         }
+        break;
       }
       case "import_wallet": {
         if (ctx.session.latestCommand === "import_wallet") {
@@ -492,8 +502,12 @@ bot.on("message", async (ctx) => {
             let poolInfo = await getRayPoolKeys(ctx, msgTxt);
 
             if (!poolInfo) {
-              ctx.api.sendMessage(chatId, "🔴 Invalid address");
-              ctx.api.sendMessage(chatId, "🔴 Pool not found for this token.");
+              ctx.session.latestCommand = 'snipe';
+              ctx.session.snipperLookup = true;
+              ctx.session.snipeToken = new PublicKey(msgTxt);
+              display_snipe_options(ctx, msgTxt);
+              // ctx.api.sendMessage(chatId, "🔴 Invalid address");
+              // ctx.api.sendMessage(chatId, "🔴 Pool not found for this token.");
               return;
             }
             ctx.session.activeTradingPool = poolInfo;
@@ -507,6 +521,7 @@ bot.on("message", async (ctx) => {
         break;
       }
       case "snipe": {
+        ctx.session.snipeStatus = true;
         try {
           if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
             const isTOken = await checkAccountType(ctx, msgTxt);
@@ -581,7 +596,7 @@ bot.on("message", async (ctx) => {
     }
   } catch (error: any) {
     await ctx.api.sendMessage(chatId, `${error.message})`);
-    console.error("ERROR on bot.on txt msg",error, error.message);
+    console.error("ERROR on bot.on txt msg", error, error.message);
     logErrorToFile("bot.on('message'", error);
   }
 });
@@ -608,7 +623,7 @@ bot.on("callback_query", async (ctx: any) => {
       const sellPercentage = parts[1]; // '25', '50', '75', or '100'
       const positionIndex = parts[2]; // Position index
       ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
-      
+
       await handle_radyum_swap(
         ctx,
         ctx.session.activeTradingPool.baseMint,
@@ -631,7 +646,7 @@ bot.on("callback_query", async (ctx: any) => {
 
       ctx.session.positionIndex = newPositionIndex;
       ctx.session.activeTradingPool =
-      ctx.session.positionPool[ctx.session.positionIndex];
+        ctx.session.positionPool[ctx.session.positionIndex];
 
       await display_refresh_single_spl_positions(ctx);
     }
@@ -848,9 +863,8 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "snipe": {
-        const referralRecord = await Referrals.findOne({
-          referredUsers: chatId,
-        });
+        ctx.session.snipeStatus = true;
+        const referralRecord = await Referrals.findOne({ referredUsers: chatId });
         if (referralRecord) {
           ctx.session.referralCommision = referralRecord.commissionPercentage;
           ctx.session.generatorWallet = referralRecord.generatorWallet;
@@ -870,14 +884,10 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "cancel_snipe": {
-    
-          ctx.session.snipeStatus = false;
-        await ctx.api.sendMessage(chatId, "Sniper cancelled.");
         ctx.session.snipeStatus = false;
+        await ctx.api.sendMessage(chatId, "Sniper cancelled.");
         console.log("cancel_snipe.", ctx.session.snipeStatus);
         break;
-   
-        
       }
       case "set_slippage": {
         ctx.session.latestCommand = "set_slippage";
@@ -897,7 +907,7 @@ bot.on("callback_query", async (ctx: any) => {
         );
         break;
       }
- 
+
 
       case "buy_0.1_SOL":
         await handle_radyum_swap(
@@ -998,6 +1008,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "snipe_0.1_SOL": {
+        ctx.session.snipeStatus = true;
         if (ctx.session.snipperLookup) {
           await snipperON(ctx, "0.1");
         } else {
@@ -1006,6 +1017,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "snipe_0.2_SOL": {
+        ctx.session.snipeStatus = true;
         if (ctx.session.snipperLookup) {
           await snipperON(ctx, "0.2");
         } else {
@@ -1014,6 +1026,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "snipe_0.5_SOL": {
+        ctx.session.snipeStatus = true;
         if (ctx.session.snipperLookup) {
           await snipperON(ctx, "0.5");
         } else {
@@ -1022,6 +1035,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "snipe_1_SOL": {
+        ctx.session.snipeStatus = true;
         if (ctx.session.snipperLookup) {
           await snipperON(ctx, "1");
         } else {
@@ -1030,6 +1044,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "snipe_5_SOL": {
+        ctx.session.snipeStatus = true;
         if (ctx.session.snipperLookup) {
           await snipperON(ctx, "5");
         } else {
@@ -1038,6 +1053,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "snipe_X_SOL": {
+        ctx.session.snipeStatus = true;
         ctx.session.latestCommand = "snipe_X_SOL";
         ctx.api.sendMessage(chatId, "Please enter amount to snipe.");
         break;
@@ -1066,10 +1082,10 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.priorityFees = PriotitizationFeeLevels.LOW;
         if (ctx.session.latestCommand === "snipe") {
           await refreshSnipeDetails(ctx);
-        } else if(ctx.session.latestCommand === 'display_single_spl_positions'){
+        } else if (ctx.session.latestCommand === 'display_single_spl_positions') {
           await display_refresh_single_spl_positions(ctx);
-          
-        } else if(ctx.session.latestCommand === 'display_after_Snipe_Buy'){
+
+        } else if (ctx.session.latestCommand === 'display_after_Snipe_Buy') {
           await Refresh_display_after_Snipe_Buy(ctx);
 
         }
@@ -1083,9 +1099,9 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.priorityFees = PriotitizationFeeLevels.MEDIUM;
         if (ctx.session.latestCommand === "snipe") {
           await refreshSnipeDetails(ctx);
-        } else if(ctx.session.latestCommand === 'display_single_spl_positions'){
+        } else if (ctx.session.latestCommand === 'display_single_spl_positions') {
           await display_refresh_single_spl_positions(ctx);
-        } else if(ctx.session.latestCommand === 'display_after_Snipe_Buy'){
+        } else if (ctx.session.latestCommand === 'display_after_Snipe_Buy') {
           await Refresh_display_after_Snipe_Buy(ctx);
 
         }
@@ -1099,9 +1115,9 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.priorityFees = PriotitizationFeeLevels.HIGH;
         if (ctx.session.latestCommand === "snipe") {
           await refreshSnipeDetails(ctx);
-        } else if(ctx.session.latestCommand === 'display_single_spl_positions'){
+        } else if (ctx.session.latestCommand === 'display_single_spl_positions') {
           await display_refresh_single_spl_positions(ctx);
-        } else if(ctx.session.latestCommand === 'display_after_Snipe_Buy'){
+        } else if (ctx.session.latestCommand === 'display_after_Snipe_Buy') {
           await Refresh_display_after_Snipe_Buy(ctx);
 
         }
@@ -1115,9 +1131,9 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.priorityFees = PriotitizationFeeLevels.MAX;
         if (ctx.session.latestCommand === "snipe") {
           await refreshSnipeDetails(ctx);
-        } else if(ctx.session.latestCommand === 'display_single_spl_positions'){
+        } else if (ctx.session.latestCommand === 'display_single_spl_positions') {
           await display_refresh_single_spl_positions(ctx);
-        } else if(ctx.session.latestCommand === 'display_after_Snipe_Buy'){
+        } else if (ctx.session.latestCommand === 'display_after_Snipe_Buy') {
           await Refresh_display_after_Snipe_Buy(ctx);
 
         }
@@ -1129,11 +1145,11 @@ bot.on("callback_query", async (ctx: any) => {
     }
   } catch (e: any) {
     logErrorToFile("callback_query", e);
-    
-    if  (e instanceof GrammyError || e instanceof HttpError || e instanceof Error || e instanceof TypeError || e instanceof RangeError) {
+
+    if (e instanceof GrammyError || e instanceof HttpError || e instanceof Error || e instanceof TypeError || e instanceof RangeError) {
       console.error("Callback query failed due to timeout or invalid ID.");
-    
-    } 
+
+    }
     else {
       console.error(e);
     }
