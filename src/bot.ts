@@ -60,7 +60,6 @@ import { logErrorToFile } from "../error/logger";
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 type MyContext = Context & SessionFlavor<ISESSION_DATA>;
 const isProd = process.env.NODE_ENV == "DEV";
-
 _initDbConnection();
 const keys = process.env.TELEGRAM_BOT_TOKEN;
 const bot = new Bot<MyContext>(keys!);
@@ -79,12 +78,42 @@ bot.use(async (ctx, next) => {
   }
 });
 
-bot.start();
+/*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+/*                  BOT WEBHOOK                              */
+/*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
+// Set the webhook
+const botToken = process.env.TELEGRAM_BOT_TOKEN!;
+console.log("botToken", botToken);
+const express = require('express');
+const app = express();
+
+const webhookUrl = 'https://drib.ngrok.app/'; 
+bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
+  .then(() => console.log("Webhook set successfully"))
+  .catch(err => console.error("Error setting webhook:", err)
+);
+const handleUpdate = webhookCallback(bot, 'express');
+// Create the HTTP server and define request handling logic
+app.use(express.json()); // for parsing application/json
+ 
+app.post('/bot${botToken}', handleUpdate);
+
+app.get('/', (req: any, res: any) => {
+  res.send('Hello from ngrok server!');
+});
+
+// const server = createServer(bot);
+const port = process.env.PORT || 80; 
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
+
+// bot.start();
 
 const allowedUsernames = [
   "tech_01010",
   "daniellesifg",
-  "CryptoBoosie",
   "swalefdao",
   "coachalib",
 ]; // without the @
