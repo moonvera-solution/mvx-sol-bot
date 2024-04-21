@@ -88,7 +88,7 @@ console.log("botToken", botToken);
 const express = require('express');
 const app = express();
 
-const webhookUrl = 'https://www.dribsbot.com/'; 
+const webhookUrl = 'https://www.dribsbot.com'; 
 bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
   .then(() => console.log("Webhook set successfully",`${webhookUrl}/bot${botToken}`))
   .catch(err => console.error("Error setting webhook:", err)
