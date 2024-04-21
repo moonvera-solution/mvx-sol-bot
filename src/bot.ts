@@ -54,8 +54,6 @@ import { refreshSnipeDetails } from "./views/refreshData/refereshSnipe";
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { refresh_spl_positions } from "./views/refreshData/refreshPortfolio";
 import { logErrorToFile } from "../error/logger";
-const express = require('express');
-const app = express();
 
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                  BOT START & SET ENV                       */
@@ -85,11 +83,18 @@ bot.use(async (ctx, next) => {
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
 // Set the webhook
-const botToken = String(process.env.TELEGRAM_BOT_TOKEN!);
+const botToken = process.env.TELEGRAM_BOT_TOKEN!;
+console.log("botToken", botToken);
+const express = require('express');
+const app = express();
+
 const webhookUrl = 'https://www.dribsbot.com';
 
-app.use(express.json());
-app.use(`/${botToken}`, webhookCallback(bot, "express"));
+const handleUpdate = webhookCallback(bot, 'express');
+// Create the HTTP server and define request handling logic
+app.use(express.json()); // for parsing application/json
+
+app.post(`/bot${botToken}`, handleUpdate);
 
 app.get('/', (req: any, res: any) => {
   res.send('Hello from ngrok server!');
@@ -99,11 +104,7 @@ app.get('/', (req: any, res: any) => {
 const port = process.env.PORT || 80;
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
-  
-  const url = `${webhookUrl}/${botToken}`;
-
-  console.log("Setting webhook to:", url,':',port);
-  bot.api.setWebhook(url)
+  bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
     .then(() => console.log("Webhook set successfully", `${webhookUrl}/bot${botToken}`))
     .catch(err => console.error("Error setting webhook:", err)
     );
