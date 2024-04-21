@@ -54,6 +54,8 @@ import { refreshSnipeDetails } from "./views/refreshData/refereshSnipe";
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { refresh_spl_positions } from "./views/refreshData/refreshPortfolio";
 import { logErrorToFile } from "../error/logger";
+const express = require('express');
+const app = express();
 
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                  BOT START & SET ENV                       */
@@ -83,30 +85,28 @@ bot.use(async (ctx, next) => {
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
 // Set the webhook
-const botToken = process.env.TELEGRAM_BOT_TOKEN!;
-console.log("botToken", botToken);
-const express = require('express');
-const app = express();
+const botToken = String(process.env.TELEGRAM_BOT_TOKEN!);
+const webhookUrl = 'https://www.dribsbot.com';
 
-const webhookUrl = 'https://www.dribsbot.com'; 
-bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
-  .then(() => console.log("Webhook set successfully",`${webhookUrl}/bot${botToken}`))
-  .catch(err => console.error("Error setting webhook:", err)
-);
-const handleUpdate = webhookCallback(bot, 'express');
-// Create the HTTP server and define request handling logic
-app.use(express.json()); // for parsing application/json
- 
-app.post('/bot${botToken}', handleUpdate);
+app.use(express.json());
+app.use(`/${botToken}`, webhookCallback(bot, "express"));
 
 app.get('/', (req: any, res: any) => {
   res.send('Hello from ngrok server!');
 });
 
 // const server = createServer(bot);
-const port = process.env.PORT || 80; 
+const port = process.env.PORT || 80;
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
+  
+  const url = `${webhookUrl}/${botToken}`;
+
+  console.log("Setting webhook to:", url,':',port);
+  bot.api.setWebhook(url)
+    .then(() => console.log("Webhook set successfully", `${webhookUrl}/bot${botToken}`))
+    .catch(err => console.error("Error setting webhook:", err)
+    );
 });
 
 // bot.start();
@@ -447,7 +447,7 @@ bot.on("message", async (ctx) => {
               await snipperON(ctx, String(amt));
             } else {
               await setSnipe(ctx, String(amt));
-            } 
+            }
           } else {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
