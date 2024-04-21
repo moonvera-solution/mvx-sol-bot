@@ -89,7 +89,7 @@ const express = require('express');
 const app = express();
 
 const webhookUrl = 'https://www.dribsbot.com';
-const url = `${webhookUrl}/${botToken}`;
+const url = `${webhookUrl}/bot${botToken}`;
 
 function _handleUpdate(){
   console.log("handling update....")
@@ -99,7 +99,7 @@ function _handleUpdate(){
 
 // Create the HTTP server and define request handling logic
 app.use(express.json()); // for parsing application/json
-app.post(`/${botToken}`, _handleUpdate);
+app.post(`/bot${botToken}`, _handleUpdate);
 
 app.get('/', (req: any, res: any) => {
   res.send('Hello from ngrok server!');
