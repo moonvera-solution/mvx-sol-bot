@@ -88,16 +88,16 @@ console.log("botToken", botToken);
 const express = require('express');
 const app = express();
 
-// const webhookUrl = 'https://drib.ngrok.app/'; 
-// bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
-//   .then(() => console.log("Webhook set successfully"))
-//   .catch(err => console.error("Error setting webhook:", err)
-// );
-// const handleUpdate = webhookCallback(bot, 'express');
-// // Create the HTTP server and define request handling logic
-// app.use(express.json()); // for parsing application/json
+const webhookUrl = 'https://www.dribsbot.com/'; 
+bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
+  .then(() => console.log("Webhook set successfully"))
+  .catch(err => console.error("Error setting webhook:", err)
+);
+const handleUpdate = webhookCallback(bot, 'express');
+// Create the HTTP server and define request handling logic
+app.use(express.json()); // for parsing application/json
  
-// app.post('/bot${botToken}', handleUpdate);
+app.post('/bot${botToken}', handleUpdate);
 
 app.get('/', (req: any, res: any) => {
   res.send('Hello from ngrok server!');
