@@ -89,7 +89,7 @@ const express = require('express');
 const app = express();
 
 const webhookUrl = 'https://www.dribsbot.com';
-const url = `${webhookUrl}/bot${botToken}`;
+const url = `${webhookUrl}/${botToken}`;
 
 function _handleUpdate(){
   console.log("handling update....")
@@ -99,7 +99,9 @@ function _handleUpdate(){
 
 // Create the HTTP server and define request handling logic
 app.use(express.json()); // for parsing application/json
-app.post(`/bot${botToken}`, _handleUpdate);
+
+app.post(`/${botToken}`, webhookCallback(bot, 'express'));
+app.use(`/${botToken}`, webhookCallback(bot, 'express'));
 
 app.get('/', (req: any, res: any) => {
   res.send('Hello from ngrok server!');
@@ -108,9 +110,9 @@ app.get('/', (req: any, res: any) => {
 // const server = createServer(bot);
 const port = process.env.PORT || 80;
 
-app.listen(port, () => {
+app.listen(port, async () => {
   console.log(`Server is running on port ${port}`);
-  bot.api.setWebhook(url)
+  await bot.api.setWebhook(url)
     .then(() => console.log("Webhook set successfully", url))
     .catch(err => console.error("Error setting webhook:", err)
     );
