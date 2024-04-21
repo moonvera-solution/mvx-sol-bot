@@ -54,12 +54,14 @@ import { refreshSnipeDetails } from "./views/refreshData/refereshSnipe";
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { refresh_spl_positions } from "./views/refreshData/refreshPortfolio";
 import { logErrorToFile } from "../error/logger";
+const express = require('express');
+const app = express();
 
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                  BOT START & SET ENV                       */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 type MyContext = Context & SessionFlavor<ISESSION_DATA>;
-const isProd = process.env.NODE_ENV == "DEV";
+const isProd = process.env.NODE_ENV == "PROD";
 _initDbConnection();
 const keys = process.env.TELEGRAM_BOT_TOKEN;
 const bot = new Bot<MyContext>(keys!);
@@ -82,20 +84,11 @@ bot.use(async (ctx, next) => {
 /*                  BOT WEBHOOK                              */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
-// Set the webhook
 const botToken = process.env.TELEGRAM_BOT_TOKEN!;
-console.log("botToken", botToken);
-const express = require('express');
-const app = express();
+const port = process.env.PORT || 80;
 
-const webhookUrl = 'https://www.dribsbot.com';
+const webhookUrl = isProd ? 'https://www.dribsbot.com' : `http://127.0.0.1:${port}`;
 const url = `${webhookUrl}/${botToken}`;
-
-function _handleUpdate(){
-  console.log("handling update....")
-  return webhookCallback(bot, 'express');
-} 
-// const handleUpdate = webhookCallback(bot, 'express');
 
 // Create the HTTP server and define request handling logic
 app.use(express.json()); // for parsing application/json
@@ -107,13 +100,11 @@ app.get('/', (req: any, res: any) => {
   res.send('Hello from ngrok server!');
 });
 
-// const server = createServer(bot);
-const port = process.env.PORT || 80;
 
 app.listen(port, async () => {
   console.log(`Server is running on port ${port}`);
   await bot.api.setWebhook(url)
-    .then(() => console.log("Webhook set successfully", url))
+    .then(() => console.log("Webhook set successfully"))
     .catch(err => console.error("Error setting webhook:", err)
     );
 });
