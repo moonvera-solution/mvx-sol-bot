@@ -90,7 +90,7 @@ const app = express();
 
 const webhookUrl = 'https://www.dribsbot.com/'; 
 bot.api.setWebhook(`${webhookUrl}/bot${botToken}`)
-  .then(() => console.log("Webhook set successfully"))
+  .then(() => console.log("Webhook set successfully",`${webhookUrl}/bot${botToken}`))
   .catch(err => console.error("Error setting webhook:", err)
 );
 const handleUpdate = webhookCallback(bot, 'express');
