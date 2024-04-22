@@ -17,8 +17,6 @@ export async function handle_radyum_swap(
     tokenOut: PublicKey,
     side: 'buy' | 'sell',
     swapAmountIn: any) {
-        console
-
         const chatId = ctx.chat.id;
         const session: ISESSION_DATA = ctx.session;
         const userWallet = session.portfolio.wallets[session.activeWalletIndex];

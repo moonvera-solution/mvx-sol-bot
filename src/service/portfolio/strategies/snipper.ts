@@ -170,11 +170,7 @@ export async function startSnippeSimulation(
         amountIn: inputTokenAmount,
         amountOut: minOutTokenAmount,
         fixedSide: 'in',
-        makeTxVersion: TxVersion.V0,
-        // computeBudgetConfig: {
-        //     units: ctx.session.priorityFees.units,
-        //     microLamports: ctx.session.priorityFees.microLamports
-        // }
+        makeTxVersion: TxVersion.V0
     });
     //0.005  0.01 0.05 0.1 0.2
     //low medium high very high extreme
@@ -284,33 +280,15 @@ export async function startSnippeSimulation(
         count++
         snipeStatus = ctx.session.snipeStatus;
         simulationResult = await connection.simulateTransaction(txV, { replaceRecentBlockhash: true, commitment: 'processed' });
-        const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
-        if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) {
-            console.log(simulationResult.value.logs)
-            ctx.api.sendMessage(ctx.chat.id, `🔴 Slippage error, try increasing your slippage %.`);
-            return;
-        }
-        const BALANCE_ERROR = /Transfer: insufficient lamports/;
-        if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
-            console.log(simulationResult.value.logs)
-            ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction.`);
-            return;
-        }
-        const FEES_ERROR = 'InsufficientFundsForFee';
-        if (simulationResult.value.err === FEES_ERROR) {
-            console.log(simulationResult.value.logs)
-            ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction fees.`);
-            return;
-        }
-
+        await catchSimulationErrors(ctx,simulationResult);
         console.log('sim:', JSON.stringify(simulationResult.value.err), count);
 
         if (simulationResult.value.err == null) {
             sim = false;
             await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一 $${tokenData.symbol} with ${amountIn.dividedBy(1e9)} SOL.`);
             setTimeout(() => {
-                buildAndSendTx(userWallet, innerTransactions, connection, { preflightCommitment: 'processed' }).then(async (txids: any) => {
 
+                buildAndSendTx(userWallet, innerTransactions, connection, { preflightCommitment: 'processed' }).then(async (txids: any) => {
                     let msg = `🟢 Snipe <a href="https://solscan.io/tx/${txids[0]}">transaction</a> sent. Please wait for confirmation...`
                     await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
                    
@@ -320,22 +298,17 @@ export async function startSnippeSimulation(
                     if (isConfirmed) {
                         let solAmount, tokenAmount, _symbol = tokenData.symbol;
                         if (extractAmount > 0) {
-                            console.log('extractAmount', extractAmount);
                             solAmount = Number(extractAmount) / Math.pow(10, Number(tokenData.mint.decimals)); // Convert amount to SOL
                             tokenAmount = amountIn.div(Math.pow(10, tokenData.decimals));
-                            await ctx.api.sendMessage(chatId,
-                                `✅ <b>Snipe Tx Confirmed:</b> You sniped ${solAmount.toFixed(3)} <b>${_symbol}</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`,
-                                { parse_mode: 'HTML', disable_web_page_preview: true });
+                            await ctx.api.sendMessage(chatId,`✅ <b>Snipe Tx Confirmed:</b> You sniped ${solAmount.toFixed(3)} <b>${_symbol}</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`,{ parse_mode: 'HTML', disable_web_page_preview: true });
                         } else {
                             ctx.api.sendMessage(chatId, '✅ Snipe Tx Confirmed');;
                         }
 
-                        if (referralFee > 0) {
-                            if (referralRecord) {
+                        if (referralFee > 0 && referralRecord) {
                                 let updateEarnings = actualEarnings && actualEarnings + referralAmmount;
                                 referralRecord.earnings = Number(updateEarnings && updateEarnings.toFixed(0));
                                 await referralRecord.save();
-                            }
                         }
 
                         if (await trackUntilFinalized(ctx, txids[0])) {
@@ -437,35 +410,28 @@ export function formatLaunchCountDown(launchSchedule: number): string {
     // Return the time string
     return `${hours}:${minutes}:${seconds}`;
 }
-// async function getPoolKeysRPC(baseMint: PublicKey) {
-//     const AMMV4 = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8');
-//     const commitment = "confirmed"
-//     // 'memcmp:{base:',LIQUIDITY_STATE_LAYOUT_V4.offsetOf("baseMint"),
-//     // 'memcmp:{quote:',LIQUIDITY_STATE_LAYOUT_V4.offsetOf("quoteMint")
-//     const accounts = await connection.getProgramAccounts(
-//         AMMV4,
-//         {
-//             commitment,
-//             filters: [
-//                 { dataSize: LIQUIDITY_STATE_LAYOUT_V4.span },
-//                 {
-//                     memcmp: {
-//                         offset: 400,
-//                         bytes: baseMint.toBase58(),
-//                     },
-//                 },
-//                 {
-//                     memcmp: {
-//                         offset: 432,
-//                         bytes: 'So11111111111111111111111111111111111111112'
-//                     },
-//                 },
-//             ],
-//         }
-//     );
 
-//     return accounts.map(({ pubkey, account }: { pubkey: any, account: any }) => ({
-//         id: pubkey.toString(),
-//         ...LIQUIDITY_STATE_LAYOUT_V4.decode(account.data),
-//     }));
-// }
+export async function catchSimulationErrors(
+    ctx:any,
+    simulationResult:any
+){
+    const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
+    if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) {
+        console.log(simulationResult.value.logs)
+        ctx.api.sendMessage(ctx.chat.id, `🔴 Slippage error, try increasing your slippage %.`);
+        return;
+    }
+    const BALANCE_ERROR = /Transfer: insufficient lamports/;
+    if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
+        console.log(simulationResult.value.logs)
+        ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction.`);
+        return;
+    }
+    const FEES_ERROR = 'InsufficientFundsForFee';
+    if (simulationResult.value.err === FEES_ERROR) {
+        console.log(simulationResult.value.logs)
+        ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction fees.`);
+        return;
+    }
+
+}

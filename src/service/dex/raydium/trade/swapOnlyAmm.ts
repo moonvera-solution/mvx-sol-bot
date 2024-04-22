@@ -157,7 +157,10 @@ export async function swapOnlyAmm(input: TxInputInfo) {
     innerTransactions[0].instructions.push(mvxFeeInx);
     minSwapAmountBalance += input.mvxFee.toNumber();
   }
-
+  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+  /*                      PRIORITY FEES                         */
+  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+  
   let maxPriorityFee;
   const raydiumId = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8')
 
@@ -188,7 +191,6 @@ export async function swapOnlyAmm(input: TxInputInfo) {
 
   // 2.- Circular dependency on units so we need to   simulate again.
   await simulateTx(connection, innerTransactions[0].instructions, input.wallet.publicKey);
-  console.log("after simulateTx...");
 
   return {
     txids: await buildAndSendTx(
