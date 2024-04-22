@@ -1,6 +1,6 @@
 import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken, publicKey } from '@raydium-io/raydium-sdk';
 import { PublicKey, Keypair, Connection, SendTransactionError } from '@solana/web3.js';
-import { getWalletTokenAccount, getSolBalance, waitForConfirmation, getPriorityFeeLabel, getTokenExplorerURLS, trackUntilFinalized } from '../../util';
+import { getWalletTokenAccount, getSolBalance, waitForConfirmation, getPriorityFeeLabel, getTokenExplorerURLS, trackUntilFinalized,getSwapAmountOut } from '../../util';
 import { DEFAULT_TOKEN, MVXBOT_FEES, RAYDIUM_AUTHORITY } from '../../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
 import { display_after_Snipe_Buy, display_token_details } from '../../../views';
@@ -17,6 +17,8 @@ export async function handle_radyum_swap(
     tokenOut: PublicKey,
     side: 'buy' | 'sell',
     swapAmountIn: any) {
+        console
+
         const chatId = ctx.chat.id;
         const session: ISESSION_DATA = ctx.session;
         const userWallet = session.portfolio.wallets[session.activeWalletIndex];
@@ -100,7 +102,7 @@ export async function handle_radyum_swap(
             let actualEarnings = referralRecord && referralRecord.earnings;
 
             // referalRecord.earnings = updateEarnings;
-            console.log("pfee from swap",ctx.session.priorityFees);
+            console.log("pfee from swap",ctx.session.priorityFee);
 
             if (poolKeys) {
                 raydium_amm_swap({
@@ -119,25 +121,11 @@ export async function handle_radyum_swap(
                 }).then(async ({ txids }) => {
                     let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing with ${getPriorityFeeLabel(ctx.session.priorityFees)} priotity fee. <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>. Please wait for confirmation...`
                     await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-                    let extractAmount: number = 0;
-                    let counter = 0;
+                    
+                    const isConfirmed = await waitForConfirmation(ctx, txids[0]);
+                    let extractAmount =  isConfirmed ? await getSwapAmountOut(connection, txids) : 0;
 
-                    if (await waitForConfirmation(ctx, txids[0])) { // get swap amountOut
-                        while (extractAmount == 0 && counter < 30) { // it has to find it since its a transfer tx
-                            counter++;
-                            const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
-                            let txAmount: Array<any> | undefined;
-                            if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions) {
-                                txxs.meta.innerInstructions.forEach((tx) => {
-                                    txAmount = JSON.parse(JSON.stringify(tx.instructions));
-                                    txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
-                                    txAmount.forEach((tx) => {
-                                        if (tx.parsed.info.authority == RAYDIUM_AUTHORITY) { extractAmount = tx.parsed.info.amount; }
-                                        console.log('inner tx: ', JSON.parse(JSON.stringify(tx)));
-                                    });
-                                })
-                            }
-                        }
+                    if (isConfirmed) { // get swap amountOut
 
                         let confirmedMsg, solAmount, tokenAmount, _symbol = userTokenBalanceAndDetails.userTokenSymbol;
                         let solFromSell = new BigNumber(0);

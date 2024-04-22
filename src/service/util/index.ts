@@ -28,6 +28,7 @@ import {
 
 import {
     addLookupTableInfo,
+    RAYDIUM_AUTHORITY,
     makeTxVersion
 } from '../../../config';
 
@@ -687,4 +688,31 @@ export function getTokenExplorerURLS(tokenAddress: string): { birdeyeURL: any; d
         dextoolsURL: `https://www.dextools.io/app/solana/pair-explorer/${tokenAddress}`,
         dexscreenerURL: `https://dexscreener.com/solana/${tokenAddress}`,
     }
+}
+
+export async function getSwapAmountOut(
+    connection:Connection,
+    txids: string[],
+){
+    let extractAmount: number = 0;
+    let counter = 0;
+
+    while (extractAmount == 0 && counter < 30) { // it has to find it since its a transfer tx
+        counter++;
+        const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
+        let txAmount: Array<any> | undefined;
+        if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions) {
+            txxs.meta.innerInstructions.forEach((tx) => {
+                txAmount = JSON.parse(JSON.stringify(tx.instructions));
+                txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
+                txAmount.forEach((tx) => {
+                    if (tx.parsed.info.authority == RAYDIUM_AUTHORITY) { 
+                        extractAmount = tx.parsed.info.amount;
+                    }
+                    console.log('inner tx: ', JSON.parse(JSON.stringify(tx)));
+                });
+            })
+        }
+    }
+    return extractAmount;
 }

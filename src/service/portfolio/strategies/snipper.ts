@@ -6,7 +6,7 @@ import {
 } from "@raydium-io/raydium-sdk";
 import { Connection, PublicKey, Keypair, SystemProgram, VersionedTransaction, TransactionMessage, ComputeBudgetProgram } from "@solana/web3.js";
 import { MVXBOT_FEES, WALLET_MVX, SNIPE_SIMULATION_COUNT_LIMIT, RAYDIUM_AUTHORITY } from "../../../../config";
-import { buildAndSendTx, trackUntilFinalized, getPriorityFeeLabel } from '../../util';
+import { buildAndSendTx, trackUntilFinalized, getPriorityFeeLabel,getSwapAmountOut } from '../../util';
 import { saveUserPosition } from '../positions';
 const log = (k: any, v: any) => console.log(k, v);
 import base58 from 'bs58';
@@ -308,41 +308,17 @@ export async function startSnippeSimulation(
         if (simulationResult.value.err == null) {
             sim = false;
             await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一 $${tokenData.symbol} with ${amountIn.dividedBy(1e9)} SOL.`);
-            // {
-            //     parse_mode: 'HTML',
-            //     disable_web_page_preview: true,
-            //     reply_markup: {
-            //         inline_keyboard: [
-            //             [{ text: 'Cancel Snipe ', callback_data: 'cancel_snipe' }],
-            //         ]
-            //     },
-            // });
             setTimeout(() => {
                 buildAndSendTx(userWallet, innerTransactions, connection, { preflightCommitment: 'processed' }).then(async (txids: any) => {
 
                     let msg = `🟢 Snipe <a href="https://solscan.io/tx/${txids[0]}">transaction</a> sent. Please wait for confirmation...`
                     await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-                    let extractAmount: number = 0;
-                    let counter = 0;
-                    if (await waitForConfirmation(ctx, txids[0])) {
-                        while (extractAmount == 0 && counter < 30) { // it has to find it since its a transfer tx
-                            counter++;
-                            const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
-                            let txAmount: Array<any> | undefined;
-                            if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions) {
-                                txxs.meta.innerInstructions.forEach((tx) => {
-                                    txAmount = JSON.parse(JSON.stringify(tx.instructions));
-                                    txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
-                                    txAmount.forEach((tx) => {
-                                        if (tx.parsed.info.authority == RAYDIUM_AUTHORITY) { extractAmount = tx.parsed.info.amount; }
-                                        console.log('inner tx: ', JSON.parse(JSON.stringify(tx)));
-                                    });
-                                })
-                            }
-                        }
+                   
+                    const isConfirmed = await waitForConfirmation(ctx, txids[0]);
+                    let extractAmount =  isConfirmed ? await getSwapAmountOut(connection, txids) : 0;
 
+                    if (isConfirmed) {
                         let solAmount, tokenAmount, _symbol = tokenData.symbol;
-
                         if (extractAmount > 0) {
                             console.log('extractAmount', extractAmount);
                             solAmount = Number(extractAmount) / Math.pow(10, Number(tokenData.mint.decimals)); // Convert amount to SOL
