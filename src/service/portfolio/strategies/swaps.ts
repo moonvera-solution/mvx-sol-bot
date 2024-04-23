@@ -212,12 +212,8 @@ export async function handle_radyum_swap(
                 await ctx.api.sendMessage(chatId, `🔴 ${side.toUpperCase()} network issues, try again.`);
             }
         } catch (e: any) {
-            let msg;
-            if(e.message.test(/program error: 0x1/)){msg = 'Unsifficient balance for transaction';}
-            else{ msg = e.message;}
-            console.log("swap line 231", msg)
-
-            await ctx.api.sendMessage(chatId, `🔴 ${side.toUpperCase()} ${msg}`);
+            console.log("swap line 231", e.message)
+            await ctx.api.sendMessage(chatId, `🔴 ${side.toUpperCase()} ${e.message}`);
             console.error("ERROR on handle_radyum_trade: ", e);
         }
 }
