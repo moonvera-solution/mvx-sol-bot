@@ -100,7 +100,7 @@ export async function handle_radyum_swap(
             let actualEarnings = referralRecord && referralRecord.earnings;
 
             // referalRecord.earnings = updateEarnings;
-            console.log("pfee from swap",ctx.session.priorityFee);
+            console.log("pfee from swap",ctx.session.priorityFee, poolKeys, ctx.session.activeTradingPool);
 
             if (poolKeys) {
                 raydium_amm_swap({
@@ -208,6 +208,8 @@ export async function handle_radyum_swap(
                     await ctx.api.sendMessage(chatId, JSON.stringify(error.message));
                     return;
                 });
+            }else{
+                await ctx.api.sendMessage(chatId, `🔴 ${side.toUpperCase()} network issues, try again.`);
             }
         } catch (e: any) {
             let msg;
