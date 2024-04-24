@@ -19,6 +19,7 @@ const UserPortfolioSchema = new Schema<PORTFOLIO_TYPE>({
     },
   ],
   positions: [],
+  activeWalletIndex: { type: Number, default: 0 },
 });
 
 const PoolInfoSchema = new Schema<RAYDIUM_POOL_TYPE>({

@@ -92,10 +92,8 @@ export async function handle_radyum_swap(
                 swapAmountIn = new BigNumber(Math.floor(sellAmountPercent * swapAmountIn / 100));
                 await ctx.api.sendMessage(chatId, `💸 Selling ${percent}% ${userTokenBalanceAndDetails.userTokenSymbol}`);
             }
-            
-            console.log("swapAmountIn",swapAmountIn.toFixed());
-
-            const inputTokenAmount = new TokenAmount(tokenIn, swapAmountIn.toFixed(0));
+            console.log('testing')
+            const inputTokenAmount = new TokenAmount(tokenIn, Number(swapAmountIn));
             const slippage = new Percent(Math.ceil(userSlippage * 100), 10_000);
             const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
             const referralRecord = await Referrals.findOne({ referredUsers: chatId });
@@ -105,6 +103,7 @@ export async function handle_radyum_swap(
             console.log("pfee from swap",ctx.session.priorityFees);
 
             if (poolKeys) {
+                console.log('poolKeys');
                 raydium_amm_swap({
                     ctx,
                     side,
@@ -197,7 +196,7 @@ export async function handle_radyum_swap(
                         await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
                         if (side == 'buy') {
                             ctx.session.latestCommand = 'display_after_Snipe_Buy';
-                            await display_after_Snipe_Buy(ctx);
+                            await display_after_Snipe_Buy(ctx,false);
                         }
                     } else {  // Tx not confirmed
                         ctx.api.sendMessage(ctx.chat.id,

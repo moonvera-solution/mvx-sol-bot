@@ -332,7 +332,7 @@ export async function startSnippeSimulation(
                         );
                     }
                     ctx.session.latestCommand = 'display_after_Snipe_Buy';
-                    await display_after_Snipe_Buy(ctx);
+                    await display_after_Snipe_Buy(ctx, false);
                 }).catch(async (error: any) => {
                     let msg = `🔴 Snipe fail, busy Network, try again.`;
                     await ctx.api.sendMessage(chatId, msg); console.info('error', error);

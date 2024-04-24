@@ -6,17 +6,41 @@ dotenv.config();
 export async function getTokenDataFromBirdEye(tokenAddress: String) {
     try {
         const url = `https://public-api.birdeye.so/defi/token_overview?address=${tokenAddress}`;
+        const url2 = `https://public-api.birdeye.so/defi/token_security?address=${tokenAddress}`;
+
         const options = {
             method: 'GET',
             headers: {
-                "accept": " application/json",
+               
                 "x-chain": "solana",
                 'X-API-KEY': `${process.env.BIRD_EYE_API_KEY}`
             }
         };
 
         const response = await axios.get(url, options);
-        // console.log("response",response.data)
+        const response2 = await axios.get(url2, options);
+  
+        return {response,response2}; // Adjust this based on the actual response structure
+    } catch (error:any) {
+        console.error(
+            error.message
+        );
+        return null;
+    }
+}
+export async function getTokenOwnerPercentageFromBirdEye(tokenAddress: String) {
+    try {
+        const url = `https://public-api.birdeye.so/defi/token_security?address=${tokenAddress}`;
+        const options = {
+            method: 'GET',
+            headers: {
+                "x-chain": "solana",
+                'X-API-KEY': `${process.env.BIRD_EYE_API_KEY}`
+            }
+        };
+
+        const response = await axios.get(url, options);
+        console.log("response",response.data)
         return await response.data; // Adjust this based on the actual response structure
     } catch (error:any) {
         console.error(
@@ -48,47 +72,27 @@ export async function getTokenOwnerFromBirdEye(tokenAddress: String) {
         return null;
     }
 }
-export async function getTokenOwnerPercentageFromBirdEye(tokenAddress: String) {
-    try {
-        const url = `https://public-api.birdeye.so/defi/token_security?address=${tokenAddress}`;
-        const options = {
-            method: 'GET',
-            headers: {
-                "accept": " application/json",
-                "x-chain": "solana",
-                'X-API-KEY': `${process.env.BIRD_EYE_API_KEY}`
-            }
-        };
 
-        const response = await axios.get(url, options);
-        // console.log("response",response.data)
-        return await response.data; // Adjust this based on the actual response structure
-    } catch (error:any) {
-        console.error(
-            error.message
-        );
-        return null;
-    }
-}
 
 export async function getSolanaDetails() {
     
 
     try {
-        const options = {method: 'GET', headers: {'X-API-KEY': '5cbf6ca613634d29b10b2d6dbb3989ff'}};
+        const options = {method: 'GET', headers: {'X-API-KEY': 'f134abedf1c44496b3554ffc610b47f4'}};
 
-        const response = await fetch('https://public-api.birdeye.so/defi/price?address=So11111111111111111111111111111111111111112', options);
-        const data = await response.json();
-        // console.log(data.data.value);
-        return data.data.value;
+        const response = await axios.get('https://public-api.birdeye.so/defi/price?address=So11111111111111111111111111111111111111112', options);
+        // const data = await response.json();
+        // console.log(response.data.data.value);
+        return response.data.data.value;
     } catch (error:any) {
         console.error('Error fetching Solana details:', error.message);
         return null;
     }
 }
-getSolanaDetails()
+// getSolanaDetails()
 // Example:
-// getTokenDataFromBirdEye('FvVDc6gZmYho6DLLuJ3ptHS6rxb797Cxf1insiUnu2BL');
+// getTokenDataFromBirdEye('bobaM3u8QmqZhY1HwAtnvze9DLXvkgKYk3td3t8MLva');
+// getTokenOwnerPercentageFromBirdEye('4hw1dhVQA1iveLfnVzGxRnWZKsuuBUv3XzjftGRuRmJf')
 /**
  * Response:
     {
