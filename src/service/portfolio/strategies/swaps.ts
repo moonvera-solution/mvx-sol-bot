@@ -89,11 +89,11 @@ export async function handle_radyum_swap(
                 tokenIn = OUTPUT_TOKEN;
                 outputToken = DEFAULT_TOKEN.WSOL;
                 let sellAmountPercent = userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals);
-                swapAmountIn = Math.floor(sellAmountPercent * swapAmountIn / 100);
+                swapAmountIn = new BigNumber(Math.floor(sellAmountPercent * swapAmountIn / 100));
                 await ctx.api.sendMessage(chatId, `💸 Selling ${percent}% ${userTokenBalanceAndDetails.userTokenSymbol}`);
             }
             console.log('testing')
-            const inputTokenAmount = new TokenAmount(tokenIn, Number(swapAmountIn));
+            const inputTokenAmount = new TokenAmount(tokenIn, (swapAmountIn.toFixed()));
             const slippage = new Percent(Math.ceil(userSlippage * 100), 10_000);
             const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
             const referralRecord = await Referrals.findOne({ referredUsers: chatId });
