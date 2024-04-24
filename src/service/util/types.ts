@@ -9,9 +9,11 @@ export type PORTFOLIO_TYPE = {
   wallets: Array<{
     walletId: String,
     publicKey: PublicKey | String,
-    secretKey: PublicKey | String
+    secretKey: PublicKey | String,
+    
   }>
-  positions: Array<any>
+  positions: Array<any>,
+  activeWalletIndex: number
 }
 
 export const DefaultPortfolioData: PORTFOLIO_TYPE = {
@@ -22,8 +24,10 @@ export const DefaultPortfolioData: PORTFOLIO_TYPE = {
     secretKey: DEFAULT_PUBLIC_KEY
   }],
   positions: [
+  ],
+  activeWalletIndex: 0
 
-  ]
+
 }
 
 export interface ISESSION_DATA {
@@ -35,6 +39,7 @@ export interface ISESSION_DATA {
   latestSlippage: number
   metadataMessageId: number;
   snipeToken: PublicKey;
+  latestToken: PublicKey;
   snipeAmount: number;
   snipeSlippage: number;
   snipeStatus: boolean;
@@ -94,7 +99,8 @@ export const DefaultSessionData: ISESSION_DATA = {
   portfolio: {
     chatId: 0,
     wallets: [],
-    positions: []
+    positions: [],
+    activeWalletIndex: 0
   },
   referralCommision: 0,
   awaitingWalletAddress: false,
@@ -104,13 +110,14 @@ export const DefaultSessionData: ISESSION_DATA = {
   recipientAddress: DEFAULT_PUBLIC_KEY,
   activeWalletIndex: 0,
   activeTradingPool: DefaultPoolInfoData,
-  latestCommand: '',
+  latestCommand: 'optional',
   currentMode: '',
   latestSlippage: 5,
   metadataMessageId: 0,
   // buyToken: DEFAULT_PUBLIC_KEY,
   // sellToken: DEFAULT_PUBLIC_KEY,
   snipeToken: DEFAULT_PUBLIC_KEY,
+  latestToken: DEFAULT_PUBLIC_KEY,
   snipeStatus: true,
   snipperLookup: false,
   snipeAmount: 0,

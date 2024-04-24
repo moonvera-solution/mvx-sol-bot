@@ -13,28 +13,7 @@ export async function getPortfolio(chatId: any): Promise<PORTFOLIO_TYPE> {
   }
   return DefaultPortfolioData as PORTFOLIO_TYPE;
 }
-// newWallet_keyboard can be used to display after importing PK or creating new solana wallet.
-// export async function newWallet_keyboard(bot: any, chatId: number, publicKey: String) {
-//   // Fetch the newly created wallet's balance
-//   const balance = await getSolBalance(publicKey);
 
-//   // Notify the user of their new wallet and balance
-//   let walletCreationResponse = `Your new Solana wallet address: ${publicKey}\nYour current wallet balance is: ${balance.toFixed(4)} SOL`;
-//   await bot.api.sendMessage(chatId, walletCreationResponse);
-
-//   // Additional options for the user after wallet creation
-//   const walletOptions = {
-//     reply_markup: {
-//       inline_keyboard: [
-//         [{ text: 'View on Solscan', url: `https://solscan.io/account/${publicKey}` }, { text: 'Get Private Key', callback_data: 'get_private_key' }],
-//         [{ text: 'Send SOL', callback_data: 'send_sol' }, { text: 'Send Token', callback_data: 'send_token' }],
-//         [{ text: 'Check my Assets', callback_data: 'my_assets' }, { text: 'Trade', callback_data: 'settrading' }],
-//         [{ text: 'Close', callback_data: 'closing' }]
-//       ]
-//     }
-//   };
-//   await bot.api.sendMessage(chatId, "Export your private key and manage your wallet", walletOptions);
-// }
 
 export async function createUserPortfolio(ctx: any): Promise<any> {
   const chatId = ctx.chat.id;

@@ -1,3 +1,4 @@
+import { Portfolios } from '../../db';
 import { getSolanaDetails } from '../../api';
 import { getSolBalance } from '../../service/util/index';
 import { Connection } from '@solana/web3.js';
@@ -5,7 +6,13 @@ import { Connection } from '@solana/web3.js';
 export async function handleWallets(ctx: any) {
     const chatId = ctx.chat.id;
     const wallets = ctx.session.portfolio.wallets;
-    const selectedWalletIndex = ctx.session.activeWalletIndex; // Index of the currently selected wallet
+    const portfolioIndexWallet = await Portfolios.findOne({ chatId: chatId });
+    let selectedWalletIndex: number;
+    if(portfolioIndexWallet ){
+     selectedWalletIndex = portfolioIndexWallet.activeWalletIndex; // Index of the currently selected wallet
+    }else{
+     selectedWalletIndex = ctx.session.activeWalletIndex; // Index of the currently selected wallet
+    }
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
 
@@ -50,7 +57,7 @@ export async function handleWallets(ctx: any) {
         parse_mode: 'HTML'
     };
 
-    await ctx.editMessageText("Please select a wallet to configure slippage & sending SOL:", options);
+    await ctx.api.sendMessage(chatId,"Please select a wallet to configure slippage & sending SOL:", options);
 
 }
 

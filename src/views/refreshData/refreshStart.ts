@@ -19,7 +19,7 @@ export async function handleRefreshStart(ctx: any) {
     }
      // Retrieve wallet user and balance in SOL and USD 
    if(ctx.session.portfolio){
-    const selectedWallet = ctx.session.activeWalletIndex;
+    const selectedWallet = ctx.session.portfolio.activeWalletIndex;
     userWallet = ctx.session.portfolio.wallets[selectedWallet];
     }
    const publicKeyString: any = userWallet.publicKey; // The user's public key
@@ -76,16 +76,19 @@ export async function handleRereshWallet(ctx: any){
     const userWallet = ctx.session.portfolio.wallets[selectedWallet];
 
     const publicKeyString: any = userWallet.publicKey; // The user's public key
+    const [balanceInSOL, solanaDetails] = await Promise.all([
+        getSolBalance(publicKeyString, connection),
+        getSolanaDetails()
+    ]);
+    
 
     // Fetch SOL balance
-    const balanceInSOL = await getSolBalance(publicKeyString,connection);
     try {
     if (balanceInSOL === null) {
         await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
         return;
     }
 
-    const solanaDetails = await getSolanaDetails();
     const balanceInUSD = (balanceInSOL * (solanaDetails)).toFixed(2);
 
 
@@ -117,6 +120,7 @@ export async function handleRereshWallet(ctx: any){
  // Edit the existing message with the updated information and the inline keyboard
 
     await ctx.editMessageText(updatedWelcomeMessage, options);
+    ctx.session.latestCommand = "optional";
     } catch (error) {
     console.error("Error updating message: ", error);
     }

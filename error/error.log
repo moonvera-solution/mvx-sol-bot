@@ -54,4 +54,352 @@
     at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
     at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
     at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 4/23/2024, 1:47:01 PM - bot.on('message'
+ Error 
+ Non-base58 character
+ Error: Non-base58 character
+    at Object.decode (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/node_modules/base-x/src/index.js:111:11)
+    at new PublicKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:63:30)
+    at Function.isOnCurve (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:251:20)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:407:25
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:51:41
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:51:41
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:48
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/23/2024, 3:50:58 PM - bot.on('message'
+ Error 
+ Non-base58 character
+ Error: Non-base58 character
+    at Object.decode (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/node_modules/base-x/src/index.js:111:11)
+    at new PublicKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:63:30)
+    at Function.isOnCurve (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:251:20)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:407:25
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:51:41
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:51:41
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:48
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/23/2024, 4:03:22 PM - bot.on('message'
+ Error 
+ Non-base58 character
+ Error: Non-base58 character
+    at Object.decode (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/node_modules/base-x/src/index.js:111:11)
+    at new PublicKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:63:30)
+    at Function.isOnCurve (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:251:20)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:407:25
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:51:41
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:51:41
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:48
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/23/2024, 5:14:57 PM - bot on positions cmd
+ TypeError 
+ Cannot read properties of undefined (reading 'positions')
+ TypeError: Cannot read properties of undefined (reading 'positions')
+    at display_spl_positions (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:19:25)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:284:5
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 4/24/2024, 11:27:42 AM - display_snipe_options
+ UnexpectedAccountError 
+ The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+ UnexpectedAccountError: The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+    at Object.deserializeAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Serializer.ts:126:11)
+    at parse (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:53:12)
+    at Object.toMintAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:72:12)
+    at Object.handle (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/plugins/nftModule/operations/findNftByMint.ts:150:27)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Disposable.run (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/utils/Disposable.ts:33:14)
+    at async getTokenMetadata (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/feeds/index.ts:21:23)
+    at async display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:293:35)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:938:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/24/2024, 11:29:39 AM - display_snipe_options
+ UnexpectedAccountError 
+ The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+ UnexpectedAccountError: The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+    at Object.deserializeAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Serializer.ts:126:11)
+    at parse (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:53:12)
+    at Object.toMintAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:72:12)
+    at Object.handle (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/plugins/nftModule/operations/findNftByMint.ts:150:27)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Disposable.run (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/utils/Disposable.ts:33:14)
+    at async getTokenMetadata (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/feeds/index.ts:21:23)
+    at async display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:293:35)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:939:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/24/2024, 11:30:08 AM - display_snipe_options
+ UnexpectedAccountError 
+ The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+ UnexpectedAccountError: The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+    at Object.deserializeAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Serializer.ts:126:11)
+    at parse (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:53:12)
+    at Object.toMintAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:72:12)
+    at Object.handle (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/plugins/nftModule/operations/findNftByMint.ts:150:27)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Disposable.run (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/utils/Disposable.ts:33:14)
+    at async getTokenMetadata (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/feeds/index.ts:21:23)
+    at async display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:293:35)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:939:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/24/2024, 12:07:30 PM - display_snipe_options
+ UnexpectedAccountError 
+ The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+ UnexpectedAccountError: The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+    at Object.deserializeAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Serializer.ts:126:11)
+    at parse (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:53:12)
+    at Object.toMintAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:72:12)
+    at Object.handle (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/plugins/nftModule/operations/findNftByMint.ts:150:27)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Disposable.run (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/utils/Disposable.ts:33:14)
+    at async getTokenMetadata (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/feeds/index.ts:21:23)
+    at async display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:293:35)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:939:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/24/2024, 12:09:10 PM - callback_query
+ TypeError 
+ Cannot read properties of undefined (reading 'toBase58')
+ TypeError: Cannot read properties of undefined (reading 'toBase58')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:939:77
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 4/24/2024, 12:10:22 PM - callback_query
+ TypeError 
+ Cannot read properties of undefined (reading 'toBase58')
+ TypeError: Cannot read properties of undefined (reading 'toBase58')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:939:83
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 4/24/2024, 12:11:11 PM - callback_query
+ TypeError 
+ Cannot read properties of undefined (reading 'toBase58')
+ TypeError: Cannot read properties of undefined (reading 'toBase58')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:939:83
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 4/24/2024, 2:19:26 PM - callback_query
+ GrammyError 
+ Call to 'sendMessage' failed! (400: Bad Request: chat not found)
+ GrammyError: Call to 'sendMessage' failed! (400: Bad Request: chat not found)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async handleWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/util/dbWallet.ts:54:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:813:9
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/24/2024, 2:19:51 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:803:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/24/2024, 2:20:03 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:803:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/24/2024, 2:22:37 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:816:9
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/24/2024, 2:22:47 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:803:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/24/2024, 2:23:43 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message text is empty)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message text is empty)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:803:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/24/2024, 2:25:54 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:789:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/24/2024, 2:26:44 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:789:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/24/2024, 2:36:06 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:803:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/24/2024, 2:36:24 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:803:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/24/2024, 2:36:28 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:816:9
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
  

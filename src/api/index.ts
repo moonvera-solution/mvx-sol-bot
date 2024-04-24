@@ -1,5 +1,5 @@
 import { getTokenPriceFromDexTools } from './priceFeeds/dexTools';
-import { getSolanaDetails } from './priceFeeds/coinMarket';
+import { getSolanaDetails } from './priceFeeds/birdEye';
 
 
 export {

@@ -102,6 +102,7 @@ export async function _savePortfolio(
       "positions": [
 
       ],
+
     });
     walletInfoV2.save();
   } catch (err) {
