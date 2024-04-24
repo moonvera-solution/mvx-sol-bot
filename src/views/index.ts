@@ -69,8 +69,8 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
         runMax(ctx, raydiumId)
     ]);
     const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
-    const tokenPriceSOL = birdeyeData ? (birdeyeData.response.data.data.price / solPrice).toFixed(quoteDecimals) : tokenInfo.price.toNumber().toFixed(quoteDecimals);
-    const tokenPriceUSD = birdeyeData ? birdeyeData.response.data.data.price.toFixed(quoteDecimals) : (tokenInfo.price.times(solPrice)).toFixed(quoteDecimals);
+    const tokenPriceSOL = birdeyeData ? (birdeyeData.response.data.data.price / solPrice) : tokenInfo.price.toNumber();
+    const tokenPriceUSD = birdeyeData ? birdeyeData.response.data.data.price : (tokenInfo.price.times(solPrice));
     const specificPosition = userPosition[0].positions.find((pos: any) => new PublicKey(pos.baseMint).equals(tokenAddress));
     let initialInUSD = 0;
     let initialInSOL = 0;
@@ -81,14 +81,20 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
     let profitInSol ;
     if(specificPosition && specificPosition.amountOut ){
  
+
+        valueInUSD = (specificPosition.amountOut - (userTokenDetails.userTokenBalance *  Math.pow(10,baseDecimals) )) < 5 ? userTokenDetails.userTokenBalance * Number(tokenPriceUSD) : 'N/A';
+    
+        valueInSOL = (specificPosition.amountOut - (userTokenDetails.userTokenBalance * Math.pow(10,baseDecimals))) < 5 ? Number(((userTokenDetails.userTokenBalance)) * Number(tokenPriceSOL)) : 'N/A';
         initialInSOL = Number(specificPosition.amountIn) / 1e9;
-        initialInUSD = initialInSOL * Number(solPrice);
-        valueInUSD = (specificPosition.amountOut - (userTokenBalance *  Math.pow(10,baseDecimals) )) < 5 ? userTokenBalance * Number(tokenPriceUSD) : 'N/A';
-        valueInSOL = (specificPosition.amountOut - (userTokenBalance * Math.pow(10,baseDecimals))) < 5 ? Number(((userTokenBalance.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)) : 'N/A';
+        initialInUSD =  initialInSOL * Number(solPrice);
         profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(specificPosition.amountIn) / 1e9 )) / (Number(specificPosition.amountIn) / 1e9) * 100 : 'N/A';
-        profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
-        profitInSol = valueInSOL != 'N/A' ? Number(((userTokenBalance.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)) - initialInSOL : 'N/A';
+        profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
+        profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
+
+      
        }
+
+       
     const {
         birdeyeURL,
         dextoolsURL,
@@ -403,8 +409,8 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
 
     const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
 
-    const tokenPriceSOL = birdeyeData ? (birdeyeData.response.data.data.price / solPrice).toFixed(quoteDecimals) : tokenInfo.price.toNumber().toFixed(quoteDecimals);
-    const tokenPriceUSD = birdeyeData ? birdeyeData.response.data.data.price.toFixed(quoteDecimals) : (tokenInfo.price.times(solPrice)).toFixed(quoteDecimals);
+    const tokenPriceSOL = birdeyeData ? (birdeyeData.response.data.data.price / solPrice) : tokenInfo.price.toNumber();
+    const tokenPriceUSD = birdeyeData ? birdeyeData.response.data.data.price : (tokenInfo.price.times(solPrice));
 
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
@@ -421,15 +427,15 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
    
     if(specificPosition && specificPosition.amountOut ){
 
-     initialInUSD = (specificPosition.amountIn / 1e9) * Number(solPrice);
-     initialInSOL = (specificPosition.amountIn / 1e9);
-     valueInUSD = (specificPosition.amountOut - (userTokenDetails.userTokenBalance *  Math.pow(10,baseDecimals) )) < 5 ? userTokenDetails.userTokenBalance * Number(tokenPriceUSD) : 'N/A';
-
-     valueInSOL = (specificPosition.amountOut - (userTokenDetails.userTokenBalance * Math.pow(10,baseDecimals))) < 5 ? Number(((userTokenDetails.userTokenBalance.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)) : 'N/A';
-    profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(specificPosition.amountIn) / 1e9 )) / (Number(specificPosition.amountIn) / 1e9) * 100 : 'N/A';
-    profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
-     profitInSol = valueInSOL != 'N/A' ? Number(((userTokenDetails.userTokenBalance.toFixed(3)) * Number(tokenPriceSOL)).toFixed(4)) - initialInSOL : 'N/A';
-
+        valueInUSD = (specificPosition.amountOut - (userTokenDetails.userTokenBalance *  Math.pow(10,baseDecimals) )) < 5 ? userTokenDetails.userTokenBalance * Number(tokenPriceUSD) : 'N/A';
+    
+        valueInSOL = (specificPosition.amountOut - (userTokenDetails.userTokenBalance * Math.pow(10,baseDecimals))) < 5 ? Number(((userTokenDetails.userTokenBalance)) * Number(tokenPriceSOL)) : 'N/A';
+        initialInSOL = Number(specificPosition.amountIn) / 1e9;
+        initialInUSD =  initialInSOL * Number(solPrice);
+        profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(specificPosition.amountIn) / 1e9 )) / (Number(specificPosition.amountIn) / 1e9) * 100 : 'N/A';
+        profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
+        profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
+     
     }
   
         // Construct the message

@@ -91,7 +91,7 @@ export async function getSolanaDetails() {
 }
 // getSolanaDetails()
 // Example:
-getTokenDataFromBirdEye('bobaM3u8QmqZhY1HwAtnvze9DLXvkgKYk3td3t8MLva');
+// getTokenDataFromBirdEye('bobaM3u8QmqZhY1HwAtnvze9DLXvkgKYk3td3t8MLva');
 // getTokenOwnerPercentageFromBirdEye('4hw1dhVQA1iveLfnVzGxRnWZKsuuBUv3XzjftGRuRmJf')
 /**
  * Response:

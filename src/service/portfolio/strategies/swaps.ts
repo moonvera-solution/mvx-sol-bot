@@ -89,11 +89,11 @@ export async function handle_radyum_swap(
                 tokenIn = OUTPUT_TOKEN;
                 outputToken = DEFAULT_TOKEN.WSOL;
                 let sellAmountPercent = userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals);
-                swapAmountIn = Math.floor(sellAmountPercent * swapAmountIn / 100);
+                swapAmountIn = new BigNumber(Math.floor(sellAmountPercent * swapAmountIn / 100));
                 await ctx.api.sendMessage(chatId, `💸 Selling ${percent}% ${userTokenBalanceAndDetails.userTokenSymbol}`);
             }
             console.log('testing')
-            const inputTokenAmount = new TokenAmount(tokenIn, Number(swapAmountIn));
+            const inputTokenAmount = new TokenAmount(tokenIn, (swapAmountIn.toFixed()));
             const slippage = new Percent(Math.ceil(userSlippage * 100), 10_000);
             const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
             const referralRecord = await Referrals.findOne({ referredUsers: chatId });
@@ -209,14 +209,12 @@ export async function handle_radyum_swap(
                     await ctx.api.sendMessage(chatId, JSON.stringify(error.message));
                     return;
                 });
+            }else{
+                await ctx.api.sendMessage(chatId, `🔴 ${side.toUpperCase()} network issues, try again.`);
             }
         } catch (e: any) {
-            let msg;
-            if(e.message.test(/program error: 0x1/)){msg = 'Unsifficient balance for transaction';}
-            else{ msg = e.message;}
-            console.log("swap line 231", msg)
-
-            await ctx.api.sendMessage(chatId, `🔴 ${side.toUpperCase()} ${msg}`);
+            console.log("swap line 231", e.message)
+            await ctx.api.sendMessage(chatId, `🔴 ${side.toUpperCase()} ${e.message}`);
             console.error("ERROR on handle_radyum_trade: ", e);
         }
 }
