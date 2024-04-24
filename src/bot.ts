@@ -83,32 +83,30 @@ const botToken = process.env.TELEGRAM_BOT_TOKEN!;
 const port = process.env.PORT || 80;
 
 
-// if (isProd) {
-//   const webhookUrl = 'https://www.dribsbot.com';
-//   const url = `${webhookUrl}/${botToken}`;
+if (isProd) {
+  const webhookUrl = 'https://drib.ngrok.app';
+  const url = `${webhookUrl}/${botToken}`;
 
-//   // Create the HTTP server and define request handling logic
-//   app.use(express.json()); // for parsing application/json
+  // Create the HTTP server and define request handling logic
+  app.use(express.json()); // for parsing application/json
 
-//   app.post(`/${botToken}`, webhookCallback(bot, 'express'));
-//   app.use(`/${botToken}`, webhookCallback(bot, 'express'));
+  app.post(`/${botToken}`, webhookCallback(bot, 'express'));
+  app.use(`/${botToken}`, webhookCallback(bot, 'express'));
 
-//   app.get('/', (req: any, res: any) => {
-//     res.send('Hello from ngrok server!');
-//   });
+  app.get('/', (req: any, res: any) => {
+    res.send('Hello from ngrok server!');
+  });
 
-
-//   app.listen(port, async () => {
-//     console.log(`Server is running on port ${port}`);
-//     await bot.api.setWebhook(url)
-//       .then(() => console.log("Webhook set successfully"))
-//       .catch(err => console.error("Error setting webhook:", err)
-//       );
-//   });
-// } else {
-  
-// }
-bot.start();
+  app.listen(port, async () => {
+    console.log(`Server is running on port ${port}`);
+    await bot.api.setWebhook(url)
+      .then(() => console.log("Webhook set successfully"))
+      .catch(err => console.error("Error setting webhook:", err)
+      );
+  });
+} else {
+  bot.start();
+}
 
 const allowedUsernames = [
   "tech_01010",
@@ -181,7 +179,7 @@ bot.command("start", async (ctx: any) => {
     //-------Start bot with wallet---------------------------
     ctx.session.latestCommand = "start";
     let userWallet: Keypair | null = null;
-    
+
     if (portfolio != DefaultPortfolioData) {
       ctx.session.portfolio = portfolio;
     } else {
@@ -265,7 +263,7 @@ bot.command("start", async (ctx: any) => {
     logErrorToFile("bot on start cmd", error);
 
     if (error instanceof GrammyError || error instanceof HttpError || error instanceof Error || error instanceof TypeError || error instanceof RangeError) {
-      console.error("Callback query failed due to timeout or invalid ID.",error);
+      console.error("Callback query failed due to timeout or invalid ID.", error);
     } else {
       console.error(error.message);
     }
