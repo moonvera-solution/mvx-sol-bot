@@ -14,6 +14,7 @@ import {
   HttpError,
   session,
   SessionFlavor,
+  webhookCallback,
 } from "grammy";
 import { importWallet, getPortfolio } from "./service/portfolio/wallets";
 import {
@@ -374,7 +375,7 @@ bot.on("message", async (ctx) => {
   try {
     const latestCommand = ctx.session.latestCommand;
     const msgTxt = ctx.update.message.text;
-    console.log("latestCommand", latestCommand);
+  
    
        switch (latestCommand) {
         case "optional": {
@@ -581,7 +582,7 @@ bot.on("message", async (ctx) => {
         try {
           if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
             const isTOken = await checkAccountType(ctx, msgTxt);
-            console.log("isTOken", isTOken);
+            // console.log("isTOken", isTOken);
             if (!isTOken) {
               ctx.api.sendMessage(chatId, "Invalid address");
               return;

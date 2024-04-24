@@ -250,7 +250,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
                 tokenData,
             } = tokenMetadataResult;
             const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
-            const marketCap = tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
+            const marketCap =  birdeyeData?.response.data.data.mc? birdeyeData.response.data.data.mc : tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
             const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
     
             ctx.session.currentMode = 'snipe';
@@ -268,8 +268,8 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
                 poolStatusMessage = `⏳ Opening in ${countdown}`;
             }
     
-            const tokenPriceSOL = tokenInfo.price.toNumber();
-            const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
+            const tokenPriceSOL = birdeyeData ? (birdeyeData.response.data.data.price / solPrice).toFixed(quoteDecimals) : tokenInfo.price.toNumber().toFixed(quoteDecimals);
+            const tokenPriceUSD = birdeyeData ? birdeyeData.response.data.data.price.toFixed(quoteDecimals) : (tokenInfo.price.times(solPrice)).toFixed(quoteDecimals);
             const priceImpact = tokenInfo.priceImpact.toFixed(2);
             const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     
@@ -281,7 +281,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
                 `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
                 `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
                 `Market Cap: <b>${formattedmac} USD</b>\n` +
-                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL.toFixed(9)} SOL</b> \n\n` +
+                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
                 // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
                 `price Impact (5.0 SOL) : <b>${priceImpact}%</b> | (1.0 SOL): <b>${priceImpact_1}%</b> \n\n` +
                 `Pool Status: <b>${poolStatusMessage}</b>\n\n` +
@@ -403,8 +403,8 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
 
     const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
 
-    const tokenPriceSOL = tokenInfo.price.toNumber();
-    const tokenPriceUSD = (Number(tokenPriceSOL) * (solPrice)).toFixed(quoteDecimals);
+    const tokenPriceSOL = birdeyeData ? (birdeyeData.response.data.data.price / solPrice).toFixed(quoteDecimals) : tokenInfo.price.toNumber().toFixed(quoteDecimals);
+    const tokenPriceUSD = birdeyeData ? birdeyeData.response.data.data.price.toFixed(quoteDecimals) : (tokenInfo.price.times(solPrice)).toFixed(quoteDecimals);
 
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
@@ -442,7 +442,7 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
                 `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
                 `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
                 `Market Cap: <b>${formattedmac} USD</b>\n` +
-                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL.toFixed(9)} SOL</b> \n\n` +
+                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
                 // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
                 `Price Impact (5.0 SOL) : <b>${priceImpact}%</b>  |  (1.0 SOL): <b> ${priceImpact_1}%</b>\n\n` +
                 `---<code>Trade Position</code>---\n` +

@@ -19,8 +19,7 @@ export async function getTokenDataFromBirdEye(tokenAddress: String) {
 
         const response = await axios.get(url, options);
         const response2 = await axios.get(url2, options);
-        // console.log("response",response.data.data.mc)
-        // console.log("response2",response2.data.data)
+  
         return {response,response2}; // Adjust this based on the actual response structure
     } catch (error:any) {
         console.error(
@@ -83,7 +82,7 @@ export async function getSolanaDetails() {
 
         const response = await axios.get('https://public-api.birdeye.so/defi/price?address=So11111111111111111111111111111111111111112', options);
         // const data = await response.json();
-        console.log(response.data.data.value);
+        // console.log(response.data.data.value);
         return response.data.data.value;
     } catch (error:any) {
         console.error('Error fetching Solana details:', error.message);

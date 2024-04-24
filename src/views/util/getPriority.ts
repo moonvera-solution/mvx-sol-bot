@@ -69,7 +69,7 @@ export  async function runMin(ctx: any, raydiumId: any) {
         percentile: PriotitizationFeeLevels.LOW,
         fallback: false,
     });
-        console.log('result_Min', result);
+        // console.log('result_Min', result);
     return result;  
 }
 export async function runMedium(ctx: any, raydiumId: any) {
@@ -83,7 +83,7 @@ export async function runMedium(ctx: any, raydiumId: any) {
         percentile: PriotitizationFeeLevels.MEDIUM,
         fallback: false,
     });
-        console.log('result_Medium', result);
+        // console.log('result_Medium', result);
     return result;
 }
 
@@ -97,7 +97,7 @@ export async function runHigh(ctx: any, raydiumId: any) {
         percentile: PriotitizationFeeLevels.HIGH,
         fallback: false,
     });
-        console.log('result_High', result);
+        // console.log('result_High', result);
 
     return result;
 }
@@ -114,7 +114,7 @@ export async function runMax(ctx: any, raydiumId: any) {
         percentile: PriotitizationFeeLevels.MAX,
         fallback: false,
     });
-        console.log('result_Max', result);
+        // console.log('result_Max', result);
     return result;
 }
 // runMin();
