@@ -21,14 +21,6 @@ export async function getTokenDataFromBirdEye(tokenAddress: String) {
 export async function getTokenOwnerPercentageFromBirdEye(tokenAddress: String) {
     try {
         const url = `https://public-api.birdeye.so/defi/token_security?address=${tokenAddress}`;
-        const options = {
-            method: 'GET',
-            headers: {
-                "x-chain": "solana",
-                'X-API-KEY': `${process.env.BIRD_EYE_API_KEY}`
-            }
-        };
-
         const response = await axios.get(url, options);
         console.log("response",response.data)
         return await response.data; // Adjust this based on the actual response structure
@@ -43,14 +35,6 @@ export async function getTokenOwnerPercentageFromBirdEye(tokenAddress: String) {
 export async function getTokenOwnerFromBirdEye(tokenAddress: String) {
     try {
         const url = `https://public-api.birdeye.so/defi/token_creation_info?address=${tokenAddress}`;
-        const options = {
-            method: 'GET',
-            headers: {
-                "accept": " application/json",
-                "x-chain": "solana",
-                'X-API-KEY': `${process.env.BIRD_EYE_API_KEY}`
-            }
-        };
 
         const response = await axios.get(url, options);
         // console.log("response",response.data)
