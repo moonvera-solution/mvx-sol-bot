@@ -100,7 +100,7 @@ export async function handle_radyum_swap(
             let actualEarnings = referralRecord && referralRecord.earnings;
 
             // referalRecord.earnings = updateEarnings;
-            console.log("pfee from swap",ctx.session.priorityFee);
+            console.log("pfee from swap",ctx.session.priorityFees);
 
             if (poolKeys) {
                 raydium_amm_swap({

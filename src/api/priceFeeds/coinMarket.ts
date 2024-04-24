@@ -22,4 +22,4 @@ export async function getSolanaDetails() {
     }
 }
 
-getSolanaDetails();
+// getSolanaDetails();

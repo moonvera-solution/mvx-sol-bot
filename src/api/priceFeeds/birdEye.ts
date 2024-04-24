@@ -77,7 +77,7 @@ export async function getSolanaDetails() {
     try {
         const options = {method: 'GET', headers: {'X-API-KEY': '5cbf6ca613634d29b10b2d6dbb3989ff'}};
 
-        const response = await fetch('https://public-api.birdeye.so/public/price?address=So11111111111111111111111111111111111111112', options);
+        const response = await fetch('https://public-api.birdeye.so/defi/price?address=So11111111111111111111111111111111111111112', options);
         const data = await response.json();
         // console.log(data.data.value);
         return data.data.value;
@@ -88,7 +88,7 @@ export async function getSolanaDetails() {
 }
 getSolanaDetails()
 // Example:
-getTokenDataFromBirdEye('FvVDc6gZmYho6DLLuJ3ptHS6rxb797Cxf1insiUnu2BL');
+// getTokenDataFromBirdEye('FvVDc6gZmYho6DLLuJ3ptHS6rxb797Cxf1insiUnu2BL');
 /**
  * Response:
     {
