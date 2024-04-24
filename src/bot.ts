@@ -574,6 +574,7 @@ bot.on("message", async (ctx) => {
           }
         } catch (e) {
           ctx.api.sendMessage(chatId, "🔴 Please entre a valid address");
+          console.error("Error in 'buy' command:", e);
         }
         break;
       }
