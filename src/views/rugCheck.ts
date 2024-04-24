@@ -9,7 +9,7 @@ import { getTokenDataFromBirdEye } from '../api/priceFeeds/birdEye';
 export async function display_rugCheck(ctx: any, isRefresh: boolean ) {
     const chatId = ctx.chat.id;
     const session = ctx.session;
-    const token = session.rugCheckToken;
+    const token = session.rugCheckToken instanceof PublicKey ? session.rugCheckToken.toBase58() : session.rugCheckToken;
     const rugPool = session.activeTradingPool;
     const baseVault = rugPool.baseVault;
     const quoteVault = rugPool.quoteVault;
@@ -35,7 +35,7 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean ) {
             lpMintInfo
         ] = await Promise.all([
             getTokenDataFromBirdEye(token),
-            getTokenMetadata(ctx, token.toBase58()),
+            getTokenMetadata(ctx, token),
             getSolanaDetails(),
             quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
             connection.getParsedAccountInfo(new PublicKey(quoteVault), "processed"),
