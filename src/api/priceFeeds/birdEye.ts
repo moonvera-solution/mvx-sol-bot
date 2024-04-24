@@ -2,21 +2,11 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 
 dotenv.config();
-
+const options = {method: 'GET', headers: {'X-API-KEY': 'f134abedf1c44496b3554ffc610b47f4'}};
 export async function getTokenDataFromBirdEye(tokenAddress: String) {
     try {
         const url = `https://public-api.birdeye.so/defi/token_overview?address=${tokenAddress}`;
         const url2 = `https://public-api.birdeye.so/defi/token_security?address=${tokenAddress}`;
-
-        const options = {
-            method: 'GET',
-            headers: {
-               
-                "x-chain": "solana",
-                'X-API-KEY': `${process.env.BIRD_EYE_API_KEY}`
-            }
-        };
-
         const response = await axios.get(url, options);
         const response2 = await axios.get(url2, options);
   
