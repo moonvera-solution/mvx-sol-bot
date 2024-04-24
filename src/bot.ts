@@ -1181,8 +1181,7 @@ bot.on("callback_query", async (ctx: any) => {
     logErrorToFile("callback_query", e);
 
     if (e instanceof GrammyError || e instanceof HttpError || e instanceof Error || e instanceof TypeError || e instanceof RangeError) {
-      console.error("Callback query failed due to timeout or invalid ID.");
-
+      console.error("Callback query failed due to timeout or invalid ID.", e);
     }
     else {
       console.error(e);
