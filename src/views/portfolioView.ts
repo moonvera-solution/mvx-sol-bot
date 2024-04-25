@@ -387,6 +387,5 @@ export async function display_refresh_single_spl_positions(ctx: any) {
         await ctx.editMessageText(fullMessage, options);
     } catch (err) {
         console.error(err);
-
     }
 }
