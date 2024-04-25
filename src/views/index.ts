@@ -448,7 +448,7 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
                 `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
                 `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
                 `Market Cap: <b>${formattedmac} USD</b>\n` +
-                `Token Price: <b> ${tokenPriceUSD} USD</b> | <b> ${tokenPriceSOL} SOL</b> \n\n` +
+                `Token Price: <b> ${tokenPriceUSD.toFixed(4)} USD</b> | <b> ${tokenPriceSOL.toFixed(4)} SOL</b> \n\n` +
                 // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
                 `Price Impact (5.0 SOL) : <b>${priceImpact}%</b>  |  (1.0 SOL): <b> ${priceImpact_1}%</b>\n\n` +
                 `---<code>Trade Position</code>---\n` +
