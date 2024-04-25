@@ -47,7 +47,7 @@ import { sendHelpMessage } from "./views/util/helpMessage";
 import { display_rugCheck } from "./views/rugCheck";
 import { _generateReferralLink, _getReferralData } from "../src/db/mongo/crud";
 import { Portfolios, Referrals } from "./db/mongo/schema";
-import { display_spl_positions, display_single_spl_positions} from "./views/portfolioView";
+import { display_spl_positions, display_single_spl_positions, display_refresh_single_spl_positions} from "./views/portfolioView";
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { logErrorToFile } from "../error/logger";
 const express = require('express');
@@ -258,7 +258,7 @@ bot.command("start", async (ctx: any) => {
     // Send the message with the inline keyboard
     ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
     ctx.session.portfolio = await getPortfolio(chatId);
-    ctx.session.latestCommand = "optional";
+    // ctx.session.latestCommand = "optional";
   } catch (error: any) {
 
     logErrorToFile("bot on start cmd", error);
@@ -378,30 +378,30 @@ bot.on("message", async (ctx) => {
   
    
        switch (latestCommand) {
-        case "optional": {
-            if(msgTxt){
-                if (PublicKey.isOnCurve(msgTxt)) {
-                  const isTOken = await checkAccountType(ctx, msgTxt);
-                  if (!isTOken) {
-                    ctx.api.sendMessage(chatId, "Invalid address");
-                    return;
-                  }
-                  ctx.session.latestToken = new PublicKey(msgTxt);
-                  const addressOptions = {
-                    reply_markup: {
-                      inline_keyboard: [
-                        [{ text: "Snipe", callback_data: "snipe" }],
-                        [{ text: "Buy", callback_data: "buy" }]
-                      ]
-                    },
-                    // parse_mode: "HTML",
-                  };
-                  await ctx.api.sendMessage(chatId, "Choose an action for the address:", addressOptions);
-                  return;  // Stop further processing to wait for next command
-              }
-            }          
-                break;
-        }
+        // case "optional": {
+        //     if(msgTxt){
+        //         if (PublicKey.isOnCurve(msgTxt)) {
+        //           const isTOken = await checkAccountType(ctx, msgTxt);
+        //           if (!isTOken) {
+        //             ctx.api.sendMessage(chatId, "Invalid address");
+        //             return;
+        //           }
+        //           ctx.session.latestToken = new PublicKey(msgTxt);
+        //           const addressOptions = {
+        //             reply_markup: {
+        //               inline_keyboard: [
+        //                 [{ text: "Snipe", callback_data: "snipe" }],
+        //                 [{ text: "Buy", callback_data: "buy" }]
+        //               ]
+        //             },
+        //             // parse_mode: "HTML",
+        //           };
+        //           await ctx.api.sendMessage(chatId, "Choose an action for the address:", addressOptions);
+        //           return;  // Stop further processing to wait for next command
+        //       }
+        //     }          
+        //         break;
+        // }
       case "set_slippage": {
         ctx.session.latestSlippage = Number(msgTxt);
         if (ctx.session.currentMode === "buy") {
@@ -594,7 +594,7 @@ bot.on("message", async (ctx) => {
             if (!ctx.session.activeTradingPool) {
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
-              display_snipe_options(ctx, false, msgTxt);
+              await display_snipe_options(ctx, false, msgTxt);
             } else {
               ctx.session.snipeToken = new PublicKey(
                 ctx.session.activeTradingPool.baseMint
@@ -703,10 +703,9 @@ bot.on("callback_query", async (ctx: any) => {
       const newPositionIndex = parseInt(parts[2]); // New position index
 
       ctx.session.positionIndex = newPositionIndex;
-      ctx.session.activeTradingPool =
-        ctx.session.positionPool[ctx.session.positionIndex];
-
-      await display_single_spl_positions(ctx, true);
+      console.log('positionIndex', ctx.session.positionIndex)
+      ctx.session.activeTradingPool = ctx.session.positionPool[ctx.session.positionIndex];
+      await display_refresh_single_spl_positions(ctx );
     }
 
     switch (data) {
@@ -920,12 +919,14 @@ bot.on("callback_query", async (ctx: any) => {
         if (ctx.session.latestCommand === 'rug_check') {
           ctx.session.latestCommand = "buy";
           await display_token_details(ctx, false);
-        }else if(ctx.session.latestCommand === 'optional'){
-          ctx.session.latestCommand = "buy";
-          // ctx.session.snipeToken = ctx.session.latestToken;
-          ctx.session.activeTradingPool = await getRayPoolKeys(ctx, ctx.session.latestToken);
-          await display_token_details(ctx,false);
-        } else {
+        }
+        // else if(ctx.session.latestCommand === 'optional'){
+        //   ctx.session.latestCommand = "buy";
+        //   // ctx.session.snipeToken = ctx.session.latestToken;
+        //   ctx.session.activeTradingPool = await getRayPoolKeys(ctx, ctx.session.latestToken);
+        //   await display_token_details(ctx,false);
+        // }
+         else {
           ctx.session.latestCommand = "buy";
           await ctx.api.sendMessage(
             chatId,
@@ -946,12 +947,13 @@ bot.on("callback_query", async (ctx: any) => {
         if (ctx.session.latestCommand === 'rug_check') {
           ctx.session.latestCommand = "snipe";
           await display_snipe_options(ctx,false, ctx.session.rugCheckToken);
-        } else if(ctx.session.latestCommand === 'optional'){
-          ctx.session.latestCommand = "snipe";
-          ctx.session.snipeToken = ctx.session.latestToken;
-          ctx.session.activeTradingPool = await getRayPoolKeys(ctx, ctx.session.latestToken);
-          await display_snipe_options(ctx,false, ctx.session.snipeToken);
-        }
+        } 
+        // else if(ctx.session.latestCommand === 'optional'){
+        //   ctx.session.latestCommand = "snipe";
+        //   ctx.session.snipeToken = ctx.session.latestToken;
+        //   ctx.session.activeTradingPool = await getRayPoolKeys(ctx, ctx.session.latestToken);
+        //   await display_snipe_options(ctx,false, ctx.session.snipeToken);
+        // }
         else {
           ctx.session.latestCommand = "snipe";
           await ctx.api.sendMessage(
@@ -1143,8 +1145,8 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "display_refresh_single_spl_positions": {
-        await display_single_spl_positions(ctx, true);
-        await display_single_spl_positions(ctx, true);
+        await display_refresh_single_spl_positions(ctx);
+        await display_refresh_single_spl_positions(ctx);
         break;
       }
       case "Refresh_display_after_Snipe_Buy": {
@@ -1153,7 +1155,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "display_single_spl_positions": {
         ctx.session.latestCommand = 'display_single_spl_positions'
-        await display_single_spl_positions(ctx, false);
+        await display_single_spl_positions(ctx);
         break;
       }
       case "priority_low": {
@@ -1162,7 +1164,7 @@ bot.on("callback_query", async (ctx: any) => {
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);
         } else if (ctx.session.latestCommand === 'display_single_spl_positions') {
-          await display_single_spl_positions(ctx, true);
+          await display_refresh_single_spl_positions(ctx);
 
         } else if (ctx.session.latestCommand === 'display_after_Snipe_Buy') {
           await display_after_Snipe_Buy(ctx, true);
@@ -1179,7 +1181,7 @@ bot.on("callback_query", async (ctx: any) => {
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);
         } else if (ctx.session.latestCommand === 'display_single_spl_positions') {
-          await display_single_spl_positions(ctx, true);
+          await display_refresh_single_spl_positions(ctx);
         } else if (ctx.session.latestCommand === 'display_after_Snipe_Buy') {
           await display_after_Snipe_Buy(ctx,true);
 
@@ -1195,7 +1197,7 @@ bot.on("callback_query", async (ctx: any) => {
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);
         } else if (ctx.session.latestCommand === 'display_single_spl_positions') {
-          await display_single_spl_positions(ctx, true);
+          await display_refresh_single_spl_positions(ctx);
         } else if (ctx.session.latestCommand === 'display_after_Snipe_Buy') {
           await display_after_Snipe_Buy(ctx, true);
 
@@ -1211,7 +1213,7 @@ bot.on("callback_query", async (ctx: any) => {
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);
         } else if (ctx.session.latestCommand === 'display_single_spl_positions') {
-          await display_single_spl_positions(ctx, true);
+          await display_refresh_single_spl_positions(ctx);
         } else if (ctx.session.latestCommand === 'display_after_Snipe_Buy') {
           await display_after_Snipe_Buy(ctx, true);
 
