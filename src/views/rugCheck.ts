@@ -5,11 +5,12 @@ import { getSolanaDetails } from '../api';
 import { formatNumberToKOrM, getSolBalance } from '../service/util';
 import { Connection } from '@solana/web3.js';
 import { getTokenDataFromBirdEye } from '../api/priceFeeds/birdEye';
+import BigNumber from 'bignumber.js';
 
 export async function display_rugCheck(ctx: any, isRefresh: boolean ) {
     const chatId = ctx.chat.id;
     const session = ctx.session;
-    const token = session.rugCheckToken;
+    const token = session.rugCheckToken instanceof PublicKey ? session.rugCheckToken.toBase58() : session.rugCheckToken;
     const rugPool = session.activeTradingPool;
     const baseVault = rugPool.baseVault;
     const quoteVault = rugPool.quoteVault;
@@ -35,7 +36,7 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean ) {
             lpMintInfo
         ] = await Promise.all([
             getTokenDataFromBirdEye(token),
-            getTokenMetadata(ctx, token.toBase58()),
+            getTokenMetadata(ctx, token),
             getSolanaDetails(),
             quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
             connection.getParsedAccountInfo(new PublicKey(quoteVault), "processed"),
@@ -46,9 +47,9 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean ) {
         const {
             tokenData,
         } = tokenMetadataResult;
-        const tokenPriceSOL = birdeyeData ? (birdeyeData.response.data.data.price / solPrice).toFixed(quoteDecimals) : tokenInfo.price.toNumber().toFixed(quoteDecimals);
-        const tokenPriceUSD = birdeyeData ? birdeyeData.response.data.data.price.toFixed(quoteDecimals) : (tokenInfo.price.times(solPrice)).toFixed(quoteDecimals);
-        const marketCap =  birdeyeData?.response.data.data.mc? birdeyeData.response.data.data.mc : tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
+        const tokenPriceSOL = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price).div(solPrice).toFixed(quoteDecimals) : new BigNumber(tokenInfo.price).toFixed(quoteDecimals);
+        const tokenPriceUSD = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price).toFixed(quoteDecimals) : new BigNumber(tokenInfo.price.times(solPrice)).toFixed(quoteDecimals);
+        const marketCap =  birdeyeData?.response.data.data.mc? birdeyeData.response.data.data.mc : new BigNumber(tokenInfo.marketCap).times(new BigNumber(solPrice)).toFixed(2);
         const processData = (data: any) => {
             if (data.value?.data instanceof Buffer) {
                 return null;

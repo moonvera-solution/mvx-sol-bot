@@ -110,7 +110,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   recipientAddress: DEFAULT_PUBLIC_KEY,
   activeWalletIndex: 0,
   activeTradingPool: DefaultPoolInfoData,
-  latestCommand: 'optional',
+  latestCommand: '',
   currentMode: '',
   latestSlippage: 5,
   metadataMessageId: 0,
