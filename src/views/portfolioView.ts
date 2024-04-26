@@ -26,7 +26,6 @@ interface UserPosition {
 
 export async function display_spl_positions(ctx: any, isRefresh: boolean) {
     const { publicKey: userWallet } = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex] || {};
-
     if (!userWallet) return ctx.api.sendMessage(ctx.chat.id, "Wallet not found.", { parse_mode: 'HTML' });
 
     const userPosition = await UserPositions.find({ positionChatId: ctx.chat.id, walletId: userWallet }, { positions: { $slice: -7 } });
@@ -43,8 +42,7 @@ export async function display_spl_positions(ctx: any, isRefresh: boolean) {
     const tokenBalances = await Promise.all(userPosition[0].positions.map(pos =>
         connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(pos.baseMint), programId: TOKEN_PROGRAM_ID })
     ));
-
-   const messagePartsPromises = userPosition[0].positions.map(async (pos, i) => {
+    const messagePartsPromises = userPosition[0].positions.map(async (pos, i) => {
     const tokenAccountInfo = tokenBalances[i];
     const userBalance = new BigNumber(tokenAccountInfo.value[0]?.account.data.parsed.info.tokenAmount.amount || 0);
     if (pos.amountIn == 0 || pos.amountOut == 0 || pos.amountOut! < 0 || pos.amountIn < 0 || userBalance.toNumber() == 0) {
@@ -300,7 +298,6 @@ export async function display_refresh_single_spl_positions(ctx: any) {
             await UserPositions.updateOne({ walletId: userWallet },{$pull: { positions: { baseMint: pos.baseMint } }});
             return;
         }
-     
         ctx.session.activeTradingPool =  ctx.session.positionPool.find((pool: any) => pool.baseMint === pos.baseMint) 
     } 
 
