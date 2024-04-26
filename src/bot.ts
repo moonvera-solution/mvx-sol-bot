@@ -1146,7 +1146,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "display_refresh_single_spl_positions": {
         await display_refresh_single_spl_positions(ctx);
-        await display_refresh_single_spl_positions(ctx);
+    
         break;
       }
       case "Refresh_display_after_Snipe_Buy": {
@@ -1229,6 +1229,7 @@ bot.on("callback_query", async (ctx: any) => {
 
     if (e instanceof GrammyError || e instanceof HttpError || e instanceof Error || e instanceof TypeError || e instanceof RangeError) {
       console.error("Callback query failed due to timeout or invalid ID.");
+      console.log("Error in callback_query:", e);
 
     }
     else {

@@ -26,9 +26,11 @@ interface UserPosition {
 
 export async function display_spl_positions(ctx: any, isRefresh: boolean) {
     const { publicKey: userWallet } = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex] || {};
+
     if (!userWallet) return ctx.api.sendMessage(ctx.chat.id, "Wallet not found.", { parse_mode: 'HTML' });
 
     const userPosition = await UserPositions.find({ positionChatId: ctx.chat.id, walletId: userWallet }, { positions: { $slice: -7 } });
+    
     if (!userPosition.length || !userPosition[0].positions.length) {
         return ctx.api.sendMessage(ctx.chat.id, "No positions found.", { parse_mode: 'HTML' });
     }
@@ -42,30 +44,39 @@ export async function display_spl_positions(ctx: any, isRefresh: boolean) {
         connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(pos.baseMint), programId: TOKEN_PROGRAM_ID })
     ));
 
-    const messageParts: Promise<string>[] = userPosition[0].positions
-        .map((pos, i) => {
-            const tokenAccountInfo = tokenBalances[i];
-            let userBalance = new BigNumber(tokenAccountInfo.value[0]?.account.data.parsed.info.tokenAmount.amount || 0);
-            if (userBalance.toNumber() <= 0) return null; 
+   const messagePartsPromises = userPosition[0].positions.map(async (pos, i) => {
+    const tokenAccountInfo = tokenBalances[i];
+    const userBalance = new BigNumber(tokenAccountInfo.value[0]?.account.data.parsed.info.tokenAmount.amount || 0);
+    if (pos.amountIn == 0 || pos.amountOut == 0 || pos.amountOut! < 0 || pos.amountIn < 0 || userBalance.toNumber() == 0) {
+        await UserPositions.updateOne({ walletId: userWallet }, {$pull: { positions: { baseMint: pos.baseMint } }});
+        return null;
+    }
 
-            return { pos, userBalance };
-        })
-        .filter((position): position is UserPosition => position !== null) 
-        .map(async ({ pos, userBalance }) => {
-            let poolKeys = positionPoolKeys.find(pk => pk.baseMint === pos.baseMint) || await getRayPoolKeys(ctx, pos.baseMint);
-            if (!positionPoolKeys.some(pk => pk.baseMint === pos.baseMint)) positionPoolKeys.push(poolKeys);
-            
-            const tokenInfo = await quoteToken({
-                baseVault: poolKeys.baseVault,
-                quoteVault: poolKeys.quoteVault,
-                baseDecimals: poolKeys.baseDecimals,
-                quoteDecimals: poolKeys.quoteDecimals,
-                baseSupply: poolKeys.baseMint,
-                connection
-            });
+    if (userBalance.toNumber() <= 0) return null;
 
-            return formatPositionMessage(pos, poolKeys, userBalance, tokenInfo, solprice);
+    return { pos, userBalance };
+});
+
+const messageParts: Promise<string>[] = (await Promise.all(messagePartsPromises))
+    .filter((position): position is UserPosition => position !== null)  
+    .map(async (position) => {
+        const { pos, userBalance } = position; 
+
+        let poolKeys = positionPoolKeys.find(pk => pk.baseMint === pos.baseMint) || await getRayPoolKeys(ctx, pos.baseMint);
+        if (!positionPoolKeys.some(pk => pk.baseMint === pos.baseMint)) positionPoolKeys.push(poolKeys);
+
+        const tokenInfo = await quoteToken({
+            baseVault: poolKeys.baseVault,
+            quoteVault: poolKeys.quoteVault,
+            baseDecimals: poolKeys.baseDecimals,
+            quoteDecimals: poolKeys.quoteDecimals,
+            baseSupply: poolKeys.baseMint,
+            connection
         });
+
+        return formatPositionMessage(pos, poolKeys, userBalance, tokenInfo, solprice);
+    });
+
 
 
     const fullMessage = (await Promise.all(messageParts)).join('');
@@ -128,11 +139,8 @@ function createKeyboardForPosition() {
 
 
 async function synchronizePools(userPositions: any, ctx: any) {
-    let updatedPools = [];
-    for (let pos of userPositions) {
-        let poolKeys = await getRayPoolKeys(ctx, pos.baseMint);
-        updatedPools.push(poolKeys);
-    }
+    const promises = userPositions.map((pos: any) => getRayPoolKeys(ctx, pos.baseMint));
+    const updatedPools = await Promise.all(promises);
     return updatedPools;
 }
 
@@ -148,6 +156,7 @@ export async function display_single_spl_positions(ctx: any) {
         return;
     }
     ctx.session.positionPool = await synchronizePools(userPosition[0].positions, ctx);
+    console.log('positionPool', ctx.session.positionPool);
     let currentIndex = ctx.session.positionIndex;
     if(userPosition[0].positions[currentIndex]){
         currentIndex = 0; 
@@ -161,7 +170,8 @@ export async function display_single_spl_positions(ctx: any) {
             await UserPositions.updateOne({ walletId: userWallet },{$pull: { positions: { baseMint: pos.baseMint } }});
             return;
         }
-        ctx.session.activeTradingPool = await getRayPoolKeys(ctx,userPosition[0].positions[currentIndex].baseMint);
+        ctx.session.activeTradingPool =  ctx.session.positionPool.find((pool: any) => pool.baseMint === pos.baseMint) 
+     
     }
 
     const createKeyboardForPosition = (index: any) => {
@@ -291,7 +301,7 @@ export async function display_refresh_single_spl_positions(ctx: any) {
             return;
         }
      
-        ctx.session.activeTradingPool = await getRayPoolKeys(ctx,userPosition[0].positions[currentIndex].baseMint);
+        ctx.session.activeTradingPool =  ctx.session.positionPool.find((pool: any) => pool.baseMint === pos.baseMint) 
     } 
 
     const createKeyboardForPosition = (index: any) => {
@@ -382,7 +392,6 @@ export async function display_refresh_single_spl_positions(ctx: any) {
             disable_web_page_preview: true,
             reply_markup: { inline_keyboard: keyboardButtons },
         };
-        console.log('fullMessage', fullMessage);
         await ctx.editMessageText(fullMessage, options);
     } catch (err) {
         console.error(err);

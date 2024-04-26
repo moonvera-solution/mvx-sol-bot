@@ -205,6 +205,7 @@ export async function handle_radyum_swap(
                     }
 
                 }).catch(async (error: any) => {
+                    console.log('afterswap. ',error)
                     console.log('here... ',error.message)
                     await ctx.api.sendMessage(chatId, JSON.stringify(error.message));
                     return;
