@@ -75,7 +75,7 @@ export async function getMarketCapFromDextools(chain: any, tokenAddress: any) {
       
         // Assuming the market cap is a field in the response
         const marketCap = data.data.fdv;
-        console.log("marketcap",marketCap ) // Adjust based on actual response structure
+        // console.log("marketcap",marketCap ) // Adjust based on actual response structure
         return marketCap;
     } catch (error:any) {
         console.error('Error fetching market cap from Dextools:', error.message);

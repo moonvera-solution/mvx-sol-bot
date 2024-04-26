@@ -22,7 +22,7 @@ export async function getTokenOwnerPercentageFromBirdEye(tokenAddress: String) {
     try {
         const url = `https://public-api.birdeye.so/defi/token_security?address=${tokenAddress}`;
         const response = await axios.get(url, options);
-        console.log("response",response.data)
+        // console.log("response",response.data)
         return await response.data; // Adjust this based on the actual response structure
     } catch (error:any) {
         console.error(

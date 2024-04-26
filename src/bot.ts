@@ -1146,7 +1146,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "display_refresh_single_spl_positions": {
         await display_refresh_single_spl_positions(ctx);
-        await display_refresh_single_spl_positions(ctx);
+    
         break;
       }
       case "Refresh_display_after_Snipe_Buy": {
@@ -1159,7 +1159,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "priority_low": {
-        console.log("LOW ")
+        // console.log("LOW ")
         ctx.session.priorityFees = PriotitizationFeeLevels.LOW;
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);
@@ -1176,7 +1176,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "priority_medium": {
-        console.log("MED ")
+        // console.log("MED ")
         ctx.session.priorityFees = PriotitizationFeeLevels.MEDIUM;
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);
@@ -1192,7 +1192,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "priority_high": {
-        console.log("HIGH ")
+        // console.log("HIGH ")
         ctx.session.priorityFees = PriotitizationFeeLevels.HIGH;
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);
@@ -1208,7 +1208,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "priority_max": {
-        console.log("MAX")
+        // console.log("MAX")
         ctx.session.priorityFees = PriotitizationFeeLevels.MAX;
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);
@@ -1228,7 +1228,9 @@ bot.on("callback_query", async (ctx: any) => {
     logErrorToFile("callback_query", e);
 
     if (e instanceof GrammyError || e instanceof HttpError || e instanceof Error || e instanceof TypeError || e instanceof RangeError) {
-      console.error("Callback query failed due to timeout or invalid ID.", e);
+      console.error("Callback query failed due to timeout or invalid ID.",e);
+      // console.log("Error in callback_query:", e);
+
     }
     else {
       console.error(e);
