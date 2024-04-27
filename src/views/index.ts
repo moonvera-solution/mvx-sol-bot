@@ -105,7 +105,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
         dexscreenerURL,
         tokenData,
     } = tokenMetadataResult;
-    const marketCap =  birdeyeData?.response.data.data.mc? birdeyeData.response.data.data.mc : tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
+    const marketCap =  birdeyeData?.response.data.data.mc? birdeyeData.response.data.data.mc : tokenInfo.marketCap.toNumber() * (solPrice);
     try {
 
     const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
@@ -141,10 +141,9 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
                 disable_web_page_preview: true,
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: ' 🔂 Refresh ', callback_data: 'refresh_trade' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
+                        [{ text: ' 🔂 Refresh ', callback_data: 'refresh_trade' }, { text: ' ⚙️ Settings ', callback_data: 'settings' },{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }],
                         [{ text: 'Buy (X SOL)', callback_data: 'buy_X_SOL' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_SOL' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_SOL' }],
                         // [{ text: '⏮️ Previous', callback_data: 'previous_token' }, { text: `${tokenData.name} (${tokenData.symbol})`, callback_data: 'current_token' }, { text: 'Next ⏭️', callback_data: 'next_token' }],
-                        [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: 'Selling Mode 💸', callback_data: 'sell' }],
                         [{ text: '📈 Priority fees', callback_data: '_' }],
                         [
                             { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Med ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
@@ -310,10 +309,9 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
                 disable_web_page_preview: true,
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: ' 🔂 Refresh ', callback_data: 'refresh_snipe' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
+                        [{ text: ' 🔂 Refresh ', callback_data: 'refresh_snipe' }, { text: ' ⚙️ Settings ', callback_data: 'settings' },{ text: `⛷️ Set Slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }],
                         // [{ text: ' 🎯  Turbo Snipping ', callback_data: '_' }],
                         [{ text: '🎯 X SOL', callback_data: 'snipe_X_SOL' }, { text: '🎯 0.5 SOL', callback_data: 'snipe_0.5_SOL' }, { text: '🎯 1 SOL', callback_data: 'snipe_1_SOL' }],
-                        [{ text: `⛷️ Set Slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }, { text: 'Selling Mode 💸', callback_data: 'sell' }],
                         [{ text: '📈 Priority fees', callback_data: '_' }],
         
                         [
@@ -331,10 +329,9 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
             disable_web_page_preview: true,
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: ' 🔂 Refresh ', callback_data: 'refresh_snipe' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
+                    [{ text: ' 🔂 Refresh ', callback_data: 'refresh_snipe' }, { text: ' ⚙️ Settings ', callback_data: 'settings' },{ text: `⛷️ Set Slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }],
                     // [{ text: ' 🎯  Turbo Snipping ', callback_data: '_' }],
                     [{ text: '🎯 X SOL', callback_data: 'snipe_X_SOL' }, { text: '🎯 0.5 SOL', callback_data: 'snipe_0.5_SOL' }, { text: '🎯 1 SOL', callback_data: 'snipe_1_SOL' }],
-                    [{ text: `⛷️ Set Slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }, { text: 'Selling Mode 💸', callback_data: 'sell' }],
                     [{ text: '📈 Priority fees', callback_data: '_' }],
     
                     [
