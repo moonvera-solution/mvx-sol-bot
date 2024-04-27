@@ -709,11 +709,11 @@ bot.on("callback_query", async (ctx: any) => {
         const username = ctx.update.callback_query.from.username; //ctx.from.username;
 
         // Check if the user is allowed to access the referral program
-        if (ctx.session.env.allowedReferral[0].tgUserName) {
+        if (allowedUsernames.includes(username)) {
           ctx.session.latestCommand = "refer_friends";
           let existingReferral = await Referrals.findOne({
             generatorChatId: chatId,
-          });
+         });
 
           if (!existingReferral) {
             // No existing referral found, ask for the wallet address
