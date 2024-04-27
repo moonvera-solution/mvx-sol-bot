@@ -157,7 +157,7 @@ export async function display_single_spl_positions(ctx: any) {
         return;
     }
     ctx.session.positionPool = await synchronizePools(userPosition[0].positions, ctx);
-    console.log('positionPool', ctx.session.positionPool);
+    // console.log('positionPool', ctx.session.positionPool);
     let currentIndex = ctx.session.positionIndex;
     if(userPosition[0].positions[currentIndex]){
         currentIndex = 0; 
@@ -256,7 +256,7 @@ export async function display_single_spl_positions(ctx: any) {
                     `Capital: ${initialInSOL.toFixed(4)} <b>SOL</b> | ${initialInUSD.toFixed(4)} <b>USD </b>\n` +
                     `Current value: ${valueInSOL != 'N/A' ? valueInSOL.toFixed(4) : 'N/A'} <b>SOL</b> | ${valueInUSD != 'N/A' ? valueInUSD.toFixed(4) : 'N/A'} <b>USD </b>\n` +
                     `Profit: ${profitInSol != 'N/A' ? profitInSol.toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? profitInUSD.toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? profitPercentage.toFixed(2) : 'N/A'}%\n\n` +
-                    `Token Balance t: ${Number(userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).toFixed(3)} <b>${pos.symbol}</b> | ${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n\n` +
+                    `Token Balance: ${Number(userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).toFixed(3)} <b>${pos.symbol}</b> | ${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n\n` +
                     `Wallet Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(
                         balanceInSOL * details
                       ).toFixed(2)}</b> USD\n\n` ;
@@ -336,7 +336,7 @@ export async function display_refresh_single_spl_positions(ctx: any) {
 
                 let pos = userPosition[0].positions[currentIndex];
                 const token = String(pos.baseMint);
-                console.log('tokenzzz', token);
+                // console.log('tokenzzz', token);
                 const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
                 let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
                 if (pos.amountIn == 0 || pos.amountOut == 0 || pos.amountOut < 0 || pos.amountIn < 0 || userBalance.toNumber() == 0) {
@@ -388,7 +388,7 @@ export async function display_refresh_single_spl_positions(ctx: any) {
                 `Capital: ${initialInSOL.toFixed(4)} <b>SOL</b> | ${initialInUSD.toFixed(4)} <b>USD </b>\n` +
                 `Current value: ${valueInSOL != 'N/A' ? valueInSOL.toFixed(4) : 'N/A'} <b>SOL</b> | ${valueInUSD != 'N/A' ? valueInUSD.toFixed(4) : 'N/A'} <b>USD </b>\n` +
                 `Profit: ${profitInSol != 'N/A' ? profitInSol.toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? profitInUSD.toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? profitPercentage.toFixed(2) : 'N/A'}%\n\n` +
-                `Token Balance t: ${Number(userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).toFixed(3)} <b>${pos.symbol}</b> | ${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n\n` +
+                `Token Balance: ${Number(userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).toFixed(3)} <b>${pos.symbol}</b> | ${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n\n` +
                 `Wallet Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(
                     balanceInSOL * details
                   ).toFixed(2)}</b> USD\n\n` ;
