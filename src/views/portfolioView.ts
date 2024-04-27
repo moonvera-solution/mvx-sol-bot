@@ -164,7 +164,7 @@ export async function display_single_spl_positions(ctx: any) {
         ctx.session.positionIndex = currentIndex;  // Update session index
         let pos = userPosition[0].positions[currentIndex];
         const token = String(pos.baseMint);
-        // console.log('tokenzzz', token);
+        // console.log('tokenzzz', token);`
         const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
         let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
         if (pos.amountIn == 0 || pos.amountOut == 0 || pos.amountOut < 0 || pos.amountIn < 0 || userBalance.toNumber() == 0) {
