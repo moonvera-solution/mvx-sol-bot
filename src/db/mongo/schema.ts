@@ -76,6 +76,10 @@ const UserPositionSchema = new Schema<USERPOSITION_TYPE>({
   ]
 });
 
+const AllowedReferralsSchema = new Schema({
+  tgUserName: { type: String, required: true }
+});
+
 export const UserPositions = mongoose.model<USERPOSITION_TYPE>(
   "UserPositions",
   UserPositionSchema
@@ -97,3 +101,4 @@ export const Referrals = mongoose.model<REFERRAL_TYPE>(
 
 export const WalletKeys = mongoose.model("WalletKeys", WalletSchema);
 export const Portfolios = mongoose.model("Portfolios", UserPortfolioSchema);
+export const AllowedReferrals = mongoose.model("AllowedReferrals", AllowedReferralsSchema);
