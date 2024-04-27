@@ -72,7 +72,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
     const tokenPriceSOL = birdeyeData ? (birdeyeData.response.data.data.price / solPrice) : tokenInfo.price.toNumber();
     const tokenPriceUSD = birdeyeData ? birdeyeData.response.data.data.price : (tokenInfo.price.times(solPrice));
     let specificPosition;
-    if(userPosition[0].positions){
+    if(userPosition[0] && userPosition[0].positions && userPosition[0].positions != undefined){
         specificPosition = userPosition[0].positions.find((pos: any) => new PublicKey(pos.baseMint).equals(tokenAddress));
 
     }
