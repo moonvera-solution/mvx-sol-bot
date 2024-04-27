@@ -63,25 +63,7 @@ export async function _initDbConnection(): Promise<any> {
   return _anon;
 }
 
-// export async function _findSOLPoolByBaseMint(baseMintValue: PublicKey): Promise<RAYDIUM_POOL_TYPE> {
-// try {
-//   // Search in unofficial pools
-//   let pool: RAYDIUM_POOL_TYPE | null = await Raydium_unOfficial_pools.findOne({ baseMint: baseMintValue, quoteMint: SOL_TOKEN });
-//   console.log("pool", pool);
-//   if (pool?.baseMint != DEFAULT_PUBLIC_KEY) {
-//     return pool as RAYDIUM_POOL_TYPE;
-//   }
 
-//   // If not found in unofficial pools, search in official pools
-//   pool = await Raydium_official_pools.findOne({ baseMint: baseMintValue, quoteMint: SOL_TOKEN });
-//   if (pool?.baseMint != DEFAULT_PUBLIC_KEY) {
-//     return pool as RAYDIUM_POOL_TYPE;
-//   }
-// } catch (err: any) {
-//   console.log(`No pool found with baseMint: ${baseMintValue}`, err.message);
-// }
-// return DefaultPoolInfoData as RAYDIUM_POOL_TYPE;
-// }
 
 export async function _savePortfolio(
   chatId: Number,

@@ -5,7 +5,7 @@ import { TOKEN_PROGRAM_ID } from '@raydium-io/raydium-sdk';
 import { getSolanaDetails, getTokenDataFromBirdEye } from "../api/priceFeeds/birdEye";
 import { getRayPoolKeys } from '../service/dex/raydium/raydium-utils/formatAmmKeysById'
 import { quoteToken } from './util/dataCalculation';
-import { formatNumberToKOrM } from '../service/util';
+import { formatNumberToKOrM, getSolBalance } from '../service/util';
 import { Connection } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 
@@ -148,7 +148,10 @@ export async function display_single_spl_positions(ctx: any) {
     const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userWallet },  { positions: { $slice: -7} } );
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
-    const solprice = await getSolanaDetails();
+        const [balanceInSOL, details] = await Promise.all([
+        getSolBalance(userWallet, connection),
+        getSolanaDetails()
+    ]);
     if (!userPosition[0] || userPosition[0].positions.length === 0) {
         await ctx.api.sendMessage(ctx.chat.id, "No positions found.", { parse_mode: 'HTML' });
         return;
@@ -188,7 +191,7 @@ export async function display_single_spl_positions(ctx: any) {
                  { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Med ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
                  { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
              ],
-            [{ text: 'Refresh Positions', callback_data: 'display_refresh_single_spl_positions' }]
+            [{ text: 'Refresh', callback_data: 'display_refresh_single_spl_positions' }]
         ];
     };
     
@@ -232,19 +235,19 @@ export async function display_single_spl_positions(ctx: any) {
                     connection
                 });
                 const tokenPriceSOL = tokenInfo.price.toNumber();
-                const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(poolKeys.quoteDecimals);
+                const tokenPriceUSD = (Number(tokenPriceSOL) * (details)).toFixed(poolKeys.quoteDecimals);
                 const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
                 const userBalanceUSD = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceUSD).toFixed(3);
                 const userBalanceSOL = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceSOL).toFixed(3);
 
                 const valueInUSD = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10, poolKeys.baseDecimals) * Number(tokenPriceUSD) : 'N/A';
                 const valueInSOL = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10, poolKeys.baseDecimals) * Number(tokenPriceSOL) : 'N/A';
-                const initialInUSD = (pos.amountIn / 1e9) * Number(solprice);
+                const initialInUSD = (pos.amountIn / 1e9) * Number(details);
                 const initialInSOL = (pos.amountIn / 1e9);
-                const profitPercentage = valueInUSD != 'N/A' ? (valueInUSD - (pos.amountIn / 1e9 * solprice)) / (pos.amountIn / 1e9 * solprice) * 100 : 'N/A';
+                const profitPercentage = valueInUSD != 'N/A' ? (valueInUSD - (pos.amountIn / 1e9 * details)) / (pos.amountIn / 1e9 * details) * 100 : 'N/A';
                 const profitInUSD = valueInUSD != 'N/A' ? valueInUSD - initialInUSD : 'N/A';
                 const profitInSol = valueInSOL != 'N/A' ? valueInSOL - initialInSOL : 'N/A';
-                const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
+                const marketCap = tokenInfo.marketCap.toNumber() * (details).toFixed(2);
                 const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
              
 
@@ -253,7 +256,10 @@ export async function display_single_spl_positions(ctx: any) {
                     `Capital: ${initialInSOL.toFixed(4)} <b>SOL</b> | ${initialInUSD.toFixed(4)} <b>USD </b>\n` +
                     `Current value: ${valueInSOL != 'N/A' ? valueInSOL.toFixed(4) : 'N/A'} <b>SOL</b> | ${valueInUSD != 'N/A' ? valueInUSD.toFixed(4) : 'N/A'} <b>USD </b>\n` +
                     `Profit: ${profitInSol != 'N/A' ? profitInSol.toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? profitInUSD.toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? profitPercentage.toFixed(2) : 'N/A'}%\n\n` +
-                    `Token Balance in Wallet: ${Number(userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).toFixed(3)} <b>${pos.symbol}</b> | ${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n\n`;
+                    `Token Balance t: ${Number(userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).toFixed(3)} <b>${pos.symbol}</b> | ${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n\n` +
+                    `Wallet Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(
+                        balanceInSOL * details
+                      ).toFixed(2)}</b> USD\n\n` ;
      
         };
         let keyboardButtons = createKeyboardForPosition(currentIndex);
@@ -277,7 +283,10 @@ export async function display_refresh_single_spl_positions(ctx: any) {
     const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userWallet },  { positions: { $slice: -7} } );
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
-    const solprice = await getSolanaDetails();
+    const [balanceInSOL, details] = await Promise.all([
+        getSolBalance(userWallet, connection),
+        getSolanaDetails()
+    ]);
     try {
     if (!userPosition[0]) {
         await ctx.api.sendMessage(ctx.chat.id, "No positions found.", { parse_mode: 'HTML' });
@@ -316,7 +325,7 @@ export async function display_refresh_single_spl_positions(ctx: any) {
                  { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Med ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
                  { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
              ],
-            [{ text: 'Refresh Positions', callback_data: 'display_refresh_single_spl_positions' }]
+            [{ text: 'Refresh ', callback_data: 'display_refresh_single_spl_positions' }]
         ];
     };
     
@@ -357,7 +366,7 @@ export async function display_refresh_single_spl_positions(ctx: any) {
                     connection
                 });
                 const tokenPriceSOL = tokenInfo.price.toNumber();
-                const tokenPriceUSD = (Number(tokenPriceSOL) * (solprice)).toFixed(poolKeys.quoteDecimals);
+                const tokenPriceUSD = (Number(tokenPriceSOL) * (details)).toFixed(poolKeys.quoteDecimals);
            
                 const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
                 const userBalanceUSD = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceUSD).toFixed(2);
@@ -365,21 +374,24 @@ export async function display_refresh_single_spl_positions(ctx: any) {
 
                 const valueInUSD = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10, poolKeys.baseDecimals) * Number(tokenPriceUSD) : 'N/A';
                 const valueInSOL = (pos.amountOut - userBalance.toNumber()) < 5 ? (Number(pos.amountOut)) / Math.pow(10, poolKeys.baseDecimals) * Number(tokenPriceSOL) : 'N/A';
-                const initialInUSD = (pos.amountIn / 1e9) * Number(solprice);
+                const initialInUSD = (pos.amountIn / 1e9) * Number(details);
                 const initialInSOL = (pos.amountIn / 1e9);
-                const profitPercentage = valueInUSD != 'N/A' ? (valueInUSD - (pos.amountIn / 1e9 * solprice)) / (pos.amountIn / 1e9 * solprice) * 100 : 'N/A';
+                const profitPercentage = valueInUSD != 'N/A' ? (valueInUSD - (pos.amountIn / 1e9 * details)) / (pos.amountIn / 1e9 * details) * 100 : 'N/A';
                 const profitInUSD = valueInUSD != 'N/A' ? valueInUSD - initialInUSD : 'N/A';
                 const profitInSol = valueInSOL != 'N/A' ? valueInSOL - initialInSOL : 'N/A';
-                const marketCap = tokenInfo.marketCap.toNumber() * (solprice).toFixed(2);
+                const marketCap = tokenInfo.marketCap.toNumber() * (details).toFixed(2);
                 const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
              
 
                 fullMessage += `<b>${pos.name} (${pos.symbol})</b> | <code>${poolKeys.baseMint}</code>\n` +
-                    `Mcap: ${formattedmac} <b>USD</b>\n` +
-                    `Capital: ${initialInSOL.toFixed(4)} <b>SOL</b> | ${initialInUSD.toFixed(4)} <b>USD </b>\n` +
-                    `Current value: ${valueInSOL != 'N/A' ? valueInSOL.toFixed(4) : 'N/A'} <b>SOL</b> | ${valueInUSD != 'N/A' ? valueInUSD.toFixed(4) : 'N/A'} <b>USD </b>\n` +
-                    `Profit: ${profitInSol != 'N/A' ? profitInSol.toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? profitInUSD.toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? profitPercentage.toFixed(2) : 'N/A'}%\n\n` +
-                    `Token Balance in Wallet: ${Number(userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).toFixed(3)} <b>${pos.symbol}</b> | ${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n\n`;
+                `Mcap: ${formattedmac} <b>USD</b>\n` +
+                `Capital: ${initialInSOL.toFixed(4)} <b>SOL</b> | ${initialInUSD.toFixed(4)} <b>USD </b>\n` +
+                `Current value: ${valueInSOL != 'N/A' ? valueInSOL.toFixed(4) : 'N/A'} <b>SOL</b> | ${valueInUSD != 'N/A' ? valueInUSD.toFixed(4) : 'N/A'} <b>USD </b>\n` +
+                `Profit: ${profitInSol != 'N/A' ? profitInSol.toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? profitInUSD.toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? profitPercentage.toFixed(2) : 'N/A'}%\n\n` +
+                `Token Balance t: ${Number(userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).toFixed(3)} <b>${pos.symbol}</b> | ${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n\n` +
+                `Wallet Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(
+                    balanceInSOL * details
+                  ).toFixed(2)}</b> USD\n\n` ;
 
         };
         let keyboardButtons = createKeyboardForPosition(currentIndex);
