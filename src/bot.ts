@@ -46,7 +46,7 @@ import { getRayPoolKeys } from "./service/dex/raydium/raydium-utils/formatAmmKey
 import { sendHelpMessage } from "./views/util/helpMessage";
 import { display_rugCheck } from "./views/rugCheck";
 import { _generateReferralLink, _getReferralData } from "../src/db/mongo/crud";
-import { Portfolios, Referrals } from "./db/mongo/schema";
+import { Portfolios, Referrals,AllowedReferrals } from "./db/mongo/schema";
 import { display_spl_positions, display_single_spl_positions, display_refresh_single_spl_positions} from "./views/portfolioView";
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { logErrorToFile } from "../error/logger";
@@ -109,12 +109,6 @@ if (isProd) {
   bot.start();
 }
 
-const allowedUsernames = [
-  "tech_01010",
-  "daniellesifg",
-  "swalefdao",
-  "coachalib",
-]; // without the @
 
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                      BOT START                             */
@@ -142,9 +136,9 @@ bot.command("start", async (ctx: any) => {
     const userName = ctx.message.from.username;
     console.log("userName:", userName);
 
-    const allowedUsers = allowedUsernames.includes(userName);
+    ctx.session.env["allowedReferral"] = await AllowedReferrals.find({tgUserName: userName})
 
-    if (referralCode || allowedUsers) {
+    if (referralCode || ctx.session.env.allowedReferral[0].tgUserName) {
       const referralRecord = await Referrals.findOne({
         referralCode: referralCode,
       });
@@ -714,7 +708,7 @@ bot.on("callback_query", async (ctx: any) => {
         const username = ctx.update.callback_query.from.username; //ctx.from.username;
 
         // Check if the user is allowed to access the referral program
-        if (allowedUsernames.includes(username)) {
+        if (ctx.session.env.allowedReferral[0].tgUserName) {
           ctx.session.latestCommand = "refer_friends";
           let existingReferral = await Referrals.findOne({
             generatorChatId: chatId,
