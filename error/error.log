@@ -1284,4 +1284,18 @@ Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range.
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:56:9
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:56:9
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:56:9
+ 4/27/2024, 4:47:26 PM - callback_query
+ TypeError 
+ Cannot read properties of undefined (reading '0')
+ TypeError: Cannot read properties of undefined (reading '0')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:712:44
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:51:41
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:51:41
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:48
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
  
