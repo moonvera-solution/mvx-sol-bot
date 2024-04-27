@@ -47,9 +47,9 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean ) {
         const {
             tokenData,
         } = tokenMetadataResult;
-        const tokenPriceSOL = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price).div(solPrice).toFixed(quoteDecimals) : new BigNumber(tokenInfo.price).toFixed(quoteDecimals);
-        const tokenPriceUSD = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price).toFixed(quoteDecimals) : new BigNumber(tokenInfo.price.times(solPrice)).toFixed(quoteDecimals);
-        const marketCap =  birdeyeData?.response.data.data.mc? birdeyeData.response.data.data.mc : new BigNumber(tokenInfo.marketCap).times(new BigNumber(solPrice)).toFixed(2);
+        const tokenPriceSOL = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price).div(solPrice) : new BigNumber(tokenInfo.price);
+        const tokenPriceUSD = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price) : new BigNumber(tokenInfo.price.times(solPrice));
+        const marketCap =  birdeyeData?.response.data.data.mc? birdeyeData.response.data.data.mc : new BigNumber(tokenInfo.marketCap).times(new BigNumber(solPrice));
         const processData = (data: any) => {
             if (data.value?.data instanceof Buffer) {
                 return null;
@@ -61,8 +61,8 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean ) {
         const circulatingSupply = processData(baseVaultInfo);
         const aMM = processData(lpMintInfo);
         const creatorAddress = birdeyeData?  birdeyeData.response2.data.data.creatorAddress :  tokenData.updateAuthorityAddress.toBase58();
-        const circulatedSupply = Number(((Number(circulatingSupply.tokenAmount.amount)) / Math.pow(10, baseDecimals)).toFixed(2));
-        const baseTokenSupply = Number(((Number(getBaseSupply.supply)) / Math.pow(10, baseDecimals)).toFixed(2));
+        const circulatedSupply = Number(((Number(circulatingSupply.tokenAmount.amount)) / Math.pow(10, baseDecimals)));
+        const baseTokenSupply = Number(((Number(getBaseSupply.supply)) / Math.pow(10, baseDecimals)));
         //Get the user balance
         let [getCreatorPercentage, lpSupplyOwner, formattedCirculatingSupply, formattedSupply, formattedLiquidity, formattedmac] = await Promise.all([
             getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint), connection),
@@ -79,12 +79,12 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean ) {
 
         formattedmac = formattedmac ? formattedmac : "NA";
         formattedLiquidity = formattedLiquidity ? formattedLiquidity : "N/A";
-        const circulatingPercentage = (Number(circulatedSupply) / Number(baseTokenSupply) * 100).toFixed(2);
-        const pooledSol = Number(((Number(getPooledSol.tokenAmount.amount)) / Math.pow(10, quoteDecimals)).toFixed(2));
+        const circulatingPercentage = (Number(circulatedSupply) / Number(baseTokenSupply) * 100);
+        const pooledSol = Number(((Number(getPooledSol.tokenAmount.amount)) / Math.pow(10, quoteDecimals)));
         // const isRaydium = aMM.mintAuthority === '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1' ? "<b>Raydium</b>" : "Unknown";
         const lpSupply = lpSupplyOwner.userTokenBalance;
         const islpBurnt = lpSupply > 0 ? "❌ No" : "✅ Yes";
-        const creatorPercentage = (Number(getCreatorPercentage.userTokenBalance) / Number(baseTokenSupply) * 100).toFixed(2);
+        const creatorPercentage = (Number(getCreatorPercentage.userTokenBalance) / Number(baseTokenSupply) * 100);
         let liquidityWarning = (tokenInfo.liquidity * solPrice) / 0.5 < 300 ? "🟥 Be careful: This has low liquidity on Raydium." : "";
 
         let messageText = `<b>------ ${birdeyeData?.response.data.data.name} (${birdeyeData?.response.data.data.symbol}) ------</b>\n` +
@@ -103,12 +103,12 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean ) {
             `Top 10 Holders percentage: <b>${top10.toFixed(2)}%</b>\n\n` +
             `<code>------Financials------</code>\n` +
             `Total Supply: <b>${formattedSupply}</b> ${tokenData.symbol}\n` +
-            `Circulating Supply: <b>${formattedCirculatingSupply}</b> ${tokenData.symbol} | <b>${circulatingPercentage}%</b>\n` +
+            `Circulating Supply: <b>${formattedCirculatingSupply}</b> ${tokenData.symbol} | <b>${circulatingPercentage.toFixed(2)}%</b>\n` +
             
-            `Price: <b>${tokenPriceUSD} USD</b> | <b>${tokenPriceSOL} SOL</b>\n` +
+            `Price: <b>${tokenPriceUSD.toFixed(9)} USD</b> | <b>${tokenPriceSOL.toFixed(9)} SOL</b>\n` +
             `Market Cap: <b>${formattedmac}</b> USD\n` +
             `Liquidity: <b>${formattedLiquidity}</b> USD\n` +
-            `Pooled SOL: <b>${pooledSol}</b> SOL\n` +
+            `Pooled SOL: <b>${pooledSol.toFixed(3)}</b> SOL\n` +
             `LP Burnt: ${islpBurnt}\n\n` +
             `${liquidityWarning}`;
    
