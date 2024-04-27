@@ -109,7 +109,12 @@ if (isProd) {
   bot.start();
 }
 
-
+const allowedUsernames = [
+  "tech_01010",
+  "daniellesifg",
+  "swalefdao",
+  "coachalib",
+]; // without the @
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                      BOT START                             */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
@@ -121,7 +126,6 @@ bot.command("start", async (ctx: any) => {
     const connection = new Connection(
       `${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`
     );
-
     let referralCode = null;
     // Check if there's additional text with the /start command
     if (ctx.message.text.includes(" ")) {
@@ -132,21 +136,19 @@ bot.command("start", async (ctx: any) => {
       // User is new
       isNewUser = true;
     }
+     const userName = ctx.message.from.username;
+     console.log("userName:", userName);
 
-    const userName = ctx.message.from.username;
-    console.log("userName:", userName);
+     const allowedUsers = allowedUsernames.includes(userName);
 
-    ctx.session.env["allowedReferral"] = await AllowedReferrals.find({tgUserName: userName})
-
-    if (referralCode || ctx.session.env.allowedReferral[0].tgUserName) {
-      const referralRecord = await Referrals.findOne({
-        referralCode: referralCode,
-      });
+     if (referralCode || allowedUsers) {
+       const referralRecord = await Referrals.findOne({
+         referralCode: referralCode,
+       });
       if (referralRecord && referralRecord.generatorChatId !== chatId) {
         if (!referralRecord.referredUsers.includes(chatId)) {
           // Add the user's chatId to the referredUsers array
           referralRecord.referredUsers.push(chatId);
-
           // Increment the referral count
           referralRecord.numberOfReferrals! += 1;
           await referralRecord.save();
@@ -170,7 +172,6 @@ bot.command("start", async (ctx: any) => {
       );
       return;
     }
-
     //-------Start bot with wallet---------------------------
     ctx.session.latestCommand = "start";
     let userWallet: Keypair | null = null;

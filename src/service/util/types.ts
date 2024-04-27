@@ -129,7 +129,8 @@ export const DefaultSessionData: ISESSION_DATA = {
   // txTip:5_000
   env: {
     'tritonRPC' : 'https://moonvera-pit.rpcpool.com/',
-    'tritonToken' : process.env.TRITON_RPC_TOKEN!
+    'tritonToken' : process.env.TRITON_RPC_TOKEN!,
+    
   }
 }
 
