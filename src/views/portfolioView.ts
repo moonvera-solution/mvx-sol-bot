@@ -82,11 +82,19 @@ const messageParts: Promise<string>[] = (await Promise.all(messagePartsPromises)
     await sendMessage(ctx, fullMessage, isRefresh);
 }
 
-function formatPositionMessage(pos: Position, poolKeys: any, userBalance: BigNumber, tokenInfo: any, solprice: number): string {
+async function formatPositionMessage(pos: Position, poolKeys: any, userBalance: BigNumber, tokenInfo: any, solprice: number): Promise<string> {
     const amountOut = pos.amountOut ?? 0;  
+    const tokenAddress = (pos.baseMint);
+    const birdeyeData =  await  getTokenDataFromBirdEye(tokenAddress.toString());
+    const tokenPriceUSD = birdeyeData 
+  && birdeyeData.response 
+  && birdeyeData.response.data 
+  && birdeyeData.response.data.data 
+  && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
+    ? birdeyeData.response.data.data.price 
+    : tokenInfo.price.times(solprice).toNumber();
+    const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solprice) : tokenInfo.price.toNumber();
 
-    const tokenPriceUSD = tokenInfo.price.times(solprice);
-    const tokenPriceSOL = tokenPriceUSD / solprice;
     const displayUserBalance = userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals)).toFixed(3);
     const userBalanceUSD = userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals)).times(tokenPriceUSD).toFixed(4);
     const userBalanceSOL = userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals)).times(tokenPriceSOL).toFixed(4);
