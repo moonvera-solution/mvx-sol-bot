@@ -1479,4 +1479,140 @@ Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range.
     at processTicksAndRejections (node:internal/process/task_queues:95:5)
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/28/2024, 6:52:36 PM - display_snipe_options
+ TypeError 
+ Cannot read properties of null (reading 'toFixed')
+ TypeError: Cannot read properties of null (reading 'toFixed')
+    at display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:293:51)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:944:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/28/2024, 6:54:34 PM - display_snipe_options
+ TypeError 
+ Cannot read properties of null (reading 'toFixed')
+ TypeError: Cannot read properties of null (reading 'toFixed')
+    at display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:282:57)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:944:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/28/2024, 6:55:21 PM - display_snipe_options
+ TypeError 
+ Cannot read properties of null (reading 'toFixed')
+ TypeError: Cannot read properties of null (reading 'toFixed')
+    at display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:282:57)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:944:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/28/2024, 6:56:24 PM - display_snipe_options
+ TypeError 
+ Cannot read properties of null (reading 'toFixed')
+ TypeError: Cannot read properties of null (reading 'toFixed')
+    at display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:282:57)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+ 4/28/2024, 6:56:58 PM - display_snipe_options
+ TypeError 
+ Cannot read properties of null (reading 'toFixed')
+ TypeError: Cannot read properties of null (reading 'toFixed')
+    at display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:282:57)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+ 4/28/2024, 6:58:03 PM - display_snipe_options
+ TypeError 
+ Cannot read properties of null (reading 'toFixed')
+ TypeError: Cannot read properties of null (reading 'toFixed')
+    at display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:282:57)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:944:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/28/2024, 6:59:51 PM - display_snipe_options
+ TypeError 
+ Cannot read properties of null (reading 'toFixed')
+ TypeError: Cannot read properties of null (reading 'toFixed')
+    at display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:282:57)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:944:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/28/2024, 7:00:28 PM - display_snipe_options
+ TypeError 
+ Cannot read properties of null (reading 'toFixed')
+ TypeError: Cannot read properties of null (reading 'toFixed')
+    at display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:294:51)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:944:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/28/2024, 7:02:28 PM - display_snipe_options
+ TypeError 
+ Cannot read properties of null (reading 'toFixed')
+ TypeError: Cannot read properties of null (reading 'toFixed')
+    at display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:296:51)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:944:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/28/2024, 7:03:52 PM - display_snipe_options
+ TypeError 
+ Cannot read properties of null (reading 'toFixed')
+ TypeError: Cannot read properties of null (reading 'toFixed')
+    at display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:296:51)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+ 4/28/2024, 7:04:02 PM - display_snipe_options
+ TypeError 
+ Cannot read properties of null (reading 'toFixed')
+ TypeError: Cannot read properties of null (reading 'toFixed')
+    at display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:296:51)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+ 4/28/2024, 7:35:02 PM - bot on positions cmd
+ GrammyError 
+ Call to 'sendMessage' failed! (400: Bad Request: message text is empty)
+ GrammyError: Call to 'sendMessage' failed! (400: Bad Request: message text is empty)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async sendMessage (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:135:9)
+    at async display_spl_positions (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:82:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:278:5
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
  

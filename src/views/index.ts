@@ -69,9 +69,15 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
         runMax(ctx, raydiumId)
     ]);
     const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
-    const tokenPriceSOL = birdeyeData ? (birdeyeData.response.data.data.price / solPrice) : tokenInfo.price.toNumber();
-    const tokenPriceUSD = birdeyeData ? birdeyeData.response.data.data.price : (tokenInfo.price.times(solPrice));
-    let specificPosition;
+    const tokenPriceUSD = birdeyeData 
+  && birdeyeData.response 
+  && birdeyeData.response.data 
+  && birdeyeData.response.data.data 
+  && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
+    ? birdeyeData.response.data.data.price 
+    : tokenInfo.price.times(solPrice).toNumber();
+    const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solPrice) : tokenInfo.price.toNumber();
+ let specificPosition;
     if(userPosition[0] && userPosition[0].positions && userPosition[0].positions != undefined){
         specificPosition = userPosition[0].positions.find((pos: any) => new PublicKey(pos.baseMint).equals(tokenAddress));
 
@@ -276,9 +282,16 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
                 const countdown = new Date(timeDiff).toISOString().substr(11, 8);
                 poolStatusMessage = `⏳ Opening in ${countdown}`;
             }
-    
-            const tokenPriceSOL = birdeyeData ? (birdeyeData.response.data.data.price / solPrice) : tokenInfo.price.toNumber();
-            const tokenPriceUSD = birdeyeData ? birdeyeData.response.data.data.price : (tokenInfo.price.times(solPrice));
+            console.log('(tokenInfo.price.times(solPrice)',(tokenInfo.price.times(solPrice).toNumber()));
+            const tokenPriceUSD = birdeyeData 
+  && birdeyeData.response 
+  && birdeyeData.response.data 
+  && birdeyeData.response.data.data 
+  && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
+    ? birdeyeData.response.data.data.price 
+    : tokenInfo.price.times(solPrice).toNumber();
+    const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solPrice) : tokenInfo.price.toNumber();
+
             const priceImpact = tokenInfo.priceImpact.toFixed(2);
             const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     
@@ -408,9 +421,15 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
 
     const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
 
-    const tokenPriceSOL = birdeyeData ? (birdeyeData.response.data.data.price / solPrice) : tokenInfo.price.toNumber();
-    const tokenPriceUSD = birdeyeData ? birdeyeData.response.data.data.price : (tokenInfo.price.times(solPrice));
-
+    const tokenPriceUSD = birdeyeData 
+    && birdeyeData.response 
+    && birdeyeData.response.data 
+    && birdeyeData.response.data.data 
+    && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
+      ? birdeyeData.response.data.data.price 
+      : tokenInfo.price.times(solPrice).toNumber();
+      const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solPrice) : tokenInfo.price.toNumber();
+  
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
