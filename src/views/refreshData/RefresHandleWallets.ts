@@ -6,8 +6,8 @@ import { Connection } from '@solana/web3.js';
 export async function RefreshAllWallets(ctx: any){
     const chatId = ctx.chat.id;
     const wallets = ctx.session.portfolio.wallets;
-    const selectedWalletIndex = ctx.session.activeWalletIndex; // Index of the currently selected wallet
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const selectedWalletIndex = ctx.session.portfolio.activeWalletIndex; // Index of the currently selected wallet
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
 
 
     if (!wallets || wallets.length === 0) {

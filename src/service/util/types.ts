@@ -9,8 +9,7 @@ export type PORTFOLIO_TYPE = {
   wallets: Array<{
     walletId: String,
     publicKey: PublicKey | String,
-    secretKey: PublicKey | String,
-    
+    secretKey: PublicKey | String
   }>
   positions: Array<any>,
   activeWalletIndex: number
@@ -27,12 +26,11 @@ export const DefaultPortfolioData: PORTFOLIO_TYPE = {
   ],
   activeWalletIndex: 0
 
-
 }
 
 export interface ISESSION_DATA {
+  chatId: number;
   portfolio: PORTFOLIO_TYPE,
-  activeWalletIndex: number | 0,
   activeTradingPool: RAYDIUM_POOL_TYPE;
   latestCommand: string;
   currentMode: string;
@@ -54,9 +52,19 @@ export interface ISESSION_DATA {
   positionPool: Array<any>;
   priorityFees: PriotitizationFeeLevels;
   positionIndex: number;
-  env: {
-    [key: string]: string
-  }
+  tritonRPC: String,
+  tritonToken: String,
+  allowedReferral:String, // tg Username
+  poolSchedule: {
+    status: String,
+    baseDecimals: Number,
+    quoteDecimals: Number,
+    lpDecimals: Number,
+    baseReserve: String,
+    quoteReserve: String,
+    lpSupply: String,
+    startTime: String
+  },
 }
 
 export const enum PriotitizationFeeLevels {
@@ -96,6 +104,7 @@ export const DefaultPoolInfoData: RAYDIUM_POOL_TYPE = {
 }
 
 export const DefaultSessionData: ISESSION_DATA = {
+  chatId: 0,
   portfolio: {
     chatId: 0,
     wallets: [],
@@ -108,7 +117,6 @@ export const DefaultSessionData: ISESSION_DATA = {
   rugCheckToken: DEFAULT_PUBLIC_KEY,
   solAmount: 0,
   recipientAddress: DEFAULT_PUBLIC_KEY,
-  activeWalletIndex: 0,
   activeTradingPool: DefaultPoolInfoData,
   latestCommand: '',
   currentMode: '',
@@ -126,11 +134,19 @@ export const DefaultSessionData: ISESSION_DATA = {
   positionPool: [],
   priorityFees: PriotitizationFeeLevels.LOW,
   positionIndex: 0,
-  // txTip:5_000
-  env: {
-    'tritonRPC' : 'https://moonvera-pit.rpcpool.com/',
-    'tritonToken' : process.env.TRITON_RPC_TOKEN!
-  }
+  allowedReferral:'', // tg Username
+  tritonRPC : 'https://moonvera-pit.rpcpool.com/',
+  tritonToken : process.env.TRITON_RPC_TOKEN!,
+  poolSchedule: {
+    status: '',
+    baseDecimals: 0,
+    quoteDecimals: 0,
+    lpDecimals: 0,
+    baseReserve: '',
+    quoteReserve: '',
+    lpSupply: '',
+    startTime: ''
+  },
 }
 
 export type RAYDIUM_POOL_TYPE = {
@@ -161,6 +177,7 @@ export type RAYDIUM_POOL_TYPE = {
   "marketEventQueue": PublicKey;
   "lookupTableAccount": PublicKey;
 }
+
 export type REFERRAL_TYPE = {
   generatorChatId: number;
   generatorWallet: string;    // Wallet of the referrer

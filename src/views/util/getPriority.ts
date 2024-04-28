@@ -60,7 +60,7 @@ const getMaxPrioritizationFeeByPercentile = async (
 
 
 export  async function runMin(ctx: any, raydiumId: any) {
-  const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
  const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [
@@ -74,7 +74,7 @@ export  async function runMin(ctx: any, raydiumId: any) {
 }
 export async function runMedium(ctx: any, raydiumId: any) {
   const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
-  const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
 
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [
@@ -89,7 +89,7 @@ export async function runMedium(ctx: any, raydiumId: any) {
 
 export async function runHigh(ctx: any, raydiumId: any) {
   const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
-  const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [
             new PublicKey(priorityCalculation),
@@ -104,7 +104,7 @@ export async function runHigh(ctx: any, raydiumId: any) {
 
 export async function runMax(ctx: any, raydiumId: any) {
   const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
-  const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
 
     const result = await getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [

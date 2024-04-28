@@ -20,7 +20,7 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean ) {
     ctx.session.snipeToken = baseMint;
     ctx.session.buyToken = baseMint;
     const lpMint = rugPool.lpMint;
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
     const birdeyeURL = `https://birdeye.so/token/${token}?chain=solana`;
     const dextoolsURL = `https://www.dextools.io/app/solana/pair-explorer/${token}`;
     const dexscreenerURL = `https://dexscreener.com/solana/${token}`;

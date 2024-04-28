@@ -7,12 +7,12 @@ import { PublicKey,Connection } from '@solana/web3.js';
 
 export async function handleSettings(ctx:any) {
     // await RefreshAllWallets(ctx);
-    const selectedWallet = ctx.session.activeWalletIndex;
+    const selectedWallet = ctx.session.portfolio.activeWalletIndex;
     const userWallet = ctx.session.portfolio.wallets[selectedWallet];
     const chatId = ctx.chat.id;
     const publicKeyString: any = userWallet.publicKey; // The user's public key
     // Fetch SOL balance
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
     const balanceInSOL = await getSolBalance(publicKeyString,connection);
     try{
 

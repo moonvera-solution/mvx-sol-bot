@@ -4,7 +4,7 @@ import { Connection } from '@solana/web3.js';
 
 export async function handleRefreshStart(ctx: any) {
     const chatId = ctx.chat.id;
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
 
     // Fetch the latest SOL price
     const details = await getSolanaDetails();
@@ -71,8 +71,8 @@ export async function handleRefreshStart(ctx: any) {
 export async function handleRereshWallet(ctx: any){
 
     const chatId = ctx.chat.id;
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
-    const selectedWallet = ctx.session.activeWalletIndex;
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const selectedWallet = ctx.session.portfolio.activeWalletIndex;
     const userWallet = ctx.session.portfolio.wallets[selectedWallet];
 
     const publicKeyString: any = userWallet.publicKey; // The user's public key

@@ -1,16 +1,5 @@
-import {
-  ApiPoolInfoV4,
-  LIQUIDITY_STATE_LAYOUT_V4,
-  Liquidity,
-  LiquidityPoolKeys,
-  MARKET_STATE_LAYOUT_V3,
-  Market,
-  SPL_MINT_LAYOUT,
-  jsonInfo2PoolKeys
-} from '@raydium-io/raydium-sdk';
-import {
-  PublicKey, Connection
-} from '@solana/web3.js';
+import {ApiPoolInfoV4,LIQUIDITY_STATE_LAYOUT_V4,Liquidity,LiquidityPoolKeys,MARKET_STATE_LAYOUT_V3,Market,SPL_MINT_LAYOUT,jsonInfo2PoolKeys} from '@raydium-io/raydium-sdk';
+import { PublicKey, Connection } from '@solana/web3.js';
 import { RAYDIUM_POOL_TYPE } from '../../../../service/util/types';
 import { connect } from 'node:http2';
 
@@ -20,20 +9,20 @@ export async function fetchPoolSchedule(keys: any, connection: Connection) {
 }
 
 export async function getRayPoolKeys(ctx: any, shitcoin: string) {
-  const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
   const quoteMint = 'So11111111111111111111111111111111111111112';
   let keys = undefined;
   try {
     keys = await _getRayPoolKeys({ t1: shitcoin, t2: quoteMint, connection });
     // console.log('keys', keys);
     if (keys) {
-      ctx.session.env["poolSchedule"] = await fetchPoolSchedule(keys, connection);
-      ctx.session.env["originalBaseMint"] = keys.baseMint;
+      ctx.session.poolSchedule = await fetchPoolSchedule(keys, connection);
+      ctx.session.originalBaseMint = keys.baseMint;
     } else {
       keys = await _getRayPoolKeys({ t1: quoteMint, t2: shitcoin, connection });
       if (keys) {
-        ctx.session.env["originalBaseMint"] = keys.baseMint;
-        ctx.session.env["poolSchedule"] = await fetchPoolSchedule(keys, connection);
+        ctx.session.originalBaseMint = keys.baseMint;
+        ctx.session.poolSchedule = await fetchPoolSchedule(keys, connection);
 
         let _quoteMint = keys.quoteMint;
         let _baseMint = keys.baseMint;
