@@ -253,7 +253,7 @@ bot.command("start", async (ctx: any) => {
     // Send the message with the inline keyboard
     ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
     ctx.session.portfolio = await getPortfolio(chatId);
-    // ctx.session.latestCommand = "optional";
+    // ctx.session.latestCommand = "rug_check";
   } catch (error: any) {
 
     logErrorToFile("bot on start cmd", error);
@@ -268,12 +268,15 @@ bot.command("start", async (ctx: any) => {
 
 bot.command("help", async (ctx) => {
   await sendHelpMessage(ctx);
+  ctx.session.latestCommand = "rug_check";
+
 });
 
 bot.command("positions", async (ctx) => {
   try {
     // await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
     await display_spl_positions(ctx, false);
+    
   } catch (error: any) {
     logErrorToFile("bot on positions cmd", error);
   }
@@ -370,33 +373,30 @@ bot.on("message", async (ctx) => {
   try {
     const latestCommand = ctx.session.latestCommand;
     const msgTxt = ctx.update.message.text;
-  
-   
+    console.log("msgTxt", msgTxt);
+    console.log('typeof msgTxt', typeof msgTxt);
+    console.log("latestCommand", latestCommand);
+    if (msgTxt) {
+      if ((!isNaN(parseFloat(msgTxt!)) &&  ctx.session.latestCommand !== 'buy' && ctx.session.latestCommand !== 'sell' && ctx.session.latestCommand !== 'snipe' && ctx.session.latestCommand !== "send_sol" && ctx.session.latestCommand !== 'ask_for_sol_amount' && ctx.session.latestCommand === 'display_after_Snipe_Buy' ) || ctx.session.latestCommand === 'start' || ctx.session.latestCommand === 'display_single_spl_positions') {
+          if (PublicKey.isOnCurve(msgTxt!)) {
+            const isTOken = await checkAccountType(ctx, msgTxt);
+            if (!isTOken) {
+              ctx.api.sendMessage(chatId, "Invalid address");
+              return;
+            }
+            ctx.session.latestCommand = "rug_check";
+            let rugCheckToken = new PublicKey(msgTxt);
+            ctx.session.rugCheckToken = rugCheckToken;
+            ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
+
+            await display_rugCheck(ctx, false);
+          } else {
+            ctx.api.sendMessage(chatId, "Invalid address");
+          }
+        }
+    } 
        switch (latestCommand) {
-        // case "optional": {
-        //     if(msgTxt){
-        //         if (PublicKey.isOnCurve(msgTxt)) {
-        //           const isTOken = await checkAccountType(ctx, msgTxt);
-        //           if (!isTOken) {
-        //             ctx.api.sendMessage(chatId, "Invalid address");
-        //             return;
-        //           }
-        //           ctx.session.latestToken = new PublicKey(msgTxt);
-        //           const addressOptions = {
-        //             reply_markup: {
-        //               inline_keyboard: [
-        //                 [{ text: "Snipe", callback_data: "snipe" }],
-        //                 [{ text: "Buy", callback_data: "buy" }]
-        //               ]
-        //             },
-        //             // parse_mode: "HTML",
-        //           };
-        //           await ctx.api.sendMessage(chatId, "Choose an action for the address:", addressOptions);
-        //           return;  // Stop further processing to wait for next command
-        //       }
-        //     }          
-        //         break;
-        // }
+       
       case "set_slippage": {
         ctx.session.latestSlippage = Number(msgTxt);
         if (ctx.session.currentMode === "buy") {
@@ -629,7 +629,7 @@ bot.on("message", async (ctx) => {
             `<b>Referral Program Details</b>\n\n` +
             `🔗 <b>Your Referral Link:</b> ${referralLink}\n\n` +
             `👥 <b>Referrals Count:</b> ${referralData?.count}\n` +
-            `💰 <b>Total Earnings:</b> ${referEarningSol} SOL/Token ($${referEarningDollar}) | 0.00 TOKEN\n` +
+            `💰 <b>Total Earnings:</b> ${referEarningSol} SOL ($${referEarningDollar})\n` +
             `Rewards are credited instantly to your SOL balance.\n\n` +
             `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals.\n\n` +
             `Your total earnings have been sent to your referral wallet <b>${recipientAddress}</b>.\n\n` +
@@ -736,7 +736,7 @@ bot.on("callback_query", async (ctx: any) => {
               `<b>Referral Program Details</b>\n\n` +
               `🔗 <b>Your Referral Link:</b> ${referralLink}\n\n` +
               `👥 <b>Referrals Count:</b> ${referralData?.count}\n` +
-              `💰 <b>Total Earnings:</b> ${referEarningSol} SOL/Token ($${referEarningDollar}) | 0.00 TOKEN \n` +
+              `💰 <b>Total Earnings:</b> ${referEarningSol} SOL ($${referEarningDollar})\n` +
               `Rewards are credited instantly to your SOL balance.\n\n` +
               `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals.\n\n` +
               `<i>Your total earnings have been sent to your referral wallet.</i>\n\n` +
