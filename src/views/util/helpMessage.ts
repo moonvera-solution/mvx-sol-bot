@@ -17,11 +17,9 @@ export async function sendHelpMessage(ctx: any) {
 
 <b>NFT for Early Access:</b> We're leveraging the power of NFTs to offer you early access to our referral program and premium features. This is your ticket to a world of exclusive benefits with DRIBs bot.
 
-<b>Free Trading FOR LIFE:</b> Yes, you read that right. We're offering no trading fees for LIFE. This is a golden opportunity to trade freely with the upcoming tools of DRIBs bot, enhancing your trading experience without any cost.
+<b>Free Trading FOR LIFE:</b> Free Trading for Life: Exclusive to our NFT holders! Enjoy no trading fees forever with DRIBs bot and enhance your trading experience at no extra cost.
 
-<b>Future Airdrops:</b> To reward our loyal DRIBs users, we're planning future airdrops. This is our way of saying thank you for your continued support and trust in us.
-
-Remember, these exciting features and offers are on the horizon. Join us in this journey and let's shape the future of trading together!
+<b>Future Rewards:</b> To show our appreciation for our loyal DRIBs users, we're planning special rewards in the future.
 
 <i>🤝 Partnership Program Development</i>
 <b>Post-Premium Launch:</b> Following the release of all our premium features, we're excited to be developing a partnership program. Stay tuned for more details!
