@@ -1615,4 +1615,466 @@ Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range.
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 4/28/2024, 7:46:40 PM - bot.on('message'
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:257:17)
+ 4/28/2024, 7:46:40 PM - bot on snipe simmulation
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:257:17)
+ 4/28/2024, 7:48:55 PM - bot.on('message'
+ TypeError 
+ Cannot read properties of null (reading 'baseVault')
+ TypeError: Cannot read properties of null (reading 'baseVault')
+    at display_rugCheck (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/rugCheck.ts:15:31)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:392:35
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 4/28/2024, 7:52:08 PM - bot on snipe simmulation
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:257:17)
+ 4/28/2024, 7:52:08 PM - bot.on('message'
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:257:17)
+ 4/28/2024, 8:00:36 PM - bot.on('message'
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:257:17)
+ 4/28/2024, 8:00:36 PM - bot on snipe simmulation
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:257:17)
+ 4/28/2024, 8:05:50 PM - bot.on('message'
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:257:17)
+ 4/28/2024, 8:05:50 PM - bot on snipe simmulation
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:257:17)
+ 4/28/2024, 8:34:14 PM - bot on setSnipe
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:264:17)
+ 4/28/2024, 8:34:14 PM - bot on snipe simmulation
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:264:17)
+ 4/28/2024, 8:34:52 PM - bot on setSnipe
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:264:17)
+ 4/28/2024, 8:34:52 PM - bot on snipe simmulation
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:264:17)
+ 4/28/2024, 8:38:48 PM - bot on setSnipe
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:264:17)
+ 4/28/2024, 8:38:48 PM - bot on snipe simmulation
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:264:17)
+ 4/28/2024, 8:46:08 PM - bot on setSnipe
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:276:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:234:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:264:17)
+ 4/28/2024, 8:46:08 PM - bot on snipe simmulation
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:276:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:234:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:264:17)
+ 4/28/2024, 8:47:07 PM - bot on setSnipe
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:276:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:234:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:264:17)
+ 4/28/2024, 8:47:07 PM - bot on snipe simmulation
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:276:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:234:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:264:17)
+ 4/28/2024, 8:49:28 PM - bot on setSnipe
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:276:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:234:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:264:17)
+ 4/28/2024, 8:49:28 PM - bot on snipe simmulation
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:276:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:234:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:264:17)
+ 4/28/2024, 8:54:50 PM - bot on setSnipe
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:276:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:234:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:266:17)
+ 4/28/2024, 8:54:50 PM - bot on snipe simmulation
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:276:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:234:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:266:17)
+ 4/28/2024, 8:56:53 PM - bot on setSnipe
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:276:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:234:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:266:17)
+ 4/28/2024, 8:56:53 PM - bot on snipe simmulation
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:276:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:234:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:266:17)
+ 4/28/2024, 9:48:08 PM - bot on setSnipe
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:276:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:234:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:266:17)
+ 4/28/2024, 9:48:08 PM - bot on snipe simmulation
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:276:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:234:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:266:17)
+ 4/28/2024, 11:00:20 PM - display_snipe_options
+ UnexpectedAccountError 
+ The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+ UnexpectedAccountError: The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+    at Object.deserializeAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Serializer.ts:126:11)
+    at parse (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:53:12)
+    at Object.toMintAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:72:12)
+    at Object.handle (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/plugins/nftModule/operations/findNftByMint.ts:150:27)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Disposable.run (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/utils/Disposable.ts:33:14)
+    at async getTokenMetadata (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/feeds/index.ts:21:23)
+    at async display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:315:35)
+    at async display_rugCheck (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/rugCheck.ts:137:9)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:392:13
+ 4/28/2024, 11:02:54 PM - display_snipe_options
+ UnexpectedAccountError 
+ The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+ UnexpectedAccountError: The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+    at Object.deserializeAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Serializer.ts:126:11)
+    at parse (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:53:12)
+    at Object.toMintAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:72:12)
+    at Object.handle (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/plugins/nftModule/operations/findNftByMint.ts:150:27)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Disposable.run (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/utils/Disposable.ts:33:14)
+    at async getTokenMetadata (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/feeds/index.ts:21:23)
+    at async display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:315:35)
+    at async display_rugCheck (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/rugCheck.ts:138:9)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:436:13
+ 4/28/2024, 11:12:02 PM - display_snipe_options
+ UnexpectedAccountError 
+ The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+ UnexpectedAccountError: The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+    at Object.deserializeAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Serializer.ts:126:11)
+    at parse (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:53:12)
+    at Object.toMintAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:72:12)
+    at Object.handle (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/plugins/nftModule/operations/findNftByMint.ts:150:27)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Disposable.run (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/utils/Disposable.ts:33:14)
+    at async getTokenMetadata (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/feeds/index.ts:21:23)
+    at async display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:315:35)
+    at async display_rugCheck (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/rugCheck.ts:138:9)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:436:13
+ 4/28/2024, 11:13:11 PM - display_snipe_options
+ UnexpectedAccountError 
+ The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+ UnexpectedAccountError: The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+    at Object.deserializeAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Serializer.ts:126:11)
+    at parse (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:53:12)
+    at Object.toMintAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:72:12)
+    at Object.handle (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/plugins/nftModule/operations/findNftByMint.ts:150:27)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Disposable.run (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/utils/Disposable.ts:33:14)
+    at async getTokenMetadata (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/feeds/index.ts:21:23)
+    at async display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:315:35)
+    at async display_rugCheck (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/rugCheck.ts:138:9)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:436:13
+ 4/28/2024, 11:13:33 PM - display_snipe_options
+ UnexpectedAccountError 
+ The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+ UnexpectedAccountError: The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+    at Object.deserializeAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Serializer.ts:126:11)
+    at parse (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:53:12)
+    at Object.toMintAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:72:12)
+    at Object.handle (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/plugins/nftModule/operations/findNftByMint.ts:150:27)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Disposable.run (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/utils/Disposable.ts:33:14)
+    at async getTokenMetadata (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/feeds/index.ts:21:23)
+    at async display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:315:35)
+    at async display_rugCheck (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/rugCheck.ts:138:9)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:436:13
+ 4/28/2024, 11:18:23 PM - display_snipe_options
+ UnexpectedAccountError 
+ The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+ UnexpectedAccountError: The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+    at Object.deserializeAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Serializer.ts:126:11)
+    at parse (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:53:12)
+    at Object.toMintAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:72:12)
+    at Object.handle (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/plugins/nftModule/operations/findNftByMint.ts:150:27)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Disposable.run (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/utils/Disposable.ts:33:14)
+    at async getTokenMetadata (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/feeds/index.ts:21:23)
+    at async display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:315:35)
+    at async display_rugCheck (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/rugCheck.ts:138:9)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:436:13
+ 4/28/2024, 11:18:25 PM - display_snipe_options
+ UnexpectedAccountError 
+ The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+ UnexpectedAccountError: The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+    at Object.deserializeAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Serializer.ts:126:11)
+    at parse (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:53:12)
+    at Object.toMintAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:72:12)
+    at Object.handle (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/plugins/nftModule/operations/findNftByMint.ts:150:27)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Disposable.run (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/utils/Disposable.ts:33:14)
+    at async getTokenMetadata (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/feeds/index.ts:21:23)
+    at async display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:315:35)
+    at async display_rugCheck (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/rugCheck.ts:138:9)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:436:13
+ 4/28/2024, 11:19:03 PM - display_snipe_options
+ UnexpectedAccountError 
+ The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+ UnexpectedAccountError: The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+    at Object.deserializeAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Serializer.ts:126:11)
+    at parse (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:53:12)
+    at Object.toMintAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:72:12)
+    at Object.handle (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/plugins/nftModule/operations/findNftByMint.ts:150:27)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Disposable.run (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/utils/Disposable.ts:33:14)
+    at async getTokenMetadata (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/feeds/index.ts:21:23)
+    at async display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:315:35)
+    at async display_rugCheck (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/rugCheck.ts:138:9)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:436:13
+ 4/28/2024, 11:19:05 PM - display_snipe_options
+ UnexpectedAccountError 
+ The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+ UnexpectedAccountError: The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+    at Object.deserializeAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Serializer.ts:126:11)
+    at parse (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:53:12)
+    at Object.toMintAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:72:12)
+    at Object.handle (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/plugins/nftModule/operations/findNftByMint.ts:150:27)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Disposable.run (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/utils/Disposable.ts:33:14)
+    at async getTokenMetadata (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/feeds/index.ts:21:23)
+    at async display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:315:35)
+    at async display_rugCheck (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/rugCheck.ts:138:9)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:436:13
+ 4/28/2024, 11:19:06 PM - display_snipe_options
+ UnexpectedAccountError 
+ The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+ UnexpectedAccountError: The account at the provided address [11111111111111111111111111111111] is not of the expected type [MintAccount].
+
+Source: SDK
+
+Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 20. Received 44
+
+    at Object.deserializeAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Serializer.ts:126:11)
+    at parse (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:53:12)
+    at Object.toMintAccount (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/types/Account.ts:72:12)
+    at Object.handle (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/plugins/nftModule/operations/findNftByMint.ts:150:27)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Disposable.run (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@metaplex-foundation/js/src/utils/Disposable.ts:33:14)
+    at async getTokenMetadata (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/feeds/index.ts:21:23)
+    at async display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:315:35)
+    at async display_rugCheck (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/rugCheck.ts:138:9)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:436:13
  
