@@ -266,11 +266,11 @@ function catchSimError(sim:any){
   const SLIPPAGE_ERROR = /exceeds desired slippage limit/;
   const FEES_ERROR = /InsufficientFundsForFee/;
   if (sim.value && sim.value.err && sim.value.logs) {
-    if (sim.value.logs.find((logMsg: any) => TRANSFER_ERROR.test(logMsg))) { msg = `🔴 Insufficient balance for transaction.`; };
-    if (sim.value.logs && sim.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) { msg = `🔴 Slippage error, try increasing your slippage %.`; };
+    if (sim.value.logs.find((logMsg: any) => TRANSFER_ERROR.test(logMsg))) throw new Error(JSON.stringify(`🔴 Insufficient balance for transaction.`));
+    if (sim.value.logs && sim.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) { throw new Error(JSON.stringify(`🔴 Slippage error, try increasing your slippage %.`)); };
     if (sim.value.logs.find((logMsg: any) => FEES_ERROR.test(logMsg))) { msg = `🔴 Insufficient balance for transaction fees.`; };
     if (!msg) { msg = `🔴 ${JSON.stringify(sim.value.err)}`; }
     console.error(msg);
-    throw new Error(JSON.stringify(msg));
+    
   }
 }

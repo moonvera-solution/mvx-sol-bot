@@ -585,7 +585,7 @@ bot.on("message", async (ctx) => {
             }
 
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
-            // console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
+
             if (!ctx.session.activeTradingPool) {
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
@@ -850,7 +850,6 @@ bot.on("callback_query", async (ctx: any) => {
         if (allowed) {
           await createNewWallet(ctx);
         }
-
         break;
       case "settings":
         await handleSettings(ctx);

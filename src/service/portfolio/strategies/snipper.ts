@@ -1,12 +1,9 @@
 import { logErrorToFile } from '../../../../error/logger';
 import BigNumber from 'bignumber.js';
-import {
-    Liquidity, TokenAmount, LiquidityPoolKeys, Token, SPL_ACCOUNT_LAYOUT,
-    TOKEN_PROGRAM_ID, TokenAccount, TxVersion, jsonInfo2PoolKeys
-} from "@raydium-io/raydium-sdk";
+import { Liquidity, TokenAmount, LiquidityPoolKeys, Token, SPL_ACCOUNT_LAYOUT, TOKEN_PROGRAM_ID, TokenAccount, TxVersion, jsonInfo2PoolKeys } from "@raydium-io/raydium-sdk";
 import { Connection, PublicKey, Keypair, SystemProgram, VersionedTransaction, TransactionMessage, ComputeBudgetProgram } from "@solana/web3.js";
-import { MVXBOT_FEES, WALLET_MVX, SNIPE_SIMULATION_COUNT_LIMIT, RAYDIUM_AUTHORITY } from "../../../../config";
-import { buildAndSendTx, trackUntilFinalized, getPriorityFeeLabel,getSwapAmountOut } from '../../util';
+import { MVXBOT_FEES, WALLET_MVX, SNIPE_SIMULATION_COUNT_LIMIT, RAYDIUM_AUTHORITY, RAYDIUM_PROGRAM } from "../../../../config";
+import { buildAndSendTx, trackUntilFinalized, getPriorityFeeLabel, getSwapAmountOut } from '../../util';
 import { saveUserPosition } from '../positions';
 const log = (k: any, v: any) => console.log(k, v);
 import base58 from 'bs58';
@@ -14,8 +11,8 @@ import { getRayPoolKeys, formatAmmKeysById } from "../../dex/raydium/raydium-uti
 import { getTokenMetadata } from "../../feeds";
 import { waitForConfirmation, getSolBalance, getTokenExplorerURLS } from '../../util';
 import { Referrals, UserPositions } from "../../../db/mongo/schema";
-import { PriotitizationFeeLevels, getMaxPrioritizationFeeByPercentile, getSimulationUnits } from "../../../service/fees/priorityFees";
-import { display_after_Snipe_Buy, display_token_details } from '../../../views';
+import { getMaxPrioritizationFeeByPercentile, getSimulationUnits } from "../../../service/fees/priorityFees";
+import { display_after_Snipe_Buy } from '../../../views';
 
 export async function snipperON(ctx: any, amount: string) {
     try {
@@ -31,32 +28,26 @@ export async function snipperON(ctx: any, amount: string) {
         }
 
         await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一 Snipper set for ${amount} SOL, on ${snipeToken}`, {
-            parse_mode: 'HTML',
-            disable_web_page_preview: true,
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: '❌ Cancel Snipe ', callback_data: 'cancel_snipe' }],
-                ]
-            },
+            parse_mode: 'HTML', disable_web_page_preview: true, reply_markup: { inline_keyboard: [[{ text: '❌ Cancel Snipe ', callback_data: 'cancel_snipe' }],] },
         });
 
         let poolKeys = await getRayPoolKeys(ctx, snipeToken);
         let isIntervalDone = false;
-        let interval_1 : any , interval_2 :any;
+        let interval_1: any, interval_2: any;
 
         interval_1 = setInterval(async () => {
             if (!poolKeys && ctx.session.snipeStatus) {
                 console.log('Snipe lookup on.');
                 poolKeys = await getRayPoolKeys(ctx, snipeToken);
                 console.log('snipe status: ', ctx.session.snipeStatus);
-            } else if(poolKeys){
+            } else if (poolKeys) {
                 isIntervalDone = true;
                 clearInterval(interval_1); // Stop the interval when the condition is no longer met
                 clearInterval(interval_2);
                 ctx.session.activeTradingPool = jsonInfo2PoolKeys(poolKeys.id) as LiquidityPoolKeys;
                 setSnipe(ctx, amount);
             }
-            if(!ctx.session.snipeStatus) {
+            if (!ctx.session.snipeStatus) {
                 clearInterval(interval_1); // Stop the interval when the condition is no longer met
                 clearInterval(interval_2);
                 return;
@@ -74,7 +65,7 @@ export async function snipperON(ctx: any, amount: string) {
             console.log('Snipe lookup end, keys not founda after 5 min.');
             return await ctx.api.sendMessage(ctx.chat.id, `🔴 Snipe 5min timeout, please set your snipper.`, { parse_mode: 'HTML', disable_web_page_preview: true });
         });
-    } catch (e:any) {
+    } catch (e: any) {
         console.log(e);
         logErrorToFile("bot on snipperON", e);
         return await ctx.api.sendMessage(ctx.chat.id, e.message);
@@ -82,14 +73,13 @@ export async function snipperON(ctx: any, amount: string) {
 }
 
 export async function setSnipe(ctx: any, amountIn: any) {
-    // Returns either the time to wait or indicates pool is already open
     console.log('Snipe set ...');
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     const snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
 
     const amountInLamports = new BigNumber(Number.parseFloat(amountIn)).times(1e9);
     const snipeSlippage = ctx.session.snipeSlippage;
-    console.log('snipeSlippage', snipeSlippage);
+
     const currentWalletIdx = ctx.session.activeWalletIndex;
     const currentWallet = ctx.session.portfolio.wallets[currentWalletIdx];
     const { tokenData } = await getTokenMetadata(ctx, snipeToken.toBase58());
@@ -98,13 +88,13 @@ export async function setSnipe(ctx: any, amountIn: any) {
 
     const balanceInSOL = await getSolBalance(currentWallet.publicKey, connection);
     if (balanceInSOL * 1e9 < amountInLamports.toNumber()) await ctx.api.sendMessage(
-        ctx.session.portfolio.chatId, '🔴 Insufficient balance for transaction.',
-        { parse_mode: 'HTML', disable_web_page_preview: true }
+        ctx.session.portfolio.chatId, '🔴 Insufficient balance for transaction.', { parse_mode: 'HTML', disable_web_page_preview: true }
     );
 
     const liqInfo = ctx.session.env.poolSchedule;
     const poolStartTime = liqInfo.startTime.toNumber();
     const simulationPromise = startSnippeSimulation(ctx, userKeypair, amountInLamports, snipeSlippage, poolStartTime, tokenData);
+
     simulationPromise.catch(async (error: any) => {
         console.log("Error setting snipper", error);
         await ctx.api.sendMessage(ctx.chat.id, `🔴 Snipe fail: ${error}`);
@@ -113,19 +103,12 @@ export async function setSnipe(ctx: any, amountIn: any) {
     await simulationPromise;
 }
 
-export async function startSnippeSimulation(
-    ctx: any,
-    userWallet: Keypair,
-    amountIn: BigNumber,
-    snipeSlippage: number,
-    poolStartTime: number,
-    tokenData: any
-) {
+export async function startSnippeSimulation(ctx: any, userWallet: Keypair, amountIn: BigNumber, snipeSlippage: number, poolStartTime: number, tokenData: any) {
     const chatId = ctx.chat.id;
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
     const walletTokenAccounts = await _getWalletTokenAccount(connection, userWallet.publicKey);
     const poolKeys = ctx.session.activeTradingPool;
-    console.log('poolKeysQuote', poolKeys.quoteMint);
+
     const _tokenIn: Token = new Token(TOKEN_PROGRAM_ID, new PublicKey(poolKeys.quoteMint), poolKeys.quoteDecimals, '', '');
     const _tokenOut: Token = new Token(TOKEN_PROGRAM_ID, new PublicKey(poolKeys.baseMint), poolKeys.baseDecimals, '', '');
 
@@ -147,7 +130,6 @@ export async function startSnippeSimulation(
         const existingPositionIndex = userPosition.positions.findIndex(
             position => position.baseMint === _tokenOut.mint.toBase58()
         );
-        // console.log('existingPositionIndex', existingPositionIndex);
         if (userPosition.positions[existingPositionIndex]) {
             oldPositionSol = userPosition?.positions[existingPositionIndex].amountIn
             oldPositionToken = userPosition?.positions[existingPositionIndex].amountOut!
@@ -172,13 +154,7 @@ export async function startSnippeSimulation(
         fixedSide: 'in',
         makeTxVersion: TxVersion.V0
     });
-    //0.005  0.01 0.05 0.1 0.2
-    //low medium high very high extreme
-    // MVXBOT_FEES
-    // mvxFeeInx is the amount of fees to be paid to the bot, it is calculated as a percentage of the amountIn
-    // we need to calculate the referral fee and send it to the referral wallet
-    // the fees sent to the referral wallet is calculated as a percentage of the mvxFeeInx
-    // referralFee
+
     const referralWallet = ctx.session.generatorWallet;
     const referralFee = ctx.session.referralCommision / 100;
 
@@ -190,17 +166,6 @@ export async function startSnippeSimulation(
     let referralInx: any = null;
     let minimumBalanceNeeded = 0;
     minimumBalanceNeeded += amountIn.toNumber()
-    // Tippimg the validator
-    // const validatorLead = await connection.getSlotLeader();
-
-    // const transferIx = SystemProgram.transfer({
-    //     fromPubkey: userWallet.publicKey,
-    //     toPubkey: new PublicKey(validatorLead),
-    //     lamports: TIP_VALIDATOR, // 5_000 || 6_000
-    // });
-
-    // innerTransactions[0].instructions.push(transferIx);
-    // minimumBalanceNeeded += TIP_VALIDATOR;
 
     if (referralFee > 0) {
         mvxFeeInx = SystemProgram.transfer({
@@ -227,88 +192,71 @@ export async function startSnippeSimulation(
         minimumBalanceNeeded += bot_fee;
     }
 
-
     const userSolBalance = await getSolBalance(userWallet.publicKey, connection);
     minimumBalanceNeeded += totalComputeBudget;
 
     if ((userSolBalance * 1e9) < minimumBalanceNeeded) {
-        await ctx.api.sendMessage(chatId, `🔴 Insufficient balance for Turbo Snipping. Your balance is ${userSolBalance} SOL.`);
-        return;
+        await ctx.api.sendMessage(chatId, `🔴 Insufficient balance for Turbo Snipping. Your balance is ${userSolBalance} SOL.`); return;
     }
     let maxPriorityFee;
     if (poolKeys) {
-        maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
-            lockedWritableAccounts: [
-                new PublicKey(poolKeys.id),
-            ], percentile: ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
-            fallback: true
-        });
+        maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, { lockedWritableAccounts: [new PublicKey(poolKeys.id),], percentile: ctx.session.priorityFee, fallback: true });
     } else {
-        maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
-            lockedWritableAccounts: [new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8')], percentile: ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
-            fallback: true
-        });
+        maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, { lockedWritableAccounts: [new PublicKey(RAYDIUM_PROGRAM)], percentile: ctx.session.priorityFee, fallback: true });
     }
 
-    // if(ctx.session.priorityFee == PriotitizationFeeLevels.HIGH) maxPriorityFee = maxPriorityFee * 3;
-    // if(ctx.session.priorityFee == PriotitizationFeeLevels.MAX) maxPriorityFee = maxPriorityFee * 1.5;
     const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: (maxPriorityFee), });
 
-    let units = await getSimulationUnits(connection, innerTransactions[0].instructions, userWallet.publicKey);
-    console.log("snipe units", units)
-    if(units)innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(units  * 1.1) }));
-
-    innerTransactions[0].instructions.push(priorityFeeInstruction);
-
-    let tx = new TransactionMessage({
-        payerKey: userWallet.publicKey,
-        instructions: innerTransactions[0].instructions,
-        recentBlockhash: await connection.getLatestBlockhash().then((blockhash: any) => blockhash.blockhash)
-    }).compileToV0Message();
-
-    let txV = new VersionedTransaction(tx);
-    let simulationResult: any;
-    let count = 0;
-    let sim = true;
     let diff_1 = new BigNumber(poolStartTime).minus(new BigNumber(new Date().getTime()));
-    let diff = diff_1.plus(400);
+    let diff = diff_1.toNumber() > 0 ? diff_1.plus(400) : diff_1; // 400ms delay to give extra time to pool to open
+    let snipeStatus: boolean = ctx.session.snipeStatus, sim = true;
 
+    setTimeout(async () => {
 
-    let snipeStatus: boolean = ctx.session.snipeStatus;
+        let units = await getSimulationUnits(connection, innerTransactions[0].instructions, userWallet.publicKey);
+        if (units) innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(units * 1.1) }));
 
-    while (sim && snipeStatus && count < SNIPE_SIMULATION_COUNT_LIMIT) {
-        count++
-        snipeStatus = ctx.session.snipeStatus;
-        simulationResult = await connection.simulateTransaction(txV, { replaceRecentBlockhash: true, commitment: 'processed' });
-        await catchSimulationErrors(ctx,simulationResult);
-        console.log('sim:', JSON.stringify(simulationResult.value.err), count);
+        innerTransactions[0].instructions.push(priorityFeeInstruction);
 
-        if (simulationResult.value.err == null) {
-            sim = false;
-            await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一 $${tokenData.symbol} with ${amountIn.dividedBy(1e9)} SOL.`);
-            setTimeout(() => {
+        let tx = new TransactionMessage({
+            payerKey: userWallet.publicKey, instructions: innerTransactions[0].instructions,
+            recentBlockhash: await connection.getLatestBlockhash().then((blockhash: any) => blockhash.blockhash)
+        }).compileToV0Message();
+
+        let txV = new VersionedTransaction(tx), simulationResult: any, count = 0;
+
+        while (sim && snipeStatus && count < SNIPE_SIMULATION_COUNT_LIMIT) {
+            count++
+            snipeStatus = ctx.session.snipeStatus;
+            simulationResult = await connection.simulateTransaction(txV, { replaceRecentBlockhash: true, commitment: 'processed' });
+            await catchSimulationErrors(ctx, simulationResult);
+            console.log('sim:', JSON.stringify(simulationResult.value.err), count);
+
+            if (simulationResult.value.err == null) {
+                sim = false;
+                await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一 $${tokenData.symbol} with ${amountIn.dividedBy(1e9)} SOL.`);
 
                 buildAndSendTx(userWallet, innerTransactions, connection, { preflightCommitment: 'processed' }).then(async (txids: any) => {
                     let msg = `🟢 Snipe <a href="https://solscan.io/tx/${txids[0]}">transaction</a> sent. Please wait for confirmation...`
                     await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-                   
+
                     const isConfirmed = await waitForConfirmation(ctx, txids[0]);
-                    let extractAmount =  isConfirmed ? await getSwapAmountOut(connection, txids) : 0;
+                    let extractAmount = isConfirmed ? await getSwapAmountOut(connection, txids) : 0;
 
                     if (isConfirmed) {
                         let solAmount, tokenAmount, _symbol = tokenData.symbol;
                         if (extractAmount > 0) {
                             solAmount = Number(extractAmount) / Math.pow(10, Number(tokenData.mint.decimals)); // Convert amount to SOL
                             tokenAmount = amountIn.div(Math.pow(10, tokenData.decimals));
-                            await ctx.api.sendMessage(chatId,`✅ <b>Snipe Tx Confirmed:</b> You sniped ${solAmount.toFixed(3)} <b>${_symbol}</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`,{ parse_mode: 'HTML', disable_web_page_preview: true });
+                            await ctx.api.sendMessage(chatId, `✅ <b>Snipe Tx Confirmed:</b> You sniped ${solAmount.toFixed(3)} <b>${_symbol}</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`, { parse_mode: 'HTML', disable_web_page_preview: true });
                         } else {
                             ctx.api.sendMessage(chatId, '✅ Snipe Tx Confirmed');;
                         }
 
                         if (referralFee > 0 && referralRecord) {
-                                let updateEarnings = actualEarnings && actualEarnings + referralAmmount;
-                                referralRecord.earnings = Number(updateEarnings && updateEarnings.toFixed(0));
-                                await referralRecord.save();
+                            let updateEarnings = actualEarnings && actualEarnings + referralAmmount;
+                            referralRecord.earnings = Number(updateEarnings && updateEarnings.toFixed(0));
+                            await referralRecord.save();
                         }
 
                         if (await trackUntilFinalized(ctx, txids[0])) {
@@ -338,9 +286,10 @@ export async function startSnippeSimulation(
                     await ctx.api.sendMessage(chatId, msg); console.info('error', error);
                     return error;
                 });
-            }, diff.toNumber());
+
+            }
         }
-    }
+    }, diff.toNumber());
 
     if (count == SNIPE_SIMULATION_COUNT_LIMIT) {
         await ctx.api.sendMessage(chatId, `🔴 Snipe fail, busy Network, please try again.`);
@@ -380,21 +329,15 @@ async function _quote({ amountIn, baseVault, quoteVault, connection }: { amountI
     // base SOL & quote SHIT
     const price: BigNumber = quoteTokenVaultSupply.div(baseTokenVaultSupply);
     console.log("******************** **********************");
-    log("price ", price.toNumber());
+    console.log("price ", price.toNumber());
     console.log("******************** **********************");
-    log("Base Vault Supply ", baseTokenVaultSupply.toNumber());
-    log("Quote Vault Supply ", quoteTokenVaultSupply.toNumber());
-    console.log("******************** **********************");
+    console.log("Base Vault Supply ", baseTokenVaultSupply.toNumber());
+    console.log("Quote Vault Supply ", quoteTokenVaultSupply.toNumber());
     console.log("******************** **********************");
     return new BigNumber(amountIn.multipliedBy(price))//.div(10 ** quoteDecimals).toFixed(0)) // first swap amount out
 }
-function getLaunchCountDown(startTime: number): number {
-    const launchSchedule: number = Number((new Date().getTime() / 1000).toFixed(0)) - Number(startTime * 1000);
-    if (launchSchedule > 0) {
-        return launchSchedule
-    }
-    return 0;
-}
+
+
 export function formatLaunchCountDown(launchSchedule: number): string {
     let seconds: any = Math.floor(launchSchedule / 1000);
     let hours = Math.floor(seconds / 3600);
@@ -411,10 +354,7 @@ export function formatLaunchCountDown(launchSchedule: number): string {
     return `${hours}:${minutes}:${seconds}`;
 }
 
-export async function catchSimulationErrors(
-    ctx:any,
-    simulationResult:any
-){
+export async function catchSimulationErrors(ctx: any, simulationResult: any) {
     const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
     if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) {
         console.log(simulationResult.value.logs)
@@ -424,13 +364,13 @@ export async function catchSimulationErrors(
     const BALANCE_ERROR = /Transfer: insufficient lamports/;
     if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
         console.log(simulationResult.value.logs)
-        ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction.`);
+        await ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction.`);
         return;
     }
     const FEES_ERROR = 'InsufficientFundsForFee';
     if (simulationResult.value.err === FEES_ERROR) {
         console.log(simulationResult.value.logs)
-        ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction fees.`);
+        await ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction fees.`);
         return;
     }
 

@@ -29,11 +29,16 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
     if (keys) {
       ctx.session.env["poolSchedule"] = await fetchPoolSchedule(keys, connection);
       ctx.session.env["originalBaseMint"] = keys.baseMint;
+      console.log("keys-- starttime",ctx.session.env.poolSchedule.startTime.toNumber());
+
     } else {
+
       keys = await _getRayPoolKeys({ t1: quoteMint, t2: shitcoin, connection });
       if (keys) {
+
         ctx.session.env["originalBaseMint"] = keys.baseMint;
         ctx.session.env["poolSchedule"] = await fetchPoolSchedule(keys, connection);
+        console.log("not keys--", ctx.session.env.poolSchedule);
 
         let _quoteMint = keys.quoteMint;
         let _baseMint = keys.baseMint;
