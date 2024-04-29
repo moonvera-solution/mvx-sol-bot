@@ -284,13 +284,13 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
             }
             console.log('(tokenInfo.price.times(solPrice)',(tokenInfo.price.times(solPrice).toNumber()));
             const tokenPriceUSD = birdeyeData 
-  && birdeyeData.response 
-  && birdeyeData.response.data 
-  && birdeyeData.response.data.data 
-  && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
-    ? birdeyeData.response.data.data.price 
-    : tokenInfo.price.times(solPrice).toNumber();
-    const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solPrice) : tokenInfo.price.toNumber();
+            && birdeyeData.response 
+            && birdeyeData.response.data 
+            && birdeyeData.response.data.data 
+            && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
+                ? birdeyeData.response.data.data.price 
+                : tokenInfo.price.times(solPrice).toNumber();
+            const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solPrice) : tokenInfo.price.toNumber();
 
             const priceImpact = tokenInfo.priceImpact.toFixed(2);
             const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
