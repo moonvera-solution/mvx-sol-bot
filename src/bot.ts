@@ -28,18 +28,9 @@ import { _initDbConnection } from "./db/mongo/crud";
 import { handleSettings } from "./service/settings";
 import { getSolanaDetails } from "./api";
 import { setSnipe, snipperON } from "./service/portfolio/strategies/snipper";
-import {
-  display_token_details,
-  display_snipe_options,
-  handleCloseKeyboard,
-  display_after_Snipe_Buy
-  // Refresh_display_after_Snipe_Buy,
-} from "./views";
+import {display_token_details,display_snipe_options,handleCloseKeyboard,display_after_Snipe_Buy} from "./views";
 import { getSolBalance, sendSol } from "./service/util";
-import {
-  handleRefreshStart,
-  handleRereshWallet,
-} from "./views/refreshData/refreshStart";
+import {handleRefreshStart,handleRereshWallet} from "./views/refreshData/refreshStart";
 import { handleWallets } from "./views/util/dbWallet";
 import { RefreshAllWallets } from "./views/refreshData/RefresHandleWallets";
 import { getRayPoolKeys } from "./service/dex/raydium/raydium-utils/formatAmmKeysById";
