@@ -7,6 +7,8 @@ export async function getTokenDataFromBirdEye(tokenAddress: String) {
     try {
         const url = `https://public-api.birdeye.so/defi/token_overview?address=${tokenAddress}`;
         const url2 = `https://public-api.birdeye.so/defi/token_security?address=${tokenAddress}`;
+        const solanDetails = 'https://public-api.birdeye.so/defi/price?address=So11111111111111111111111111111111111111112';
+
 
         const options = {
             method: 'GET',
@@ -16,11 +18,11 @@ export async function getTokenDataFromBirdEye(tokenAddress: String) {
                 'X-API-KEY': `${process.env.BIRD_EYE_API_KEY}`
             }
         };
-
-        const response = await axios.get(url, options);
-        const response2 = await axios.get(url2, options);
+        const [response, response2,solanaPrice] = await Promise.all([axios.get(url, options), axios.get(url2, options), axios.get(solanDetails, options)]); // [response1, response2
+        // const response = await axios.get(url, options);
+        // const response2 = await axios.get(url2, options);
   
-        return {response,response2}; // Adjust this based on the actual response structure
+        return {response,response2,solanaPrice}; // Adjust this based on the actual response structure
     } catch (error:any) {
         console.error(
             error.message

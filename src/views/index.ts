@@ -46,7 +46,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
     const [
         birdeyeData,
         tokenMetadataResult,
-        solPrice,
+        // solPrice,
         tokenInfo,
         balanceInSOL,
         userPosition,
@@ -58,7 +58,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
     ] = await Promise.all([
         getTokenDataFromBirdEye(tokenAddress.toString()),
         getTokenMetadata(ctx, tokenAddress.toBase58()),
-        getSolanaDetails(),
+        // getSolanaDetails(),
         quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
         getSolBalance(userPublicKey, connection),
         UserPositions.find({ positionChatId: chatId, walletId: userPublicKey }, { positions: { $slice: -7 } }),
@@ -68,8 +68,11 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
         runHigh(ctx, raydiumId),
         runMax(ctx, raydiumId)
     ]);
+    const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+
     const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
     const tokenPriceUSD = birdeyeData 
+    
   && birdeyeData.response 
   && birdeyeData.response.data 
   && birdeyeData.response.data.data 
@@ -104,14 +107,13 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
       
        }
 
-       
     const {
         birdeyeURL,
         dextoolsURL,
         dexscreenerURL,
         tokenData,
     } = tokenMetadataResult;
-    const marketCap =  birdeyeData?.response.data.data.mc? birdeyeData.response.data.data.mc : tokenInfo.marketCap.toNumber() * (solPrice);
+    const marketCap =  birdeyeData?.response.data.data.mc? birdeyeData.response.data.data.mc : tokenInfo.marketCap.toNumber() * Number(solPrice);
     try {
 
     const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
@@ -236,7 +238,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
             const [
                 birdeyeData,
                 tokenMetadataResult,
-                solPrice,
+                // solPrice,
                 tokenInfo,
                 balanceInSOL,
                 userTokenDetails,
@@ -247,7 +249,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
             ] = await Promise.all([
                 getTokenDataFromBirdEye(tokenAddress.toString()),
                 getTokenMetadata(ctx, tokenAddress.toBase58()),
-                getSolanaDetails(),
+                // getSolanaDetails(),
                 quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
                 getSolBalance(userPublicKey, connection),
                 getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
@@ -256,7 +258,8 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
                 runHigh(ctx, raydiumId),
                 runMax(ctx, raydiumId)
             ]);
-    
+            const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+
     
             const {
                 birdeyeURL,
@@ -387,7 +390,7 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
     const [
         birdeyeData,
         tokenMetadataResult,
-        solPrice,
+        // solPrice,
         tokenInfo,
         balanceInSOL,
         userPosition,
@@ -399,7 +402,7 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
     ] = await Promise.all([
         getTokenDataFromBirdEye(tokenAddress.toString()),
         getTokenMetadata(ctx, tokenAddress.toBase58()),
-        getSolanaDetails(),
+        // getSolanaDetails(),
         quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
         getSolBalance(userPublicKey, connection),
         UserPositions.find({ positionChatId: chatId, walletId: userPublicKey }, { positions: { $slice: -7 } }),
@@ -410,6 +413,7 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
         runMax(ctx, raydiumId)
     ]);
 
+    const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
 
     const {
         birdeyeURL,

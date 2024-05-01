@@ -2077,4 +2077,32 @@ Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range.
     at async display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:315:35)
     at async display_rugCheck (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/rugCheck.ts:138:9)
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:436:13
+ 4/29/2024, 12:43:25 AM - bot.on('message'
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:262:17)
+ 4/29/2024, 12:43:25 AM - bot on snipe simmulation
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:262:17)
+ 4/29/2024, 12:47:10 AM - bot.on('message'
+ TypeError 
+ simulationResult.value.err.find is not a function
+ TypeError: simulationResult.value.err.find is not a function
+    at startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:292:78)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+ 4/29/2024, 12:47:10 AM - bot on snipe simmulation
+ TypeError 
+ simulationResult.value.err.find is not a function
+ TypeError: simulationResult.value.err.find is not a function
+    at startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:292:78)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
  
