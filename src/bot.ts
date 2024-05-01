@@ -373,9 +373,9 @@ bot.on("message", async (ctx) => {
   try {
     const latestCommand = ctx.session.latestCommand;
     const msgTxt = ctx.update.message.text;
-    console.log("msgTxt", msgTxt);
-    console.log('typeof msgTxt', typeof msgTxt);
-    console.log("latestCommand", latestCommand);
+    // console.log("msgTxt", msgTxt);
+    // console.log('typeof msgTxt', typeof msgTxt);
+    // console.log("latestCommand", latestCommand);
     if (msgTxt) {
       if ((!isNaN(parseFloat(msgTxt!)) &&  ctx.session.latestCommand !== 'buy' && ctx.session.latestCommand !== 'sell' && ctx.session.latestCommand !== 'snipe' && ctx.session.latestCommand !== "send_sol" && ctx.session.latestCommand !== 'ask_for_sol_amount' && ctx.session.latestCommand === 'display_after_Snipe_Buy' ) || ctx.session.latestCommand === 'start' || ctx.session.latestCommand === 'display_single_spl_positions') {
           if (PublicKey.isOnCurve(msgTxt!)) {
@@ -557,7 +557,7 @@ bot.on("message", async (ctx) => {
               ctx.session.latestCommand = 'snipe';
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
-              display_snipe_options(ctx,false, msgTxt);
+              await display_snipe_options(ctx,false, msgTxt);
               // ctx.api.sendMessage(chatId, "🔴 Invalid address");
               // ctx.api.sendMessage(chatId, "🔴 Pool not found for this token.");
               return;
@@ -617,11 +617,15 @@ bot.on("message", async (ctx) => {
             ctx,
             recipientAddress
           );
-          const referralData = await _getReferralData(ctx); // Fetch referral data
+          const [referralData, details] = await Promise.all([
+            await _getReferralData(ctx),
+            await getSolanaDetails()// Fetch referral data
+          ]);
+ 
           const referEarningSol = (
             Number(referralData?.totalEarnings) / 1e9
           ).toFixed(6);
-          const details = await getSolanaDetails();
+       
           const referEarningDollar = (
             Number(referEarningSol) * details
           ).toFixed(2);

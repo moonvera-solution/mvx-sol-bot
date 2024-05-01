@@ -2077,4 +2077,60 @@ Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range.
     at async display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:315:35)
     at async display_rugCheck (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/rugCheck.ts:138:9)
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:436:13
+ 4/29/2024, 12:43:25 AM - bot.on('message'
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:262:17)
+ 4/29/2024, 12:43:25 AM - bot on snipe simmulation
+ Error 
+ "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+ Error: "🔴 {\"InstructionError\":[4,{\"Custom\":22}]}"
+    at catchSimError (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:274:11)
+    at getSimulationUnits (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/fees/priorityFees.ts:233:3)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:262:17)
+ 4/29/2024, 12:47:10 AM - bot.on('message'
+ TypeError 
+ simulationResult.value.err.find is not a function
+ TypeError: simulationResult.value.err.find is not a function
+    at startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:292:78)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+ 4/29/2024, 12:47:10 AM - bot on snipe simmulation
+ TypeError 
+ simulationResult.value.err.find is not a function
+ TypeError: simulationResult.value.err.find is not a function
+    at startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:292:78)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+ 4/30/2024, 8:59:39 PM - bot on positions cmd
+ GrammyError 
+ Call to 'sendMessage' failed! (400: Bad Request: message text is empty)
+ GrammyError: Call to 'sendMessage' failed! (400: Bad Request: message text is empty)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async sendMessage (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:140:9)
+    at async display_spl_positions (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:87:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:278:5
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 4/30/2024, 9:02:30 PM - bot.on('message'
+ Error 
+ Non-base58 character
+ Error: Non-base58 character
+    at Object.decode (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/node_modules/base-x/src/index.js:111:11)
+    at new PublicKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:63:30)
+    at Function.isOnCurve (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:251:20)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:425:25
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:51:41
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:51:41
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:48
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
  

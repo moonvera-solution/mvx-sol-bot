@@ -31,7 +31,7 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean ) {
             const [
                 birdeyeData,
                 tokenMetadataResult,
-                solPrice,
+                // solPrice,
                 tokenInfo,
                 quoteVaultInfo,
                 baseMintInfo,
@@ -40,7 +40,7 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean ) {
             ] = await Promise.all([
                 getTokenDataFromBirdEye(token),
                 getTokenMetadata(ctx, token),
-                getSolanaDetails(),
+                // getSolanaDetails(),
                 quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
                 connection.getParsedAccountInfo(new PublicKey(quoteVault), "processed"),
                 connection.getParsedAccountInfo(new PublicKey(baseMint), "processed"),
@@ -50,6 +50,7 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean ) {
             const {
                 tokenData,
             } = tokenMetadataResult;
+            const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
             const tokenPriceSOL = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price).div(solPrice) : new BigNumber(tokenInfo.price);
             const tokenPriceUSD = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price) : new BigNumber(tokenInfo.price.times(solPrice));
             const marketCap =  birdeyeData?.response.data.data.mc? birdeyeData.response.data.data.mc : new BigNumber(tokenInfo.marketCap).times(new BigNumber(solPrice));
@@ -59,6 +60,7 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean ) {
                 }
                 return data.value?.data.parsed.info;
             };
+
             const getPooledSol = processData(quoteVaultInfo);
             const getBaseSupply = processData(baseMintInfo);
             const circulatingSupply = processData(baseVaultInfo);
