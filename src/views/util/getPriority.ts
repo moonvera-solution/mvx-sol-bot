@@ -2,12 +2,13 @@ import { Connection, GetRecentPrioritizationFeesConfig } from "@solana/web3.js";
 import { PublicKey } from "@solana/web3.js";
 import {
   PriotitizationFeeLevels,
-//   getMaxPrioritizationFeeByPercentile,
-//   getMeanPrioritizationFeeByPercentile,
+  //   getMaxPrioritizationFeeByPercentile,
+  //   getMeanPrioritizationFeeByPercentile,
   getMedianPrioritizationFeeByPercentile,
   getMinPrioritizationFeeByPercentile,
   getRecentPrioritizationFeesByPercentile,
 } from "../../service/fees/priorityFees";
+import { RecentPrioritizationFees } from "@solana/web3.js";
 
 interface GetRecentPrioritizationFeesByPercentileConfig
   extends GetRecentPrioritizationFeesConfig {
@@ -16,106 +17,150 @@ interface GetRecentPrioritizationFeesByPercentileConfig
 }
 
 const getMaxPrioritizationFeeByPercentile = async (
-    connection: Connection,
-    config: GetRecentPrioritizationFeesByPercentileConfig,
-    slotsToReturn?: number
+  connection: Connection,
+  config: GetRecentPrioritizationFeesByPercentileConfig,
+  slotsToReturn?: number
 ): Promise<number> => {
-    
-    const recentPrioritizationFees =
-        await getRecentPrioritizationFeesByPercentile(
-            connection,
-            config,
-            slotsToReturn
-        );
-        
-    // console.log('recentPrioritizationFees', recentPrioritizationFees);
-    const maxPriorityFee = recentPrioritizationFees[0].prioritizationFee;
-    // console.log('maxPriorityFee', maxPriorityFee);
-    
-    return maxPriorityFee;
+
+  const recentPrioritizationFees =
+    await getRecentPrioritizationFeesByPercentile(
+      connection,
+      config,
+      slotsToReturn
+    );
+
+  // console.log('recentPrioritizationFees', recentPrioritizationFees);
+  const maxPriorityFee = recentPrioritizationFees[0].prioritizationFee;
+  // console.log('maxPriorityFee', maxPriorityFee);
+
+  return maxPriorityFee;
 };
 
- const getMeanPrioritizationFeeByPercentile = async (
-    connection: Connection,
-    config: GetRecentPrioritizationFeesByPercentileConfig,
-    slotsToReturn?: number
-  ): Promise<number> => {
-    const recentPrioritizationFees =
-      await getRecentPrioritizationFeesByPercentile(
-        connection,
-        config,
-        slotsToReturn
-      );
-  
-    const mean = Math.ceil(
-      recentPrioritizationFees.reduce(
-        (acc, fee) => acc + fee.prioritizationFee,
-        0
-      ) / recentPrioritizationFees.length
+const getMeanPrioritizationFeeByPercentile = async (
+  connection: Connection,
+  config: GetRecentPrioritizationFeesByPercentileConfig,
+  slotsToReturn?: number
+): Promise<number> => {
+  const recentPrioritizationFees =
+    await getRecentPrioritizationFeesByPercentile(
+      connection,
+      config,
+      slotsToReturn
     );
-  
-    return mean;
-  };
+
+  const mean = Math.ceil(
+    recentPrioritizationFees.reduce(
+      (acc, fee) => acc + fee.prioritizationFee,
+      0
+    ) / recentPrioritizationFees.length
+  );
+
+  return mean;
+};
 
 
 
-export  async function runMin(ctx: any, raydiumId: any) {
+
+export async function runAll(ctx: any, raydiumId: any) {
   const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
- const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
-    const result = await getMaxPrioritizationFeeByPercentile(connection, {
-        lockedWritableAccounts: [
-            new PublicKey(priorityCalculation),
-        ],
-        percentile: PriotitizationFeeLevels.LOW,
-        fallback: false,
-    });
-        // console.log('result_Min', result);
-    return result;  
+  const priorityCalculation = ctx.session.activeTradingPool.id ? ctx.session.activeTradingPool.id : raydiumId;
+
+  const [result1, result2, result3, result4] = await Promise.all([
+
+    getMaxPrioritizationFeeByPercentile(connection, {
+      lockedWritableAccounts: [
+        new PublicKey(priorityCalculation),
+      ],
+      percentile: PriotitizationFeeLevels.LOW,
+      fallback: false,
+    }),
+
+    getMaxPrioritizationFeeByPercentile(connection, {
+      lockedWritableAccounts: [
+        new PublicKey(priorityCalculation),
+      ],
+      percentile: PriotitizationFeeLevels.MEDIUM,
+      fallback: false,
+    }),
+
+    getMaxPrioritizationFeeByPercentile(connection, {
+      lockedWritableAccounts: [
+        new PublicKey(priorityCalculation),
+      ],
+      percentile: PriotitizationFeeLevels.HIGH,
+      fallback: false,
+    }),
+
+    getMaxPrioritizationFeeByPercentile(connection, {
+      lockedWritableAccounts: [
+        new PublicKey(priorityCalculation),
+      ],
+      percentile: PriotitizationFeeLevels.MAX,
+      fallback: false,
+    }),
+  ]);
+  
+  return [result1, result2, result3, result4];
+}
+
+
+export async function runMin(ctx: any, raydiumId: any) {
+  const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+  const priorityCalculation = ctx.session.activeTradingPool.id ? ctx.session.activeTradingPool.id : raydiumId;
+  const result = await getMaxPrioritizationFeeByPercentile(connection, {
+    lockedWritableAccounts: [
+      new PublicKey(priorityCalculation),
+    ],
+    percentile: PriotitizationFeeLevels.LOW,
+    fallback: false,
+  });
+  // console.log('result_Min', result);
+  return result;
 }
 export async function runMedium(ctx: any, raydiumId: any) {
-  const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
+  const priorityCalculation = ctx.session.activeTradingPool.id ? ctx.session.activeTradingPool.id : raydiumId;
   const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
-    const result = await getMaxPrioritizationFeeByPercentile(connection, {
-        lockedWritableAccounts: [
-            new PublicKey(priorityCalculation),
-        ],
-        percentile: PriotitizationFeeLevels.MEDIUM,
-        fallback: false,
-    });
-        // console.log('result_Medium', result);
-    return result;
+  const result = await getMaxPrioritizationFeeByPercentile(connection, {
+    lockedWritableAccounts: [
+      new PublicKey(priorityCalculation),
+    ],
+    percentile: PriotitizationFeeLevels.MEDIUM,
+    fallback: false,
+  });
+  // console.log('result_Medium', result);
+  return result;
 }
 
 export async function runHigh(ctx: any, raydiumId: any) {
-  const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
+  const priorityCalculation = ctx.session.activeTradingPool.id ? ctx.session.activeTradingPool.id : raydiumId;
   const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
-    const result = await getMaxPrioritizationFeeByPercentile(connection, {
-        lockedWritableAccounts: [
-            new PublicKey(priorityCalculation),
-        ],
-        percentile: PriotitizationFeeLevels.HIGH,
-        fallback: false,
-    });
-        // console.log('result_High', result);
+  const result = await getMaxPrioritizationFeeByPercentile(connection, {
+    lockedWritableAccounts: [
+      new PublicKey(priorityCalculation),
+    ],
+    percentile: PriotitizationFeeLevels.HIGH,
+    fallback: false,
+  });
+  // console.log('result_High', result);
 
-    return result;
+  return result;
 }
 
 export async function runMax(ctx: any, raydiumId: any) {
-  const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
+  const priorityCalculation = ctx.session.activeTradingPool.id ? ctx.session.activeTradingPool.id : raydiumId;
   const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
-    const result = await getMaxPrioritizationFeeByPercentile(connection, {
-        lockedWritableAccounts: [
-            new PublicKey(priorityCalculation),
-            new PublicKey(raydiumId)
-        ],
-        percentile: PriotitizationFeeLevels.MAX,
-        fallback: false,
-    });
-        // console.log('result_Max', result);
-    return result;
+  const result = await getMaxPrioritizationFeeByPercentile(connection, {
+    lockedWritableAccounts: [
+      new PublicKey(priorityCalculation),
+      new PublicKey(raydiumId)
+    ],
+    percentile: PriotitizationFeeLevels.MAX,
+    fallback: false,
+  });
+  // console.log('result_Max', result);
+  return result;
 }
 // runMin();
 // runMedium();
@@ -127,7 +172,7 @@ export async function runMax(ctx: any, raydiumId: any) {
 //         [PriotitizationFeeLevels.MEDIUM]: undefined,
 //         [PriotitizationFeeLevels.HIGH]: undefined,
 //         [PriotitizationFeeLevels.MAX]: undefined
-//     }; 
+//     };
 
 //     const levels = {
 //         LOW: PriotitizationFeeLevels.LOW,

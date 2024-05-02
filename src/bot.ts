@@ -46,8 +46,8 @@ import { getRayPoolKeys } from "./service/dex/raydium/raydium-utils/formatAmmKey
 import { sendHelpMessage } from "./views/util/helpMessage";
 import { display_rugCheck } from "./views/rugCheck";
 import { _generateReferralLink, _getReferralData } from "../src/db/mongo/crud";
-import { Portfolios, Referrals,AllowedReferrals } from "./db/mongo/schema";
-import { display_spl_positions, display_single_spl_positions, display_refresh_single_spl_positions} from "./views/portfolioView";
+import { Portfolios, Referrals, AllowedReferrals } from "./db/mongo/schema";
+import { display_spl_positions, display_single_spl_positions, display_refresh_single_spl_positions } from "./views/portfolioView";
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { logErrorToFile } from "../error/logger";
 const express = require('express');
@@ -131,20 +131,21 @@ bot.command("start", async (ctx: any) => {
     if (ctx.message.text.includes(" ")) {
       referralCode = ctx.message.text.split(" ")[1];
     }
+
     // if user already exists
     if (portfolio == DefaultPortfolioData) {
       // User is new
       isNewUser = true;
     }
-     const userName = ctx.message.from.username;
-     console.log("userName:", userName);
+    const userName = ctx.message.from.username;
+    console.log("userName:", userName);
 
-     const allowedUsers = allowedUsernames.includes(userName);
+    const allowedUsers = allowedUsernames.includes(userName);
 
-     if (referralCode || allowedUsers) {
-       const referralRecord = await Referrals.findOne({
-         referralCode: referralCode,
-       });
+    if (referralCode || allowedUsers) {
+      const referralRecord = await Referrals.findOne({
+        referralCode: referralCode,
+      });
       if (referralRecord && referralRecord.generatorChatId !== chatId) {
         if (!referralRecord.referredUsers.includes(chatId)) {
           // Add the user's chatId to the referredUsers array
@@ -164,6 +165,7 @@ bot.command("start", async (ctx: any) => {
           ctx.session.referralCommision = referralRecord.commissionPercentage;
         }
       }
+
     } else if (isNewUser) {
       // New user without a referral code
       await ctx.api.sendMessage(
@@ -172,6 +174,7 @@ bot.command("start", async (ctx: any) => {
       );
       return;
     }
+
     //-------Start bot with wallet---------------------------
     ctx.session.latestCommand = "start";
     let userWallet: Keypair | null = null;
@@ -184,17 +187,18 @@ bot.command("start", async (ctx: any) => {
       userWallet = await createUserPortfolio(ctx); // => { publicKey, secretKey }
       ctx.session.portfolio.wallets[ctx.session.activeWalletIndex] = userWallet;
     }
+
     const publicKeyString: PublicKey | String = userWallet
-    ? userWallet.publicKey
-    : ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].publicKey;
+      ? userWallet.publicKey
+      : ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].publicKey;
 
     // Retrieve the current SOL details
     let solPriceMessage = "";
     const [balanceInSOL, details] = await Promise.all([
       getSolBalance(publicKeyString, connection),
       getSolanaDetails()
-  ]);
-   
+    ]);
+
     // Fetch SOL balance
     if (balanceInSOL === null) {
       await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
@@ -251,7 +255,7 @@ bot.command("start", async (ctx: any) => {
       parse_mode: "HTML",
     };
     // Send the message with the inline keyboard
-    ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
+    await ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
     ctx.session.portfolio = await getPortfolio(chatId);
     // ctx.session.latestCommand = "rug_check";
   } catch (error: any) {
@@ -266,8 +270,8 @@ bot.command("start", async (ctx: any) => {
   }
 });
 
-bot.command("help", async (ctx) => {
-  await sendHelpMessage(ctx);
+bot.command("help", (ctx) => {
+  sendHelpMessage(ctx);
   ctx.session.latestCommand = "rug_check";
 
 });
@@ -276,7 +280,7 @@ bot.command("positions", async (ctx) => {
   try {
     // await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
     await display_spl_positions(ctx, false);
-    
+
   } catch (error: any) {
     logErrorToFile("bot on positions cmd", error);
   }
@@ -377,26 +381,36 @@ bot.on("message", async (ctx) => {
     // console.log('typeof msgTxt', typeof msgTxt);
     // console.log("latestCommand", latestCommand);
     if (msgTxt) {
-      if ((!isNaN(parseFloat(msgTxt!)) &&  ctx.session.latestCommand !== 'buy' && ctx.session.latestCommand !== 'sell' && ctx.session.latestCommand !== 'snipe' && ctx.session.latestCommand !== "send_sol" && ctx.session.latestCommand !== 'ask_for_sol_amount' && ctx.session.latestCommand === 'display_after_Snipe_Buy' ) || ctx.session.latestCommand === 'start' || ctx.session.latestCommand === 'display_single_spl_positions') {
-          if (PublicKey.isOnCurve(msgTxt!)) {
-            const isTOken = await checkAccountType(ctx, msgTxt);
-            if (!isTOken) {
-              ctx.api.sendMessage(chatId, "Invalid address");
-              return;
-            }
-            ctx.session.latestCommand = "rug_check";
-            let rugCheckToken = new PublicKey(msgTxt);
-            ctx.session.rugCheckToken = rugCheckToken;
-            ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
-
-            await display_rugCheck(ctx, false);
-          } else {
-            ctx.api.sendMessage(chatId, "Invalid address");
+      if (
+        (!isNaN(parseFloat(msgTxt!))
+          && ctx.session.latestCommand !== 'buy'
+          && ctx.session.latestCommand !== 'sell'
+          && ctx.session.latestCommand !== 'snipe'
+          && ctx.session.latestCommand !== "send_sol"
+          && ctx.session.latestCommand !== 'ask_for_sol_amount'
+          && ctx.session.latestCommand === 'display_after_Snipe_Buy')
+        || ctx.session.latestCommand === 'start'
+        || ctx.session.latestCommand === 'display_single_spl_positions'
+      ) {
+        if (PublicKey.isOnCurve(msgTxt!)) {
+          const isTOken = await checkAccountType(ctx, msgTxt);
+          if (!isTOken) {
+            await ctx.api.sendMessage(chatId, "Invalid address");
+            return;
           }
+          ctx.session.latestCommand = "rug_check";
+          let rugCheckToken = new PublicKey(msgTxt);
+          ctx.session.rugCheckToken = rugCheckToken;
+          ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
+
+          await display_rugCheck(ctx, false);
+        } else {
+          await ctx.api.sendMessage(chatId, "Invalid address");
         }
-    } 
-       switch (latestCommand) {
-       
+      }
+    }
+    switch (latestCommand) {
+
       case "set_slippage": {
         ctx.session.latestSlippage = Number(msgTxt);
         if (ctx.session.currentMode === "buy") {
@@ -417,7 +431,7 @@ bot.on("message", async (ctx) => {
           ctx.session.snipeToken instanceof PublicKey
             ? ctx.session.snipeToken.toBase58()
             : ctx.session.snipeToken;
-        await display_snipe_options(ctx,false, snipeToken);
+        await display_snipe_options(ctx, false, snipeToken);
         break;
       }
       case "rug_check": {
@@ -425,7 +439,7 @@ bot.on("message", async (ctx) => {
           if (PublicKey.isOnCurve(msgTxt!)) {
             const isTOken = await checkAccountType(ctx, msgTxt);
             if (!isTOken) {
-              ctx.api.sendMessage(chatId, "Invalid address");
+              await ctx.api.sendMessage(chatId, "Invalid address");
               return;
             }
             ctx.session.latestCommand = "rug_check";
@@ -435,7 +449,7 @@ bot.on("message", async (ctx) => {
 
             await display_rugCheck(ctx, false);
           } else {
-            ctx.api.sendMessage(chatId, "Invalid address");
+            await ctx.api.sendMessage(chatId, "Invalid address");
           }
         }
         break;
@@ -548,7 +562,7 @@ bot.on("message", async (ctx) => {
             //to avoid crashin with wron address
             const isTOken = await checkAccountType(ctx, msgTxt);
             if (!isTOken) {
-              ctx.api.sendMessage(chatId, "Invalid address");
+              await ctx.api.sendMessage(chatId, "Invalid address");
               return;
             }
             let poolInfo = await getRayPoolKeys(ctx, msgTxt);
@@ -557,18 +571,18 @@ bot.on("message", async (ctx) => {
               ctx.session.latestCommand = 'snipe';
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
-              await display_snipe_options(ctx,false, msgTxt);
-              // ctx.api.sendMessage(chatId, "🔴 Invalid address");
-              // ctx.api.sendMessage(chatId, "🔴 Pool not found for this token.");
+              await display_snipe_options(ctx, false, msgTxt);
+              // await ctx.api.sendMessage(chatId, "🔴 Invalid address");
+              // await ctx.api.sendMessage(chatId, "🔴 Pool not found for this token.");
               return;
             }
             ctx.session.activeTradingPool = poolInfo;
             await display_token_details(ctx, false);
           } else {
-            ctx.api.sendMessage(chatId, "🔴 Invalid address");
+            await ctx.api.sendMessage(chatId, "🔴 Invalid address");
           }
         } catch (e) {
-          ctx.api.sendMessage(chatId, "🔴 Please entre a valid address");
+          await ctx.api.sendMessage(chatId, "🔴 Please entre a valid address");
           console.error("Error in 'buy' command:", e);
         }
         break;
@@ -580,7 +594,7 @@ bot.on("message", async (ctx) => {
             const isTOken = await checkAccountType(ctx, msgTxt);
             // console.log("isTOken", isTOken);
             if (!isTOken) {
-              ctx.api.sendMessage(chatId, "Invalid address");
+              await ctx.api.sendMessage(chatId, "Invalid address");
               return;
             }
 
@@ -598,7 +612,7 @@ bot.on("message", async (ctx) => {
               display_snipe_options(ctx, false, ctx.session.snipeToken.toBase58());
             }
           } else if (msgTxt && !PublicKey.isOnCurve(msgTxt)) {
-            ctx.api.sendMessage(chatId, "Invalid address");
+            await ctx.api.sendMessage(chatId, "Invalid address");
           }
         } catch (error: any) {
           console.error("Error in 'snipe' command:", error.message);
@@ -621,11 +635,11 @@ bot.on("message", async (ctx) => {
             await _getReferralData(ctx),
             await getSolanaDetails()// Fetch referral data
           ]);
- 
+
           const referEarningSol = (
             Number(referralData?.totalEarnings) / 1e9
           ).toFixed(6);
-       
+
           const referEarningDollar = (
             Number(referEarningSol) * details
           ).toFixed(2);
@@ -693,7 +707,7 @@ bot.on("callback_query", async (ctx: any) => {
       const parts = data.split("_");
       const positionIndex = parts[2]; // Position index
       ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
-      ctx.api.sendMessage(chatId, "Please enter SOL amount");
+      await ctx.api.sendMessage(chatId, "Please enter SOL amount");
       ctx.session.latestCommand = "buy_X_SOL";
 
       return;
@@ -704,7 +718,7 @@ bot.on("callback_query", async (ctx: any) => {
       ctx.session.positionIndex = newPositionIndex;
       console.log('positionIndex', ctx.session.positionIndex)
       ctx.session.activeTradingPool = ctx.session.positionPool[ctx.session.positionIndex];
-      await display_refresh_single_spl_positions(ctx );
+      await display_refresh_single_spl_positions(ctx);
     }
 
     switch (data) {
@@ -717,7 +731,7 @@ bot.on("callback_query", async (ctx: any) => {
           ctx.session.latestCommand = "refer_friends";
           let existingReferral = await Referrals.findOne({
             generatorChatId: chatId,
-         });
+          });
 
           if (!existingReferral) {
             // No existing referral found, ask for the wallet address
@@ -771,14 +785,14 @@ bot.on("callback_query", async (ctx: any) => {
         await handleRefreshStart(ctx);
         break;
       case "refresh_portfolio":
-        await display_spl_positions(ctx,true);
+        await display_spl_positions(ctx, true);
         break;
       case "refrech_rug_check":
         let isRefresh = true
         await display_rugCheck(ctx, isRefresh);
         break;
       case "select_wallet_0":
-        const portfolio =  await Portfolios.findOne({ chatId });
+        const portfolio = await Portfolios.findOne({ chatId });
         console.log("portfolio", portfolio);
         if (portfolio) {
           portfolio.activeWalletIndex = 0;
@@ -786,15 +800,15 @@ bot.on("callback_query", async (ctx: any) => {
           await portfolio.save();  // Save the updated document to MongoDB
           await handleSettings(ctx);
           await RefreshAllWallets(ctx);
-        }else{
+        } else {
           await ctx.api.sendMessage(chatId, "Error: Portfolio not found.");
         }
 
         break;
       case "select_wallet_1":
-        const portfolio1 =  await Portfolios.findOne({ chatId });
+        const portfolio1 = await Portfolios.findOne({ chatId });
         console.log("portfolio1", portfolio1);
-     
+
         if (portfolio1) {
           portfolio1.activeWalletIndex = 1;
           ctx.session.activeWalletIndex = portfolio1.activeWalletIndex;
@@ -802,7 +816,7 @@ bot.on("callback_query", async (ctx: any) => {
           await portfolio1.save();  // Save the updated document to MongoDB
           await handleSettings(ctx);
           await RefreshAllWallets(ctx);
-        }else{
+        } else {
           await ctx.api.sendMessage(chatId, "Error: Portfolio not found.");
         }
 
@@ -883,7 +897,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "rug_check": {
         ctx.session.latestCommand = "rug_check";
-        ctx.api.sendMessage(
+        await ctx.api.sendMessage(
           chatId,
           "Please provide the token address for a rug pull analysis."
         );
@@ -925,7 +939,7 @@ bot.on("callback_query", async (ctx: any) => {
         //   ctx.session.activeTradingPool = await getRayPoolKeys(ctx, ctx.session.latestToken);
         //   await display_token_details(ctx,false);
         // }
-         else {
+        else {
           ctx.session.latestCommand = "buy";
           await ctx.api.sendMessage(
             chatId,
@@ -945,8 +959,8 @@ bot.on("callback_query", async (ctx: any) => {
 
         if (ctx.session.latestCommand === 'rug_check') {
           ctx.session.latestCommand = "snipe";
-          await display_snipe_options(ctx,false, ctx.session.rugCheckToken);
-        } 
+          await display_snipe_options(ctx, false, ctx.session.rugCheckToken);
+        }
         // else if(ctx.session.latestCommand === 'optional'){
         //   ctx.session.latestCommand = "snipe";
         //   ctx.session.snipeToken = ctx.session.latestToken;
@@ -971,17 +985,17 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "set_slippage": {
         ctx.session.latestCommand = "set_slippage";
-        ctx.api.sendMessage(chatId, "Please enter slippage % amount");
+        await ctx.api.sendMessage(chatId, "Please enter slippage % amount");
         break;
       }
       case "set_snipe_slippage": {
         ctx.session.latestCommand = "set_snipe_slippage";
-        ctx.api.sendMessage(chatId, "Please enter slippage % amount");
+        await ctx.api.sendMessage(chatId, "Please enter slippage % amount");
         break;
       }
       case "send_sol": {
         ctx.session.latestCommand = "send_sol";
-        ctx.api.sendMessage(
+        await ctx.api.sendMessage(
           chatId,
           "Please paste the recipient's wallet address."
         );
@@ -1031,7 +1045,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       case "buy_X_SOL": {
         ctx.session.latestCommand = "buy_X_SOL";
-        ctx.api.sendMessage(chatId, "Please enter SOL amount");
+        await ctx.api.sendMessage(chatId, "Please enter SOL amount");
         break;
       }
       case "sell_10_TOKEN":
@@ -1084,7 +1098,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       case "sell_X_TOKEN": {
         ctx.session.latestCommand = "sell_X_TOKEN";
-        ctx.api.sendMessage(chatId, "Please enter amount to sell.");
+        await ctx.api.sendMessage(chatId, "Please enter amount to sell.");
         break;
       }
       case "snipe_0.1_SOL": {
@@ -1135,17 +1149,17 @@ bot.on("callback_query", async (ctx: any) => {
       case "snipe_X_SOL": {
         ctx.session.snipeStatus = true;
         ctx.session.latestCommand = "snipe_X_SOL";
-        ctx.api.sendMessage(chatId, "Please enter amount to snipe.");
+        await ctx.api.sendMessage(chatId, "Please enter amount to snipe.");
         break;
       }
       case "display_spl_positions": {
         // await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
-        await display_spl_positions(ctx,false);
+        await display_spl_positions(ctx, false);
         break;
       }
       case "display_refresh_single_spl_positions": {
         await display_refresh_single_spl_positions(ctx);
-    
+
         break;
       }
       case "Refresh_display_after_Snipe_Buy": {
@@ -1182,7 +1196,7 @@ bot.on("callback_query", async (ctx: any) => {
         } else if (ctx.session.latestCommand === 'display_single_spl_positions') {
           await display_refresh_single_spl_positions(ctx);
         } else if (ctx.session.latestCommand === 'display_after_Snipe_Buy') {
-          await display_after_Snipe_Buy(ctx,true);
+          await display_after_Snipe_Buy(ctx, true);
 
         }
         else {
