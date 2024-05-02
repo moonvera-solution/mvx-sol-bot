@@ -1,12 +1,12 @@
 
-import { RefreshAllWallets } from '../../views/refreshData/RefresHandleWallets';
+import { refreshAllWallets } from '../../views/wallets/walletsView';
 import { getSolanaDetails } from '../../api';
 import { getSolBalance } from '../util';
 import { PublicKey,Connection } from '@solana/web3.js';
 
 
 export async function handleSettings(ctx:any) {
-    // await RefreshAllWallets(ctx);
+    // await refreshAllWallets(ctx);
     const selectedWallet = ctx.session.activeWalletIndex;
     const userWallet = ctx.session.portfolio.wallets[selectedWallet];
     const chatId = ctx.chat.id;

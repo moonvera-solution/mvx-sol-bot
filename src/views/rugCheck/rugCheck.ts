@@ -1,12 +1,12 @@
 import { PublicKey } from '@metaplex-foundation/js';
-import { getLiquityFromOwner, getTokenMetadata, getUserTokenBalanceAndDetails } from '../service/feeds';
-import { quoteToken } from './util/dataCalculation';
-import { getSolanaDetails } from '../api';
-import { formatNumberToKOrM, getSolBalance } from '../service/util';
+import { getLiquityFromOwner, getTokenMetadata, getUserTokenBalanceAndDetails } from '../../service/feeds';
+import { quoteToken } from '../util/dataCalculation';
+import { getSolanaDetails } from '../../api';
+import { formatNumberToKOrM, getSolBalance } from '../../service/util';
 import { Connection } from '@solana/web3.js';
-import { getTokenDataFromBirdEye } from '../api/priceFeeds/birdEye';
+import { getTokenDataFromBirdEye } from '../../api/priceFeeds/birdEye';
 import BigNumber from 'bignumber.js';
-import { display_snipe_options } from '.';
+import { display_snipe_options } from '..';
 
 export async function display_rugCheck(ctx: any, isRefresh: boolean ) {
     try {

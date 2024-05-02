@@ -227,7 +227,6 @@ export async function startSnippeSimulation(
         minimumBalanceNeeded += bot_fee;
     }
 
-
     const userSolBalance = await getSolBalance(userWallet.publicKey, connection);
     minimumBalanceNeeded += totalComputeBudget;
 

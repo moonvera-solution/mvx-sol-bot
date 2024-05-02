@@ -23,7 +23,6 @@ export async function handleCloseKeyboard(ctx: any) {
     }
 }
 
-
 export async function display_token_details(ctx: any, isRefresh: boolean) {
     const priority_Level = ctx.session.priorityFees;
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
