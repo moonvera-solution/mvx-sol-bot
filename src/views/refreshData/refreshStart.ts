@@ -10,7 +10,13 @@ export async function handleRefreshStart(ctx: any) {
 
     let solPriceMessage = '';
     let userWallet: any;
+ 
     try {
+        if(ctx.session.portfolio){
+            const selectedWallet = ctx.session.portfolio.activeWalletIndex;
+            userWallet = ctx.session.portfolio.wallets[selectedWallet];
+        }
+        // console.log('userWallet', userWallet)
         const publicKeyString: any = userWallet.publicKey; // The user's public key
         // Fetch SOL balance
         const [balanceInSOL, details] = await Promise.all([
@@ -24,10 +30,7 @@ export async function handleRefreshStart(ctx: any) {
         solPriceMessage = '\nError fetching current SOL price.';
     }
      // Retrieve wallet user and balance in SOL and USD 
-   if(ctx.session.portfolio){
-    const selectedWallet = ctx.session.portfolio.activeWalletIndex;
-    userWallet = ctx.session.portfolio.wallets[selectedWallet];
-    }
+ 
 
      if (balanceInSOL === null) {
          await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");

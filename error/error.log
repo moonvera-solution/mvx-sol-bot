@@ -2133,4 +2133,32 @@ Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range.
     at processTicksAndRejections (node:internal/process/task_queues:95:5)
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/2/2024, 1:58:22 PM - bot.on('message'
+ Error 
+ 🔴 Insufficient balance for transaction.
+ Error: 🔴 Insufficient balance for transaction.
+    at catchSimulationErrors (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:427:15)
+    at startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:288:15)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+ 5/2/2024, 1:58:22 PM - bot on snipe simmulation
+ Error 
+ 🔴 Insufficient balance for transaction.
+ Error: 🔴 Insufficient balance for transaction.
+    at catchSimulationErrors (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:427:15)
+    at startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:288:15)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+ 5/2/2024, 5:19:42 PM - bot.on('message'
+ Error 
+ Non-base58 character
+ Error: Non-base58 character
+    at Object.decode (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/node_modules/base-x/src/index.js:111:11)
+    at new PublicKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:63:30)
+    at Function.isOnCurve (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:251:20)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:381:25
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:51:41
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:51:41
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:48
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
  

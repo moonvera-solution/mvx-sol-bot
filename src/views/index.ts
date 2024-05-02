@@ -62,7 +62,6 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
         UserPositions.find({ positionChatId: chatId, walletId: userPublicKey }, { positions: { $slice: -7 } }),
         getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
         runAllFees(ctx, raydiumId),
-
     ]);
     const lowpriorityFees = (AllpriorityFees.result);
     const mediumpriorityFees = (AllpriorityFees.result2);
@@ -73,12 +72,12 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
     const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
     const tokenPriceUSD = birdeyeData 
     
-  && birdeyeData.response 
-  && birdeyeData.response.data 
-  && birdeyeData.response.data.data 
-  && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
-    ? birdeyeData.response.data.data.price 
-    : tokenInfo.price.times(solPrice).toNumber();
+    && birdeyeData.response 
+    && birdeyeData.response.data 
+    && birdeyeData.response.data.data 
+    && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
+        ? birdeyeData.response.data.data.price 
+        : tokenInfo.price.times(solPrice).toNumber();
     const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solPrice) : tokenInfo.price.toNumber();
  let specificPosition;
     if(userPosition[0] && userPosition[0].positions && userPosition[0].positions != undefined){
@@ -93,18 +92,13 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
     let profitInUSD ;
     let profitInSol ;
     if(specificPosition && specificPosition.amountOut ){
- 
-
         valueInUSD = (specificPosition.amountOut - (userTokenDetails.userTokenBalance *  Math.pow(10,baseDecimals) )) < 5 ? userTokenDetails.userTokenBalance * Number(tokenPriceUSD) : 'N/A';
-    
         valueInSOL = (specificPosition.amountOut - (userTokenDetails.userTokenBalance * Math.pow(10,baseDecimals))) < 5 ? Number(((userTokenDetails.userTokenBalance)) * Number(tokenPriceSOL)) : 'N/A';
         initialInSOL = Number(specificPosition.amountIn) / 1e9;
         initialInUSD =  initialInSOL * Number(solPrice);
         profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(specificPosition.amountIn) / 1e9 )) / (Number(specificPosition.amountIn) / 1e9) * 100 : 'N/A';
         profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
         profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
-
-      
        }
 
     const {
@@ -116,7 +110,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
     const marketCap =  birdeyeData?.response.data.data.mc? birdeyeData.response.data.data.mc : tokenInfo.marketCap.toNumber() * Number(solPrice);
     try {
 
-    const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
+         const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
 
         const priceImpact = tokenInfo.priceImpact.toFixed(2);
         const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
@@ -383,7 +377,6 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
     const baseDecimals = rayPoolKeys.baseDecimals;
     const quoteDecimals = rayPoolKeys.quoteDecimals;
     const baseMint = rayPoolKeys.baseMint;
-
     // console.log("rayPoolKeys",rayPoolKeys)
     const tokenAddress = new PublicKey(baseMint);
    
@@ -399,15 +392,12 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
     ] = await Promise.all([
         getTokenDataFromBirdEye(tokenAddress.toString()),
         getTokenMetadata(ctx, tokenAddress.toBase58()),
-        // getSolanaDetails(),
         quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
         getSolBalance(userPublicKey, connection),
         UserPositions.find({ positionChatId: chatId, walletId: userPublicKey }, { positions: { $slice: -7 } }),
         getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
         runAllFees(ctx, raydiumId),
-        // runMedium(ctx, raydiumId),
-        // runHigh(ctx, raydiumId),
-        // runMax(ctx, raydiumId)
+
     ]);
     const lowpriorityFees = (AllpriorityFees.result);
     const mediumpriorityFees = (AllpriorityFees.result2);
