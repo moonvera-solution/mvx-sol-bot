@@ -46,7 +46,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
     const [
         birdeyeData,
         tokenMetadataResult,
-        solPrice,
+        // solPrice,
         tokenInfo,
         balanceInSOL,
         userPosition,
@@ -58,7 +58,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
     ] = await Promise.all([
         getTokenDataFromBirdEye(tokenAddress.toString()),
         getTokenMetadata(ctx, tokenAddress.toBase58()),
-        getSolanaDetails(),
+        // getSolanaDetails(),
         quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
         getSolBalance(userPublicKey, connection),
         UserPositions.find({ positionChatId: chatId, walletId: userPublicKey }, { positions: { $slice: -7 } }),
@@ -68,10 +68,23 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
         runHigh(ctx, raydiumId),
         runMax(ctx, raydiumId)
     ]);
+    const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+
     const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
-    const tokenPriceSOL = birdeyeData ? (birdeyeData.response.data.data.price / solPrice) : tokenInfo.price.toNumber();
-    const tokenPriceUSD = birdeyeData ? birdeyeData.response.data.data.price : (tokenInfo.price.times(solPrice));
-    const specificPosition = userPosition[0].positions.find((pos: any) => new PublicKey(pos.baseMint).equals(tokenAddress));
+    const tokenPriceUSD = birdeyeData 
+    
+  && birdeyeData.response 
+  && birdeyeData.response.data 
+  && birdeyeData.response.data.data 
+  && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
+    ? birdeyeData.response.data.data.price 
+    : tokenInfo.price.times(solPrice).toNumber();
+    const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solPrice) : tokenInfo.price.toNumber();
+ let specificPosition;
+    if(userPosition[0] && userPosition[0].positions && userPosition[0].positions != undefined){
+        specificPosition = userPosition[0].positions.find((pos: any) => new PublicKey(pos.baseMint).equals(tokenAddress));
+
+    }
     let initialInUSD = 0;
     let initialInSOL = 0;
     let valueInUSD: any ;
@@ -94,14 +107,13 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
       
        }
 
-       
     const {
         birdeyeURL,
         dextoolsURL,
         dexscreenerURL,
         tokenData,
     } = tokenMetadataResult;
-    const marketCap =  birdeyeData?.response.data.data.mc? birdeyeData.response.data.data.mc : tokenInfo.marketCap.toNumber() * (solPrice).toFixed(2);
+    const marketCap =  birdeyeData?.response.data.data.mc? birdeyeData.response.data.data.mc : tokenInfo.marketCap.toNumber() * Number(solPrice);
     try {
 
     const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
@@ -140,13 +152,12 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
                         [{ text: ' 🔂 Refresh ', callback_data: 'refresh_trade' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
                         [{ text: 'Buy (X SOL)', callback_data: 'buy_X_SOL' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_SOL' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_SOL' }],
                         // [{ text: '⏮️ Previous', callback_data: 'previous_token' }, { text: `${tokenData.name} (${tokenData.symbol})`, callback_data: 'current_token' }, { text: 'Next ⏭️', callback_data: 'next_token' }],
-                        [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: 'Selling Mode 💸', callback_data: 'sell' }],
                         [{ text: '📈 Priority fees', callback_data: '_' }],
                         [
                             { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Med ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
                             { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
                         ],
-                        [{ text: 'Close', callback_data: 'closing' }]]
+                        [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' },{ text: 'Close', callback_data: 'closing' }]]
                 },
             };
         } else if (ctx.session.latestCommand == 'sell') {
@@ -227,7 +238,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
             const [
                 birdeyeData,
                 tokenMetadataResult,
-                solPrice,
+                // solPrice,
                 tokenInfo,
                 balanceInSOL,
                 userTokenDetails,
@@ -238,7 +249,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
             ] = await Promise.all([
                 getTokenDataFromBirdEye(tokenAddress.toString()),
                 getTokenMetadata(ctx, tokenAddress.toBase58()),
-                getSolanaDetails(),
+                // getSolanaDetails(),
                 quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
                 getSolBalance(userPublicKey, connection),
                 getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
@@ -247,7 +258,8 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
                 runHigh(ctx, raydiumId),
                 runMax(ctx, raydiumId)
             ]);
-    
+            const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+
     
             const {
                 birdeyeURL,
@@ -273,9 +285,16 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
                 const countdown = new Date(timeDiff).toISOString().substr(11, 8);
                 poolStatusMessage = `⏳ Opening in ${countdown}`;
             }
-    
-            const tokenPriceSOL = birdeyeData ? (birdeyeData.response.data.data.price / solPrice) : tokenInfo.price.toNumber();
-            const tokenPriceUSD = birdeyeData ? birdeyeData.response.data.data.price : (tokenInfo.price.times(solPrice));
+            console.log('(tokenInfo.price.times(solPrice)',(tokenInfo.price.times(solPrice).toNumber()));
+            const tokenPriceUSD = birdeyeData 
+            && birdeyeData.response 
+            && birdeyeData.response.data 
+            && birdeyeData.response.data.data 
+            && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
+                ? birdeyeData.response.data.data.price 
+                : tokenInfo.price.times(solPrice).toNumber();
+            const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solPrice) : tokenInfo.price.toNumber();
+
             const priceImpact = tokenInfo.priceImpact.toFixed(2);
             const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     
@@ -307,11 +326,9 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
                 reply_markup: {
                     inline_keyboard: [
                         [{ text: ' 🔂 Refresh ', callback_data: 'refresh_snipe' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
-                        // [{ text: ' 🎯  Turbo Snipping ', callback_data: '_' }],
+                        [{ text: `⛷️ Set snipe slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }],
                         [{ text: '🎯 X SOL', callback_data: 'snipe_X_SOL' }, { text: '🎯 0.5 SOL', callback_data: 'snipe_0.5_SOL' }, { text: '🎯 1 SOL', callback_data: 'snipe_1_SOL' }],
-                        [{ text: `⛷️ Set Slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }, { text: 'Selling Mode 💸', callback_data: 'sell' }],
                         [{ text: '📈 Priority fees', callback_data: '_' }],
-        
                         [
                             { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Med ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
                             { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
@@ -328,11 +345,9 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
             reply_markup: {
                 inline_keyboard: [
                     [{ text: ' 🔂 Refresh ', callback_data: 'refresh_snipe' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
-                    // [{ text: ' 🎯  Turbo Snipping ', callback_data: '_' }],
+                    [{ text: `⛷️ Set snipe slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }],
                     [{ text: '🎯 X SOL', callback_data: 'snipe_X_SOL' }, { text: '🎯 0.5 SOL', callback_data: 'snipe_0.5_SOL' }, { text: '🎯 1 SOL', callback_data: 'snipe_1_SOL' }],
-                    [{ text: `⛷️ Set Slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }, { text: 'Selling Mode 💸', callback_data: 'sell' }],
                     [{ text: '📈 Priority fees', callback_data: '_' }],
-    
                     [
                         { text: `Low ${priority_Level === 2500 ? '✅' : ''}`, callback_data: 'priority_low' }, { text: `Med ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_medium' },
                         { text: `High ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_high' }, { text: `Max ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_max' }
@@ -375,7 +390,7 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
     const [
         birdeyeData,
         tokenMetadataResult,
-        solPrice,
+        // solPrice,
         tokenInfo,
         balanceInSOL,
         userPosition,
@@ -387,7 +402,7 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
     ] = await Promise.all([
         getTokenDataFromBirdEye(tokenAddress.toString()),
         getTokenMetadata(ctx, tokenAddress.toBase58()),
-        getSolanaDetails(),
+        // getSolanaDetails(),
         quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
         getSolBalance(userPublicKey, connection),
         UserPositions.find({ positionChatId: chatId, walletId: userPublicKey }, { positions: { $slice: -7 } }),
@@ -398,6 +413,7 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
         runMax(ctx, raydiumId)
     ]);
 
+    const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
 
     const {
         birdeyeURL,
@@ -409,9 +425,15 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
 
     const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
 
-    const tokenPriceSOL = birdeyeData ? (birdeyeData.response.data.data.price / solPrice) : tokenInfo.price.toNumber();
-    const tokenPriceUSD = birdeyeData ? birdeyeData.response.data.data.price : (tokenInfo.price.times(solPrice));
-
+    const tokenPriceUSD = birdeyeData 
+    && birdeyeData.response 
+    && birdeyeData.response.data 
+    && birdeyeData.response.data.data 
+    && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
+      ? birdeyeData.response.data.data.price 
+      : tokenInfo.price.times(solPrice).toNumber();
+      const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solPrice) : tokenInfo.price.toNumber();
+  
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
     const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);

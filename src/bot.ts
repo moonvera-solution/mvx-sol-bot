@@ -120,6 +120,12 @@ async function _validateSession(ctx: any) {
   }
 }
 
+const allowedUsernames = [
+  "tech_01010",
+  "daniellesifg",
+  "swalefdao",
+  "coachalib",
+]; // without the @
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                      BOT START                             */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
@@ -135,7 +141,6 @@ bot.command("start", async (ctx: any) => {
     const connection = new Connection(
       `${ctx.session.tritonRPC}${ctx.session.tritonToken}`
     );
-
     let referralCode = null;
     // Check if there's additional text with the /start command
     if (ctx.message.text.includes(" ")) {
@@ -146,21 +151,19 @@ bot.command("start", async (ctx: any) => {
       // User is new
       isNewUser = true;
     }
+     const userName = ctx.message.from.username;
+     console.log("userName:", userName);
 
-    const userName = ctx.message.from.username;
+     const allowedUsers = allowedUsernames.includes(userName);
 
-    const user = await AllowedReferrals.find({ tgUserName: userName });
-    ctx.session.allowedReferral = user[0].tgUserName;
-
-    if (referralCode || ctx.session.allowedReferral) {
-      const referralRecord = await Referrals.findOne({
-        referralCode: referralCode,
-      });
+     if (referralCode || allowedUsers) {
+       const referralRecord = await Referrals.findOne({
+         referralCode: referralCode,
+       });
       if (referralRecord && referralRecord.generatorChatId !== chatId) {
         if (!referralRecord.referredUsers.includes(chatId)) {
           // Add the user's chatId to the referredUsers array
           referralRecord.referredUsers.push(chatId);
-
           // Increment the referral count
           referralRecord.numberOfReferrals! += 1;
           await referralRecord.save();
@@ -184,7 +187,6 @@ bot.command("start", async (ctx: any) => {
       );
       return;
     }
-
     //-------Start bot with wallet---------------------------
     ctx.session.latestCommand = "start";
     let userWallet: Keypair | null = null;
@@ -266,7 +268,7 @@ bot.command("start", async (ctx: any) => {
     // Send the message with the inline keyboard
     ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
     ctx.session.portfolio = await getPortfolio(chatId);
-    // ctx.session.latestCommand = "optional";
+    // ctx.session.latestCommand = "rug_check";
   } catch (error: any) {
 
     logErrorToFile("bot on start cmd", error);
@@ -281,6 +283,8 @@ bot.command("start", async (ctx: any) => {
 
 bot.command("help", async (ctx) => {
   await sendHelpMessage(ctx);
+  ctx.session.latestCommand = "rug_check";
+
 });
 
 bot.command("positions", async (ctx) => {
@@ -290,6 +294,7 @@ bot.command("positions", async (ctx) => {
   try {
     // await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
     await display_spl_positions(ctx, false);
+    
   } catch (error: any) {
     logErrorToFile("bot on positions cmd", error);
   }
@@ -397,32 +402,30 @@ bot.on("message", async (ctx) => {
     ctx.session.portfolio.chatId = chatId;
     const latestCommand = ctx.session.latestCommand;
     const msgTxt = ctx.update.message.text;
+    // console.log("msgTxt", msgTxt);
+    // console.log('typeof msgTxt', typeof msgTxt);
+    // console.log("latestCommand", latestCommand);
+    if (msgTxt) {
+      if ((!isNaN(parseFloat(msgTxt!)) &&  ctx.session.latestCommand !== 'buy' && ctx.session.latestCommand !== 'sell' && ctx.session.latestCommand !== 'snipe' && ctx.session.latestCommand !== "send_sol" && ctx.session.latestCommand !== 'ask_for_sol_amount' && ctx.session.latestCommand === 'display_after_Snipe_Buy' ) || ctx.session.latestCommand === 'start' || ctx.session.latestCommand === 'display_single_spl_positions') {
+          if (PublicKey.isOnCurve(msgTxt!)) {
+            const isTOken = await checkAccountType(ctx, msgTxt);
+            if (!isTOken) {
+              ctx.api.sendMessage(chatId, "Invalid address");
+              return;
+            }
+            ctx.session.latestCommand = "rug_check";
+            let rugCheckToken = new PublicKey(msgTxt);
+            ctx.session.rugCheckToken = rugCheckToken;
+            ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
 
-    switch (latestCommand) {
-      // case "optional": {
-      //     if(msgTxt){
-      //         if (PublicKey.isOnCurve(msgTxt)) {
-      //           const isTOken = await checkAccountType(ctx, msgTxt);
-      //           if (!isTOken) {
-      //             ctx.api.sendMessage(chatId, "Invalid address");
-      //             return;
-      //           }
-      //           ctx.session.latestToken = new PublicKey(msgTxt);
-      //           const addressOptions = {
-      //             reply_markup: {
-      //               inline_keyboard: [
-      //                 [{ text: "Snipe", callback_data: "snipe" }],
-      //                 [{ text: "Buy", callback_data: "buy" }]
-      //               ]
-      //             },
-      //             // parse_mode: "HTML",
-      //           };
-      //           await ctx.api.sendMessage(chatId, "Choose an action for the address:", addressOptions);
-      //           return;  // Stop further processing to wait for next command
-      //       }
-      //     }          
-      //         break;
-      // }
+            await display_rugCheck(ctx, false);
+          } else {
+            ctx.api.sendMessage(chatId, "Invalid address");
+          }
+        }
+    } 
+       switch (latestCommand) {
+       
       case "set_slippage": {
         ctx.session.latestSlippage = Number(msgTxt);
         if (ctx.session.currentMode === "buy") {
@@ -583,7 +586,7 @@ bot.on("message", async (ctx) => {
               ctx.session.latestCommand = 'snipe';
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
-              display_snipe_options(ctx, false, msgTxt);
+              await display_snipe_options(ctx,false, msgTxt);
               // ctx.api.sendMessage(chatId, "🔴 Invalid address");
               // ctx.api.sendMessage(chatId, "🔴 Pool not found for this token.");
               return;
@@ -643,11 +646,15 @@ bot.on("message", async (ctx) => {
             ctx,
             recipientAddress
           );
-          const referralData = await _getReferralData(ctx); // Fetch referral data
+          const [referralData, details] = await Promise.all([
+            await _getReferralData(ctx),
+            await getSolanaDetails()// Fetch referral data
+          ]);
+ 
           const referEarningSol = (
             Number(referralData?.totalEarnings) / 1e9
           ).toFixed(6);
-          const details = await getSolanaDetails();
+       
           const referEarningDollar = (
             Number(referEarningSol) * details
           ).toFixed(2);
@@ -655,7 +662,7 @@ bot.on("message", async (ctx) => {
             `<b>Referral Program Details</b>\n\n` +
             `🔗 <b>Your Referral Link:</b> ${referralLink}\n\n` +
             `👥 <b>Referrals Count:</b> ${referralData?.count}\n` +
-            `💰 <b>Total Earnings:</b> ${referEarningSol} SOL/Token ($${referEarningDollar}) | 0.00 TOKEN\n` +
+            `💰 <b>Total Earnings:</b> ${referEarningSol} SOL ($${referEarningDollar})\n` +
             `Rewards are credited instantly to your SOL balance.\n\n` +
             `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals.\n\n` +
             `Your total earnings have been sent to your referral wallet <b>${recipientAddress}</b>.\n\n` +
@@ -739,11 +746,11 @@ bot.on("callback_query", async (ctx: any) => {
         const username = ctx.update.callback_query.from.username; //ctx.from.username;
 
         // Check if the user is allowed to access the referral program
-        if (ctx.session.allowedReferral) {
+        if (allowedUsernames.includes(username)) {
           ctx.session.latestCommand = "refer_friends";
           let existingReferral = await Referrals.findOne({
             generatorChatId: chatId,
-          });
+         });
 
           if (!existingReferral) {
             // No existing referral found, ask for the wallet address
@@ -766,7 +773,7 @@ bot.on("callback_query", async (ctx: any) => {
               `<b>Referral Program Details</b>\n\n` +
               `🔗 <b>Your Referral Link:</b> ${referralLink}\n\n` +
               `👥 <b>Referrals Count:</b> ${referralData?.count}\n` +
-              `💰 <b>Total Earnings:</b> ${referEarningSol} SOL/Token ($${referEarningDollar}) | 0.00 TOKEN \n` +
+              `💰 <b>Total Earnings:</b> ${referEarningSol} SOL ($${referEarningDollar})\n` +
               `Rewards are credited instantly to your SOL balance.\n\n` +
               `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals.\n\n` +
               `<i>Your total earnings have been sent to your referral wallet.</i>\n\n` +
