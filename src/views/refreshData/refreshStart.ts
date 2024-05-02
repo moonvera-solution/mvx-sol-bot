@@ -7,11 +7,17 @@ export async function handleRefreshStart(ctx: any) {
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
     // Fetch the latest SOL price
-    const details = await getSolanaDetails();
+
     let solPriceMessage = '';
     let userWallet: any;
     try {
-    if (details) {
+        const publicKeyString: any = userWallet.publicKey; // The user's public key
+        // Fetch SOL balance
+        const [balanceInSOL, details] = await Promise.all([
+            getSolBalance(publicKeyString, connection),
+            getSolanaDetails()
+        ]);    
+        if (details) {
         const solData = details.toFixed(2);
         solPriceMessage = `\n\SOL Price: <b>${solData}</b> USD`;
     } else {
@@ -22,9 +28,7 @@ export async function handleRefreshStart(ctx: any) {
     const selectedWallet = ctx.session.portfolio.activeWalletIndex;
     userWallet = ctx.session.portfolio.wallets[selectedWallet];
     }
-   const publicKeyString: any = userWallet.publicKey; // The user's public key
-     // Fetch SOL balance
-     const balanceInSOL = await getSolBalance(publicKeyString,connection);
+
      if (balanceInSOL === null) {
          await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
          return;
@@ -89,7 +93,7 @@ export async function handleRereshWallet(ctx: any){
         return;
     }
 
-    const balanceInUSD = (balanceInSOL * (solanaDetails)).toFixed(2);
+    const balanceInUSD = (balanceInSOL * (solanaDetails));
 
 
     // Fetch the user's wallet data from the JSON file
@@ -102,7 +106,7 @@ export async function handleRereshWallet(ctx: any){
     const updatedWelcomeMessage = `Your Wallet:  ` +
         `<code>${publicKeyString}</code>\n` +
         `Balance: ` +
-        `<b>${balanceInSOL.toFixed(3)}</b> SOL | <b>${balanceInUSD}</b> USD\n`;
+        `<b>${balanceInSOL.toFixed(3)}</b> SOL | <b>${balanceInUSD.toFixed(2)}</b> USD\n`;
 
     // Inline keyboard options
     const options: any = {

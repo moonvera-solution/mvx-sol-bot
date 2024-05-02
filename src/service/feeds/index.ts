@@ -36,13 +36,17 @@ export async function getUserTokenBalanceAndDetails(userWallet: PublicKey, token
     let userBalance = 0;
     try {
         const metaplex = Metaplex.make(connection);
-        const mintAddress = (tokenAddress instanceof PublicKey) ? tokenAddress : new PublicKey(tokenAddress);
-        const tokenD = await metaplex.nfts().findByMint({ mintAddress });
         const walletPublicKey = (userWallet instanceof PublicKey) ? userWallet : new PublicKey(userWallet);
-        let tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(walletPublicKey, {
-            mint: mintAddress,
-            programId: TOKEN_PROGRAM_ID
-        });
+
+        const mintAddress = (tokenAddress instanceof PublicKey) ? tokenAddress : new PublicKey(tokenAddress);
+        const [tokenD , tokenAccountInfo] = await Promise.all([
+            metaplex.nfts().findByMint({ mintAddress }),
+            connection.getParsedTokenAccountsByOwner(walletPublicKey, {
+                    mint: mintAddress,
+                    programId: TOKEN_PROGRAM_ID
+                })
+        ]) ;
+   
         userBalance = tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.uiAmount;
         let userBalanceTest:number = userBalance ? userBalance : 0;
         return {
