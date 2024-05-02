@@ -5,7 +5,7 @@ import { getSolanaDetails } from '../api';
 import { formatNumberToKOrM, getSolBalance } from '../service/util';
 import { RAYDIUM_POOL_TYPE } from '../service/util/types';
 import { Keypair, Connection } from '@solana/web3.js';
-import { runHigh, runMax, runMedium, runMin } from './util/getPriority';
+import { runAllFees} from './util/getPriority';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import { logErrorToFile } from "../../error/logger";
 import { UserPositions } from '../db';
@@ -51,10 +51,8 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
         balanceInSOL,
         userPosition,
         userTokenDetails,
-        lowpriorityFees,
-        mediumpriorityFees,
-        highpriorityFees,
-        maxpriorityFees
+        AllpriorityFees,
+
     ] = await Promise.all([
         getTokenDataFromBirdEye(tokenAddress.toString()),
         getTokenMetadata(ctx, tokenAddress.toBase58()),
@@ -63,11 +61,15 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
         getSolBalance(userPublicKey, connection),
         UserPositions.find({ positionChatId: chatId, walletId: userPublicKey }, { positions: { $slice: -7 } }),
         getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
-        runMin(ctx, raydiumId),
-        runMedium(ctx, raydiumId),
-        runHigh(ctx, raydiumId),
-        runMax(ctx, raydiumId)
+        runAllFees(ctx, raydiumId),
+
     ]);
+    const lowpriorityFees = (AllpriorityFees.result);
+    const mediumpriorityFees = (AllpriorityFees.result2);
+    const highpriorityFees = (AllpriorityFees.result3);
+    const maxpriorityFees = (AllpriorityFees.result4);
+    const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+
     const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
     const tokenPriceUSD = birdeyeData 
   && birdeyeData.response 
@@ -240,10 +242,8 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
                 tokenInfo,
                 balanceInSOL,
                 userTokenDetails,
-                lowpriorityFees,
-                mediumpriorityFees,
-                highpriorityFees,
-                maxpriorityFees
+                AllpriorityFees,
+
             ] = await Promise.all([
                 getTokenDataFromBirdEye(tokenAddress.toString()),
                 getTokenMetadata(ctx, tokenAddress.toBase58()),
@@ -251,12 +251,15 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
                 quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
                 getSolBalance(userPublicKey, connection),
                 getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
-                runMin(ctx, raydiumId),
-                runMedium(ctx, raydiumId),
-                runHigh(ctx, raydiumId),
-                runMax(ctx, raydiumId)
+                runAllFees(ctx, raydiumId),
+
             ]);
-    
+            const lowpriorityFees = (AllpriorityFees.result);
+            const mediumpriorityFees = (AllpriorityFees.result2);
+            const highpriorityFees = (AllpriorityFees.result3);
+            const maxpriorityFees = (AllpriorityFees.result4);
+            const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+
     
             const {
                 birdeyeURL,
@@ -392,10 +395,7 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
         balanceInSOL,
         userPosition,
         userTokenDetails,
-        lowpriorityFees,
-        mediumpriorityFees,
-        highpriorityFees,
-        maxpriorityFees
+        AllpriorityFees,
     ] = await Promise.all([
         getTokenDataFromBirdEye(tokenAddress.toString()),
         getTokenMetadata(ctx, tokenAddress.toBase58()),
@@ -404,12 +404,16 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
         getSolBalance(userPublicKey, connection),
         UserPositions.find({ positionChatId: chatId, walletId: userPublicKey }, { positions: { $slice: -7 } }),
         getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
-        runMin(ctx, raydiumId),
-        runMedium(ctx, raydiumId),
-        runHigh(ctx, raydiumId),
-        runMax(ctx, raydiumId)
+        runAllFees(ctx, raydiumId),
+        // runMedium(ctx, raydiumId),
+        // runHigh(ctx, raydiumId),
+        // runMax(ctx, raydiumId)
     ]);
-
+    const lowpriorityFees = (AllpriorityFees.result);
+    const mediumpriorityFees = (AllpriorityFees.result2);
+    const highpriorityFees = (AllpriorityFees.result3);
+    const maxpriorityFees = (AllpriorityFees.result4);
+    const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
 
     const {
         birdeyeURL,

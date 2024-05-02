@@ -13,15 +13,18 @@ export async function handleSettings(ctx:any) {
     const publicKeyString: any = userWallet.publicKey; // The user's public key
     // Fetch SOL balance
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
-    const balanceInSOL = await getSolBalance(publicKeyString,connection);
+    const [balanceInSOL, solanaDetails] = await Promise.all([
+     getSolBalance(publicKeyString,connection),
+     getSolanaDetails()
+    ]);
     try{
 
         if (balanceInSOL === null) {
             await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
             return;
         }
-        const solanaDetails = await getSolanaDetails();
-        const balanceInUSD = (balanceInSOL * (solanaDetails)).toFixed(2);
+       
+        const balanceInUSD = (balanceInSOL * (solanaDetails));
     
     
         // Fetch the user's wallet data from the JSON file
@@ -34,7 +37,7 @@ export async function handleSettings(ctx:any) {
         const walletInfoMessage = `Your Wallet:  ` +
             `<code>${publicKeyString}</code>\n` +
             `Balance: ` +
-            `<b>${balanceInSOL.toFixed(3)}</b> SOL | <b>${balanceInUSD}</b> USD\n`;
+            `<b>${balanceInSOL.toFixed(3)}</b> SOL | <b>${balanceInUSD.toFixed(3)}</b> USD\n`;
     
         // Inline keyboard options
         const options: any = {

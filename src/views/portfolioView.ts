@@ -100,9 +100,9 @@ async function formatPositionMessage(pos: Position, poolKeys: any, userBalance: 
     : tokenInfo.price.times(solprice).toNumber();
     const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solprice) : tokenInfo.price.toNumber();
 
-    const displayUserBalance = userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals)).toFixed(3);
-    const userBalanceUSD = userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals)).times(tokenPriceUSD).toFixed(4);
-    const userBalanceSOL = userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals)).times(tokenPriceSOL).toFixed(4);
+    const displayUserBalance = userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals));
+    const userBalanceUSD = userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals)).times(tokenPriceUSD);
+    const userBalanceSOL = userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals)).times(tokenPriceSOL);
     const valueInSOL = pos.amountOut !== undefined && (pos.amountOut - userBalance.toNumber()) < 5
     ? (pos.amountOut / Math.pow(10, poolKeys.baseDecimals)) * tokenPriceSOL
     : 'N/A';
@@ -124,7 +124,7 @@ const valueInUSD = pos.amountOut !== undefined && (pos.amountOut - userBalance.t
         `Initial: ${Number(initialInSOL).toFixed(4)} <b>SOL</b> | ${Number(initialInUSD).toFixed(4)} <b>USD</b>\n` +
         `Current value: ${valueInSOL !== 'N/A' ? Number(valueInSOL).toFixed(4) : 'N/A'} <b>SOL</b> | ${valueInUSD !== 'N/A' ? Number(valueInUSD).toFixed(4) : 'N/A'} <b>USD</b>\n` +
         `Profit: ${profitInSol !== 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD !== 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage !== 'N/A' ? profitPercentage.toFixed(2) : 'N/A'}%\n\n` +
-        `Token Balance: ${displayUserBalance} <b>${pos.symbol}</b> | ${userBalanceSOL} <b>SOL</b> | ${userBalanceUSD} <b>USD</b>\n\n`;
+        `Token Balance: ${displayUserBalance.toFixed(4)} <b>${pos.symbol}</b> | ${userBalanceSOL.toFixed(4)} <b>SOL</b> | ${userBalanceUSD.toFixed(4)} <b>USD</b>\n\n`;
 }
 
 
@@ -249,7 +249,7 @@ export async function display_single_spl_positions(ctx: any) {
                 });
                 const tokenPriceSOL = tokenInfo.price.toNumber();
                 const tokenPriceUSD = (Number(tokenPriceSOL) * (details));
-                const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
+                // const displayUserBalance = userBalance.toFixed(poolKeys.baseDecimals);
                 const userBalanceUSD = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceUSD);
                 const userBalanceSOL = (userBalance.dividedBy(Math.pow(10, poolKeys.baseDecimals))).times(tokenPriceSOL);
 

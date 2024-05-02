@@ -203,7 +203,7 @@ bot.command("start", async (ctx: any) => {
 
     // solana price
     if (details) {
-      const solData = details.toFixed(2);
+      const solData = details;
       solPriceMessage = `\n\SOL Price: <b>${solData}</b> USD`;
     } else {
       solPriceMessage = "\nError fetching current SOL price.";
