@@ -31,22 +31,16 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
       const [
         birdeyeData,
         tokenMetadataResult,
-        // solPrice,
+    
         tokenInfo,
-        // quoteVaultInfo,
-        // baseMintInfo,
-        // baseVaultInfo,
-        // lpMintInfo
+  
         parsedAccounts
       ] = await Promise.all([
         getTokenDataFromBirdEye(token),
         getTokenMetadata(ctx, token),
-        // getSolanaDetails(),
+
         quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
-        // connection.getParsedAccountInfo(new PublicKey(quoteVault), "processed"),
-        // connection.getParsedAccountInfo(new PublicKey(baseMint), "processed"),
-        // connection.getParsedAccountInfo(new PublicKey(baseVault), "processed"),
-        // connection.getParsedAccountInfo(new PublicKey(lpMint), "processed"),
+     
         connection.getMultipleParsedAccounts([
           new PublicKey(quoteVault),
           new PublicKey(baseMint),
@@ -66,18 +60,18 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
       const tokenPriceSOL = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price).div(solPrice) : new BigNumber(tokenInfo.price);
       const tokenPriceUSD = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price) : new BigNumber(tokenInfo.price.times(solPrice));
       const marketCap = birdeyeData?.response.data.data.mc ? birdeyeData.response.data.data.mc : new BigNumber(tokenInfo.marketCap).times(new BigNumber(solPrice));
-      const processData = (data: any) => {
-        if (data?.data instanceof Buffer) {
-          return null;
-        }
-        return data?.data.parsed.info;
+      const processData = (...dataArgs: any[]) => {
+        return dataArgs.map(data => {
+          if (data?.data instanceof Buffer) {
+            return null;
+          }
+          return data?.data.parsed.info;
+        });
       };
-
-      const getPooledSol = processData(quoteVaultInfo);
-      const getBaseSupply = processData(baseMintInfo);
-      const circulatingSupply = processData(baseVaultInfo);
-      const aMM = processData(lpMintInfo);
-      const creatorAddress = birdeyeData ? birdeyeData.response2.data.data.creatorAddress : tokenData.updateAuthorityAddress.toBase58();
+      
+      const [getPooledSol, getBaseSupply, circulatingSupply, aMM] = processData(quoteVaultInfo, baseMintInfo, baseVaultInfo, lpMintInfo);
+      const creatorAddress = birdeyeData && birdeyeData.response2.data.data.creatorAddress!= null ? birdeyeData.response2.data.data.creatorAddress : tokenData.updateAuthorityAddress.toBase58();
+    //   console.log("creatorAddress", creatorAddress);
       const circulatedSupply = Number(((Number(circulatingSupply.tokenAmount.amount)) / Math.pow(10, baseDecimals)));
       const baseTokenSupply = Number(((Number(getBaseSupply.supply)) / Math.pow(10, baseDecimals)));
       //Get the user balance

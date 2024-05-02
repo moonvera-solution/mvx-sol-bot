@@ -24,7 +24,10 @@ export async function snipperON(ctx: any, amount: string) {
 
         const currentWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex];
 
-        const balanceInSOL = await getSolBalance(currentWallet.publicKey, connection);
+        let [balanceInSOL,poolKeys] = await Promise.all([
+        getSolBalance(currentWallet.publicKey, connection),
+        getRayPoolKeys(ctx, snipeToken)
+        ]);
         if (balanceInSOL * 1e9 < new BigNumber(amount).toNumber() * 1e9) {
             await ctx.api.sendMessage(ctx.chat.id, '🔴 Insufficient balance for snipe transaction.', { parse_mode: 'HTML', disable_web_page_preview: true });
             return;
@@ -40,7 +43,7 @@ export async function snipperON(ctx: any, amount: string) {
             },
         });
 
-        let poolKeys = await getRayPoolKeys(ctx, snipeToken);
+        // let poolKeys = await getRayPoolKeys(ctx, snipeToken);
         let isIntervalDone = false;
         let interval_1 : any , interval_2 :any;
 
@@ -85,6 +88,7 @@ export async function setSnipe(ctx: any, amountIn: any) {
     // Returns either the time to wait or indicates pool is already open
     console.log('Snipe set ...');
     const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    console.log('snipeToken', ctx.session.snipeToken)
     const snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
 
     const amountInLamports = new BigNumber(Number.parseFloat(amountIn)).times(1e9);
@@ -92,11 +96,14 @@ export async function setSnipe(ctx: any, amountIn: any) {
     console.log('snipeSlippage', snipeSlippage);
     const currentWalletIdx = ctx.session.activeWalletIndex;
     const currentWallet = ctx.session.portfolio.wallets[currentWalletIdx];
-    const { tokenData } = await getTokenMetadata(ctx, snipeToken.toBase58());
-    const userKeypair = await Keypair.fromSecretKey(base58.decode(String(currentWallet.secretKey)));
+    const [balanceInSOL,{tokenData}] = await Promise.all([
+        getSolBalance(currentWallet.publicKey, connection),
+        getTokenMetadata(ctx, snipeToken.toBase58())
+    ]);
+    const userKeypair =  Keypair.fromSecretKey(base58.decode(String(currentWallet.secretKey)));
     ctx.session.snipeStatus = true;
 
-    const balanceInSOL = await getSolBalance(currentWallet.publicKey, connection);
+
     if (balanceInSOL * 1e9 < amountInLamports.toNumber()) await ctx.api.sendMessage(
         ctx.session.portfolio.chatId, '🔴 Insufficient balance for transaction.',
         { parse_mode: 'HTML', disable_web_page_preview: true }
@@ -155,10 +162,14 @@ export async function startSnippeSimulation(
     }
 
     //-------------- Update Earnings referal on Db ----------------
-    const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+    const [referralRecord,targetPoolInfo] = await Promise.all([
+        Referrals.findOne({ referredUsers: chatId }),
+        formatAmmKeysById(ctx.session.activeTradingPool.id, connection)
+    ]);
+    // const referralRecord = await Referrals.findOne({ referredUsers: chatId });
     let actualEarnings = referralRecord && referralRecord.earnings;
 
-    const targetPoolInfo = await formatAmmKeysById(ctx.session.activeTradingPool.id, connection);
+    // const targetPoolInfo = await formatAmmKeysById(ctx.session.activeTradingPool.id, connection);
 
     const { innerTransactions } = await Liquidity.makeSwapInstructionSimple({
         connection: connection,
@@ -172,16 +183,9 @@ export async function startSnippeSimulation(
         fixedSide: 'in',
         makeTxVersion: TxVersion.V0
     });
-    //0.005  0.01 0.05 0.1 0.2
-    //low medium high very high extreme
-    // MVXBOT_FEES
-    // mvxFeeInx is the amount of fees to be paid to the bot, it is calculated as a percentage of the amountIn
-    // we need to calculate the referral fee and send it to the referral wallet
-    // the fees sent to the referral wallet is calculated as a percentage of the mvxFeeInx
-    // referralFee
+ 
     const referralWallet = ctx.session.generatorWallet;
     const referralFee = ctx.session.referralCommision / 100;
-
     const bot_fee = new BigNumber(amountIn.multipliedBy(MVXBOT_FEES).toFixed(0)).toNumber();
     const referralAmmount = new BigNumber(bot_fee * (referralFee)).toNumber();
     const cut_bot_fee = (bot_fee - referralAmmount);
@@ -190,18 +194,6 @@ export async function startSnippeSimulation(
     let referralInx: any = null;
     let minimumBalanceNeeded = 0;
     minimumBalanceNeeded += amountIn.toNumber()
-    // Tippimg the validator
-    // const validatorLead = await connection.getSlotLeader();
-
-    // const transferIx = SystemProgram.transfer({
-    //     fromPubkey: userWallet.publicKey,
-    //     toPubkey: new PublicKey(validatorLead),
-    //     lamports: TIP_VALIDATOR, // 5_000 || 6_000
-    // });
-
-    // innerTransactions[0].instructions.push(transferIx);
-    // minimumBalanceNeeded += TIP_VALIDATOR;
-
     if (referralFee > 0) {
         mvxFeeInx = SystemProgram.transfer({
             fromPubkey: userWallet.publicKey,
@@ -271,23 +263,29 @@ export async function startSnippeSimulation(
     let count = 0;
     let sim = true;
     let diff_1 = new BigNumber(poolStartTime).minus(new BigNumber(new Date().getTime()));
-    let diff = diff_1.plus(400);
-
-
+    let diff = diff_1.toNumber() > 0 ? diff_1.plus(400) : diff_1; 
     let snipeStatus: boolean = ctx.session.snipeStatus;
-
+    await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一 $${tokenData.symbol} with ${amountIn.dividedBy(1e9)} SOL.`, {
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: '❌ Cancel Snipe ', callback_data: 'cancel_snipe' }],
+            ]
+        },
+    });
+    setTimeout(async() => {
     while (sim && snipeStatus && count < SNIPE_SIMULATION_COUNT_LIMIT) {
         count++
         snipeStatus = ctx.session.snipeStatus;
         simulationResult = await connection.simulateTransaction(txV, { replaceRecentBlockhash: true, commitment: 'processed' });
         await catchSimulationErrors(ctx,simulationResult);
-        console.log('sim:', JSON.stringify(simulationResult.value.err), count);
+        // if(simulationResult.value.err)
+        // console.log('sim:', JSON.stringify(simulationResult.value.err), count);
 
         if (simulationResult.value.err == null) {
             sim = false;
-            await ctx.api.sendMessage(ctx.chat.id, `▄︻デ══━一 $${tokenData.symbol} with ${amountIn.dividedBy(1e9)} SOL.`);
-            setTimeout(() => {
-
+           
                 buildAndSendTx(userWallet, innerTransactions, connection, { preflightCommitment: 'processed' }).then(async (txids: any) => {
                     let msg = `🟢 Snipe <a href="https://solscan.io/tx/${txids[0]}">transaction</a> sent. Please wait for confirmation...`
                     await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
@@ -338,9 +336,10 @@ export async function startSnippeSimulation(
                     await ctx.api.sendMessage(chatId, msg); console.info('error', error);
                     return error;
                 });
-            }, diff.toNumber());
+           
         }
     }
+    }, diff.toNumber());
 
     if (count == SNIPE_SIMULATION_COUNT_LIMIT) {
         await ctx.api.sendMessage(chatId, `🔴 Snipe fail, busy Network, please try again.`);
