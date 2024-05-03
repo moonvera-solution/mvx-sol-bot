@@ -1,13 +1,6 @@
 import { Connection, GetRecentPrioritizationFeesConfig } from "@solana/web3.js";
 import { PublicKey } from "@solana/web3.js";
-import {
-  PriotitizationFeeLevels,
-//   getMaxPrioritizationFeeByPercentile,
-//   getMeanPrioritizationFeeByPercentile,
-  getMedianPrioritizationFeeByPercentile,
-  getMinPrioritizationFeeByPercentile,
-  getRecentPrioritizationFeesByPercentile,
-} from "../../service/fees/priorityFees";
+import {PriotitizationFeeLevels,getRecentPrioritizationFeesByPercentile} from "../../service/fees/priorityFees";
 
 interface GetRecentPrioritizationFeesByPercentileConfig
   extends GetRecentPrioritizationFeesConfig {
@@ -59,7 +52,7 @@ const getMaxPrioritizationFeeByPercentile = async (
 
 
   export  async function runAllFees(ctx: any, raydiumId: any) {
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
    const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
     
     const [result, result2,result3,result4] = await Promise.all([
@@ -91,11 +84,8 @@ const getMaxPrioritizationFeeByPercentile = async (
     percentile: PriotitizationFeeLevels.MAX,
     fallback: false,
     }),
-          // console.log('result_Min', result);
   ]);
   return {result, result2,result3,result4};
-  // console.log('result_Min', result);
-      // return {result, result2,result3,result4};  
   }
 
 

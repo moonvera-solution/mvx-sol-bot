@@ -4,7 +4,7 @@ import { Connection } from '@solana/web3.js';
 
 export async function handleRefreshStart(ctx: any) {
     const chatId = ctx.chat.id;
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
 
     // Fetch the latest SOL price
 
@@ -39,7 +39,7 @@ export async function handleRefreshStart(ctx: any) {
      const balanceInUSD = (balanceInSOL * (details).toFixed(2));
 
     // Update the welcome message with the new SOL price
-    const welcomeMessage = `✨ Welcome to <b>DRIBs bot</b> - Your Advanced Trading Companion! ✨\n` +
+    const welcomeMessage = `✨ Welcome to <b>DRIBs bot</b>✨\n` +
     `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
     `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
     `We're always working to bring you new features - stay tuned!\n\n` +
@@ -78,8 +78,8 @@ export async function handleRefreshStart(ctx: any) {
 export async function handleRereshWallet(ctx: any){
 
     const chatId = ctx.chat.id;
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
-    const selectedWallet = ctx.session.activeWalletIndex;
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const selectedWallet = ctx.session.portfolio.activeWalletIndex;
     const userWallet = ctx.session.portfolio.wallets[selectedWallet];
 
     const publicKeyString: any = userWallet.publicKey; // The user's public key

@@ -19,10 +19,10 @@ import { display_after_Snipe_Buy, display_token_details } from '../../../views';
 
 export async function snipperON(ctx: any, amount: string) {
     try {
-        const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+        const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
         let snipeToken = ctx.session.snipeToken instanceof PublicKey ? ctx.session.snipeToken.toBase58() : ctx.session.snipeToken;
 
-        const currentWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex];
+        const currentWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
 
         let [balanceInSOL,poolKeys] = await Promise.all([
         getSolBalance(currentWallet.publicKey, connection),
@@ -87,14 +87,13 @@ export async function snipperON(ctx: any, amount: string) {
 export async function setSnipe(ctx: any, amountIn: any) {
     // Returns either the time to wait or indicates pool is already open
     console.log('Snipe set ...');
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
-    console.log('snipeToken', ctx.session.snipeToken)
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
     const snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
 
     const amountInLamports = new BigNumber(Number.parseFloat(amountIn)).times(1e9);
     const snipeSlippage = ctx.session.snipeSlippage;
     console.log('snipeSlippage', snipeSlippage);
-    const currentWalletIdx = ctx.session.activeWalletIndex;
+    const currentWalletIdx = ctx.session.portfolio.activeWalletIndex;
     const currentWallet = ctx.session.portfolio.wallets[currentWalletIdx];
     const [balanceInSOL,{tokenData}] = await Promise.all([
         getSolBalance(currentWallet.publicKey, connection),
@@ -109,8 +108,7 @@ export async function setSnipe(ctx: any, amountIn: any) {
         { parse_mode: 'HTML', disable_web_page_preview: true }
     );
 
-    const liqInfo = ctx.session.env.poolSchedule;
-    const poolStartTime = liqInfo.startTime.toNumber();
+    const poolStartTime = ctx.session.poolTime;
     const simulationPromise = startSnippeSimulation(ctx, userKeypair, amountInLamports, snipeSlippage, poolStartTime, tokenData);
     simulationPromise.catch(async (error: any) => {
         console.log("Error setting snipper", error);
@@ -129,7 +127,7 @@ export async function startSnippeSimulation(
     tokenData: any
 ) {
     const chatId = ctx.chat.id;
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
     const walletTokenAccounts = await _getWalletTokenAccount(connection, userWallet.publicKey);
     const poolKeys = ctx.session.activeTradingPool;
     console.log('poolKeysQuote', poolKeys.quoteMint);
@@ -307,7 +305,7 @@ export async function startSnippeSimulation(
                             saveUserPosition(
                                 ctx,
                                 userWallet.publicKey.toString(), {
-                                baseMint: ctx.session.env.originalBaseMint,
+                                baseMint: ctx.session.originalBaseMint,
                                 name: tokenData.name,
                                 symbol: tokenData.symbol,
                                 tradeType: `ray_swap_buy`,
