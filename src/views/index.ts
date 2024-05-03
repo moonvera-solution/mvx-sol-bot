@@ -195,7 +195,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
         // console.log('messageText,',messageText)
         // Send or edit the message
         if(isRefresh){
-            await ctx.api.editMessageText(messageText, options);
+            await ctx.editMessageText(messageText, options);
         }else{
             await ctx.api.sendMessage(chatId, messageText, options);
         }
