@@ -52,7 +52,7 @@ const getMaxPrioritizationFeeByPercentile = async (
 
 
   export  async function runAllFees(ctx: any, raydiumId: any) {
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
    const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
     
     const [result, result2,result3,result4] = await Promise.all([

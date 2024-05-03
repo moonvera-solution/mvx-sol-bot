@@ -108,8 +108,7 @@ export async function setSnipe(ctx: any, amountIn: any) {
         { parse_mode: 'HTML', disable_web_page_preview: true }
     );
 
-    const liqInfo = ctx.session.poolSchedule;
-    const poolStartTime = liqInfo.startTime.toNumber();
+    const poolStartTime = ctx.session.poolTime;
     const simulationPromise = startSnippeSimulation(ctx, userKeypair, amountInLamports, snipeSlippage, poolStartTime, tokenData);
     simulationPromise.catch(async (error: any) => {
         console.log("Error setting snipper", error);

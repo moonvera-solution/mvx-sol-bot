@@ -475,6 +475,7 @@ bot.on("message", async (ctx) => {
         break;
       }
       case "buy_X_SOL":
+        ctx.session.latestCommand = "buy_X_SOL";
         if (msgTxt) {
           const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
           if (!isNaN(amt)) {
@@ -485,6 +486,7 @@ bot.on("message", async (ctx) => {
           }
         }
       case "sell_X_TOKEN":
+        ctx.session.latestCommand = "sell_X_TOKEN";
         if (msgTxt) {
           const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
           if (!isNaN(amt)) {
@@ -496,10 +498,10 @@ bot.on("message", async (ctx) => {
         }
         break;
       case "snipe_X_SOL": {
+        ctx.session.latestCommand = "snipe_X_SOL";
         if (msgTxt) {
           const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
           if (!isNaN(amt)) {
-            ctx.session.latestCommand = "snipe";
             if (ctx.session.snipperLookup) {
               await snipperON(ctx, String(amt));
             } else {
@@ -888,11 +890,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       case "create_new_wallet":
         const allowed = await checkWalletsLength(ctx);
-
-        if (allowed) {
-          await createNewWallet(ctx);
-        }
-
+        if (allowed) {await createNewWallet(ctx);}
         break;
       case "settings":
         await handleSettings(ctx);
@@ -921,10 +919,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "rug_check": {
         ctx.session.latestCommand = "rug_check";
-        ctx.api.sendMessage(
-          chatId,
-          "Please provide the token address for a rug pull analysis."
-        );
+        ctx.api.sendMessage(chatId,"Please provide the token address for a rug pull analysis.");
         break;
       }
       case "sell": {
@@ -956,14 +951,7 @@ bot.on("callback_query", async (ctx: any) => {
         if (ctx.session.latestCommand === 'rug_check') {
           ctx.session.latestCommand = "buy";
           await display_token_details(ctx, false);
-        }
-        // else if(ctx.session.latestCommand === 'optional'){
-        //   ctx.session.latestCommand = "buy";
-        //   // ctx.session.snipeToken = ctx.session.latestToken;
-        //   ctx.session.activeTradingPool = await getRayPoolKeys(ctx, ctx.session.latestToken);
-        //   await display_token_details(ctx,false);
-        // }
-        else {
+        }else {
           ctx.session.latestCommand = "buy";
           await ctx.api.sendMessage(
             chatId,
@@ -1073,36 +1061,16 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "sell_10_TOKEN":
-        await handle_radyum_swap(
-          ctx,
-          ctx.session.activeTradingPool.baseMint,
-          "sell",
-          "10"
-        );
+        await handle_radyum_swap(ctx,ctx.session.activeTradingPool.baseMint,"sell","10");
         break;
       case "sell_25_TOKEN":
-        await handle_radyum_swap(
-          ctx,
-          ctx.session.activeTradingPool.baseMint,
-          "sell",
-          "25"
-        );
+        await handle_radyum_swap(ctx,ctx.session.activeTradingPool.baseMint,"sell","25");
         break;
       case "sell_30_TOKEN":
-        await handle_radyum_swap(
-          ctx,
-          ctx.session.activeTradingPool.baseMint,
-          "sell",
-          "30"
-        );
+        await handle_radyum_swap(ctx,ctx.session.activeTradingPool.baseMint,"sell","30");
         break;
       case "sell_50_TOKEN":
-        await handle_radyum_swap(
-          ctx,
-          ctx.session.activeTradingPool.baseMint,
-          "sell",
-          "50"
-        );
+        await handle_radyum_swap(ctx,ctx.session.activeTradingPool.baseMint,"sell","50");
         break;
       case "sell_75_TOKEN":
         await handle_radyum_swap(
@@ -1113,12 +1081,7 @@ bot.on("callback_query", async (ctx: any) => {
         );
         break;
       case "sell_100_TOKEN":
-        await handle_radyum_swap(
-          ctx,
-          ctx.session.activeTradingPool.baseMint,
-          "sell",
-          "100"
-        );
+        await handle_radyum_swap(ctx,ctx.session.activeTradingPool.baseMint,"sell","100");
         break;
       case "sell_X_TOKEN": {
         ctx.session.latestCommand = "sell_X_TOKEN";

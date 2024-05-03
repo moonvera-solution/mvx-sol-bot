@@ -160,16 +160,6 @@ const UserSessions = new Schema({
   tritonRPC: String,
   tritonToken: String,
   allowedReferral:String, // tg Username
-  poolSchedule: {
-    status: String,
-    baseDecimals: Number,
-    quoteDecimals: Number,
-    lpDecimals: Number,
-    baseReserve: String,
-    quoteReserve: String,
-    lpSupply: String,
-    startTime: String
-  },
   originalBaseMint:String
 });
 
