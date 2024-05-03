@@ -403,13 +403,6 @@ bot.on("message", async (ctx) => {
     ctx.session.portfolio.chatId = chatId;
     const latestCommand = ctx.session.latestCommand;
     const msgTxt = ctx.update.message.text;
-<<<<<<< HEAD
-    console.log("msgTxt", msgTxt);
-    console.log('typeof msgTxt', typeof msgTxt);
-    console.log("latestCommand", latestCommand);
-=======
-
->>>>>>> 1655ec9 (merging restoring session)
     if (msgTxt) {
       if ((!isNaN(parseFloat(msgTxt!)) &&  ctx.session.latestCommand !== 'buy' && ctx.session.latestCommand !== 'sell' && ctx.session.latestCommand !== 'snipe' && ctx.session.latestCommand !== "send_sol" && ctx.session.latestCommand !== 'ask_for_sol_amount' && ctx.session.latestCommand === 'display_after_Snipe_Buy' ) || ctx.session.latestCommand === 'start' || ctx.session.latestCommand === 'display_single_spl_positions') {
           if (PublicKey.isOnCurve(msgTxt!)) {
@@ -593,13 +586,7 @@ bot.on("message", async (ctx) => {
               ctx.session.latestCommand = 'snipe';
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
-<<<<<<< HEAD
-              display_snipe_options(ctx,false, msgTxt);
-              // ctx.api.sendMessage(chatId, "🔴 Invalid address");
-              // ctx.api.sendMessage(chatId, "🔴 Pool not found for this token.");
-=======
               display_snipe_options(ctx, false, msgTxt);
->>>>>>> 1655ec9 (merging restoring session)
               return;
             }
             ctx.session.activeTradingPool = poolInfo;
