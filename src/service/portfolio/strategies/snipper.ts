@@ -240,14 +240,8 @@ export async function startSnippeSimulation(
         });
     }
 
-    // if(ctx.session.priorityFee == PriotitizationFeeLevels.HIGH) maxPriorityFee = maxPriorityFee * 3;
-    // if(ctx.session.priorityFee == PriotitizationFeeLevels.MAX) maxPriorityFee = maxPriorityFee * 1.5;
     const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: (maxPriorityFee), });
-
-    let units = await getSimulationUnits(connection, innerTransactions[0].instructions, userWallet.publicKey);
-    console.log("snipe units", units)
-    if(units)innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(units  * 1.1) }));
-
+    innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(100_000) }));
     innerTransactions[0].instructions.push(priorityFeeInstruction);
 
     let tx = new TransactionMessage({
@@ -259,7 +253,7 @@ export async function startSnippeSimulation(
     let txV = new VersionedTransaction(tx);
     let simulationResult: any;
     let count = 0;
-    let sim = true;
+    let sim :boolean = true;
     let diff_1 = new BigNumber(poolStartTime).minus(new BigNumber(new Date().getTime()));
     let diff = diff_1.toNumber() > 0 ? diff_1.plus(400) : diff_1; 
     let snipeStatus: boolean = ctx.session.snipeStatus;
@@ -408,27 +402,20 @@ export function formatLaunchCountDown(launchSchedule: number): string {
     return `${hours}:${minutes}:${seconds}`;
 }
 
-export async function catchSimulationErrors(
-    ctx:any,
-    simulationResult:any
-){
+export async function catchSimulationErrors(ctx:any,simulationResult:any){
     const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
     if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) {
         console.log(simulationResult.value.logs)
-        ctx.api.sendMessage(ctx.chat.id, `🔴 Slippage error, try increasing your slippage %.`);
-        return;
+        throw new Error(`🔴 Slippage error, try increasing your slippage %.`);
     }
     const BALANCE_ERROR = /Transfer: insufficient lamports/;
     if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
         console.log(simulationResult.value.logs)
-        ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction.`);
-        return;
+        throw new Error(`🔴 Insufficient balance for transaction.`);
     }
     const FEES_ERROR = 'InsufficientFundsForFee';
     if (simulationResult.value.err === FEES_ERROR) {
         console.log(simulationResult.value.logs)
-        ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance for transaction fees.`);
-        return;
+        throw new Error(`🔴 Insufficient balance for transaction fees.`);
     }
-
 }
