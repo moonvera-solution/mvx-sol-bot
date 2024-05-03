@@ -6,16 +6,16 @@ import BigNumber from 'bignumber.js';
 
 export async function getPoolToken_details(tokenBaseVault: PublicKey, tokenQuoteVault: PublicKey, baseMint: PublicKey, connection: Connection): 
 Promise<{ baseTokenVaultSupply: BigNumber, quoteTokenVaultSupply: BigNumber, baseTokenSupply: BigNumber }> {
-    const [baseVault, quoteVault, baseSupply] = await Promise.all([
-        connection.getParsedAccountInfo(new PublicKey(tokenBaseVault), "processed"),
-        connection.getParsedAccountInfo(new PublicKey(tokenQuoteVault), "processed"),
-        connection.getParsedAccountInfo(new PublicKey(baseMint), "processed")
-    ]);
-
+    const publicKeys = [
+        new PublicKey(tokenBaseVault),
+        new PublicKey(tokenQuoteVault),
+        new PublicKey(baseMint)
+    ];
+    const parsedAccountsInfo = await connection.getMultipleParsedAccounts(publicKeys, { commitment: 'processed' });
     // Type checking and extracting data
-    const baseTokenVaultSupply = baseVault.value?.data instanceof Buffer ? new BigNumber(0) : new BigNumber(baseVault.value?.data.parsed.info.tokenAmount.amount);
-    const quoteTokenVaultSupply = quoteVault.value?.data instanceof Buffer ? new BigNumber(0) : new BigNumber(quoteVault.value?.data.parsed.info.tokenAmount.amount);
-    const baseTokenSupply = baseSupply.value?.data instanceof Buffer ? new BigNumber(0) : new BigNumber(baseSupply.value?.data.parsed.info.supply);
+    const baseTokenVaultSupply = parsedAccountsInfo.value[0]?.data instanceof Buffer ? new BigNumber(0) : new BigNumber(parsedAccountsInfo.value[0]?.data.parsed.info.tokenAmount.amount);
+    const quoteTokenVaultSupply = parsedAccountsInfo.value[1]?.data instanceof Buffer ? new BigNumber(0) : new BigNumber(parsedAccountsInfo.value[1]?.data.parsed.info.tokenAmount.amount);
+    const baseTokenSupply = parsedAccountsInfo.value[2]?.data instanceof Buffer ? new BigNumber(0) : new BigNumber(parsedAccountsInfo.value[2]?.data.parsed.info.supply);
 
     return {
         baseTokenVaultSupply,
@@ -23,8 +23,6 @@ Promise<{ baseTokenVaultSupply: BigNumber, quoteTokenVaultSupply: BigNumber, bas
         baseTokenSupply,
     }
 }
-
-
 
 export async function quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply, connection }:
     { baseVault: PublicKey, quoteVault: PublicKey, baseDecimals: number, quoteDecimals: number, baseSupply: PublicKey, connection: Connection}):
@@ -46,19 +44,13 @@ export async function quoteToken({ baseVault, quoteVault, baseDecimals, quoteDec
     const newBaseVaultSupply_1 = baseTokenVaultSupply.times(quoteTokenVaultSupply).div(newQuoteVaultSupply_1);
     const tokenReceived = (baseTokenVaultSupply.minus(newBaseVaultSupply));
     const tokenReceived_1 = (baseTokenVaultSupply.minus(newBaseVaultSupply_1));
-
-
     const newPrice = new BigNumber(tradeAmount_SOL.toNumber() / tokenReceived.toNumber());
     const newPrice_1 = new BigNumber(tradeAmount_SOL_1.toNumber() / tokenReceived_1.toNumber());
-    // console.log('newprice', newPrice.toNumber() );
-
     const priceImpact = newPrice.minus(price).div(price).times(100).toNumber();
     const priceImpact_1 = newPrice_1.minus(price).div(price).times(100).toNumber();
-    // console.log('priceImpact', priceImpact);
     // liquid
     const liquidityInfo: BigNumber = quoteTokenVaultSupply;
     const liquidity = liquidityInfo.toNumber() * Math.pow(10, -baseDecimals);
-    // console.log('liquidity', liquidity);
 
     return { price, marketCap, liquidity, priceImpact, priceImpact_1 };
 }

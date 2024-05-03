@@ -11,6 +11,7 @@ import BigNumber from 'bignumber.js';
 import axios from 'axios';
 import bs58 from 'bs58';
 import { Referrals, UserPositions } from '../../../db/mongo/schema';
+import BN from 'bn.js';
 
 export async function handle_radyum_swap(
     ctx: any,
@@ -19,14 +20,14 @@ export async function handle_radyum_swap(
     swapAmountIn: any) {
         const chatId = ctx.chat.id;
         const session: ISESSION_DATA = ctx.session;
-        const userWallet = session.portfolio.wallets[session.activeWalletIndex];
+        const userWallet = session.portfolio.wallets[session.portfolio.activeWalletIndex];
         let userSlippage = session.latestSlippage;
         let mvxFee = new BigNumber(0);
         let refferalFeePay = new BigNumber(0);
         const referralWallet = ctx.session.generatorWallet;
 
         try {
-            const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+            const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
             const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection);
             console.log("userTokenBalanceAndDetails", userTokenBalanceAndDetails)
             const poolKeys = ctx.session.activeTradingPool;
@@ -89,13 +90,14 @@ export async function handle_radyum_swap(
                 tokenIn = OUTPUT_TOKEN;
                 outputToken = DEFAULT_TOKEN.WSOL;
                 let sellAmountPercent = userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals);
-                swapAmountIn = new BigNumber(Math.floor(sellAmountPercent * swapAmountIn / 100));
+                swapAmountIn = new BigNumber(swapAmountIn).multipliedBy(sellAmountPercent).dividedBy(100).integerValue(BigNumber.ROUND_FLOOR);
                 await ctx.api.sendMessage(chatId, `💸 Selling ${percent}% ${userTokenBalanceAndDetails.userTokenSymbol}`);
             }
+            console.log('swapAmountIn', swapAmountIn);
             console.log('testing')
             const inputTokenAmount = new TokenAmount(tokenIn, (swapAmountIn.toFixed()));
             const slippage = new Percent(Math.ceil(userSlippage * 100), 10_000);
-            const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
+            const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
             const referralRecord = await Referrals.findOne({ referredUsers: chatId });
             let actualEarnings = referralRecord && referralRecord.earnings;
 

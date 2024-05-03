@@ -533,11 +533,11 @@ export async function formatNumberToKOrM(number: number) {
 export async function sendSol(ctx: any, recipientAddress: PublicKey, solAmount: number) {
     const chatId = ctx.chat.id;
     const session = ctx.session;
-    const userWallet = session.portfolio.wallets[session.activeWalletIndex];
+    const userWallet = session.portfolio.wallets[session.portfolio.activeWalletIndex];
     const userSecretKey = userWallet.secretKey; // User's secret key
     const userPublicKey = userWallet.publicKey; // User's public key
     const amount = solAmount * LAMPORTS_PER_SOL; // Convert SOL to lamports
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
     // Create a transaction
     const transaction = new Transaction().add(
         SystemProgram.transfer({
