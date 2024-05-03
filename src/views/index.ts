@@ -190,7 +190,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
                 },
             };
         }
-
+        console.log('messageid',ctx.msg.message_id)
         // Send or edit the message
         if(isRefresh){
             await ctx.editMessageText(messageText, options);
@@ -200,7 +200,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
         }
     } catch (error: any) {
         console.error('Error in getTokenMetadata:', error.message);
-        ctx.api.sendMessage(chatId, "Error getting token data, verify the address..", { parse_mode: 'HTML' });
+        // ctx.api.sendMessage(chatId, "Error getting token data, verify the address..", { parse_mode: 'HTML' });
     }
 }
 

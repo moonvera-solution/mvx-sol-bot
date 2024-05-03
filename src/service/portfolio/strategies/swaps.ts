@@ -11,6 +11,7 @@ import BigNumber from 'bignumber.js';
 import axios from 'axios';
 import bs58 from 'bs58';
 import { Referrals, UserPositions } from '../../../db/mongo/schema';
+import BN from 'bn.js';
 
 export async function handle_radyum_swap(
     ctx: any,
@@ -89,9 +90,10 @@ export async function handle_radyum_swap(
                 tokenIn = OUTPUT_TOKEN;
                 outputToken = DEFAULT_TOKEN.WSOL;
                 let sellAmountPercent = userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals);
-                swapAmountIn = new BigNumber(Math.floor(sellAmountPercent * swapAmountIn / 100));
+                swapAmountIn = new BigNumber(swapAmountIn).multipliedBy(sellAmountPercent).dividedBy(100).integerValue(BigNumber.ROUND_FLOOR);
                 await ctx.api.sendMessage(chatId, `💸 Selling ${percent}% ${userTokenBalanceAndDetails.userTokenSymbol}`);
             }
+            console.log('swapAmountIn', swapAmountIn);
             console.log('testing')
             const inputTokenAmount = new TokenAmount(tokenIn, (swapAmountIn.toFixed()));
             const slippage = new Percent(Math.ceil(userSlippage * 100), 10_000);
