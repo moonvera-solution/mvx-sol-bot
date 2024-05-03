@@ -1,13 +1,6 @@
 import { Connection, GetRecentPrioritizationFeesConfig } from "@solana/web3.js";
 import { PublicKey } from "@solana/web3.js";
-import {
-  PriotitizationFeeLevels,
-//   getMaxPrioritizationFeeByPercentile,
-//   getMeanPrioritizationFeeByPercentile,
-  getMedianPrioritizationFeeByPercentile,
-  getMinPrioritizationFeeByPercentile,
-  getRecentPrioritizationFeesByPercentile,
-} from "../../service/fees/priorityFees";
+import {PriotitizationFeeLevels,getRecentPrioritizationFeesByPercentile} from "../../service/fees/priorityFees";
 
 interface GetRecentPrioritizationFeesByPercentileConfig
   extends GetRecentPrioritizationFeesConfig {
@@ -91,11 +84,8 @@ const getMaxPrioritizationFeeByPercentile = async (
     percentile: PriotitizationFeeLevels.MAX,
     fallback: false,
     }),
-          // console.log('result_Min', result);
   ]);
   return {result, result2,result3,result4};
-  // console.log('result_Min', result);
-      // return {result, result2,result3,result4};  
   }
 
 

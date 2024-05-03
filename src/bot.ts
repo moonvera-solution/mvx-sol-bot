@@ -46,8 +46,8 @@ import { getRayPoolKeys } from "./service/dex/raydium/raydium-utils/formatAmmKey
 import { sendHelpMessage } from "./views/util/helpMessage";
 import { display_rugCheck } from "./views/rugCheck";
 import { _generateReferralLink, _getReferralData } from "../src/db/mongo/crud";
-import { Portfolios, Referrals,AllowedReferrals } from "./db/mongo/schema";
-import { display_spl_positions, display_single_spl_positions, display_refresh_single_spl_positions} from "./views/portfolioView";
+import { Portfolios, Referrals, AllowedReferrals, UserSession } from "./db/mongo/schema";
+import { display_spl_positions, display_single_spl_positions, display_refresh_single_spl_positions } from "./views/portfolioView";
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { logErrorToFile } from "../error/logger";
 const express = require('express');
@@ -82,7 +82,7 @@ bot.use(async (ctx, next) => {
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN!;
 const port = process.env.PORT || 80;
-
+let backupSession: ISESSION_DATA;
 
 if (isProd) {
   const webhookUrl = 'https://drib.ngrok.app';
@@ -115,16 +115,31 @@ const allowedUsernames = [
   "swalefdao",
   "coachalib",
 ]; // without the @
+
+async function _validateSession(ctx: any) {
+  if (JSON.parse(JSON.stringify(ctx.session)).chatId == 0) {
+    const restoredSession = await UserSession.findOne({ chatId: ctx.chat.id });
+    if (restoredSession) {
+      ctx.session = JSON.parse(JSON.stringify(restoredSession));
+      console.log("Session restored.");
+    }
+  }
+}
+
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                      BOT START                             */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 bot.command("start", async (ctx: any) => {
+  await _validateSession(ctx);
+  backupSession = ctx.session;
+
   try {
     const chatId = ctx.chat.id;
+    ctx.session.chatId = chatId;
     const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
     let isNewUser = false;
     const connection = new Connection(
-      `${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`
+      `${ctx.session.tritonRPC}${ctx.session.tritonToken}`
     );
     let referralCode = null;
     // Check if there's additional text with the /start command
@@ -139,12 +154,13 @@ bot.command("start", async (ctx: any) => {
      const userName = ctx.message.from.username;
      console.log("userName:", userName);
 
-     const allowedUsers = allowedUsernames.includes(userName);
+    const user = await AllowedReferrals.find({ tgUserName: userName });
+    ctx.session.allowedReferral = user[0].tgUserName;
 
-     if (referralCode || allowedUsers) {
-       const referralRecord = await Referrals.findOne({
-         referralCode: referralCode,
-       });
+    if (referralCode || ctx.session.allowedReferral) {
+      const referralRecord = await Referrals.findOne({
+        referralCode: referralCode,
+      });
       if (referralRecord && referralRecord.generatorChatId !== chatId) {
         if (!referralRecord.referredUsers.includes(chatId)) {
           // Add the user's chatId to the referredUsers array
@@ -182,19 +198,19 @@ bot.command("start", async (ctx: any) => {
       // at this point wallet from session is not avialable yet
       // hence we do ctx.session.portfolio = await getPortfolio(chatId); at the end of the "start" function.
       userWallet = await createUserPortfolio(ctx); // => { publicKey, secretKey }
-      ctx.session.portfolio.wallets[ctx.session.activeWalletIndex] = userWallet;
+      ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex] = userWallet;
     }
     const publicKeyString: PublicKey | String = userWallet
-    ? userWallet.publicKey
-    : ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].publicKey;
+      ? userWallet.publicKey
+      : ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].publicKey;
 
     // Retrieve the current SOL details
     let solPriceMessage = "";
     const [balanceInSOL, details] = await Promise.all([
       getSolBalance(publicKeyString, connection),
       getSolanaDetails()
-  ]);
-   
+    ]);
+
     // Fetch SOL balance
     if (balanceInSOL === null) {
       await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
@@ -273,6 +289,9 @@ bot.command("help", async (ctx) => {
 });
 
 bot.command("positions", async (ctx) => {
+  await _validateSession(ctx);
+  backupSession = ctx.session;
+
   try {
     // await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
     await display_spl_positions(ctx, false);
@@ -295,6 +314,8 @@ bot.command("rugchecking", async (ctx) => {
 });
 
 bot.command("buy", async (ctx) => {
+  await _validateSession(ctx);
+  backupSession = ctx.session;
   try {
     const chatId = ctx.chat.id;
     const referralRecord = await Referrals.findOne({ referredUsers: chatId });
@@ -315,6 +336,8 @@ bot.command("buy", async (ctx) => {
 });
 
 bot.command("sell", async (ctx) => {
+  await _validateSession(ctx);
+  backupSession = ctx.session;
   try {
     const chatId = ctx.chat.id;
     const referralRecord = await Referrals.findOne({ referredUsers: chatId });
@@ -335,6 +358,8 @@ bot.command("sell", async (ctx) => {
 });
 
 bot.command("snipe", async (ctx) => {
+  await _validateSession(ctx);
+  backupSession = ctx.session;
   try {
     const chatId = ctx.chat.id;
     ctx.session.snipeStatus = true;
@@ -356,6 +381,8 @@ bot.command("snipe", async (ctx) => {
 });
 
 bot.command("settings", async (ctx) => {
+  await _validateSession(ctx);
+  backupSession = ctx.session;
   try {
     await handleSettings(ctx);
   } catch (error: any) {
@@ -368,14 +395,21 @@ bot.command("settings", async (ctx) => {
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
 bot.on("message", async (ctx) => {
+  await _validateSession(ctx);
+  backupSession = ctx.session;
   const chatId = ctx.chat.id;
 
   try {
+    ctx.session.portfolio.chatId = chatId;
     const latestCommand = ctx.session.latestCommand;
     const msgTxt = ctx.update.message.text;
+<<<<<<< HEAD
     console.log("msgTxt", msgTxt);
     console.log('typeof msgTxt', typeof msgTxt);
     console.log("latestCommand", latestCommand);
+=======
+
+>>>>>>> 1655ec9 (merging restoring session)
     if (msgTxt) {
       if ((!isNaN(parseFloat(msgTxt!)) &&  ctx.session.latestCommand !== 'buy' && ctx.session.latestCommand !== 'sell' && ctx.session.latestCommand !== 'snipe' && ctx.session.latestCommand !== "send_sol" && ctx.session.latestCommand !== 'ask_for_sol_amount' && ctx.session.latestCommand === 'display_after_Snipe_Buy' ) || ctx.session.latestCommand === 'start' || ctx.session.latestCommand === 'display_single_spl_positions') {
           if (PublicKey.isOnCurve(msgTxt!)) {
@@ -417,7 +451,7 @@ bot.on("message", async (ctx) => {
           ctx.session.snipeToken instanceof PublicKey
             ? ctx.session.snipeToken.toBase58()
             : ctx.session.snipeToken;
-        await display_snipe_options(ctx,false, snipeToken);
+        await display_snipe_options(ctx, false, snipeToken);
         break;
       }
       case "rug_check": {
@@ -557,9 +591,13 @@ bot.on("message", async (ctx) => {
               ctx.session.latestCommand = 'snipe';
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
+<<<<<<< HEAD
               display_snipe_options(ctx,false, msgTxt);
               // ctx.api.sendMessage(chatId, "🔴 Invalid address");
               // ctx.api.sendMessage(chatId, "🔴 Pool not found for this token.");
+=======
+              display_snipe_options(ctx, false, msgTxt);
+>>>>>>> 1655ec9 (merging restoring session)
               return;
             }
             ctx.session.activeTradingPool = poolInfo;
@@ -658,8 +696,12 @@ bot.on("message", async (ctx) => {
 /*                      BOT ON CALLBACK                       */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 bot.on("callback_query", async (ctx: any) => {
+  await _validateSession(ctx);
+  backupSession = ctx.session;
+  const chatId = ctx.chat.id;
+
   try {
-    const chatId = ctx.chat.id;
+    ctx.session.portfolio.chatId = chatId;
     const data = ctx.callbackQuery.data;
     // console.log("callback_query", data);
     const positionCallSell = /^sellpos_\d+_\d+$/;
@@ -700,7 +742,7 @@ bot.on("callback_query", async (ctx: any) => {
       ctx.session.positionIndex = newPositionIndex;
       console.log('positionIndex', ctx.session.positionIndex)
       ctx.session.activeTradingPool = ctx.session.positionPool[ctx.session.positionIndex];
-      await display_refresh_single_spl_positions(ctx );
+      await display_refresh_single_spl_positions(ctx);
     }
 
     switch (data) {
@@ -709,7 +751,7 @@ bot.on("callback_query", async (ctx: any) => {
         const username = ctx.update.callback_query.from.username; //ctx.from.username;
 
         // Check if the user is allowed to access the referral program
-        if (allowedUsernames.includes(username)) {
+        if (ctx.session.allowedReferral) {
           ctx.session.latestCommand = "refer_friends";
           let existingReferral = await Referrals.findOne({
             generatorChatId: chatId,
@@ -767,38 +809,38 @@ bot.on("callback_query", async (ctx: any) => {
         await handleRefreshStart(ctx);
         break;
       case "refresh_portfolio":
-        await display_spl_positions(ctx,true);
+        await display_spl_positions(ctx, true);
         break;
       case "refrech_rug_check":
         let isRefresh = true
         await display_rugCheck(ctx, isRefresh);
         break;
       case "select_wallet_0":
-        const portfolio =  await Portfolios.findOne({ chatId });
+        const portfolio = await Portfolios.findOne({ chatId });
         console.log("portfolio", portfolio);
         if (portfolio) {
           portfolio.activeWalletIndex = 0;
-          ctx.session.activeWalletIndex = portfolio.activeWalletIndex;
+          ctx.session.portfolio.activeWalletIndex = portfolio.activeWalletIndex;
           await portfolio.save();  // Save the updated document to MongoDB
           await handleSettings(ctx);
           await RefreshAllWallets(ctx);
-        }else{
+        } else {
           await ctx.api.sendMessage(chatId, "Error: Portfolio not found.");
         }
 
         break;
       case "select_wallet_1":
-        const portfolio1 =  await Portfolios.findOne({ chatId });
+        const portfolio1 = await Portfolios.findOne({ chatId });
         console.log("portfolio1", portfolio1);
-     
+
         if (portfolio1) {
           portfolio1.activeWalletIndex = 1;
-          ctx.session.activeWalletIndex = portfolio1.activeWalletIndex;
+          ctx.session.portfolio.activeWalletIndex = portfolio1.activeWalletIndex;
 
           await portfolio1.save();  // Save the updated document to MongoDB
           await handleSettings(ctx);
           await RefreshAllWallets(ctx);
-        }else{
+        } else {
           await ctx.api.sendMessage(chatId, "Error: Portfolio not found.");
         }
 
@@ -921,7 +963,7 @@ bot.on("callback_query", async (ctx: any) => {
         //   ctx.session.activeTradingPool = await getRayPoolKeys(ctx, ctx.session.latestToken);
         //   await display_token_details(ctx,false);
         // }
-         else {
+        else {
           ctx.session.latestCommand = "buy";
           await ctx.api.sendMessage(
             chatId,
@@ -941,8 +983,8 @@ bot.on("callback_query", async (ctx: any) => {
 
         if (ctx.session.latestCommand === 'rug_check') {
           ctx.session.latestCommand = "snipe";
-          await display_snipe_options(ctx,false, ctx.session.rugCheckToken);
-        } 
+          await display_snipe_options(ctx, false, ctx.session.rugCheckToken);
+        }
         // else if(ctx.session.latestCommand === 'optional'){
         //   ctx.session.latestCommand = "snipe";
         //   ctx.session.snipeToken = ctx.session.latestToken;
@@ -1136,12 +1178,12 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "display_spl_positions": {
         // await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
-        await display_spl_positions(ctx,false);
+        await display_spl_positions(ctx, false);
         break;
       }
       case "display_refresh_single_spl_positions": {
         await display_refresh_single_spl_positions(ctx);
-    
+
         break;
       }
       case "Refresh_display_after_Snipe_Buy": {
@@ -1178,7 +1220,7 @@ bot.on("callback_query", async (ctx: any) => {
         } else if (ctx.session.latestCommand === 'display_single_spl_positions') {
           await display_refresh_single_spl_positions(ctx);
         } else if (ctx.session.latestCommand === 'display_after_Snipe_Buy') {
-          await display_after_Snipe_Buy(ctx,true);
+          await display_after_Snipe_Buy(ctx, true);
 
         }
         else {
@@ -1251,7 +1293,7 @@ bot.catch((err) => {
 
 async function checkAccountType(ctx: any, address: any) {
   const connection = new Connection(
-    `${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`
+    `${ctx.session.tritonRPC}${ctx.session.tritonToken}`
   );
   const publicKey = new PublicKey(address);
   const TOKEN_PROGRAM_ID = new PublicKey(
@@ -1278,4 +1320,14 @@ process.on('uncaughtException', (err, origin) => {
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('SIGINT', async () => {
+  console.log("backupSession",backupSession);
+  if (backupSession) {
+      await UserSession.findOneAndUpdate({ chatId: backupSession.chatId }, backupSession, { upsert: true })
+      .then(() => { console.log(":: Stored user session to DB") })
+      .catch((e: any) => { console.log("error", e)});
+  }
+  process.exit();
 });

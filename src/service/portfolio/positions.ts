@@ -14,7 +14,7 @@ export async function saveUserPosition(ctx: any, walletId: String, newPosition:
         amountOut: number | undefined;
     }) {
      const chatId = ctx.chat.id;
-     const selectedWallet = ctx.session.activeWalletIndex;
+     const selectedWallet = ctx.session.portfolio.activeWalletIndex;
      let userWallet = ctx.session.portfolio.wallets[selectedWallet];
      userWallet = userWallet.walletId instanceof PublicKey ? userWallet.walletId.toBase58() : userWallet.walletId;
 
@@ -89,7 +89,7 @@ export async function saveUserPosition(ctx: any, walletId: String, newPosition:
 
 // export async function getTokensFromWallet(ctx: any) {
 //     const chatId = ctx.chat.id;
-//     const userWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex]?.publicKey;
+//     const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex]?.publicKey;
 
 //     const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 //     const portfolios: any = [];

@@ -15,7 +15,7 @@ export async function getTokenMetadata(ctx: any, tokenAddress: string): Promise<
         ctx.api.sendMessage(chatId, "Invalid token address provided.", { parse_mode: 'HTML' });
         return;
     }
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
     const metaplex = Metaplex.make(connection);
     const mintAddress = new PublicKey(tokenAddress);
     const tokenData = await metaplex.nfts().findByMint({ mintAddress: mintAddress });
