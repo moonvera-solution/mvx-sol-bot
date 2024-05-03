@@ -11,9 +11,9 @@ export async function handleWallets(ctx: any) {
     if(portfolioIndexWallet ){
      selectedWalletIndex = portfolioIndexWallet.activeWalletIndex; // Index of the currently selected wallet
     }else{
-     selectedWalletIndex = ctx.session.activeWalletIndex; // Index of the currently selected wallet
+     selectedWalletIndex = ctx.session.portfolio.activeWalletIndex; // Index of the currently selected wallet
     }
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
 
 
     if (!wallets || wallets.length === 0) {
