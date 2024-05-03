@@ -946,7 +946,7 @@ bot.on("callback_query", async (ctx: any) => {
         if (referralRecord) {
           ctx.session.referralCommision = referralRecord.commissionPercentage;
           ctx.session.generatorWallet = referralRecord.generatorWallet;
-          // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
+
         }
         if (ctx.session.latestCommand === 'rug_check') {
           ctx.session.latestCommand = "buy";
