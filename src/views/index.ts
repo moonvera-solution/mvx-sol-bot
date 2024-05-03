@@ -200,7 +200,6 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
         }
     } catch (error: any) {
         console.error('Error in getTokenMetadata:', error.message);
-        ctx.api.sendMessage(chatId, "Error getting token data, verify the address..", { parse_mode: 'HTML' });
     }
 }
 
@@ -499,7 +498,6 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
         }
     } catch (error: any) {
         console.error('Error in getTokenMetadata:', error.message);
-        ctx.api.sendMessage(chatId, "Error getting token data, verify the address..", { parse_mode: 'HTML' });
     }
 }
 
