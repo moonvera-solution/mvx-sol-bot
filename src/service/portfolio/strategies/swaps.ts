@@ -89,7 +89,7 @@ export async function handle_radyum_swap(
                 tokenIn = OUTPUT_TOKEN;
                 outputToken = DEFAULT_TOKEN.WSOL;
                 let sellAmountPercent = userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals);
-                swapAmountIn = new BigNumber(Math.floor(sellAmountPercent * swapAmountIn / 100));
+                swapAmountIn = new BigNumber(swapAmountIn).multipliedBy(sellAmountPercent).dividedBy(100).integerValue(BigNumber.ROUND_FLOOR);
                 await ctx.api.sendMessage(chatId, `💸 Selling ${percent}% ${userTokenBalanceAndDetails.userTokenSymbol}`);
             }
             console.log('testing')
