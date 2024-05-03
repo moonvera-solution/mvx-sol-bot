@@ -26,7 +26,7 @@ export async function handleCloseKeyboard(ctx: any) {
 
 export async function display_token_details(ctx: any, isRefresh: boolean) {
     const priority_Level = ctx.session.priorityFees;
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
     let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
     const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
     if (!rayPoolKeys) {
@@ -41,7 +41,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
     const baseMint = rayPoolKeys.baseMint;
     const tokenAddress = new PublicKey(baseMint);
     const chatId = ctx.chat.id;
-    const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
+    const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
     const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
     const [
         birdeyeData,
@@ -210,8 +210,8 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
         const priority_Level = ctx.session.priorityFees;
         let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
         const activePool = ctx.session.activeTradingPool;
-        const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
-        const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
+        const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+        const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
         const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
         // console.log("activePool",activePool)
         if (!msgTxt && !activePool) { await ctx.api.sendMessage(ctx.chat.id, "Enter token address to snipe.", { parse_mode: 'HTML' }); return; }
@@ -228,7 +228,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
             const chatId = ctx.chat.id;
             const tokenAddress = new PublicKey(ctx.session.snipeToken);
     
-            const liqInfo = ctx.session.env.poolSchedule;
+            const liqInfo = ctx.session.poolSchedule;
             const [
                 birdeyeData,
                 tokenMetadataResult,
@@ -361,9 +361,9 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
 export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
     const priority_Level = ctx.session.priorityFees;
     const chatId = ctx.chat.id;
-    const activeWalletIndexIdx: number = ctx.session.activeWalletIndex;
+    const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
     const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
     let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
     const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
 

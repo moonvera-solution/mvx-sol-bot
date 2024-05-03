@@ -104,7 +104,7 @@ export async function checkWalletsLength(ctx: any) {
 }
 
 export async function handleGetPrivateKey(ctx: any) {
-  const selectedWallet = ctx.session.activeWalletIndex;
+  const selectedWallet = ctx.session.portfolio.activeWalletIndex;
   const userWallet = ctx.session.portfolio.wallets[selectedWallet];
   const chatId = ctx.chat.id;
 
@@ -151,7 +151,7 @@ export async function confirmResetWalletAgain(ctx: any) {
 
 export async function resetWallet(ctx: any) {
   const chatId = ctx.chat.id;
-  const walletIndex = ctx.session.activeWalletIndex;
+  const walletIndex = ctx.session.portfolio.activeWalletIndex;
   const userWallet = ctx.session.portfolio.wallets[walletIndex];
 
   const privatekeyString: any = userWallet.secretKey;

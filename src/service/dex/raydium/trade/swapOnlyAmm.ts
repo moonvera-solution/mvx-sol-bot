@@ -56,7 +56,7 @@ export type TxInputInfo = {
 };
 
 export async function swapOnlyAmm(input: TxInputInfo) {
-  const connection = new Connection(`${input.ctx.session.env.tritonRPC}${input.ctx.session.env.tritonToken}`);
+  const connection = new Connection(`${input.ctx.session.tritonRPC}${input.ctx.session.tritonToken}`);
   const targetPoolInfo = await formatAmmKeysById(input.targetPool, connection);
   assert(targetPoolInfo, "cannot find the target pool");
   const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys;
