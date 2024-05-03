@@ -16,13 +16,13 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
     keys = await _getRayPoolKeys({ t1: shitcoin, t2: quoteMint, connection });
     // console.log('keys', keys);
     if (keys) {
-      ctx.session.poolSchedule = await fetchPoolSchedule(keys, connection);
+      ctx.session.poolTime = Number((await fetchPoolSchedule(keys, connection)).startTime);
       ctx.session.originalBaseMint = keys.baseMint;
     } else {
       keys = await _getRayPoolKeys({ t1: quoteMint, t2: shitcoin, connection });
       if (keys) {
         ctx.session.originalBaseMint = keys.baseMint;
-        ctx.session.poolSchedule = await fetchPoolSchedule(keys, connection);
+        ctx.session.poolTime = Number((await fetchPoolSchedule(keys, connection)).startTime);
 
         let _quoteMint = keys.quoteMint;
         let _baseMint = keys.baseMint;

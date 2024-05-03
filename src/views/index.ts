@@ -228,7 +228,6 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
             const chatId = ctx.chat.id;
             const tokenAddress = new PublicKey(ctx.session.snipeToken);
     
-            const liqInfo = ctx.session.poolSchedule;
             const [
                 birdeyeData,
                 tokenMetadataResult,
@@ -266,10 +265,9 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
             const formattedmac = await formatNumberToKOrM(marketCap) ?? "NA";
     
             ctx.session.currentMode = 'snipe';
-            ctx.session.poolTime = liqInfo;
             // showing the user the countdowm to the snipe
             const currentTime = new Date();
-            const poolStartTime = new Date(liqInfo.startTime.toNumber() * 1000);
+            const poolStartTime = new Date(ctx.session.poolTime * 1000);
     
             let poolStatusMessage;
             if (currentTime >= poolStartTime) {
