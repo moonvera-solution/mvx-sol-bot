@@ -153,9 +153,13 @@ bot.command("start", async (ctx: any) => {
     }
      const userName = ctx.message.from.username;
      console.log("userName:", userName);
-
-    const user = await AllowedReferrals.find({ tgUserName: userName });
-    ctx.session.allowedReferral = user[0].tgUserName;
+     const user = await AllowedReferrals.find({ tgUserName: userName });
+     // console.log("user:", user[0]);
+     if(user[0] != undefined){
+       ctx.session.allowedReferral = user[0];
+       console.log("ctx.session.allowedReferral:", ctx.session.allowedReferral);
+ 
+     }
 
     if (referralCode || ctx.session.allowedReferral) {
       const referralRecord = await Referrals.findOne({
