@@ -231,7 +231,7 @@ bot.command("start", async (ctx: any) => {
 
     // Combine the welcome message, SOL price message, and instruction to create a wallet
     const welcomeMessage =
-      `✨ Welcome to <b>DRIBs bot</b> - Your Advanced Trading Companion! ✨\n` +
+      `✨ Welcome to <b>DRIBs bot</b>✨\n` +
       `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
       `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
       `We're always working to bring you new features - stay tuned!\n\n` +
