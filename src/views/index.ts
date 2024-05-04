@@ -121,7 +121,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
 
     if (
       ctx.session.latestCommand == 'buy'
-      || ctx.session.latestCommand == 'sell_X_TOKEN'
+      || ctx.session.latestCommand == 'buy_X_SOL'
     ) {
       ctx.session.currentMode = 'buy';
       messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
