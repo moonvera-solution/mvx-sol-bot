@@ -33,6 +33,7 @@ export interface ISESSION_DATA {
   portfolio: PORTFOLIO_TYPE,
   activeTradingPool: RAYDIUM_POOL_TYPE;
   latestCommand: string;
+  previousCommand: string;
   currentMode: string;
   latestSlippage: number
   metadataMessageId: number;
@@ -109,6 +110,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   recipientAddress: DEFAULT_PUBLIC_KEY,
   activeTradingPool: DefaultPoolInfoData,
   latestCommand: '',
+  previousCommand: '',
   currentMode: '',
   latestSlippage: 5,
   metadataMessageId: 0,

@@ -486,6 +486,19 @@ bot.on("message", async (ctx) => {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
         }
+        // just to solve the position refresh problem temporarly 
+      case "buy_X_SOL_IN_POSITION":
+        ctx.session.latestCommand = "display_single_spl_positions";
+        if (msgTxt) {
+          const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
+          if (!isNaN(amt)) {
+            // ctx.session.latestCommand = "buy_X_SOL";
+            await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "buy", Number(msgTxt));
+            break;
+          } else {
+            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+          }
+        }
       case "sell_X_TOKEN":
         ctx.session.latestCommand = "sell_X_TOKEN";
         if (msgTxt) {
@@ -733,7 +746,9 @@ bot.on("callback_query", async (ctx: any) => {
       const positionIndex = parts[2]; // Position index
       ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
       ctx.api.sendMessage(chatId, "Please enter SOL amount");
-      ctx.session.latestCommand = "buy_X_SOL";
+
+      // display_single_spl_positions
+      ctx.session.latestCommand = "buy_X_SOL_IN_POSITION";
 
       return;
     } else if (matchNavigate) {
