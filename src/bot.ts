@@ -138,6 +138,7 @@ bot.command("start", async (ctx: any) => {
     ctx.session.chatId = chatId;
     const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
     console.log("portfolio:", portfolio);
+    console.log("portfolio:", portfolio);
     let isNewUser = false;
     const connection = new Connection(
       `${ctx.session.tritonRPC}${ctx.session.tritonToken}`
@@ -156,8 +157,12 @@ bot.command("start", async (ctx: any) => {
     const userName = ctx.message.from.username;
     console.log("userName:", userName);
 
+    const userName = ctx.message.from.username;
+    console.log("userName:", userName);
+
     const user = await AllowedReferrals.find({ tgUserName: userName });
     // console.log("user:", user[0]);
+    if (user[0] != undefined) {
     if (user[0] != undefined) {
       ctx.session.allowedReferral = user[0];
       console.log("ctx.session.allowedReferral:", ctx.session.allowedReferral);
@@ -303,6 +308,7 @@ bot.command("positions", async (ctx) => {
     // await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
     await display_spl_positions(ctx, false);
 
+
   } catch (error: any) {
     logErrorToFile("bot on positions cmd", error);
   }
@@ -422,6 +428,14 @@ bot.on("message", async (ctx) => {
             let rugCheckToken = new PublicKey(msgTxt);
             ctx.session.rugCheckToken = rugCheckToken;
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
+
+          await display_rugCheck(ctx, false);
+        } else {
+          ctx.api.sendMessage(chatId, "Invalid address");
+        }
+      }
+    }
+    switch (latestCommand) {
 
           await display_rugCheck(ctx, false);
         } else {
@@ -666,9 +680,11 @@ bot.on("message", async (ctx) => {
             await getSolanaDetails()// Fetch referral data
           ]);
 
+
           const referEarningSol = (
             Number(referralData?.totalEarnings) / 1e9
           ).toFixed(6);
+
 
           const referEarningDollar = (
             Number(referEarningSol) * details
@@ -767,6 +783,7 @@ bot.on("callback_query", async (ctx: any) => {
           ctx.session.latestCommand = "refer_friends";
           let existingReferral = await Referrals.findOne({
             generatorChatId: chatId,
+          });
           });
 
           if (!existingReferral) {
@@ -901,6 +918,7 @@ bot.on("callback_query", async (ctx: any) => {
       case "create_new_wallet":
         const allowed = await checkWalletsLength(ctx);
         if (allowed) { await createNewWallet(ctx); }
+        if (allowed) { await createNewWallet(ctx); }
         break;
       case "settings":
         await handleSettings(ctx);
@@ -929,6 +947,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "rug_check": {
         ctx.session.latestCommand = "rug_check";
+        ctx.api.sendMessage(chatId, "Please provide the token address for a rug pull analysis.");
         ctx.api.sendMessage(chatId, "Please provide the token address for a rug pull analysis.");
         break;
       }
@@ -961,6 +980,7 @@ bot.on("callback_query", async (ctx: any) => {
         if (ctx.session.latestCommand === 'rug_check') {
           ctx.session.latestCommand = "buy";
           await display_token_details(ctx, false);
+        } else {
         } else {
           ctx.session.latestCommand = "buy";
           await ctx.api.sendMessage(
@@ -1072,14 +1092,18 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "sell_10_TOKEN":
         await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", "10");
+        await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", "10");
         break;
       case "sell_25_TOKEN":
+        await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", "25");
         await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", "25");
         break;
       case "sell_30_TOKEN":
         await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", "30");
+        await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", "30");
         break;
       case "sell_50_TOKEN":
+        await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", "50");
         await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", "50");
         break;
       case "sell_75_TOKEN":
@@ -1091,6 +1115,7 @@ bot.on("callback_query", async (ctx: any) => {
         );
         break;
       case "sell_100_TOKEN":
+        await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", "100");
         await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", "100");
         break;
       case "sell_X_TOKEN": {
@@ -1297,9 +1322,15 @@ process.on('unhandledRejection', (reason, promise) => {
 
 process.on('SIGINT', async () => {
   console.log("backupSession", backupSession);
+  console.log("backupSession", backupSession);
   if (backupSession) {
     await UserSession.findOneAndUpdate({ chatId: backupSession.chatId }, backupSession, { upsert: true })
+    await UserSession.findOneAndUpdate({ chatId: backupSession.chatId }, backupSession, { upsert: true })
       .then(() => { console.log(":: Stored user session to DB") })
+      .catch((e: any) => {
+        logErrorToFile("bot on backupSession cmd", e);
+        console.log("error", e)
+      });
       .catch((e: any) => {
         logErrorToFile("bot on backupSession cmd", e);
         console.log("error", e)
