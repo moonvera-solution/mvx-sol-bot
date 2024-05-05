@@ -413,8 +413,7 @@ bot.on("message", async (ctx) => {
 
     if (msgTxt) {
       if ((!isNaN(parseFloat(msgTxt!)) &&  ctx.session.latestCommand !== 'buy' && ctx.session.latestCommand !== 'sell' && ctx.session.latestCommand !== 'snipe' && ctx.session.latestCommand !== "send_sol" && ctx.session.latestCommand !== 'ask_for_sol_amount' && ctx.session.latestCommand === 'display_after_Snipe_Buy' ) || ctx.session.latestCommand === 'start' || ctx.session.latestCommand === 'display_single_spl_positions') {
-          if (PublicKey.isOnCurve(msgTxt!)) {
-            const isTOken = await checkAccountType(ctx, msgTxt);
+        if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {            const isTOken = await checkAccountType(ctx, msgTxt);
             if (!isTOken) {
               ctx.api.sendMessage(chatId, "Invalid address");
               return;
@@ -457,8 +456,7 @@ bot.on("message", async (ctx) => {
       }
       case "rug_check": {
         if (msgTxt) {
-          if (PublicKey.isOnCurve(msgTxt!)) {
-            const isTOken = await checkAccountType(ctx, msgTxt);
+          if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {            const isTOken = await checkAccountType(ctx, msgTxt);
             if (!isTOken) {
               ctx.api.sendMessage(chatId, "Invalid address");
               return;
@@ -480,6 +478,19 @@ bot.on("message", async (ctx) => {
         if (msgTxt) {
           const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
           if (!isNaN(amt)) {
+            await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "buy", Number(msgTxt));
+            break;
+          } else {
+            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+          }
+        }
+        // just to solve the position refresh problem temporarly 
+      case "buy_X_SOL_IN_POSITION":
+        ctx.session.latestCommand = "display_single_spl_positions";
+        if (msgTxt) {
+          const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
+          if (!isNaN(amt)) {
+            // ctx.session.latestCommand = "buy_X_SOL";
             await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "buy", Number(msgTxt));
             break;
           } else {
@@ -581,8 +592,7 @@ bot.on("message", async (ctx) => {
       case "sell":
       case "buy": {
         try {
-          if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
-            //to avoid crashin with wron address
+          if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {            //to avoid crashin with wron address
             const isTOken = await checkAccountType(ctx, msgTxt);
             if (!isTOken) {
               ctx.api.sendMessage(chatId, "Invalid address");
@@ -611,8 +621,7 @@ bot.on("message", async (ctx) => {
       case "snipe": {
         ctx.session.snipeStatus = true;
         try {
-          if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
-            const isTOken = await checkAccountType(ctx, msgTxt);
+          if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {            const isTOken = await checkAccountType(ctx, msgTxt);
             // console.log("isTOken", isTOken);
             if (!isTOken) {
               ctx.api.sendMessage(chatId, "Invalid address");
@@ -632,7 +641,7 @@ bot.on("message", async (ctx) => {
 
               display_snipe_options(ctx, false, ctx.session.snipeToken.toBase58());
             }
-          } else if (msgTxt && !PublicKey.isOnCurve(msgTxt)) {
+          } else if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {
             ctx.api.sendMessage(chatId, "Invalid address");
           }
         } catch (error: any) {
@@ -733,7 +742,9 @@ bot.on("callback_query", async (ctx: any) => {
       const positionIndex = parts[2]; // Position index
       ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
       ctx.api.sendMessage(chatId, "Please enter SOL amount");
-      ctx.session.latestCommand = "buy_X_SOL";
+
+      // display_single_spl_positions
+      ctx.session.latestCommand = "buy_X_SOL_IN_POSITION";
 
       return;
     } else if (matchNavigate) {

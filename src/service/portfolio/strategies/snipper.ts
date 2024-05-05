@@ -29,6 +29,7 @@ export async function snipperON(ctx: any, amount: string) {
         getRayPoolKeys(ctx, snipeToken)
         ]);
         if (balanceInSOL * 1e9 < new BigNumber(amount).toNumber() * 1e9) {
+            console.log(' snipe transaction.');
             await ctx.api.sendMessage(ctx.chat.id, '🔴 Insufficient balance for snipe transaction.', { parse_mode: 'HTML', disable_web_page_preview: true });
             return;
         }
@@ -103,11 +104,12 @@ export async function setSnipe(ctx: any, amountIn: any) {
     ctx.session.snipeStatus = true;
 
 
-    if (balanceInSOL * 1e9 < amountInLamports.toNumber()) await ctx.api.sendMessage(
-        ctx.session.portfolio.chatId, '🔴 Insufficient balance for transaction.',
+    if (balanceInSOL * 1e9 < amountInLamports.toNumber()) {
+        await ctx.api.sendMessage(ctx.session.portfolio.chatId, '🔴 Insufficient balance for transaction.',
         { parse_mode: 'HTML', disable_web_page_preview: true }
-    );
-
+        );
+        return;
+    }
     const poolStartTime = ctx.session.poolTime;
     const simulationPromise = startSnippeSimulation(ctx, userKeypair, amountInLamports, snipeSlippage, poolStartTime, tokenData);
     simulationPromise.catch(async (error: any) => {

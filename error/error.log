@@ -2259,4 +2259,60 @@ Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range.
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:56:9
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:56:9
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:56:9
+ 5/3/2024, 10:18:40 PM - bot on positions cmd
+ GrammyError 
+ Call to 'sendMessage' failed! (400: Bad Request: message text is empty)
+ GrammyError: Call to 'sendMessage' failed! (400: Bad Request: message text is empty)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async sendMessage (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:140:9)
+    at async display_spl_positions (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:87:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:304:5
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/4/2024, 12:56:07 AM - bot.on('message'
+ Error 
+ Non-base58 character
+ Error: Non-base58 character
+    at Object.decode (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/node_modules/base-x/src/index.js:111:11)
+    at new PublicKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:63:30)
+    at Function.isOnCurve (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:251:20)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:417:23
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/4/2024, 1:16:34 AM - bot.on('message'
+ Error 
+ Invalid public key input
+ Error: Invalid public key input
+    at new PublicKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:65:17)
+    at Function.isOnCurve (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:251:20)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:465:25
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/5/2024, 8:36:42 AM - callback_query
+ GrammyError 
+ Call to 'sendMessage' failed! (400: Bad Request: message text is empty)
+ GrammyError: Call to 'sendMessage' failed! (400: Bad Request: message text is empty)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async sendMessage (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:140:9)
+    at async display_spl_positions (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:87:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:1154:9
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
  
