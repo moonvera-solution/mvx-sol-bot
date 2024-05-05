@@ -166,8 +166,8 @@ bot.command("start", async (ctx: any) => {
 
     const user = await AllowedReferrals.find({ tgUserName: userName });
     // console.log("user:", user[0]);
-    if (user[0] != undefined) {
-      ctx.session.allowedReferral = user[0];
+    if(user[0] != undefined){
+      ctx.session.allowedReferral = user[0].tgUserName;
       // console.log("ctx.session.allowedReferral:", ctx.session.allowedReferral);
     }
     // console.log("referralCode:", referralCode);
@@ -1512,8 +1512,7 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
 
-process.on("SIGINT", async () => {
-  console.log("backupSession", backupSession);
+process.on('SIGINT', async () => {
   if (backupSession) {
     await UserSession.findOneAndUpdate(
       { chatId: backupSession.chatId },

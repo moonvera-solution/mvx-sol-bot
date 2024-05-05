@@ -51,8 +51,7 @@ import {
   
     try {
       abortableResender();
-      const lastValidBlockHeight =
-        blockhashWithExpiryBlockHeight.lastValidBlockHeight - 150;
+      const lastValidBlockHeight = blockhashWithExpiryBlockHeight.lastValidBlockHeight - 150;
   
       // this would throw TransactionExpiredBlockheightExceededError
       await Promise.race([

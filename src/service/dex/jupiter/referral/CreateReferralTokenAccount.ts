@@ -16,14 +16,28 @@ const WEN_TOKEN = "WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk";
  * 
  */
 (async () => {
-  const mint = new PublicKey(WEN_TOKEN);
+  const mint = new PublicKey('JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN');
   const { tx, referralTokenAccountPubKey } =
     await provider.initializeReferralTokenAccount({
-      payerPubKey: keypair.publicKey,referralAccountPubKey: new PublicKey(MVX_JUP_REFERRAL),mint,
+      payerPubKey: keypair.publicKey,
+      referralAccountPubKey: new PublicKey(MVX_JUP_REFERRAL),
+      mint:mint,
     });
+
+  console.log(tx,"\n",referralTokenAccountPubKey.toBase58());
+
   const referralTokenAccount = await connection.getAccountInfo(referralTokenAccountPubKey,);
   if (!referralTokenAccount) {
-    const txId = await sendAndConfirmTransaction(connection, tx, [keypair]);
+    const txId = await sendAndConfirmTransaction(connection, tx, [keypair],{
+      /** disable transaction verification step */
+      skipPreflight: false,
+      /** desired commitment level */
+      commitment: 'processed',
+      /** preflight commitment level */
+      preflightCommitment:"processed",
+      /** Maximum number of times for the RPC node to retry sending the transaction to the leader. */
+      maxRetries: 0,
+  });
     console.log({txId,referralTokenAccountPubKey: referralTokenAccountPubKey.toBase58()});
   } else {
     console.log(`referralTokenAccount ${referralTokenAccountPubKey.toBase58()} for mint ${mint.toBase58()} already exists`);
