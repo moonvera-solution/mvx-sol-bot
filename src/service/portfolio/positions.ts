@@ -4,15 +4,18 @@ import { UserPositions } from '../../db';
 import { quoteToken } from "../../views/util/dataCalculation";
 type Commitment = 'processed' | 'confirmed' | 'finalized' | 'recent' | 'single' | 'singleGossip' | 'root' | 'max';
 
-export async function saveUserPosition(ctx: any, walletId: String, newPosition:
-    {
+export async function saveUserPosition(
+  ctx: any, 
+  walletId: String,
+   newPosition:{
         baseMint: string;
         name: string;
         symbol: string;
         tradeType: string;
         amountIn: number;
         amountOut: number | undefined;
-    }) {
+    }
+  ) {
      const chatId = ctx.chat.id;
      const selectedWallet = ctx.session.activeWalletIndex;
      let userWallet = ctx.session.portfolio.wallets[selectedWallet];
@@ -27,7 +30,7 @@ export async function saveUserPosition(ctx: any, walletId: String, newPosition:
                 position => position.baseMint === newPosition.baseMint.toString()
             );
             if (existingPositionIndex === -1) {
-                // console.log("newPosition",newPosition);
+                console.log("newPosition",newPosition);
                 userPosition.positions.push(newPosition);
                 await userPosition.save();
                 console.log('adding new position', )
