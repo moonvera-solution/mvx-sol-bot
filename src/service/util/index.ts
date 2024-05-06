@@ -720,6 +720,10 @@ export async function getSwapAmountOut(
     return extractAmount;
 }
 
+/**
+ * @notice Only use if there is a referral
+ * @returns TransactionInstruction Array
+ */
 export function add_mvx_and_ref_inx_fees(
     payerKeypair: Keypair,
     referralWallet: string,
@@ -745,7 +749,10 @@ export function add_mvx_and_ref_inx_fees(
     return [referralInx, mvxFeeInx];
 }
 
-
+/**
+ * @notice Only use if there is NO referral
+ * @returns TransactionInstruction Array
+ */
 export function addMvxFeesInx(payerKeypair: Keypair, solAmount: BigNumber): TransactionInstruction[] {
     return [SystemProgram.transfer({
         fromPubkey: payerKeypair.publicKey,
@@ -755,10 +762,7 @@ export function addMvxFeesInx(payerKeypair: Keypair, solAmount: BigNumber): Tran
 }
 
 
-export function wrapLegacyTx(
-    txInxs: TransactionInstruction[],
-    payerKeypair: Keypair,
-    blockhash: any): MessageV0 {
+export function wrapLegacyTx(txInxs: TransactionInstruction[],payerKeypair: Keypair,blockhash: any): MessageV0 {
     return new TransactionMessage({
         payerKey: payerKeypair.publicKey,
         recentBlockhash: blockhash,

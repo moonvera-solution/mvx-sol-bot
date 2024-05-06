@@ -16,6 +16,7 @@ import bs58 from "bs58";
 
 export async function swap_pump_fun(ctx:any){
     const chatId = ctx.chat.id;
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
     const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
     const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
     const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
@@ -25,7 +26,7 @@ export async function swap_pump_fun(ctx:any){
     const tokenIn = tradeSide == 'buy' ? SOL_ADDR : ctx.session.pump.token;
     const tokenOut = tradeSide == 'buy' ? ctx.session.pump.token : SOL_ADDR;
 
-    swap_solTracker({
+    swap_solTracker(connection,{
         side: tradeSide,
         from: tokenIn,
         to :  tokenOut,
@@ -34,7 +35,7 @@ export async function swap_pump_fun(ctx:any){
         payerKeypair: payerKeypair,
         referralWallet: null,//ctx.session.generatorWallet,
         referralCommision: null,//referralCommision,
-        priorityFee: null,//ctx.session.priorityFees.HIGH,
+        priorityFee: ctx.session.priorityFees,
         forceLegacy: true
     }).then(txSigs => {  
         txSigs && ctx.api.sendMessage(chatId, txSigs);

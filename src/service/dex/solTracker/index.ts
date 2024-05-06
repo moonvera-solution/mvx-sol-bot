@@ -6,69 +6,12 @@ import { sendTx, add_mvx_and_ref_inx_fees, addMvxFeesInx, wrapLegacyTx } from '.
 import { Keypair, Connection, Transaction, VersionedTransaction, TransactionMessage } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 
-const connection = new Connection('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41')
-
-
-async function swap_solTracker_sdk(
-    from: string,
-    to: string,
-    amount: number,
-    slippage: number,
-    payerKeypair: Keypair,
-    priorityFee?: number,
-    forceLegacy?: boolean
-) {
-    const headers = { 'x-api-key': '13460529-40af-40d4-8834-2a37f1701aa4' };
-    const keypair = payerKeypair;
-    const solanaTracker = new SolanaTracker(
-        keypair,
-        'https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41',
-        'https://swap-api-xmb4.solanatracker.io',
-        headers
-    );
-
-    const swapResponse = await solanaTracker.getSwapInstructions(
-        from, // From Token
-        to, // To Token
-        amount, // Amount to swap
-        slippage, // Slippage
-        keypair.publicKey.toBase58(), // Payer public key
-        priorityFee, // Priority fee (Recommended while network is congested)
-        true // Force legacy transaction for Jupiter
-    );
-
-    const txid = await solanaTracker.performSwap(swapResponse, {
-        sendOptions: { skipPreflight: true },
-        confirmationRetries: 30,
-        confirmationRetryTimeout: 1000,
-        lastValidBlockHeightBuffer: 150,
-        resendInterval: 1000,
-        confirmationCheckInterval: 1000,
-        skipConfirmationCheck: false, // Set to true if you want to skip confirmation checks and return txid immediately
-    });
-    // Returns txid when the swap is successful or throws an error if the swap fails
-    console.log("Transaction ID:", txid);
-    console.log("Transaction URL:", `https://explorer.solana.com/tx/${txid}`);
-}
-
-async function getSwapDetails(
-    from: String,
-    to: String,
-    amount: Number,
-    slippage: Number,
-) {
-    const params = { from, to, amount, slippage };
-    const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
-    try {
-        const response = await axios.get('https://swap-api-xmb4.solanatracker.io/rate', { params, headers });
-        console.log("rate response:", response.data);
-
-    } catch (error: any) {
-        throw new Error(error);
-    }
-}
-
-export async function swap_solTracker({
+/**
+ * @notice Quotes from solTracker API then sends swap tx adding mvx&ref fees
+ * @param passing connection b4 SOL_TRACKER_SWAP_PARAMS 
+ * @returns Arrays of tx ids, false if fails
+ */
+export async function swap_solTracker(connection: Connection ,{
     side,
     from,
     to,
@@ -119,6 +62,67 @@ export async function swap_solTracker({
     }).catch(error => { throw new Error(error) });
 }
 
+async function getSwapDetails(
+    from: String,
+    to: String,
+    amount: Number,
+    slippage: Number,
+) {
+    const params = { from, to, amount, slippage };
+    const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
+    try {
+        const response = await axios.get(`${process.env.SOL_TRACKER_API_URL}`, { params, headers });
+        console.log("rate response:", response.data);
+
+    } catch (error: any) {
+        throw new Error(error);
+    }
+}
+
+/**
+ * DONOT USE THIS FUNCTION AS IT IS
+ */
+async function swap_solTracker_sdk(
+    from: string,
+    to: string,
+    amount: number,
+    slippage: number,
+    payerKeypair: Keypair,
+    priorityFee?: number,
+    forceLegacy?: boolean
+) {
+    const headers = { 'x-api-key': '13460529-40af-40d4-8834-2a37f1701aa4' };
+    const keypair = payerKeypair;
+    const solanaTracker = new SolanaTracker(
+        keypair,
+        'https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41',
+        'https://swap-api-xmb4.solanatracker.io',
+        headers
+    );
+
+    const swapResponse = await solanaTracker.getSwapInstructions(
+        from, // From Token
+        to, // To Token
+        amount, // Amount to swap
+        slippage, // Slippage
+        keypair.publicKey.toBase58(), // Payer public key
+        priorityFee, // Priority fee (Recommended while network is congested)
+        true // Force legacy transaction for Jupiter
+    );
+
+    const txid = await solanaTracker.performSwap(swapResponse, {
+        sendOptions: { skipPreflight: true },
+        confirmationRetries: 30,
+        confirmationRetryTimeout: 1000,
+        lastValidBlockHeightBuffer: 150,
+        resendInterval: 1000,
+        confirmationCheckInterval: 1000,
+        skipConfirmationCheck: false, // Set to true if you want to skip confirmation checks and return txid immediately
+    });
+    // Returns txid when the swap is successful or throws an error if the swap fails
+    console.log("Transaction ID:", txid);
+    console.log("Transaction URL:", `https://explorer.solana.com/tx/${txid}`);
+}
 type SOL_TRACKER_SWAP_PARAMS =     {
     side: 'buy' | 'sell',
     from: string,
@@ -132,13 +136,14 @@ type SOL_TRACKER_SWAP_PARAMS =     {
     forceLegacy?: boolean
 }
 
+
 // one unit of shitcoin for sol price time usdc
-getSwapDetails(
-    'BuoVT17kvPXRM6gt3kS7kvQKER8SHLpUJwnC6CYm7rC5',
-    'So11111111111111111111111111111111111111112',
-    1,
-    0.5
-).then((res) => console.log(res)).catch(console.error);
+// getSwapDetails(
+//     'BuoVT17kvPXRM6gt3kS7kvQKER8SHLpUJwnC6CYm7rC5',
+//     'So11111111111111111111111111111111111111112',
+//     1,
+//     0.5
+// ).then((res) => console.log(res)).catch(console.error);
 
 // const keypair = Keypair.fromSecretKey(bs58.decode('gzUcAh399QM7T5uCQfuiVxfeGDJp5mwEpfrQaTbrP8ZwqkAE8dTn3A4F5TP9hjDDn2txix6ebW2Ui8axNBqiPnX'));
 // swap_solTracker(
