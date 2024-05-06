@@ -54,6 +54,7 @@ export interface ISESSION_DATA {
   positionPool: Array<any>;
   priorityFees: PriotitizationFeeLevels;
   positionIndex: number;
+  limitOrders:{token:String,amount:String,side:String, targetPrice:String},
   env: {
     [key: string]: string
   }
@@ -126,6 +127,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   positionPool: [],
   priorityFees: PriotitizationFeeLevels.LOW,
   positionIndex: 0,
+  limitOrders:{token:'',amount:'',side:'',targetPrice:''},
   // txTip:5_000
   env: {
     'tritonRPC' : 'https://moonvera-pit.rpcpool.com/',

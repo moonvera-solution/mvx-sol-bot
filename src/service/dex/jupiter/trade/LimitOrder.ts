@@ -1,10 +1,10 @@
-import { LimitOrderProvider} from "@jup-ag/limit-order-sdk";
-import { Keypair,Connection,PublicKey,sendAndConfirmTransaction ,TransactionSignature} from "@solana/web3.js";
-import {BN} from "@coral-xyz/anchor";
-import  bs58 from 'bs58';
-import {getTokenDataFromBirdEye} from "../../../../api/priceFeeds/birdEye";
-import {getTokenPriceFromJupiter} from "../../../../api/priceFeeds/jupiter";
-import dotenv from 'dotenv'; dotenv.config();
+import { LimitOrderProvider } from "@jup-ag/limit-order-sdk";
+import { Keypair, Connection, PublicKey, sendAndConfirmTransaction, TransactionSignature, TransactionMessage } from "@solana/web3.js";
+import { BN } from "@coral-xyz/anchor";
+import bs58 from 'bs58';
+import { getTokenDataFromBirdEye } from "../../../../api/priceFeeds/birdEye";
+import dotenv from 'dotenv';import { Transaction } from "jito-ts/dist/gen/geyser/confirmed_block";
+ dotenv.config();
 
 // The Jupiter Limit Order's project account for the Referral Program is 
 // 45ruCyfdRkWpRNGEqWzjCiXRHkZs8WXCLQ67Pnpye7Hp referral fees are withdrawable here.
@@ -16,61 +16,77 @@ const wallet = Keypair.fromSecretKey(bs58.decode(process.env.JUP_REF_ACCOUNT_AUT
 /**
  * Fetch latest fair price or current price (CP)
  * * Give user buttons to 
+ * 
+ * DONE:
+ * 0.- user clicks limit order button
+ * 1.- user paste token
+ * 2.- bot show current price and details
+ * 
+ * 4.- 
+ * 
  * * * set sell order at multiple % up of CP
  * * * set buy order at multiple % down of CP
  * * * set order expiration time 1hr, 2hr, Never
  */
+type LIMIT_ORDER_PARAMS = {
+    userWallet: Keypair,
+    inputToken: string,
+    inAmount: string,
+    outputToken: string,
+    outAmount: string,
+    expiredAt: string | null
+}
 
-async function _setLimitOrder( // 0.08
-    inputToken: PublicKey,
-    inAmount: BN,
-    outputToken: PublicKey,
-    outAmount: BN,
-    expiredAt?: BN
-): Promise<TransactionSignature>{
-    const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
-    
-    const base = Keypair.generate(); // random unique order id
-    const { tx, orderPubKey } = await limitOrder.createOrder({ // 2.5 fee jup
-        owner: wallet.publicKey,
-        inAmount: new BN(1000000), // 1000000 => 1 USDC if inputToken.address is USDC mint
-        outAmount: new BN(12771169527),
-        inputMint: new PublicKey(inputToken),
-        outputMint: new PublicKey(outputToken),
-        expiredAt:  expiredAt ?? null, // new BN(new Date().valueOf() / 1000)
-        base: base.publicKey 
-    });
+export async function setLimitJupiterOrder(connection: Connection,{ 
+    userWallet,
+    inputToken,
+    inAmount,
+    outputToken,
+    outAmount,
+    expiredAt,
+}:LIMIT_ORDER_PARAMS ): Promise<TransactionSignature> {
+    let txSig = '';
+    try {
+        const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
+        const base = Keypair.generate(); // random unique order id
+        const { tx, orderPubKey } = await limitOrder.createOrder({ // 2.5 fee jup
+            owner: userWallet.publicKey,
+            inAmount: new BN(inAmount), // 1000000 => 1 USDC if inputToken.address is USDC mint
+            outAmount: new BN(outAmount),
+            inputMint: new PublicKey(inputToken),
+            outputMint: new PublicKey(outputToken),
+            base: base.publicKey,
+            expiredAt: expiredAt ? new BN(expiredAt) : null, // new BN(new Date().valueOf() / 1000)
+        });
+        tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+        tx.sign(userWallet, base);
+        txSig = await connection.sendRawTransaction(tx.serialize(), {preflightCommitment: 'processed'})
+        // txSig = await sendAndConfirmTransaction(connection, tx, [wallet, base]);
+        console.log("txSig:: ", txSig);
+        return txSig;
 
-    const txSig = await sendAndConfirmTransaction(connection, tx, [wallet, base]);
-    console.log("txSig:: ",txSig);
+    } catch (e: any) {
+        throw new Error(e.message);
+        console.log(e.message);
+    }
     return txSig;
 }
 
+// urrent price: 000196005
+// target price  '0.001' SOL  /  000186005 = outAmount
 
-export async function setLimitOrder(tokenAddress:String){
-    let amountIn =  0.01 * 10 ** 9;
-    let amountOut = await getTokenPriceFromJupiter(tokenAddress);
-    amountOut = Math.abs(amountOut);
-    console.log("amountOut:: ",Math.abs(amountOut));
-
-    // amountOut = amountOut.WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk.price;
-    
-    amountOut = amountOut * amountIn;
-    console.log("amountOut:: ",(amountOut));
-    try {
-        _setLimitOrder(
-            new PublicKey('So11111111111111111111111111111111111111112'),
-            new BN(amountIn),
-            new PublicKey(tokenAddress),
-            new BN(amountOut)
-        );
-    }catch(e:any){
-        console.log(e.message);
-    }
-}
+// how to use
+// setLimitJupiterOrder(connection,{ 
+//     userWallet: wallet,
+//     inputToken: 'So11111111111111111111111111111111111111112',
+//     inAmount: new BN(100000).toString(), //'0.001',
+//     outputToken: 'WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk',
+//     outAmount: new BN(1.191 * 1e5).toString(), //'1.191', //  '0.001' SOL  / token unit curret price  = outAmount
+//     expiredAt: null,
+// });
 
 
-setLimitOrder('WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk');
+
 
 /**
  * solana transfer --from DDL8apK4Xr3CYa6vxLccNkJAcX2bQdqRS8o51h2sBeTP.json GF7Mi4vZh4pZPCjwVTXHSDCQCAT9s7WMnGHiiqaP2m7s 30000  --allow-unfunded-recipient

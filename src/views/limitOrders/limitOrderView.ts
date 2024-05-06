@@ -10,8 +10,46 @@ export const DEFAULT_PUBLIC_KEY = new PublicKey('1111111111111111111111111111111
 import { logErrorToFile } from "../../../error/logger";
 import { UserPositions } from '../../db';
 import { getTokenDataFromBirdEye } from '../../api/priceFeeds/birdEye';
+import { getTokenPriceFromJupiter } from "../../api/priceFeeds/jupiter";
+import { setLimitJupiterOrder } from '../../service/dex/jupiter/trade/limitOrder';
+import { SOL_ADDRESS } from "../../../config";
+import { getPriorityFeeLabel, waitForConfirmation } from "../../service/util";
+import BigNumber from 'bignumber.js';
 
 
+export async function submit_limitOrder(ctx: any) {
+    const chatId = ctx.chat.id;
+    const userWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex];
+    const amountIn = ctx.session.limitOrder.amount;
+    const isBuySide = ctx.session.limitOrder.side == 'buy';
+    const tokenIn = isBuySide ? SOL_ADDRESS : ctx.session.limitOrder.token;
+    const tokenOut = !isBuySide ? ctx.session.limitOrder.token : SOL_ADDRESS;
+    let amountOut = await calculateLimitOrderAmountOut(amountIn, ctx.session.limitOrder.token, ctx.session.limitOrder.targetPrice);
+    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+
+    setLimitJupiterOrder(connection, {
+        userWallet: userWallet,
+        inputToken: tokenIn,
+        inAmount: amountIn,
+        outputToken: tokenOut,
+        outAmount: amountOut.toString(),
+        expiredAt: null
+    }).then(async (txSig: string) => {
+        let msg = `🟢 <b>Submit ${isBuySide ? 'Buy' : 'Sell'} Limit Order:</b> Processing with ${getPriorityFeeLabel(ctx.session.priorityFees)} priotity fee. <a href="https://solscan.io/tx/${txSig}">View on Solscan</a>. Please wait for confirmation...`
+        await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
+
+        const isConfirmed = await waitForConfirmation(ctx, txSig);
+        isConfirmed ?
+            await ctx.api.sendMessage(chatId, `🟢 <b>Submit ${isBuySide ? 'Buy' : 'Sell'} Limit Order:</b> Order has been successfully submitted.\n` + `Order will ${isBuySide ? 'Buy' : 'Sell'} when price reaches`, { parse_mode: 'HTML' }) :
+            await ctx.api.sendMessage(chatId, `🔴 <b>${isBuySide ? 'Buy' : 'Sell'} Limit Order:</b> Order has been failed.`, { parse_mode: 'HTML' });
+        console.log(txSig)
+    });
+}
+
+async function calculateLimitOrderAmountOut(amount: BigNumber, token: String, targetPrice: String): Promise<number> {
+    let currentPrice = token == SOL_ADDRESS ? await getSolanaDetails() : await getTokenPriceFromJupiter(token);
+    return amount.dividedBy(currentPrice).times(Number(targetPrice)).toNumber();
+}
 
 export async function display_limitOrder_token_details(ctx: any, isRefresh: boolean) {
 
@@ -118,7 +156,7 @@ export async function display_limitOrder_token_details(ctx: any, isRefresh: bool
                     inline_keyboard: [
                         [{ text: ' Set Limit Order ', callback_data: '_' }],
                         [{ text: ' 🔂 Refresh ', callback_data: 'refresh_trade' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
-                        [{ text: ` Side: buy/sell  (${ctx.session.limOrderSide})`, callback_data: 'set_limit_order_side' }],
+                        [{ text: ` Buy `, callback_data: 'set_limit_order_side_buy' }, { text: ` Sell `, callback_data: 'set_limit_order_side' }],
                         [{ text: ` Order Amount  (${ctx.session.limOrderAmount})`, callback_data: 'set_limit_order_amount' }],
                         [{ text: ` Target Price (${ctx.session.limOrderPrice}) `, callback_data: 'set_limit_order_price' }],
                         [{ text: 'Close', callback_data: 'closing' }]

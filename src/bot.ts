@@ -1180,6 +1180,17 @@ bot.on("callback_query", async (ctx: any) => {
       case "limitOrders":{
         ctx.session.latestCommand = "limitOrders"
         await ctx.api.sendMessage(chatId,"Enter token address to set limit order.");
+        break;
+      }
+      case 'set_limit_order_side_buy':{
+        ctx.session.latestCommand = "limitOrders"
+        await ctx.api.sendMessage(chatId,"Enter amount to set buying order.");
+        break;
+      }
+      case 'set_limit_order_side_sell':{
+        ctx.session.latestCommand = "limitOrders"
+        await ctx.api.sendMessage(chatId,"Enter amount to set selling order.");
+        break;
       }
     }
   } catch (e: any) {
