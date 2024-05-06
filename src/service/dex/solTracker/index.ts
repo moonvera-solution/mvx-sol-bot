@@ -84,7 +84,7 @@ export async function swap_solTracker({
     const params = new URLSearchParams({
         from, to, fromAmount: amount.toString(),
         slippage: slippage.toString(),
-        payer: keypair.publicKey.toBase58(),
+        payer: payerKeypair.publicKey.toBase58(),
         forceLegacy: forceLegacy ? "true" : "false",
     });
 
@@ -95,6 +95,7 @@ export async function swap_solTracker({
     // API CALL TO SOL TRACKER SWAP
     return axios.get(`${process.env.SOL_TRACKER_API_URL}/swap`, { params, headers }).then(async(swapInx) => {
         const swapResponse = swapInx.data;
+        console.log("swap response:", swapResponse);
         const serializedTransactionBuffer = Buffer.from(swapResponse.txn, "base64");
         let solAmount: BigNumber = side == 'buy' ? new BigNumber(swapResponse.rate.amountIn) : new BigNumber(swapResponse.rate.amountOut);
         let hasReferral = referralWallet && referralCommision;
@@ -131,14 +132,15 @@ type SOL_TRACKER_SWAP_PARAMS =     {
     forceLegacy?: boolean
 }
 
-// getSwapDetails(
-//     'So11111111111111111111111111111111111111112',
-//     'WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk',
-//     0.001,
-//     0.5
-// ).then((res) => consol`e.log(res)).catch(console.error);
+// one unit of shitcoin for sol price time usdc
+getSwapDetails(
+    'BuoVT17kvPXRM6gt3kS7kvQKER8SHLpUJwnC6CYm7rC5',
+    'So11111111111111111111111111111111111111112',
+    1,
+    0.5
+).then((res) => console.log(res)).catch(console.error);
 
-const keypair = Keypair.fromSecretKey(bs58.decode('gzUcAh399QM7T5uCQfuiVxfeGDJp5mwEpfrQaTbrP8ZwqkAE8dTn3A4F5TP9hjDDn2txix6ebW2Ui8axNBqiPnX'));
+// const keypair = Keypair.fromSecretKey(bs58.decode('gzUcAh399QM7T5uCQfuiVxfeGDJp5mwEpfrQaTbrP8ZwqkAE8dTn3A4F5TP9hjDDn2txix6ebW2Ui8axNBqiPnX'));
 // swap_solTracker(
 //     'sell',
 //     'So11111111111111111111111111111111111111112',

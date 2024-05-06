@@ -726,8 +726,8 @@ export function add_mvx_and_ref_inx_fees(
     solAmount: BigNumber,
     referralCommision: number): TransactionInstruction[] {
 
-    const mvxFee = solAmount.multipliedBy(MVXBOT_FEES);
-    const referralAmmount = mvxFee.multipliedBy(referralCommision);
+    const mvxFee = solAmount.times(MVXBOT_FEES);
+    const referralAmmount = mvxFee.times(referralCommision);
     const mvxFeeAfterRefeeralCut = mvxFee.minus(referralAmmount);
 
     const referralInx = SystemProgram.transfer({
@@ -744,13 +744,17 @@ export function add_mvx_and_ref_inx_fees(
 
     return [referralInx, mvxFeeInx];
 }
+
+
 export function addMvxFeesInx(payerKeypair: Keypair, solAmount: BigNumber): TransactionInstruction[] {
     return [SystemProgram.transfer({
         fromPubkey: payerKeypair.publicKey,
         toPubkey: new PublicKey(WALLET_MVX),
-        lamports: solAmount.times(1e9).toNumber(), // 5_000 || 6_000
+        lamports: new BigNumber(solAmount.times(1e9)).times(MVXBOT_FEES).toNumber(), // 5_000 || 6_000
     })];
 }
+
+
 export function wrapLegacyTx(
     txInxs: TransactionInstruction[],
     payerKeypair: Keypair,
