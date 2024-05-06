@@ -1019,7 +1019,6 @@ bot.on("callback_query", async (ctx: any) => {
 
       case "select_wallet_0":
         const portfolio = await Portfolios.findOne({ chatId });
-        console.log("portfolio", portfolio);
         if (portfolio) {
           portfolio.activeWalletIndex = 0;
           ctx.session.portfolio.activeWalletIndex = portfolio.activeWalletIndex;
@@ -1169,7 +1168,6 @@ bot.on("callback_query", async (ctx: any) => {
       case "cancel_snipe": {
         ctx.session.snipeStatus = false;
         await ctx.api.sendMessage(chatId, "Sniper cancelled.");
-        console.log("cancel_snipe.", ctx.session.snipeStatus);
         break;
       }
       case "set_slippage": {
@@ -1368,7 +1366,6 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "priority_low": {
-        console.log("LOW ");
         ctx.session.priorityFees = PriotitizationFeeLevels.LOW;
         ctx.session.ispriorityCustomFee = false;
         if (ctx.session.latestCommand === "snipe") {
@@ -1387,7 +1384,6 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "priority_medium": {
-        console.log("MED ");
         ctx.session.priorityFees = PriotitizationFeeLevels.MEDIUM;
         ctx.session.ispriorityCustomFee = false;
         if (ctx.session.latestCommand === "snipe") {
@@ -1514,17 +1510,13 @@ process.on("unhandledRejection", (reason, promise) => {
 
 process.on('SIGINT', async () => {
   if (backupSession) {
-    await UserSession.findOneAndUpdate(
-      { chatId: backupSession.chatId },
-      backupSession,
-      { upsert: true }
-    )
-      .then(() => {
-        console.log(":: Stored user session to DB");
-      })
+    await UserSession.findOneAndUpdate({ chatId: backupSession.chatId }, backupSession, { upsert: true })
+      .then(() => { console.log(":: Stored user session to DB") })
       .catch((e: any) => {
-        console.log("error", e);
-      });
+        logErrorToFile("Error on restore session, process exit", e);
+        console.log("error", e)
+      }
+      );
   }
   process.exit();
 });
