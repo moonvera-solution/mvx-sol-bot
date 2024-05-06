@@ -56,6 +56,7 @@ export interface ISESSION_DATA {
   tritonRPC: String,
   tritonToken: String,
   allowedReferral:String, // tg Username
+  pump:{token:String,side:String,amountIn:number,amountOut:number}
 }
 
 export const enum PriotitizationFeeLevels {
@@ -126,7 +127,8 @@ export const DefaultSessionData: ISESSION_DATA = {
   positionIndex: 0,
   allowedReferral:'', // tg Username
   tritonRPC : 'https://moonvera-pit.rpcpool.com/',
-  tritonToken : process.env.TRITON_RPC_TOKEN!
+  tritonToken : process.env.TRITON_RPC_TOKEN!,
+  pump:{token:'',side:'',amountIn:0,amountOut:0}
 }
 
 export type RAYDIUM_POOL_TYPE = {
