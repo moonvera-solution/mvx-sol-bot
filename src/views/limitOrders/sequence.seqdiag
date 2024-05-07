@@ -1,0 +1,18 @@
+title: SUBMIT Limit Orders Bot/user flow
+
+User->Bot:click limit order
+Bot->User:asks for token
+User->Bot:inputs token
+Bot->Network: get token price
+Network->User: bot get price & send buy/sell btns options
+User->Bot:inputs buy or sell btn
+Bot->User:asks for amount
+User->Bot:inputs amount
+Bot->User:asks for target price
+User->Bot:inputs target price
+Bot->Bot: calc target price * amount = amountOut
+Bot->Jupiter:Submits limit order
+Jupiter->Bot: sends txIds of Order submitted
+Bot->Network:waits to confirm txIds
+Network->Bot:confirms txIds
+Bot->User:shows order submitted
