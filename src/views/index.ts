@@ -158,7 +158,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
         },
       };
     } else if (ctx.session.latestCommand == 'sell'
-      || ctx.session.latestCommand == 'sell_X_SOL'
+      || ctx.session.latestCommand == 'sell_X_TOKEN'
     ) {
       ctx.session.currentMode = 'sell';
       messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
