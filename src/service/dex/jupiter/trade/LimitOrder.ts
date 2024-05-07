@@ -13,21 +13,7 @@ const connection = new Connection(`${process.env.TRITON_RPC_URL!}${process.env.T
 const MVX_JUP_REFERRAL = "HH2UqSLMJZ9VP9jnneixYKe3oW8873S9MLUuMF3xvjLH";
 const wallet = Keypair.fromSecretKey(bs58.decode(process.env.JUP_REF_ACCOUNT_AUTHORITY_KEY!));
 
-/**
- * Fetch latest fair price or current price (CP)
- * * Give user buttons to 
- * 
- * DONE:
- * 0.- user clicks limit order button
- * 1.- user paste token
- * 2.- bot show current price and details
- * 
- * 4.- 
- * 
- * * * set sell order at multiple % up of CP
- * * * set buy order at multiple % down of CP
- * * * set order expiration time 1hr, 2hr, Never
- */
+
 type LIMIT_ORDER_PARAMS = {
     userWallet: Keypair,
     inputToken: string,
