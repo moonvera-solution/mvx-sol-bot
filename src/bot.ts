@@ -1,28 +1,63 @@
-import {createUserPortfolio,createNewWallet,handleGetPrivateKey,checkWalletsLength,confirmResetWalletAgain,resetWallet,} from "./service/portfolio/wallets";
+import {
+  createUserPortfolio,
+  createNewWallet,
+  handleGetPrivateKey,
+  checkWalletsLength,
+  confirmResetWalletAgain,
+  resetWallet,
+} from "./service/portfolio/wallets";
 import { handle_radyum_swap } from "./service/portfolio/strategies/swaps";
-import {Bot,Context,GrammyError,HttpError,session,SessionFlavor,webhookCallback} from "grammy";
+import {
+  Bot,
+  Context,
+  GrammyError,
+  HttpError,
+  session,
+  SessionFlavor,
+  webhookCallback,
+} from "grammy";
 import { importWallet, getPortfolio } from "./service/portfolio/wallets";
-import {ISESSION_DATA,DefaultSessionData,PORTFOLIO_TYPE,DefaultPortfolioData,} from "./service/util/types";
+import {
+  ISESSION_DATA,
+  DefaultSessionData,
+  PORTFOLIO_TYPE,
+  DefaultPortfolioData,
+} from "./service/util/types";
 import { Keypair, PublicKey, Connection } from "@solana/web3.js";
 import { _initDbConnection } from "./db/mongo/crud";
 import { handleSettings } from "./service/settings";
 import { getSolanaDetails } from "./api";
 import { setSnipe, snipperON } from "./service/portfolio/strategies/snipper";
-import { display_token_details, display_snipe_options, handleCloseKeyboard, display_after_Snipe_Buy } from "./views";
+import {
+  display_token_details,
+  display_snipe_options,
+  handleCloseKeyboard,
+  display_after_Snipe_Buy,
+} from "./views";
 import { getSolBalance, sendSol } from "./service/util";
 import { handleRefreshStart } from "./views/refreshData/refreshStart";
-import { handleRefreshWallet,refreshAllWallets } from "./views/wallets/walletsView";
-import { display_limitOrder_token_details } from "./views/limitOrders/limitOrderView";
+import {
+  handleRefreshWallet,
+  refreshAllWallets,
+} from "./views/wallets/walletsView";
+import {
+  display_limitOrder_token_details,
+  submit_limitOrder,
+} from "./views/limitOrders/limitOrderView";
 import { handleWallets } from "./views/util/dbWallet";
 import { getRayPoolKeys } from "./service/dex/raydium/raydium-utils/formatAmmKeysById";
 import { sendHelpMessage } from "./views/util/helpMessage";
 import { display_rugCheck } from "./views/rugCheck/rugCheck";
 import { _generateReferralLink, _getReferralData } from "../src/db/mongo/crud";
 import { Portfolios, Referrals, AllowedReferrals } from "./db/mongo/schema";
-import { display_spl_positions, display_single_spl_positions, display_refresh_single_spl_positions } from "./views/portfolio/portfolioView";
+import {
+  display_spl_positions,
+  display_single_spl_positions,
+  display_refresh_single_spl_positions,
+} from "./views/portfolio/portfolioView";
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { logErrorToFile } from "../error/logger";
-const express = require('express');
+const express = require("express");
 const app = express();
 
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
@@ -41,8 +76,10 @@ bot.use(async (ctx, next) => {
   const messageTimestamp = ctx.message?.date;
   const currentTimestamp = Math.floor(Date.now() / 1000);
   const threshold = 20;
-  if (messageTimestamp && (currentTimestamp - messageTimestamp) > threshold) {
-    console.error("This message was sent while I was offline and is now too old. Please resend your message if it's still relevant.");
+  if (messageTimestamp && currentTimestamp - messageTimestamp > threshold) {
+    console.error(
+      "This message was sent while I was offline and is now too old. Please resend your message if it's still relevant."
+    );
   } else {
     return next();
   }
@@ -55,27 +92,26 @@ bot.use(async (ctx, next) => {
 const botToken = process.env.TELEGRAM_BOT_TOKEN!;
 const port = process.env.PORT || 80;
 
-
 if (isProd) {
-  const webhookUrl = 'https://drib.ngrok.app';
+  const webhookUrl = "https://drib.ngrok.app";
   const url = `${webhookUrl}/${botToken}`;
 
   // Create the HTTP server and define request handling logic
   app.use(express.json()); // for parsing application/json
 
-  app.post(`/${botToken}`, webhookCallback(bot, 'express'));
-  app.use(`/${botToken}`, webhookCallback(bot, 'express'));
+  app.post(`/${botToken}`, webhookCallback(bot, "express"));
+  app.use(`/${botToken}`, webhookCallback(bot, "express"));
 
-  app.get('/', (req: any, res: any) => {
-    res.send('Hello from ngrok server!');
+  app.get("/", (req: any, res: any) => {
+    res.send("Hello from ngrok server!");
   });
 
   app.listen(port, async () => {
     console.log(`Server is running on port ${port}`);
-    await bot.api.setWebhook(url)
+    await bot.api
+      .setWebhook(url)
       .then(() => console.log("Webhook set successfully"))
-      .catch(err => console.error("Error setting webhook:", err)
-      );
+      .catch((err) => console.error("Error setting webhook:", err));
   });
 } else {
   bot.start();
@@ -158,13 +194,14 @@ bot.command("start", async (ctx: any) => {
     }
     const publicKeyString: PublicKey | String = userWallet
       ? userWallet.publicKey
-      : ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].publicKey;
+      : ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex]
+          .publicKey;
 
     // Retrieve the current SOL details
     let solPriceMessage = "";
     const [balanceInSOL, details] = await Promise.all([
       getSolBalance(publicKeyString, connection),
-      getSolanaDetails()
+      getSolanaDetails(),
     ]);
 
     // Fetch SOL balance
@@ -228,11 +265,19 @@ bot.command("start", async (ctx: any) => {
     ctx.session.portfolio = await getPortfolio(chatId);
     // ctx.session.latestCommand = "rug_check";
   } catch (error: any) {
-
     logErrorToFile("bot on start cmd", error);
 
-    if (error instanceof GrammyError || error instanceof HttpError || error instanceof Error || error instanceof TypeError || error instanceof RangeError) {
-      console.error("Callback query failed due to timeout or invalid ID.", error);
+    if (
+      error instanceof GrammyError ||
+      error instanceof HttpError ||
+      error instanceof Error ||
+      error instanceof TypeError ||
+      error instanceof RangeError
+    ) {
+      console.error(
+        "Callback query failed due to timeout or invalid ID.",
+        error
+      );
     } else {
       console.error(error.message);
     }
@@ -242,14 +287,12 @@ bot.command("start", async (ctx: any) => {
 bot.command("help", async (ctx) => {
   await sendHelpMessage(ctx);
   ctx.session.latestCommand = "rug_check";
-
 });
 
 bot.command("positions", async (ctx) => {
   try {
     // await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
     await display_spl_positions(ctx, false);
-
   } catch (error: any) {
     logErrorToFile("bot on positions cmd", error);
   }
@@ -347,10 +390,20 @@ bot.on("message", async (ctx) => {
     const latestCommand = ctx.session.latestCommand;
     const msgTxt = ctx.update.message.text;
     console.log("msgTxt", msgTxt);
-    console.log('typeof msgTxt', typeof msgTxt);
+    console.log("typeof msgTxt", typeof msgTxt);
     console.log("latestCommand", latestCommand);
     if (msgTxt) {
-      if ((!isNaN(parseFloat(msgTxt!)) && ctx.session.latestCommand !== 'buy' && ctx.session.latestCommand !== 'sell' && ctx.session.latestCommand !== 'snipe' && ctx.session.latestCommand !== "send_sol" && ctx.session.latestCommand !== 'ask_for_sol_amount' && ctx.session.latestCommand === 'display_after_Snipe_Buy') || ctx.session.latestCommand === 'start' || ctx.session.latestCommand === 'display_single_spl_positions') {
+      if (
+        (!isNaN(parseFloat(msgTxt!)) &&
+          ctx.session.latestCommand !== "buy" &&
+          ctx.session.latestCommand !== "sell" &&
+          ctx.session.latestCommand !== "snipe" &&
+          ctx.session.latestCommand !== "send_sol" &&
+          ctx.session.latestCommand !== "ask_for_sol_amount" &&
+          ctx.session.latestCommand === "display_after_Snipe_Buy") ||
+        ctx.session.latestCommand === "start" ||
+        ctx.session.latestCommand === "display_single_spl_positions"
+      ) {
         if (PublicKey.isOnCurve(msgTxt!)) {
           const isTOken = await checkAccountType(ctx, msgTxt);
           if (!isTOken) {
@@ -369,7 +422,6 @@ bot.on("message", async (ctx) => {
       }
     }
     switch (latestCommand) {
-
       case "set_slippage": {
         ctx.session.latestSlippage = Number(msgTxt);
         if (ctx.session.currentMode === "buy") {
@@ -415,9 +467,16 @@ bot.on("message", async (ctx) => {
       }
       case "buy_X_SOL":
         if (msgTxt) {
-          const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
+          const amt = msgTxt.includes(".")
+            ? Number.parseFloat(msgTxt)
+            : Number.parseInt(msgTxt);
           if (!isNaN(amt)) {
-            await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "buy", Number(msgTxt));
+            await handle_radyum_swap(
+              ctx,
+              ctx.session.activeTradingPool.baseMint,
+              "buy",
+              Number(msgTxt)
+            );
             break;
           } else {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
@@ -425,9 +484,16 @@ bot.on("message", async (ctx) => {
         }
       case "sell_X_TOKEN":
         if (msgTxt) {
-          const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
+          const amt = msgTxt.includes(".")
+            ? Number.parseFloat(msgTxt)
+            : Number.parseInt(msgTxt);
           if (!isNaN(amt)) {
-            await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", Number(msgTxt));
+            await handle_radyum_swap(
+              ctx,
+              ctx.session.activeTradingPool.baseMint,
+              "sell",
+              Number(msgTxt)
+            );
             break;
           } else {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
@@ -436,7 +502,9 @@ bot.on("message", async (ctx) => {
         break;
       case "snipe_X_SOL": {
         if (msgTxt) {
-          const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
+          const amt = msgTxt.includes(".")
+            ? Number.parseFloat(msgTxt)
+            : Number.parseInt(msgTxt);
           if (!isNaN(amt)) {
             ctx.session.latestCommand = "snipe";
             if (ctx.session.snipperLookup) {
@@ -527,7 +595,7 @@ bot.on("message", async (ctx) => {
             let poolInfo = await getRayPoolKeys(ctx, msgTxt);
 
             if (!poolInfo) {
-              ctx.session.latestCommand = 'snipe';
+              ctx.session.latestCommand = "snipe";
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
               display_snipe_options(ctx, false, msgTxt);
@@ -568,14 +636,17 @@ bot.on("message", async (ctx) => {
                 ctx.session.activeTradingPool.baseMint
               );
 
-              display_snipe_options(ctx, false, ctx.session.snipeToken.toBase58());
+              display_snipe_options(
+                ctx,
+                false,
+                ctx.session.snipeToken.toBase58()
+              );
             }
           } else if (msgTxt && !PublicKey.isOnCurve(msgTxt)) {
             ctx.api.sendMessage(chatId, "Invalid address");
           }
         } catch (error: any) {
           console.error("Error in 'snipe' command:", error.message);
-
         }
         break;
       }
@@ -619,17 +690,47 @@ bot.on("message", async (ctx) => {
         }
         break;
       }
-      case "limitOrders":{
-        try{
+      case "limitOrders": {
+        try {
+          ctx.session.limitOrders.token = (ctx.message.text || "").toString();
+          console.log("PublicKey : ", PublicKey);
           if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
             const isTOken = await checkAccountType(ctx, msgTxt);
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
-            ctx.session.latestCommand = "limitOrders"
+            ctx.session.latestCommand = "limitOrders";
             await display_limitOrder_token_details(ctx, false);
           }
-        }catch(error:any){
+        } catch (error: any) {
           console.error("ERROR on bot.on txt msg", error, error.message);
+        }
+      }
 
+      case "set_limit_order_side_buy": {
+        try {
+          ctx.session.limitOrders.amount = (ctx.message.text || "").toString();
+          ctx.session.latestCommand === "set_limit_order_side_buy" &&
+            (await ctx.api.sendMessage(chatId, "enter target value :"));
+
+          ctx.session.latestCommand = "calculate_limit_order_price";
+          break;
+        } catch (error: any) {
+          console.error("ERROR on bot.on txt msg", error, error.message);
+        }
+      }
+
+      case "calculate_limit_order_price": {
+        try {
+          ctx.session.limitOrders.targetPrice = (
+            ctx.message.text || ""
+          ).toString();
+          ctx.session.limitOrders.side = "buy";
+          console.log(ctx.session.limitOrders);
+          if (ctx.session.latestCommand === "calculate_limit_order_price") {
+            await submit_limitOrder(ctx);
+          }
+          break;
+        } catch (error: any) {
+          console.error("ERROR on bot.on txt msg", error, error.message);
         }
       }
     }
@@ -684,8 +785,9 @@ bot.on("callback_query", async (ctx: any) => {
       const newPositionIndex = parseInt(parts[2]); // New position index
 
       ctx.session.positionIndex = newPositionIndex;
-      console.log('positionIndex', ctx.session.positionIndex)
-      ctx.session.activeTradingPool = ctx.session.positionPool[ctx.session.positionIndex];
+      console.log("positionIndex", ctx.session.positionIndex);
+      ctx.session.activeTradingPool =
+        ctx.session.positionPool[ctx.session.positionIndex];
       await display_refresh_single_spl_positions(ctx);
     }
 
@@ -756,7 +858,7 @@ bot.on("callback_query", async (ctx: any) => {
         await display_spl_positions(ctx, true);
         break;
       case "refrech_rug_check":
-        let isRefresh = true
+        let isRefresh = true;
         await display_rugCheck(ctx, isRefresh);
         break;
       case "select_wallet_0":
@@ -765,7 +867,7 @@ bot.on("callback_query", async (ctx: any) => {
         if (portfolio) {
           portfolio.activeWalletIndex = 0;
           ctx.session.activeWalletIndex = portfolio.activeWalletIndex;
-          await portfolio.save();  // Save the updated document to MongoDB
+          await portfolio.save(); // Save the updated document to MongoDB
           await handleSettings(ctx);
           await refreshAllWallets(ctx);
         } else {
@@ -781,7 +883,7 @@ bot.on("callback_query", async (ctx: any) => {
           portfolio1.activeWalletIndex = 1;
           ctx.session.activeWalletIndex = portfolio1.activeWalletIndex;
 
-          await portfolio1.save();  // Save the updated document to MongoDB
+          await portfolio1.save(); // Save the updated document to MongoDB
           await handleSettings(ctx);
           await refreshAllWallets(ctx);
         } else {
@@ -897,7 +999,7 @@ bot.on("callback_query", async (ctx: any) => {
           ctx.session.generatorWallet = referralRecord.generatorWallet;
           // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
         }
-        if (ctx.session.latestCommand === 'rug_check') {
+        if (ctx.session.latestCommand === "rug_check") {
           ctx.session.latestCommand = "buy";
           await display_token_details(ctx, false);
         } else {
@@ -911,13 +1013,15 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "snipe": {
         ctx.session.snipeStatus = true;
-        const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+        const referralRecord = await Referrals.findOne({
+          referredUsers: chatId,
+        });
         if (referralRecord) {
           ctx.session.referralCommision = referralRecord.commissionPercentage;
           ctx.session.generatorWallet = referralRecord.generatorWallet;
         }
 
-        if (ctx.session.latestCommand === 'rug_check') {
+        if (ctx.session.latestCommand === "rug_check") {
           ctx.session.latestCommand = "snipe";
           await display_snipe_options(ctx, false, ctx.session.rugCheckToken);
         } else {
@@ -1116,33 +1220,36 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "display_single_spl_positions": {
-        ctx.session.latestCommand = 'display_single_spl_positions'
+        ctx.session.latestCommand = "display_single_spl_positions";
         await display_single_spl_positions(ctx);
         break;
       }
       case "priority_low": {
-        console.log("LOW ")
+        console.log("LOW ");
         ctx.session.priorityFees = PriotitizationFeeLevels.LOW;
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);
-        } else if (ctx.session.latestCommand === 'display_single_spl_positions') {
+        } else if (
+          ctx.session.latestCommand === "display_single_spl_positions"
+        ) {
           await display_refresh_single_spl_positions(ctx);
-        } else if (ctx.session.latestCommand === 'display_after_Snipe_Buy') {
+        } else if (ctx.session.latestCommand === "display_after_Snipe_Buy") {
           await display_after_Snipe_Buy(ctx, true);
-        }
-        else {
+        } else {
           await display_token_details(ctx, true);
         }
         break;
       }
       case "priority_medium": {
-        console.log("MED ")
+        console.log("MED ");
         ctx.session.priorityFees = PriotitizationFeeLevels.MEDIUM;
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);
-        } else if (ctx.session.latestCommand === 'display_single_spl_positions') {
+        } else if (
+          ctx.session.latestCommand === "display_single_spl_positions"
+        ) {
           await display_refresh_single_spl_positions(ctx);
-        } else if (ctx.session.latestCommand === 'display_after_Snipe_Buy') {
+        } else if (ctx.session.latestCommand === "display_after_Snipe_Buy") {
           await display_after_Snipe_Buy(ctx, true);
         } else {
           await display_token_details(ctx, true);
@@ -1150,13 +1257,15 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "priority_high": {
-        console.log("HIGH ")
+        console.log("HIGH ");
         ctx.session.priorityFees = PriotitizationFeeLevels.HIGH;
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);
-        } else if (ctx.session.latestCommand === 'display_single_spl_positions') {
+        } else if (
+          ctx.session.latestCommand === "display_single_spl_positions"
+        ) {
           await display_refresh_single_spl_positions(ctx);
-        } else if (ctx.session.latestCommand === 'display_after_Snipe_Buy') {
+        } else if (ctx.session.latestCommand === "display_after_Snipe_Buy") {
           await display_after_Snipe_Buy(ctx, true);
         } else {
           await display_token_details(ctx, true);
@@ -1164,42 +1273,53 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "priority_max": {
-        console.log("MAX")
+        console.log("MAX");
         ctx.session.priorityFees = PriotitizationFeeLevels.MAX;
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);
-        } else if (ctx.session.latestCommand === 'display_single_spl_positions') {
+        } else if (
+          ctx.session.latestCommand === "display_single_spl_positions"
+        ) {
           await display_refresh_single_spl_positions(ctx);
-        } else if (ctx.session.latestCommand === 'display_after_Snipe_Buy') {
+        } else if (ctx.session.latestCommand === "display_after_Snipe_Buy") {
           await display_after_Snipe_Buy(ctx, true);
         } else {
           await display_token_details(ctx, true);
         }
         break;
       }
-      case "limitOrders":{
-        ctx.session.latestCommand = "limitOrders"
-        await ctx.api.sendMessage(chatId,"Enter token address to set limit order.");
+      case "limitOrders": {
+        ctx.session.latestCommand = "limitOrders";
+        await ctx.api.sendMessage(
+          chatId,
+          "Enter token address to set limit order."
+        );
         break;
       }
-      case 'set_limit_order_side_buy':{
-        ctx.session.latestCommand = "limitOrders"
-        await ctx.api.sendMessage(chatId,"Enter amount to set buying order.");
+      case "set_limit_order_side_buy": {
+        ctx.session.latestCommand = "limitOrders";
+        await ctx.api.sendMessage(chatId, "Enter amount to set buying order.");
+        ctx.session.latestCommand = "set_limit_order_side_buy";
         break;
       }
-      case 'set_limit_order_side_sell':{
-        ctx.session.latestCommand = "limitOrders"
-        await ctx.api.sendMessage(chatId,"Enter amount to set selling order.");
+      case "set_limit_order_side_sell": {
+        ctx.session.latestCommand = "limitOrders";
+        await ctx.api.sendMessage(chatId, "Enter amount to set selling order.");
         break;
       }
     }
   } catch (e: any) {
     logErrorToFile("callback_query", e);
-    if (e instanceof GrammyError || e instanceof HttpError || e instanceof Error || e instanceof TypeError || e instanceof RangeError) {
+    if (
+      e instanceof GrammyError ||
+      e instanceof HttpError ||
+      e instanceof Error ||
+      e instanceof TypeError ||
+      e instanceof RangeError
+    ) {
       console.error("Callback query failed due to timeout or invalid ID.");
       console.log("Error in callback_query:", e);
-    }
-    else {
+    } else {
       console.error(e);
     }
   }
@@ -1243,11 +1363,10 @@ async function checkAccountType(ctx: any, address: any) {
     return false;
   }
 }
-process.on('uncaughtException', (err, origin) => {
-  console.error(`Caught exception: ${err}\n` +
-    `Exception origin: ${origin}`);
+process.on("uncaughtException", (err, origin) => {
+  console.error(`Caught exception: ${err}\n` + `Exception origin: ${origin}`);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
