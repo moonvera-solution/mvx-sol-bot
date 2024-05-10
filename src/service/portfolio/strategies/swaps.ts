@@ -12,6 +12,7 @@ import axios from 'axios';
 import bs58 from 'bs58';
 import { Referrals, UserPositions } from '../../../db/mongo/schema';
 import BN from 'bn.js';
+import { display_single_spl_positions } from '../../../views/portfolioView';
 
 export async function handle_radyum_swap(
   ctx: any,
@@ -185,16 +186,32 @@ export async function handle_radyum_swap(
               newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(swapAmountIn) : oldPositionToken;
             }
 
-            await saveUserPosition(
-              ctx,
-              userWallet.publicKey.toString(), {
-              baseMint: poolKeys.baseMint,
-              name: userTokenBalanceAndDetails.userTokenName,
-              symbol: _symbol,
-              tradeType: `ray_swap_${side}`,
-              amountIn: newAmountIn,
-              amountOut: newAmountOut,
-            });
+
+            if (
+              newAmountIn == 0
+              || newAmountOut == 0
+              || newAmountOut < 0
+              || newAmountIn < 0
+              // || userBalance.toNumber() == 0
+            ) {
+              await UserPositions.updateOne(
+                { walletId: userWallet.publicKey.toString() },
+                { $pull: { positions: { baseMint: poolKeys.baseMint } } }
+              );
+              ctx.session.positionIndex = 0;
+              await display_single_spl_positions(ctx);
+            } else {
+              await saveUserPosition(
+                ctx,
+                userWallet.publicKey.toString(), {
+                baseMint: poolKeys.baseMint,
+                name: userTokenBalanceAndDetails.userTokenName,
+                symbol: _symbol,
+                tradeType: `ray_swap_${side}`,
+                amountIn: newAmountIn,
+                amountOut: newAmountOut,
+              });
+            }
           }
           await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
           if (side == 'buy') {
@@ -206,6 +223,8 @@ export async function handle_radyum_swap(
             `Transaction could not be confirmed within the ${getPriorityFeeLabel(ctx.session.priorityFees).toUpperCase()} priority fee. \n`
           );
         }
+
+        //
 
       }).catch(async (error: any) => {
         console.log('afterswap. ', error)
