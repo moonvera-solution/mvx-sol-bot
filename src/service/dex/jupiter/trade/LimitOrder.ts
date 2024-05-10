@@ -67,12 +67,12 @@ export async function setLimitJupiterOrder(
     const { tx, orderPubKey } = await limitOrder.createOrder({
       // 2.5 fee jup
       owner: userWallet.publicKey,
-      inAmount: new BN(inAmount), // 1000000 => 1 USDC if inputToken.address is USDC mint
-      outAmount: floatStringToBigNumber(outAmount),
+      inAmount: new BigNumber(inAmount), // 1000000 => 1 USDC if inputToken.address is USDC mint
+      outAmount: new BigNumber("100"),
       inputMint: new PublicKey(inputToken),
       outputMint: new PublicKey(outputToken),
       base: base.publicKey,
-      expiredAt: expiredAt ? new BN(expiredAt) : null, // new BN(new Date().valueOf() / 1000)
+      expiredAt: expiredAt ? new BigNumber(expiredAt) : null, // new BN(new Date().valueOf() / 1000)
     });
     tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
     tx.sign(userWallet, base);

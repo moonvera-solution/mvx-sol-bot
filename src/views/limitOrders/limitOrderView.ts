@@ -29,7 +29,7 @@ export async function submit_limitOrder(ctx: any) {
   const amountIn = ctx.session.limitOrders.amount;
   const isBuySide = ctx.session.limitOrders.side == "buy";
   const tokenIn = isBuySide ? SOL_ADDRESS : ctx.session.limitOrders.token;
-  const tokenOut = !isBuySide ? ctx.session.limitOrders.token : SOL_ADDRESS;
+  const tokenOut = isBuySide ? ctx.session.limitOrders.token : SOL_ADDRESS;
   let amountOut = await calculateLimitOrderAmountOut(
     amountIn,
     ctx.session.limitOrders.token,
@@ -44,7 +44,7 @@ export async function submit_limitOrder(ctx: any) {
     inputToken: tokenIn,
     inAmount: amountIn,
     outputToken: tokenOut,
-    outAmount: amountOut.toString(),
+    outAmount: amountOut.toString() || "100",
     expiredAt: null,
   }).then(async (txSig: string) => {
     let msg = `🟢 <b>Submit ${

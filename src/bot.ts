@@ -693,7 +693,7 @@ bot.on("message", async (ctx) => {
       case "limitOrders": {
         try {
           ctx.session.limitOrders.token = (ctx.message.text || "").toString();
-          console.log("PublicKey : ", PublicKey);
+          // console.log("PublicKey : ", PublicKey);
           if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
             const isTOken = await checkAccountType(ctx, msgTxt);
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
