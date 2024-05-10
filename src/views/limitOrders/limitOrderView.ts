@@ -24,20 +24,13 @@ import BigNumber from "bignumber.js";
 export async function submit_limitOrder(ctx: any) {
   console.log("logged in the function : ", ctx.session.limitOrders);
   const chatId = ctx.chat.id;
-  const userWallet =
-    ctx.session.portfolio.wallets[ctx.session.activeWalletIndex];
+  const userWallet = ctx.session.portfolio.wallets[ctx.session.activeWalletIndex];
   const amountIn = ctx.session.limitOrders.amount;
   const isBuySide = ctx.session.limitOrders.side == "buy";
   const tokenIn = isBuySide ? SOL_ADDRESS : ctx.session.limitOrders.token;
   const tokenOut = isBuySide ? ctx.session.limitOrders.token : SOL_ADDRESS;
-  let amountOut = await calculateLimitOrderAmountOut(
-    amountIn,
-    ctx.session.limitOrders.token,
-    ctx.session.limitOrders.targetPrice
-  );
-  const connection = new Connection(
-    `${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`
-  );
+  let amountOut = await calculateLimitOrderAmountOut(amountIn,ctx.session.limitOrders.token,ctx.session.limitOrders.targetPrice);
+  const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
 
   setLimitJupiterOrder(connection, {
     userWallet: userWallet,
@@ -47,56 +40,23 @@ export async function submit_limitOrder(ctx: any) {
     outAmount: amountOut.toString() || "100",
     expiredAt: null,
   }).then(async (txSig: string) => {
-    let msg = `🟢 <b>Submit ${
-      isBuySide ? "Buy" : "Sell"
-    } Limit Order:</b> Processing with ${getPriorityFeeLabel(
-      ctx.session.priorityFees
-    )} priotity fee. <a href="https://solscan.io/tx/${txSig}">View on Solscan</a>. Please wait for confirmation...`;
-    await ctx.api.sendMessage(chatId, msg, {
-      parse_mode: "HTML",
-      disable_web_page_preview: true,
-    });
+    let msg = `🟢 <b>Submit ${isBuySide ? "Buy" : "Sell"} Limit Order:</b> Processing with ${getPriorityFeeLabel(ctx.session.priorityFees)} priotity fee. <a href="https://solscan.io/tx/${txSig}">View on Solscan</a>. Please wait for confirmation...`;
+    await ctx.api.sendMessage(chatId, msg, {parse_mode: "HTML",disable_web_page_preview: true,});
 
     const isConfirmed = await waitForConfirmation(ctx, txSig);
     isConfirmed
-      ? await ctx.api.sendMessage(
-          chatId,
-          `🟢 <b>Submit ${
-            isBuySide ? "Buy" : "Sell"
-          } Limit Order:</b> Order has been successfully submitted.\n` +
-            `Order will ${isBuySide ? "Buy" : "Sell"} when price reaches`,
-          { parse_mode: "HTML" }
-        )
-      : await ctx.api.sendMessage(
-          chatId,
-          `🔴 <b>${
-            isBuySide ? "Buy" : "Sell"
-          } Limit Order:</b> Order has been failed.`,
-          { parse_mode: "HTML" }
-        );
+      ? await ctx.api.sendMessage(chatId,`🟢 <b>Submit ${isBuySide ? "Buy" : "Sell"} Limit Order:</b> Order has been successfully submitted.\n` +`Order will ${isBuySide ? "Buy" : "Sell"} when price reaches`,{ parse_mode: "HTML" })
+      : await ctx.api.sendMessage(chatId,`🔴 <b>${isBuySide ? "Buy" : "Sell"} Limit Order:</b> Order has been failed.`,{ parse_mode: "HTML" });
     console.log(txSig);
   });
 }
 
-async function calculateLimitOrderAmountOut(
-  amount: BigNumber,
-  token: String,
-  targetPrice: String
-): Promise<number> {
-  let currentPrice =
-    token == SOL_ADDRESS
-      ? await getSolanaDetails()
-      : await getTokenPriceFromJupiter(token);
-  return new BigNumber(amount)
-    .dividedBy(currentPrice)
-    .times(Number(targetPrice))
-    .toNumber();
+async function calculateLimitOrderAmountOut(amount: BigNumber,token: String,targetPrice: String): Promise<number> {
+  let currentPrice =token == SOL_ADDRESS? await getSolanaDetails(): await getTokenPriceFromJupiter(token);
+  return new BigNumber(amount).dividedBy(currentPrice).times(Number(targetPrice)).toNumber();
 }
 
-export async function display_limitOrder_token_details(
-  ctx: any,
-  isRefresh: boolean
-) {
+export async function display_limitOrder_token_details(ctx: any,isRefresh: boolean) {
   const priority_Level = ctx.session.priorityFees;
   const connection = new Connection(
     `${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`

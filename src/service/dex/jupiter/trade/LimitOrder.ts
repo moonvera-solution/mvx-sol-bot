@@ -1,4 +1,4 @@
-import { LimitOrderProvider } from "@jup-ag/limit-order-sdk";
+import { LimitOrderProvider, CreateOrderParams } from "@jup-ag/limit-order-sdk";
 import {
   Keypair,
   Connection,
@@ -11,26 +11,25 @@ import { BN } from "@coral-xyz/anchor";
 import bs58 from "bs58";
 import { getTokenDataFromBirdEye } from "../../../../api/priceFeeds/birdEye";
 import dotenv from "dotenv";
-import { Transaction } from "jito-ts/dist/gen/geyser/confirmed_block";
-import BigNumber from "bignumber.js";
+
 dotenv.config();
 
 // The Jupiter Limit Order's project account for the Referral Program is
 // 45ruCyfdRkWpRNGEqWzjCiXRHkZs8WXCLQ67Pnpye7Hp referral fees are withdrawable here.
 
-const connection = new Connection(
-  `${process.env.TRITON_RPC_URL!}${process.env.TRITON_RPC_TOKEN!}`
-);
+// const connection = new Connection(
+//   `${process.env.TRITON_RPC_URL!}${process.env.TRITON_RPC_TOKEN!}`
+// );
 const MVX_JUP_REFERRAL = "HH2UqSLMJZ9VP9jnneixYKe3oW8873S9MLUuMF3xvjLH";
-const wallet = Keypair.fromSecretKey(
-  bs58.decode(process.env.JUP_REF_ACCOUNT_AUTHORITY_KEY!)
-);
+// const wallet = Keypair.fromSecretKey(
+//   bs58.decode(process.env.JUP_REF_ACCOUNT_AUTHORITY_KEY!)
+// );
 
 function floatStringToBigNumber(floatStr: string) {
   const parts = floatStr.split(".");
-  const integerPart = new BigNumber(parts[0]);
-  const fractionalPart = new BigNumber(parts[1] || 0);
-  const power = new BigNumber(10).exponentiatedBy(
+  const integerPart = new BN(parts[0]);
+  const fractionalPart = new BN(parts[1] || 0);
+  const power = new BN(10).exponentiatedBy(
     parts[1] ? parts[1].length : 0
   );
 
@@ -46,44 +45,41 @@ type LIMIT_ORDER_PARAMS = {
   expiredAt: string | null;
 };
 
+
 export async function setLimitJupiterOrder(
-  connection: Connection,
-  {
+  connection: Connection, {
     userWallet,
     inputToken,
     inAmount,
     outputToken,
     outAmount,
     expiredAt,
-  }: LIMIT_ORDER_PARAMS
-): Promise<TransactionSignature> {
+  }: LIMIT_ORDER_PARAMS): Promise<TransactionSignature> {
   let txSig = "";
+
   try {
-    const limitOrder = new LimitOrderProvider(
-      connection,
-      new PublicKey(MVX_JUP_REFERRAL)
-    );
+    const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
     const base = Keypair.generate(); // random unique order id
+
     const { tx, orderPubKey } = await limitOrder.createOrder({
-      // 2.5 fee jup
-      owner: userWallet.publicKey,
-      inAmount: new BigNumber(inAmount), // 1000000 => 1 USDC if inputToken.address is USDC mint
-      outAmount: new BigNumber("100"),
+      owner: new PublicKey(userWallet.publicKey),
       inputMint: new PublicKey(inputToken),
       outputMint: new PublicKey(outputToken),
+      outAmount: new BN(Number(outAmount) * 1e9),
+      inAmount: new BN(Number(inAmount) * 1e9),
       base: base.publicKey,
-      expiredAt: expiredAt ? new BigNumber(expiredAt) : null, // new BN(new Date().valueOf() / 1000)
+      expiredAt: null
     });
-    tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-    tx.sign(userWallet, base);
-    txSig = await connection.sendRawTransaction(tx.serialize(), {
-      preflightCommitment: "processed",
-    });
+
+    // tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+    // tx.sign(userWallet, base);
+    console.log("txSig:---: ", tx);
+
+    // txSig = await connection.srendRawTransaction(tx.serialize(), {preflightCommitment: "processed",});
     // txSig = await sendAndConfirmTransaction(connection, tx, [wallet, base]);
-    console.log("txSig:: ", txSig);
     return txSig;
   } catch (e: any) {
-    console.log(e.message);
+    console.log(e);
     throw new Error(e.message);
   }
   return txSig;
@@ -105,3 +101,8 @@ export async function setLimitJupiterOrder(
 /**
  * solana transfer --from DDL8apK4Xr3CYa6vxLccNkJAcX2bQdqRS8o51h2sBeTP.json GF7Mi4vZh4pZPCjwVTXHSDCQCAT9s7WMnGHiiqaP2m7s 30000  --allow-unfunded-recipient
  */
+
+(()=>{
+ const f = new BN(0.001 * 1e9);
+ console.log(f.toString());
+})()
