@@ -4,27 +4,34 @@ import { Connection } from '@solana/web3.js';
 
 export async function handleRefreshStart(ctx: any) {
     const chatId = ctx.chat.id;
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
 
     // Fetch the latest SOL price
-    const details = await getSolanaDetails();
+
     let solPriceMessage = '';
     let userWallet: any;
+ 
     try {
-    if (details) {
+        if(ctx.session.portfolio){
+            const selectedWallet = ctx.session.portfolio.activeWalletIndex;
+            userWallet = ctx.session.portfolio.wallets[selectedWallet];
+        }
+        // console.log('userWallet', userWallet)
+        const publicKeyString: any = userWallet.publicKey; // The user's public key
+        // Fetch SOL balance
+        const [balanceInSOL, details] = await Promise.all([
+            getSolBalance(publicKeyString, connection),
+            getSolanaDetails()
+        ]);    
+        if (details) {
         const solData = details.toFixed(2);
         solPriceMessage = `\n\SOL Price: <b>${solData}</b> USD`;
     } else {
         solPriceMessage = '\nError fetching current SOL price.';
     }
      // Retrieve wallet user and balance in SOL and USD 
-   if(ctx.session.portfolio){
-    const selectedWallet = ctx.session.portfolio.activeWalletIndex;
-    userWallet = ctx.session.portfolio.wallets[selectedWallet];
-    }
-   const publicKeyString: any = userWallet.publicKey; // The user's public key
-     // Fetch SOL balance
-     const balanceInSOL = await getSolBalance(publicKeyString,connection);
+ 
+
      if (balanceInSOL === null) {
          await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
          return;
@@ -32,7 +39,7 @@ export async function handleRefreshStart(ctx: any) {
      const balanceInUSD = (balanceInSOL * (details).toFixed(2));
 
     // Update the welcome message with the new SOL price
-    const welcomeMessage = `✨ Welcome to <b>DRIBs bot</b> - Your Advanced Trading Companion! ✨\n` +
+    const welcomeMessage = `✨ Welcome to <b>DRIBs bot</b>✨\n` +
     `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
     `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
     `We're always working to bring you new features - stay tuned!\n\n` +
@@ -66,4 +73,63 @@ export async function handleRefreshStart(ctx: any) {
     } catch (error) {
         console.error("Error updating message: ", error);
     }
+}
+
+export async function handleRereshWallet(ctx: any){
+
+    const chatId = ctx.chat.id;
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const selectedWallet = ctx.session.portfolio.activeWalletIndex;
+    const userWallet = ctx.session.portfolio.wallets[selectedWallet];
+
+    const publicKeyString: any = userWallet.publicKey; // The user's public key
+    const [balanceInSOL, solanaDetails] = await Promise.all([
+        getSolBalance(publicKeyString, connection),
+        getSolanaDetails()
+    ]);
+    
+
+    // Fetch SOL balance
+    try {
+    if (balanceInSOL === null) {
+        await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
+        return;
+    }
+
+    const balanceInUSD = (balanceInSOL * (solanaDetails));
+
+
+    // Fetch the user's wallet data from the JSON file
+    if (!userWallet || !userWallet.publicKey) {
+        await ctx.api.sendMessage(chatId, "No wallet found. Please create a wallet first.");
+        return;
+    }
+
+    // Create a message with the wallet information
+    const updatedWelcomeMessage = `Your Wallet:  ` +
+        `<code>${publicKeyString}</code>\n` +
+        `Balance: ` +
+        `<b>${balanceInSOL.toFixed(3)}</b> SOL | <b>${balanceInUSD.toFixed(2)}</b> USD\n`;
+
+    // Inline keyboard options
+    const options: any = {
+        reply_markup: JSON.stringify({
+            inline_keyboard: [
+                [{ text: 'Get Private Key', callback_data: 'get_private_key' }, { text: `✏ Slippage (${ctx.session.latestSlippage}%)`, callback_data: 'set_slippage' }],
+                [{ text: '🔂 Refresh', callback_data: 'refresh_wallet' }, { text: 'Reset Wallet', callback_data: 'confirm_reset_wallet' }],
+                [{ text: '↗️ Send SOL', callback_data: 'send_sol' }],
+                [{ text: 'Close', callback_data: 'closing' }]
+            ]
+        }),
+        parse_mode: 'HTML'
+    };
+
+ // Edit the existing message with the updated information and the inline keyboard
+
+    await ctx.editMessageText(updatedWelcomeMessage, options);
+    ctx.session.latestCommand = "optional";
+    } catch (error) {
+    console.error("Error updating message: ", error);
+    }
+
 }

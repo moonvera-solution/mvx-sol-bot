@@ -23,13 +23,14 @@ import {
     LAMPORTS_PER_SOL,
     TransactionInstruction,
     Commitment,
-    SystemProgram
+    SystemProgram,
+    MessageV0
 } from '@solana/web3.js';
 
 import {
     addLookupTableInfo,
-    RAYDIUM_AUTHORITY,
-    makeTxVersion
+    RAYDIUM_AUTHORITY, MVXBOT_FEES,
+    makeTxVersion, WALLET_MVX
 } from '../../../config';
 
 // define some default locations
@@ -40,6 +41,8 @@ const DEFAULT_DEMO_DATA_FILE = "demo.json";
 import bs58 from 'bs58';
 import fs from "fs";
 import path from "path";
+import BigNumber from 'bignumber.js';
+import { Instruction } from '@coral-xyz/anchor';
 
 export async function sendTx(
     connection: Connection,
@@ -51,8 +54,8 @@ export async function sendTx(
     for (const iTx of txs) {
         if (iTx instanceof VersionedTransaction) {
             iTx.sign([payer]);
-            let ixId = await connection.sendRawTransaction(iTx.serialize(),options);
-            console.log("sending versioned tx",ixId);
+            let ixId = await connection.sendRawTransaction(iTx.serialize(), options);
+            console.log("sending versioned tx", ixId);
             txids.push(ixId);
         } else {
             console.log("sending legacy tx");
@@ -65,7 +68,7 @@ export async function sendTx(
 export async function getWalletTokenAccount(connection: Connection, wallet: PublicKey): Promise<TokenAccount[]> {
     const walletTokenAccount = await connection.getTokenAccountsByOwner(wallet, {
         programId: TOKEN_PROGRAM_ID,
-    },'processed');
+    }, 'processed');
     return walletTokenAccount.value.map((i) => ({
         pubkey: i.pubkey,
         programId: i.account.owner,
@@ -73,7 +76,7 @@ export async function getWalletTokenAccount(connection: Connection, wallet: Publ
     }));
 }
 
-export async function buildTx(innerSimpleV0Transaction: InnerSimpleV0Transaction[], connection:Connection, options?: SendOptions):
+export async function buildTx(innerSimpleV0Transaction: InnerSimpleV0Transaction[], connection: Connection, options?: SendOptions):
     Promise<(VersionedTransaction | Transaction)[]> {
     return await buildSimpleTransaction({
         connection,
@@ -84,7 +87,7 @@ export async function buildTx(innerSimpleV0Transaction: InnerSimpleV0Transaction
     });
 }
 
-export async function buildAndSendTx(keypair: Keypair, innerSimpleV0Transaction: InnerSimpleV0Transaction[], connection:Connection,options?: SendOptions) {
+export async function buildAndSendTx(keypair: Keypair, innerSimpleV0Transaction: InnerSimpleV0Transaction[], connection: Connection, options?: SendOptions) {
     const willSendTx: (VersionedTransaction | Transaction)[] = await buildSimpleTransaction({
         connection,
         makeTxVersion,
@@ -533,11 +536,11 @@ export async function formatNumberToKOrM(number: number) {
 export async function sendSol(ctx: any, recipientAddress: PublicKey, solAmount: number) {
     const chatId = ctx.chat.id;
     const session = ctx.session;
-    const userWallet = session.portfolio.wallets[session.activeWalletIndex];
+    const userWallet = session.portfolio.wallets[session.portfolio.activeWalletIndex];
     const userSecretKey = userWallet.secretKey; // User's secret key
     const userPublicKey = userWallet.publicKey; // User's public key
     const amount = solAmount * LAMPORTS_PER_SOL; // Convert SOL to lamports
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
     // Create a transaction
     const transaction = new Transaction().add(
         SystemProgram.transfer({
@@ -558,9 +561,9 @@ export async function sendSol(ctx: any, recipientAddress: PublicKey, solAmount: 
             { commitment: 'processed' }
         );
 
-const solscanUrl = `https://solscan.io/tx/${signature}`;
+        const solscanUrl = `https://solscan.io/tx/${signature}`;
 
-await ctx.api.sendMessage(chatId, `💸 Sent ${solAmount} SOL to ${recipientAddress.toBase58()}.\nView on Solscan: ${solscanUrl}`,{ parse_mode: 'HTML', disable_web_page_preview: true });
+        await ctx.api.sendMessage(chatId, `💸 Sent ${solAmount} SOL to ${recipientAddress.toBase58()}.\nView on Solscan: ${solscanUrl}`, { parse_mode: 'HTML', disable_web_page_preview: true });
     } catch (error) {
         console.error("Transaction Error:", error);
         await ctx.api.sendMessage(chatId, "Transaction failed. Please try again later.");
@@ -605,9 +608,9 @@ export async function waitForConfirmation(ctx: any, txid: string): Promise<boole
     return isConfirmed;
 }
 
-export function getPriorityFeeLabel(fee: number) : string{
+export function getPriorityFeeLabel(fee: number): string {
     let priorityFeeLabel;
-    switch(fee) {
+    switch (fee) {
         case 2500:
             priorityFeeLabel = 'low';
             break;
@@ -667,7 +670,7 @@ export async function getTransactionStatus(txid: string) {
         const response = await axios.post(solanaRpcUrl, body, {
             headers: { 'Content-Type': 'application/json' },
         });
-        
+
         const data = response.data;
         // console.log('Transaction status data:', data);
         // Check if the transaction is confirmed
@@ -691,9 +694,9 @@ export function getTokenExplorerURLS(tokenAddress: string): { birdeyeURL: any; d
 }
 
 export async function getSwapAmountOut(
-    connection:Connection,
+    connection: Connection,
     txids: string[],
-){
+) {
     let extractAmount: number = 0;
     let counter = 0;
 
@@ -706,7 +709,7 @@ export async function getSwapAmountOut(
                 txAmount = JSON.parse(JSON.stringify(tx.instructions));
                 txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
                 txAmount.forEach((tx) => {
-                    if (tx.parsed.info.authority == RAYDIUM_AUTHORITY) { 
+                    if (tx.parsed.info.authority == RAYDIUM_AUTHORITY) {
                         extractAmount = tx.parsed.info.amount;
                     }
                     console.log('inner tx: ', JSON.parse(JSON.stringify(tx)));
@@ -715,4 +718,54 @@ export async function getSwapAmountOut(
         }
     }
     return extractAmount;
+}
+
+/**
+ * @notice Only use if there is a referral
+ * @returns TransactionInstruction Array
+ */
+export function add_mvx_and_ref_inx_fees(
+    payerKeypair: Keypair,
+    referralWallet: string,
+    solAmount: BigNumber,
+    referralCommision: number): TransactionInstruction[] {
+
+    const mvxFee = solAmount.times(MVXBOT_FEES);
+    const referralAmmount = mvxFee.times(referralCommision);
+    const mvxFeeAfterRefeeralCut = mvxFee.minus(referralAmmount);
+
+    const referralInx = SystemProgram.transfer({
+        fromPubkey: payerKeypair.publicKey,
+        toPubkey: new PublicKey(referralWallet),
+        lamports: referralAmmount.times(1e9).toNumber(), // 5_000 || 6_000
+    });
+
+    const mvxFeeInx = SystemProgram.transfer({
+        fromPubkey: payerKeypair.publicKey,
+        toPubkey: new PublicKey(WALLET_MVX),
+        lamports: mvxFeeAfterRefeeralCut.times(1e9).toNumber(), // 5_000 || 6_000
+    });
+
+    return [referralInx, mvxFeeInx];
+}
+
+/**
+ * @notice Only use if there is NO referral
+ * @returns TransactionInstruction Array
+ */
+export function addMvxFeesInx(payerKeypair: Keypair, solAmount: BigNumber): TransactionInstruction[] {
+    return [SystemProgram.transfer({
+        fromPubkey: payerKeypair.publicKey,
+        toPubkey: new PublicKey(WALLET_MVX),
+        lamports: new BigNumber(solAmount.times(1e9)).times(MVXBOT_FEES).toNumber(), // 5_000 || 6_000
+    })];
+}
+
+
+export function wrapLegacyTx(txInxs: TransactionInstruction[],payerKeypair: Keypair,blockhash: any): MessageV0 {
+    return new TransactionMessage({
+        payerKey: payerKeypair.publicKey,
+        recentBlockhash: blockhash,
+        instructions: txInxs
+    }).compileToV0Message();
 }

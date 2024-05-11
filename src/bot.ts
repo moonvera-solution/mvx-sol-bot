@@ -4,42 +4,20 @@ import {
   handleGetPrivateKey,
   checkWalletsLength,
   confirmResetWalletAgain,
-  resetWallet,
+  resetWallet,importWallet, getPortfolio
 } from "./service/portfolio/wallets";
 import { handle_radyum_swap } from "./service/portfolio/strategies/swaps";
-import {
-  Bot,
-  Context,
-  GrammyError,
-  HttpError,
-  session,
-  SessionFlavor,
-  webhookCallback,
-} from "grammy";
-import { importWallet, getPortfolio } from "./service/portfolio/wallets";
-import {
-  ISESSION_DATA,
-  DefaultSessionData,
-  PORTFOLIO_TYPE,
-  DefaultPortfolioData,
-} from "./service/util/types";
+import {Bot,Context,GrammyError,HttpError,session,SessionFlavor,webhookCallback} from "grammy";
+import {ISESSION_DATA,DefaultSessionData,PORTFOLIO_TYPE,DefaultPortfolioData} from "./service/util/types";
 import { Keypair, PublicKey, Connection } from "@solana/web3.js";
 import { _initDbConnection } from "./db/mongo/crud";
 import { handleSettings } from "./service/settings";
 import { getSolanaDetails } from "./api";
 import { setSnipe, snipperON } from "./service/portfolio/strategies/snipper";
-import {
-  display_token_details,
-  display_snipe_options,
-  handleCloseKeyboard,
-  display_after_Snipe_Buy,
-} from "./views";
+import {display_token_details,display_snipe_options,handleCloseKeyboard,display_after_Snipe_Buy} from "./views";
 import { getSolBalance, sendSol } from "./service/util";
 import { handleRefreshStart } from "./views/refreshData/refreshStart";
-import {
-  handleRefreshWallet,
-  refreshAllWallets,
-} from "./views/wallets/walletsView";
+import {handleRefreshWallet,refreshAllWallets,} from "./views/wallets/walletsView";
 import {
   display_limitOrder_token_details,
   submit_limitOrder,
@@ -49,13 +27,10 @@ import { getRayPoolKeys } from "./service/dex/raydium/raydium-utils/formatAmmKey
 import { sendHelpMessage } from "./views/util/helpMessage";
 import { display_rugCheck } from "./views/rugCheck/rugCheck";
 import { _generateReferralLink, _getReferralData } from "../src/db/mongo/crud";
-import { Portfolios, Referrals, AllowedReferrals } from "./db/mongo/schema";
-import {
-  display_spl_positions,
-  display_single_spl_positions,
-  display_refresh_single_spl_positions,
-} from "./views/portfolio/portfolioView";
+import { Portfolios, Referrals, AllowedReferrals, UserSession } from "./db/mongo/schema";
+import { display_spl_positions, display_single_spl_positions, display_refresh_single_spl_positions } from "./views/portfolioView";
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
+import { swap_pump_fun, display_pump_fun_token_details } from "./views/pumpFun/pumpFunView";
 import { logErrorToFile } from "../error/logger";
 const express = require("express");
 const app = express();
@@ -91,6 +66,7 @@ bot.use(async (ctx, next) => {
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN!;
 const port = process.env.PORT || 80;
+let backupSession: ISESSION_DATA;
 
 if (isProd) {
   const webhookUrl = "https://drib.ngrok.app";
@@ -123,22 +99,39 @@ const allowedUsernames = [
   "swalefdao",
   "coachalib",
 ]; // without the @
+
+async function _validateSession(ctx: any) {
+  if (JSON.parse(JSON.stringify(ctx.session)).chatId == 0) {
+    const restoredSession = await UserSession.findOne({ chatId: ctx.chat.id });
+    if (restoredSession) {
+      // ctx.session = JSON.parse(JSON.stringify(restoredSession));
+      console.log("Session restored.");
+    }
+  }
+}
+
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                      BOT START                             */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 bot.command("start", async (ctx: any) => {
+  await _validateSession(ctx);
+  backupSession = ctx.session;
+
   try {
     const chatId = ctx.chat.id;
+    ctx.session.chatId = chatId;
     const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
+    console.log("portfolio:", portfolio);
     let isNewUser = false;
     const connection = new Connection(
-      `${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`
+      `${ctx.session.tritonRPC}${ctx.session.tritonToken}`
     );
     let referralCode = null;
     // Check if there's additional text with the /start command
     if (ctx.message.text.includes(" ")) {
       referralCode = ctx.message.text.split(" ")[1];
     }
+    console.log('ctx.message.text', ctx.message.text);
     // if user already exists
     if (portfolio == DefaultPortfolioData) {
       // User is new
@@ -147,9 +140,15 @@ bot.command("start", async (ctx: any) => {
     const userName = ctx.message.from.username;
     console.log("userName:", userName);
 
-    const allowedUsers = allowedUsernames.includes(userName);
+    const user = await AllowedReferrals.find({ tgUserName: userName });
+    // console.log("user:", user[0]);
+    if (user[0] != undefined) {
+      ctx.session.allowedReferral = user[0];
+      console.log("ctx.session.allowedReferral:", ctx.session.allowedReferral);
 
-    if (referralCode || allowedUsers) {
+    }
+    console.log("referralCode:", referralCode);
+    if (referralCode || ctx.session.allowedReferral) {
       const referralRecord = await Referrals.findOne({
         referralCode: referralCode,
       });
@@ -190,18 +189,17 @@ bot.command("start", async (ctx: any) => {
       // at this point wallet from session is not avialable yet
       // hence we do ctx.session.portfolio = await getPortfolio(chatId); at the end of the "start" function.
       userWallet = await createUserPortfolio(ctx); // => { publicKey, secretKey }
-      ctx.session.portfolio.wallets[ctx.session.activeWalletIndex] = userWallet;
+      ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex] = userWallet;
     }
     const publicKeyString: PublicKey | String = userWallet
       ? userWallet.publicKey
-      : ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex]
-          .publicKey;
+      : ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].publicKey;
 
     // Retrieve the current SOL details
     let solPriceMessage = "";
     const [balanceInSOL, details] = await Promise.all([
       getSolBalance(publicKeyString, connection),
-      getSolanaDetails(),
+      getSolanaDetails()
     ]);
 
     // Fetch SOL balance
@@ -212,7 +210,7 @@ bot.command("start", async (ctx: any) => {
 
     // solana price
     if (details) {
-      const solData = details.toFixed(2);
+      const solData = details;
       solPriceMessage = `\n\SOL Price: <b>${solData}</b> USD`;
     } else {
       solPriceMessage = "\nError fetching current SOL price.";
@@ -220,7 +218,7 @@ bot.command("start", async (ctx: any) => {
 
     // Combine the welcome message, SOL price message, and instruction to create a wallet
     const welcomeMessage =
-      `✨ Welcome to <b>DRIBs bot</b> - Your Advanced Trading Companion! ✨\n` +
+      `✨ Welcome to <b>DRIBs bot</b>✨\n` +
       `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
       `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
       `We're always working to bring you new features - stay tuned!\n\n` +
@@ -244,6 +242,7 @@ bot.command("start", async (ctx: any) => {
             { text: "💼 Wallets & Settings⚙️", callback_data: "show_wallets" },
           ],
           [{ text: "☑️ Rug Check", callback_data: "rug_check" }],
+          [{ text: "🧙🏻‍♀️ Trade on pump.fun", callback_data: "display_pump_token" }],
           [{ text: "🎯 Turbo Snipe", callback_data: "snipe" }],
           [{ text: "⏳ Limit Orders", callback_data: "limitOrders" }],
           [
@@ -290,8 +289,10 @@ bot.command("help", async (ctx) => {
 });
 
 bot.command("positions", async (ctx) => {
+  await _validateSession(ctx);
+  backupSession = ctx.session;
+
   try {
-    // await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
     await display_spl_positions(ctx, false);
   } catch (error: any) {
     logErrorToFile("bot on positions cmd", error);
@@ -311,6 +312,8 @@ bot.command("rugchecking", async (ctx) => {
 });
 
 bot.command("buy", async (ctx) => {
+  await _validateSession(ctx);
+  backupSession = ctx.session;
   try {
     const chatId = ctx.chat.id;
     const referralRecord = await Referrals.findOne({ referredUsers: chatId });
@@ -331,6 +334,8 @@ bot.command("buy", async (ctx) => {
 });
 
 bot.command("sell", async (ctx) => {
+  await _validateSession(ctx);
+  backupSession = ctx.session;
   try {
     const chatId = ctx.chat.id;
     const referralRecord = await Referrals.findOne({ referredUsers: chatId });
@@ -351,6 +356,8 @@ bot.command("sell", async (ctx) => {
 });
 
 bot.command("snipe", async (ctx) => {
+  await _validateSession(ctx);
+  backupSession = ctx.session;
   try {
     const chatId = ctx.chat.id;
     ctx.session.snipeStatus = true;
@@ -372,6 +379,8 @@ bot.command("snipe", async (ctx) => {
 });
 
 bot.command("settings", async (ctx) => {
+  await _validateSession(ctx);
+  backupSession = ctx.session;
   try {
     await handleSettings(ctx);
   } catch (error: any) {
@@ -384,27 +393,18 @@ bot.command("settings", async (ctx) => {
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
 bot.on("message", async (ctx) => {
+  await _validateSession(ctx);
+  backupSession = ctx.session;
   const chatId = ctx.chat.id;
 
   try {
+    ctx.session.portfolio.chatId = chatId;
     const latestCommand = ctx.session.latestCommand;
     const msgTxt = ctx.update.message.text;
-    console.log("msgTxt", msgTxt);
-    console.log("typeof msgTxt", typeof msgTxt);
-    console.log("latestCommand", latestCommand);
+
     if (msgTxt) {
-      if (
-        (!isNaN(parseFloat(msgTxt!)) &&
-          ctx.session.latestCommand !== "buy" &&
-          ctx.session.latestCommand !== "sell" &&
-          ctx.session.latestCommand !== "snipe" &&
-          ctx.session.latestCommand !== "send_sol" &&
-          ctx.session.latestCommand !== "ask_for_sol_amount" &&
-          ctx.session.latestCommand === "display_after_Snipe_Buy") ||
-        ctx.session.latestCommand === "start" ||
-        ctx.session.latestCommand === "display_single_spl_positions"
-      ) {
-        if (PublicKey.isOnCurve(msgTxt!)) {
+      if ((!isNaN(parseFloat(msgTxt!)) && ctx.session.latestCommand !== 'buy' && ctx.session.latestCommand !== 'sell' && ctx.session.latestCommand !== 'snipe' && ctx.session.latestCommand !== "send_sol" && ctx.session.latestCommand !== 'ask_for_sol_amount' && ctx.session.latestCommand === 'display_after_Snipe_Buy') || ctx.session.latestCommand === 'start' || ctx.session.latestCommand === 'display_single_spl_positions') {
+        if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {
           const isTOken = await checkAccountType(ctx, msgTxt);
           if (!isTOken) {
             ctx.api.sendMessage(chatId, "Invalid address");
@@ -447,7 +447,7 @@ bot.on("message", async (ctx) => {
       }
       case "rug_check": {
         if (msgTxt) {
-          if (PublicKey.isOnCurve(msgTxt!)) {
+          if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {
             const isTOken = await checkAccountType(ctx, msgTxt);
             if (!isTOken) {
               ctx.api.sendMessage(chatId, "Invalid address");
@@ -466,6 +466,7 @@ bot.on("message", async (ctx) => {
         break;
       }
       case "buy_X_SOL":
+        ctx.session.latestCommand = "buy_X_SOL";
         if (msgTxt) {
           const amt = msgTxt.includes(".")
             ? Number.parseFloat(msgTxt)
@@ -482,7 +483,21 @@ bot.on("message", async (ctx) => {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
         }
+      // just to solve the position refresh problem temporarly 
+      case "buy_X_SOL_IN_POSITION":
+        ctx.session.latestCommand = "display_single_spl_positions";
+        if (msgTxt) {
+          const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
+          if (!isNaN(amt)) {
+            // ctx.session.latestCommand = "buy_X_SOL";
+            await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "buy", Number(msgTxt));
+            break;
+          } else {
+            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+          }
+        }
       case "sell_X_TOKEN":
+        ctx.session.latestCommand = "sell_X_TOKEN";
         if (msgTxt) {
           const amt = msgTxt.includes(".")
             ? Number.parseFloat(msgTxt)
@@ -501,12 +516,12 @@ bot.on("message", async (ctx) => {
         }
         break;
       case "snipe_X_SOL": {
+        ctx.session.latestCommand = "snipe_X_SOL";
         if (msgTxt) {
           const amt = msgTxt.includes(".")
             ? Number.parseFloat(msgTxt)
             : Number.parseInt(msgTxt);
           if (!isNaN(amt)) {
-            ctx.session.latestCommand = "snipe";
             if (ctx.session.snipperLookup) {
               await snipperON(ctx, String(amt));
             } else {
@@ -585,8 +600,7 @@ bot.on("message", async (ctx) => {
       case "sell":
       case "buy": {
         try {
-          if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
-            //to avoid crashin with wron address
+          if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {            //to avoid crashin with wron address
             const isTOken = await checkAccountType(ctx, msgTxt);
             if (!isTOken) {
               ctx.api.sendMessage(chatId, "Invalid address");
@@ -599,8 +613,6 @@ bot.on("message", async (ctx) => {
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
               display_snipe_options(ctx, false, msgTxt);
-              // ctx.api.sendMessage(chatId, "🔴 Invalid address");
-              // ctx.api.sendMessage(chatId, "🔴 Pool not found for this token.");
               return;
             }
             ctx.session.activeTradingPool = poolInfo;
@@ -617,7 +629,7 @@ bot.on("message", async (ctx) => {
       case "snipe": {
         ctx.session.snipeStatus = true;
         try {
-          if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
+          if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {
             const isTOken = await checkAccountType(ctx, msgTxt);
             // console.log("isTOken", isTOken);
             if (!isTOken) {
@@ -642,7 +654,7 @@ bot.on("message", async (ctx) => {
                 ctx.session.snipeToken.toBase58()
               );
             }
-          } else if (msgTxt && !PublicKey.isOnCurve(msgTxt)) {
+          } else if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {
             ctx.api.sendMessage(chatId, "Invalid address");
           }
         } catch (error: any) {
@@ -661,11 +673,15 @@ bot.on("message", async (ctx) => {
             ctx,
             recipientAddress
           );
-          const referralData = await _getReferralData(ctx); // Fetch referral data
+          const [referralData, details] = await Promise.all([
+            await _getReferralData(ctx),
+            await getSolanaDetails()// Fetch referral data
+          ]);
+
           const referEarningSol = (
             Number(referralData?.totalEarnings) / 1e9
           ).toFixed(6);
-          const details = await getSolanaDetails();
+
           const referEarningDollar = (
             Number(referEarningSol) * details
           ).toFixed(2);
@@ -690,48 +706,41 @@ bot.on("message", async (ctx) => {
         }
         break;
       }
-      case "limitOrders": {
-        try {
-          ctx.session.limitOrders.token = (ctx.message.text || "").toString();
-          // console.log("PublicKey : ", PublicKey);
-          if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
-            const isTOken = await checkAccountType(ctx, msgTxt);
-            ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
-            ctx.session.latestCommand = "limitOrders";
-            await display_limitOrder_token_details(ctx, false);
-          }
-        } catch (error: any) {
-          console.error("ERROR on bot.on txt msg", error, error.message);
+      case 'display_pump_token': {
+        ctx.session.latestCommand = 'display_pump_token';
+        if (msgTxt) {
+          ctx.session.pump.token = msgTxt;
+          await display_pump_fun_token_details(ctx,false);
         }
+        break;
       }
-
-      case "set_limit_order_side_buy": {
-        try {
-          ctx.session.limitOrders.amount = (ctx.message.text || "").toString();
-          ctx.session.latestCommand === "set_limit_order_side_buy" &&
-            (await ctx.api.sendMessage(chatId, "enter target value :"));
-
-          ctx.session.latestCommand = "calculate_limit_order_price";
-          break;
-        } catch (error: any) {
-          console.error("ERROR on bot.on txt msg", error, error.message);
-        }
-      }
-
-      case "calculate_limit_order_price": {
-        try {
-          ctx.session.limitOrders.targetPrice = (
-            ctx.message.text || ""
-          ).toString();
-          ctx.session.limitOrders.side = "buy";
-          console.log(ctx.session.limitOrders);
-          if (ctx.session.latestCommand === "calculate_limit_order_price") {
-            await submit_limitOrder(ctx);
+      case 'buy_pump_X_SOL': {
+        ctx.session.latestCommand = 'buy_pump_X_SOL';
+        if (msgTxt) {
+          const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
+          if (!isNaN(amt)) {
+            ctx.session.pump.amountIn = amt;
+            ctx.session.pump.side = 'buy';
+            await swap_pump_fun(ctx);
+          } else {
+            await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
-          break;
-        } catch (error: any) {
-          console.error("ERROR on bot.on txt msg", error, error.message);
         }
+        break;
+      }
+      case 'sell_pump_X_SOL': {
+        ctx.session.latestCommand = 'sell_pump_X_SOL';
+        if (msgTxt) {
+          const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
+          if (!isNaN(amt)) {
+            ctx.session.pump.amountIn = amt;
+            ctx.session.pump.side = 'sell';
+            await swap_pump_fun(ctx);
+          } else {
+            await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+          }
+        }
+        break;
       }
     }
   } catch (error: any) {
@@ -745,8 +754,12 @@ bot.on("message", async (ctx) => {
 /*                      BOT ON CALLBACK                       */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 bot.on("callback_query", async (ctx: any) => {
+  await _validateSession(ctx);
+  backupSession = ctx.session;
+  const chatId = ctx.chat.id;
+
   try {
-    const chatId = ctx.chat.id;
+    ctx.session.portfolio.chatId = chatId;
     const data = ctx.callbackQuery.data;
     // console.log("callback_query", data);
     const positionCallSell = /^sellpos_\d+_\d+$/;
@@ -777,7 +790,9 @@ bot.on("callback_query", async (ctx: any) => {
       const positionIndex = parts[2]; // Position index
       ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
       ctx.api.sendMessage(chatId, "Please enter SOL amount");
-      ctx.session.latestCommand = "buy_X_SOL";
+
+      // display_single_spl_positions
+      ctx.session.latestCommand = "buy_X_SOL_IN_POSITION";
 
       return;
     } else if (matchNavigate) {
@@ -785,9 +800,8 @@ bot.on("callback_query", async (ctx: any) => {
       const newPositionIndex = parseInt(parts[2]); // New position index
 
       ctx.session.positionIndex = newPositionIndex;
-      console.log("positionIndex", ctx.session.positionIndex);
-      ctx.session.activeTradingPool =
-        ctx.session.positionPool[ctx.session.positionIndex];
+      console.log('positionIndex', ctx.session.positionIndex)
+      ctx.session.activeTradingPool = ctx.session.positionPool[ctx.session.positionIndex];
       await display_refresh_single_spl_positions(ctx);
     }
 
@@ -797,7 +811,7 @@ bot.on("callback_query", async (ctx: any) => {
         const username = ctx.update.callback_query.from.username; //ctx.from.username;
 
         // Check if the user is allowed to access the referral program
-        if (allowedUsernames.includes(username)) {
+        if (ctx.session.allowedReferral) {
           ctx.session.latestCommand = "refer_friends";
           let existingReferral = await Referrals.findOne({
             generatorChatId: chatId,
@@ -866,8 +880,8 @@ bot.on("callback_query", async (ctx: any) => {
         console.log("portfolio", portfolio);
         if (portfolio) {
           portfolio.activeWalletIndex = 0;
-          ctx.session.activeWalletIndex = portfolio.activeWalletIndex;
-          await portfolio.save(); // Save the updated document to MongoDB
+          ctx.session.portfolio.activeWalletIndex = portfolio.activeWalletIndex;
+          await portfolio.save();  // Save the updated document to MongoDB
           await handleSettings(ctx);
           await refreshAllWallets(ctx);
         } else {
@@ -881,7 +895,7 @@ bot.on("callback_query", async (ctx: any) => {
 
         if (portfolio1) {
           portfolio1.activeWalletIndex = 1;
-          ctx.session.activeWalletIndex = portfolio1.activeWalletIndex;
+          ctx.session.portfolio.activeWalletIndex = portfolio1.activeWalletIndex;
 
           await portfolio1.save(); // Save the updated document to MongoDB
           await handleSettings(ctx);
@@ -934,11 +948,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       case "create_new_wallet":
         const allowed = await checkWalletsLength(ctx);
-
-        if (allowed) {
-          await createNewWallet(ctx);
-        }
-
+        if (allowed) { await createNewWallet(ctx); }
         break;
       case "settings":
         await handleSettings(ctx);
@@ -967,10 +977,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "rug_check": {
         ctx.session.latestCommand = "rug_check";
-        ctx.api.sendMessage(
-          chatId,
-          "Please provide the token address for a rug pull analysis."
-        );
+        ctx.api.sendMessage(chatId, "Please provide the token address for a rug pull analysis.");
         break;
       }
       case "sell": {
@@ -997,7 +1004,7 @@ bot.on("callback_query", async (ctx: any) => {
         if (referralRecord) {
           ctx.session.referralCommision = referralRecord.commissionPercentage;
           ctx.session.generatorWallet = referralRecord.generatorWallet;
-          // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
+
         }
         if (ctx.session.latestCommand === "rug_check") {
           ctx.session.latestCommand = "buy";
@@ -1103,36 +1110,16 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "sell_10_TOKEN":
-        await handle_radyum_swap(
-          ctx,
-          ctx.session.activeTradingPool.baseMint,
-          "sell",
-          "10"
-        );
+        await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", "10");
         break;
       case "sell_25_TOKEN":
-        await handle_radyum_swap(
-          ctx,
-          ctx.session.activeTradingPool.baseMint,
-          "sell",
-          "25"
-        );
+        await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", "25");
         break;
       case "sell_30_TOKEN":
-        await handle_radyum_swap(
-          ctx,
-          ctx.session.activeTradingPool.baseMint,
-          "sell",
-          "30"
-        );
+        await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", "30");
         break;
       case "sell_50_TOKEN":
-        await handle_radyum_swap(
-          ctx,
-          ctx.session.activeTradingPool.baseMint,
-          "sell",
-          "50"
-        );
+        await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", "50");
         break;
       case "sell_75_TOKEN":
         await handle_radyum_swap(
@@ -1143,12 +1130,7 @@ bot.on("callback_query", async (ctx: any) => {
         );
         break;
       case "sell_100_TOKEN":
-        await handle_radyum_swap(
-          ctx,
-          ctx.session.activeTradingPool.baseMint,
-          "sell",
-          "100"
-        );
+        await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", "100");
         break;
       case "sell_X_TOKEN": {
         ctx.session.latestCommand = "sell_X_TOKEN";
@@ -1225,7 +1207,6 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "priority_low": {
-        console.log("LOW ");
         ctx.session.priorityFees = PriotitizationFeeLevels.LOW;
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);
@@ -1241,23 +1222,19 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "priority_medium": {
-        console.log("MED ");
         ctx.session.priorityFees = PriotitizationFeeLevels.MEDIUM;
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);
-        } else if (
-          ctx.session.latestCommand === "display_single_spl_positions"
-        ) {
+        } else if (ctx.session.latestCommand === "display_single_spl_positions") {
           await display_refresh_single_spl_positions(ctx);
-        } else if (ctx.session.latestCommand === "display_after_Snipe_Buy") {
+        } else if (ctx.session.latestCommand === 'display_after_Snipe_Buy') {
           await display_after_Snipe_Buy(ctx, true);
-        } else {
+        }else {
           await display_token_details(ctx, true);
         }
         break;
       }
       case "priority_high": {
-        console.log("HIGH ");
         ctx.session.priorityFees = PriotitizationFeeLevels.HIGH;
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);
@@ -1273,13 +1250,9 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "priority_max": {
-        console.log("MAX");
         ctx.session.priorityFees = PriotitizationFeeLevels.MAX;
-        if (ctx.session.latestCommand === "snipe") {
-          await display_snipe_options(ctx, true);
-        } else if (
-          ctx.session.latestCommand === "display_single_spl_positions"
-        ) {
+        if (ctx.session.latestCommand === "snipe") {await display_snipe_options(ctx, true);
+        } else if (ctx.session.latestCommand === "display_single_spl_positions") {
           await display_refresh_single_spl_positions(ctx);
         } else if (ctx.session.latestCommand === "display_after_Snipe_Buy") {
           await display_after_Snipe_Buy(ctx, true);
@@ -1305,6 +1278,21 @@ bot.on("callback_query", async (ctx: any) => {
       case "set_limit_order_side_sell": {
         ctx.session.latestCommand = "limitOrders";
         await ctx.api.sendMessage(chatId, "Enter amount to set selling order.");
+        break;
+      }
+      case 'display_pump_token': {
+        ctx.session.latestCommand = 'display_pump_token';
+        await ctx.api.sendMessage(chatId, "Please enter the token address.");
+        break;
+      }
+      case 'buy_pump_X_SOL': {
+        ctx.session.latestCommand = 'buy_pump_X_SOL';
+        await ctx.api.sendMessage(chatId, "Please enter amount to buy");
+        break;
+      }
+      case 'buy_pump_X_SOLbuy_pump_X_SOL': {
+        ctx.session.latestCommand = 'sell_pump_X_SOL';
+        await ctx.api.sendMessage(chatId, "Please enter amount to sell");
         break;
       }
     }
@@ -1343,7 +1331,7 @@ bot.catch((err) => {
 
 async function checkAccountType(ctx: any, address: any) {
   const connection = new Connection(
-    `${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`
+    `${ctx.session.tritonRPC}${ctx.session.tritonToken}`
   );
   const publicKey = new PublicKey(address);
   const TOKEN_PROGRAM_ID = new PublicKey(
@@ -1367,6 +1355,16 @@ process.on("uncaughtException", (err, origin) => {
   console.error(`Caught exception: ${err}\n` + `Exception origin: ${origin}`);
 });
 
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('SIGINT', async () => {
+  console.log("backupSession", backupSession);
+  if (backupSession) {
+    await UserSession.findOneAndUpdate({ chatId: backupSession.chatId }, backupSession, { upsert: true })
+      .then(() => { console.log(":: Stored user session to DB") })
+      .catch((e: any) => { console.log("error", e) });
+  }
+  process.exit();
 });
