@@ -59,7 +59,7 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
       const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
       const tokenPriceSOL = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price).div(solPrice) : new BigNumber(tokenInfo.price);
       const tokenPriceUSD = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price) : new BigNumber(tokenInfo.price.times(solPrice));
-      const marketCap = birdeyeData?.response.data.data.mc ? birdeyeData.response.data.data.mc : new BigNumber(tokenInfo.marketCap).times(new BigNumber(solPrice));
+      // const marketCap = birdeyeData?.response.data.data.mc ? birdeyeData.response.data.data.mc : new BigNumber(tokenInfo.marketCap).times(new BigNumber(solPrice));
       const processData = (...dataArgs: any[]) => {
         return dataArgs.map(data => {
           if (data?.data instanceof Buffer) {
@@ -74,6 +74,7 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
     //   console.log("creatorAddress", creatorAddress);
       const circulatedSupply = Number(((Number(circulatingSupply.tokenAmount.amount)) / Math.pow(10, baseDecimals)));
       const baseTokenSupply = Number(((Number(getBaseSupply.supply)) / Math.pow(10, baseDecimals)));
+     const mcap = baseTokenSupply * tokenPriceUSD.toNumber();
       //Get the user balance
       let [getCreatorPercentage, lpSupplyOwner, formattedCirculatingSupply, formattedSupply, formattedLiquidity, formattedmac] = await Promise.all([
         getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint), connection),
@@ -81,9 +82,9 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
         formatNumberToKOrM(Number(circulatedSupply)),
         formatNumberToKOrM(Number(baseTokenSupply)),
         formatNumberToKOrM((tokenInfo.liquidity * solPrice) / 0.5),
-        formatNumberToKOrM(marketCap)
+        formatNumberToKOrM(mcap)
       ]);
-
+      
       const MutableInfo = birdeyeData?.response2.data.data.mutableMetadata ? '⚠️ Mutable' : '✅ Immutable';
       const renounced = tokenData.mint.mintAuthorityAddress?.toString() !== tokenData.updateAuthorityAddress.toString() ? "✅" : "❌ No";
       const top10 = Number(birdeyeData?.response2.data.data.top10HolderPercent) * 100;

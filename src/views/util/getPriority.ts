@@ -55,37 +55,41 @@ const getMaxPrioritizationFeeByPercentile = async (
     const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
    const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
     
-    const [result, result2,result3,result4] = await Promise.all([
-      getMaxPrioritizationFeeByPercentile(connection, {
-          lockedWritableAccounts: [
-              new PublicKey(priorityCalculation),
-          ],
-          percentile: PriotitizationFeeLevels.LOW,
-          fallback: false,
-      }),
+    const [result2,result3,result4] = await Promise.all([
+
       getMaxPrioritizationFeeByPercentile(connection, {
         lockedWritableAccounts: [
             new PublicKey(priorityCalculation),
         ],
-        percentile: PriotitizationFeeLevels.MEDIUM,
+        percentile: PriotitizationFeeLevels.LOW,
         fallback: false,
     }),
     getMaxPrioritizationFeeByPercentile(connection, {
       lockedWritableAccounts: [
           new PublicKey(priorityCalculation),
       ],
-      percentile: PriotitizationFeeLevels.HIGH,
+      percentile: PriotitizationFeeLevels.MEDIUM,
       fallback: false,
   }),
     getMaxPrioritizationFeeByPercentile(connection, {
     lockedWritableAccounts: [
         new PublicKey(priorityCalculation),
     ],
-    percentile: PriotitizationFeeLevels.MAX,
+    percentile: PriotitizationFeeLevels.HIGH,
     fallback: false,
     }),
   ]);
-  return {result, result2,result3,result4};
+  return {result2,result3,result4};
   }
 
 
+export async function setCustomPriority(ctx: any) {
+
+    const FeeInMicroLamports = (ctx.session.customPriorityFee * 1e9 ) ;
+    console.log('userFees', FeeInMicroLamports);
+    ctx.session.txPriorityFee = FeeInMicroLamports;
+    return ctx.session.txPriorityFee;
+    
+    
+   
+}

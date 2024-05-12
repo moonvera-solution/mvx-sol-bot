@@ -138,6 +138,7 @@ const UserSessions = new Schema({
       lookupTableAccount: String,
     }
   },
+
   currentMode: String,
   latestSlippage: Number,
   metadataMessageId: Number,
@@ -160,7 +161,9 @@ const UserSessions = new Schema({
   tritonRPC: String,
   tritonToken: String,
   allowedReferral:String, // tg Username
-  originalBaseMint:String
+  originalBaseMint:String,
+  ispriorityCustomFee: Boolean,
+  customPriorityFee: Number
 });
 
 export const UserSession = mongoose.model("UserSession", UserSessions);

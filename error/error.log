@@ -2315,4 +2315,1206 @@ Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range.
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/8/2024, 5:25:10 PM - bot.on('message'
+ Error 
+ bad secret key size
+ Error: bad secret key size
+    at Function.fromSecretKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/keypair.ts:56:13)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:512:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/9/2024, 10:48:39 PM - bot.on('message'
+ Error 
+ Non-base58 character
+ Error: Non-base58 character
+    at Object.decode (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/node_modules/base-x/src/index.js:111:11)
+    at new PublicKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:63:30)
+    at Function.isOnCurve (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:251:20)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:483:36
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/10/2024, 7:28:19 AM - bot.on('message'
+ Error 
+ Error: failed to send transaction: Transaction simulation failed: Transaction results in an account (0) with insufficient funds for rent
+ Error: Error: failed to send transaction: Transaction simulation failed: Transaction results in an account (0) with insufficient funds for rent
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/solTracker/index.ts:62:31
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:524:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/10/2024, 1:50:00 PM - bot.on('message'
+ Error 
+ Non-base58 character
+ Error: Non-base58 character
+    at Object.decode (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/node_modules/base-x/src/index.js:111:11)
+    at new PublicKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:63:30)
+    at Function.isOnCurve (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:251:20)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:421:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/10/2024, 1:56:31 PM - bot.on('message'
+ Error 
+ Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/solTracker/index.ts:64:31
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:536:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/10/2024, 1:56:54 PM - bot.on('message'
+ Error 
+ Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/service/dex/solTracker/index.ts:64:31
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:536:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/10/2024, 5:54:04 PM - bot.on('message'
+ TypeError 
+ Cannot set properties of undefined (setting 'amountIn')
+ TypeError: Cannot set properties of undefined (setting 'amountIn')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:517:38
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 5:55:52 PM - bot.on('message'
+ TypeError 
+ Cannot set properties of undefined (setting 'amountIn')
+ TypeError: Cannot set properties of undefined (setting 'amountIn')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:519:38
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 5:57:19 PM - bot.on('message'
+ TypeError 
+ Cannot set properties of undefined (setting 'amountIn')
+ TypeError: Cannot set properties of undefined (setting 'amountIn')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:519:38
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 5:59:47 PM - bot.on('message'
+ TypeError 
+ Cannot set properties of undefined (setting 'amountIn')
+ TypeError: Cannot set properties of undefined (setting 'amountIn')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:519:38
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 6:00:54 PM - bot.on('message'
+ Error 
+ Non-base58 character
+ Error: Non-base58 character
+    at Object.decode (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/node_modules/base-x/src/index.js:111:11)
+    at new PublicKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:63:30)
+    at Function.isOnCurve (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:251:20)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:494:37
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/10/2024, 6:01:02 PM - bot.on('message'
+ TypeError 
+ Cannot set properties of undefined (setting 'amountIn')
+ TypeError: Cannot set properties of undefined (setting 'amountIn')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:520:38
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 6:04:25 PM - bot.on('message'
+ TypeError 
+ Cannot read properties of undefined (reading 'amountIn')
+ TypeError: Cannot read properties of undefined (reading 'amountIn')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:519:70
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 6:08:48 PM - bot.on('message'
+ TypeError 
+ Cannot read properties of undefined (reading 'amountIn')
+ TypeError: Cannot read properties of undefined (reading 'amountIn')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:520:70
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 6:10:56 PM - bot.on('message'
+ TypeError 
+ Cannot read properties of undefined (reading 'amountIn')
+ TypeError: Cannot read properties of undefined (reading 'amountIn')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:520:70
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 6:11:41 PM - bot.on('message'
+ TypeError 
+ Cannot set properties of undefined (setting 'side')
+ TypeError: Cannot set properties of undefined (setting 'side')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:522:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 6:16:33 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:39:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 6:17:09 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:39:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 6:17:50 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:39:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 9:31:44 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 9:31:59 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 9:35:12 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 9:35:30 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 9:35:45 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 9:35:59 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 9:36:11 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 9:37:51 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/10/2024, 9:38:34 PM - bot.on('message'
+ Error 
+ TypeError: Cannot read properties of undefined (reading 'info')
+ Error: TypeError: Cannot read properties of undefined (reading 'info')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 7:15:05 AM - bot.on('message'
+ Error 
+ TypeError: Cannot read properties of undefined (reading 'info')
+ Error: TypeError: Cannot read properties of undefined (reading 'info')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 8:16:38 AM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1775
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1775
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 8:52:36 AM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 8:53:19 AM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:931:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 8:54:33 AM - bot.on('message'
+ Error 
+ TypeError: Cannot read properties of undefined (reading 'info')
+ Error: TypeError: Cannot read properties of undefined (reading 'info')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 9:07:20 AM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 9:07:27 AM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 9:07:43 AM - bot.on('message'
+ Error 
+ TypeError: Cannot read properties of undefined (reading 'info')
+ Error: TypeError: Cannot read properties of undefined (reading 'info')
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 9:20:25 AM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 9:20:30 AM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 9:20:41 AM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 9:22:13 AM - bot.on('message'
+ Error 
+ Non-base58 character
+ Error: Non-base58 character
+    at Object.decode (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/node_modules/base-x/src/index.js:111:11)
+    at new PublicKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:63:30)
+    at Function.isOnCurve (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:251:20)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:494:37
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 9:32:46 AM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 9:32:51 AM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 9:32:55 AM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:523:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 10:04:46 AM - bot.on('message'
+ Error 
+ Non-base58 character
+ Error: Non-base58 character
+    at Object.decode (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/node_modules/base-x/src/index.js:111:11)
+    at new PublicKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:63:30)
+    at Function.isOnCurve (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:251:20)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:465:36
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 10:28:10 AM - callback_query
+ TypeError 
+ tokenPriceUSD.toNumber is not a function
+ TypeError: tokenPriceUSD.toNumber is not a function
+    at display_token_details (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:117:43)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:1061:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 11:39:30 AM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async sendMessage (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:158:5)
+    at async display_spl_positions (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:90:3)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:911:9
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 11:43:13 AM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async sendMessage (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:158:5)
+    at async display_spl_positions (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:90:3)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:911:9
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 11:54:32 AM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async sendMessage (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:156:5)
+    at async display_spl_positions (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:90:3)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:911:9
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 11:55:41 AM - bot on positions cmd
+ GrammyError 
+ Call to 'sendMessage' failed! (400: Bad Request: message text is empty)
+ GrammyError: Call to 'sendMessage' failed! (400: Bad Request: message text is empty)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async sendMessage (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:158:5)
+    at async display_spl_positions (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/portfolioView.ts:90:3)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:310:5
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 2:52:06 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:931:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 2:56:28 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:931:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 2:57:44 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:931:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 4:01:16 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:946:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 4:03:09 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:946:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 4:04:05 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:947:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 4:21:28 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:947:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 4:24:22 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:947:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 4:26:10 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:947:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 4:30:13 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:947:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 4:59:38 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:947:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 5:01:24 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:948:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 5:08:39 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:948:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 5:10:06 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:948:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 5:13:54 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:948:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 5:45:07 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:948:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 5:45:35 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:948:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 5:46:31 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:948:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 5:47:19 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:948:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 7:28:24 PM - display_snipe_options
+ TypeError 
+ Cannot read properties of undefined (reading '_bn')
+ TypeError: Cannot read properties of undefined (reading '_bn')
+    at isPublicKeyData (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:39:35)
+    at new PublicKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:58:9)
+    at getPoolToken_details (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/util/dataCalculation.ts:10:9)
+    at quoteToken (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/util/dataCalculation.ts:30:82)
+    at display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:261:19)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:995:36
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 7:28:31 PM - display_snipe_options
+ TypeError 
+ Cannot read properties of undefined (reading '_bn')
+ TypeError: Cannot read properties of undefined (reading '_bn')
+    at isPublicKeyData (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:39:35)
+    at new PublicKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:58:9)
+    at getPoolToken_details (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/util/dataCalculation.ts:10:9)
+    at quoteToken (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/util/dataCalculation.ts:30:82)
+    at display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:261:19)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:995:36
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 7:28:35 PM - display_snipe_options
+ TypeError 
+ Cannot read properties of undefined (reading '_bn')
+ TypeError: Cannot read properties of undefined (reading '_bn')
+    at isPublicKeyData (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:39:35)
+    at new PublicKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:58:9)
+    at getPoolToken_details (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/util/dataCalculation.ts:10:9)
+    at quoteToken (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/util/dataCalculation.ts:30:82)
+    at display_snipe_options (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/index.ts:261:19)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:995:36
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 7:33:15 PM - bot.on('message'
+ TypeError 
+ poolKeys.id.toBase58 is not a function
+ TypeError: poolKeys.id.toBase58 is not a function
+    at startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:238:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+ 5/11/2024, 7:33:15 PM - bot on snipe simmulation
+ TypeError 
+ poolKeys.id.toBase58 is not a function
+ TypeError: poolKeys.id.toBase58 is not a function
+    at startSnippeSimulation (/Users/ghalebdamaj/mvx-sol-bot_stage/src/service/portfolio/strategies/snipper.ts:238:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+ 5/11/2024, 8:45:27 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:44:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:26:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:524:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 8:47:11 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:45:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:27:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:524:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 8:54:10 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:47:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:29:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:524:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 9:06:32 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:47:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:29:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:524:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 9:07:20 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:47:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:29:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:524:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 9:16:57 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:47:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:29:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:524:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 9:26:35 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:60:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:42:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:524:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 9:31:57 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Insufficient funds for fee
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:60:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:42:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:524:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 9:35:11 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:948:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 9:48:57 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x1772
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x1772
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:60:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:42:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:524:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 10:00:11 PM - bot.on('message'
+ Error 
+ Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x1772
+ Error: Error: Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x1772
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:60:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:42:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:524:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 10:18:59 PM - bot.on('message'
+ Error 
+ Non-base58 character
+ Error: Non-base58 character
+    at Object.decode (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/node_modules/base-x/src/index.js:111:11)
+    at new PublicKey (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:63:30)
+    at Function.isOnCurve (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/@solana/web3.js/src/publickey.ts:251:20)
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:423:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+ 5/12/2024, 1:37:14 AM - bot.on('message'
+ Error 
+ TypeError: extractAmount.toFixed is not a function
+ Error: TypeError: extractAmount.toFixed is not a function
+    at /Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:56:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async swap_pump_fun (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/pumpFun/pumpFunView.ts:29:4)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:524:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/12/2024, 4:08:44 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RefreshAllWallets (/Users/ghalebdamaj/mvx-sol-bot_stage/src/views/refreshData/RefresHandleWallets.ts:53:5)
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/src/bot.ts:933:11
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+    at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
  

@@ -26,7 +26,7 @@ export async function handleSettings(ctx: any) {
             await ctx.api.sendMessage(chatId, "No wallet found. Please create a wallet first.");
             return;
         }
-
+        console.log('ctx.customPriorityFee', ctx.session.customPriorityFee)
         // Create a message with the wallet information
         const walletInfoMessage = `Your Wallet:  ` +
             `<code>${publicKeyString}</code>\n` +
@@ -37,7 +37,8 @@ export async function handleSettings(ctx: any) {
         const options: any = {
             reply_markup: JSON.stringify({
                 inline_keyboard: [
-                    [{ text: 'Get Private Key', callback_data: 'get_private_key' }, { text: `✏ Slippage (${ctx.session.latestSlippage}%)`, callback_data: 'set_slippage' }],
+                    [{ text: 'Get Private Key', callback_data: 'get_private_key' }],
+                    [{ text: `✏ Slippage (${ctx.session.latestSlippage}%)`, callback_data: 'set_slippage' },{ text: `✏ Priority Fee (${ctx.session.customPriorityFee} SOL)`, callback_data: 'set_customPriority' } ],
                     [{ text: '🔂 Refresh', callback_data: 'refresh_wallet' }, { text: 'Reset Wallet', callback_data: 'confirm_reset_wallet' }],
                     [{ text: '↗️ Send SOL', callback_data: 'send_sol' }],
                     [{ text: 'Close', callback_data: 'closing' }]

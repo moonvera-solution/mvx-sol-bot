@@ -6,7 +6,7 @@ import {
 } from "@raydium-io/raydium-sdk";
 import { Connection, PublicKey, Keypair, SystemProgram, VersionedTransaction, TransactionMessage, ComputeBudgetProgram } from "@solana/web3.js";
 import { MVXBOT_FEES, WALLET_MVX, SNIPE_SIMULATION_COUNT_LIMIT, RAYDIUM_AUTHORITY } from "../../../../config";
-import { buildAndSendTx, trackUntilFinalized, getPriorityFeeLabel,getSwapAmountOut } from '../../util';
+import { buildAndSendTx, getPriorityFeeLabel,getSwapAmountOut } from '../../util';
 import { saveUserPosition } from '../positions';
 const log = (k: any, v: any) => console.log(k, v);
 import base58 from 'bs58';
@@ -16,6 +16,7 @@ import { waitForConfirmation, getSolBalance, getTokenExplorerURLS } from '../../
 import { Referrals, UserPositions } from "../../../db/mongo/schema";
 import { PriotitizationFeeLevels, getMaxPrioritizationFeeByPercentile, getSimulationUnits } from "../../../service/fees/priorityFees";
 import { display_after_Snipe_Buy, display_token_details } from '../../../views';
+import { RAYDIUM_POOL_TYPE } from '../../../service/util/types';
 
 export async function snipperON(ctx: any, amount: string) {
     try {
@@ -52,12 +53,16 @@ export async function snipperON(ctx: any, amount: string) {
             if (!poolKeys && ctx.session.snipeStatus) {
                 console.log('Snipe lookup on.');
                 poolKeys = await getRayPoolKeys(ctx, snipeToken);
+                console.log('poolKeysRayyy:::::', poolKeys);
                 console.log('snipe status: ', ctx.session.snipeStatus);
             } else if(poolKeys){
+
                 isIntervalDone = true;
                 clearInterval(interval_1); // Stop the interval when the condition is no longer met
                 clearInterval(interval_2);
-                ctx.session.activeTradingPool = jsonInfo2PoolKeys(poolKeys.id) as LiquidityPoolKeys;
+                console.log('poolKeys:::::', poolKeys.id);
+                ctx.session.activeTradingPool = poolKeys;
+                console.log('activeTradingPool::::::', ctx.session.activeTradingPool);
                 setSnipe(ctx, amount);
             }
             if(!ctx.session.snipeStatus) {
@@ -228,22 +233,21 @@ export async function startSnippeSimulation(
         return;
     }
     let maxPriorityFee;
-    if (poolKeys) {
-        maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
-            lockedWritableAccounts: [
-                new PublicKey(poolKeys.id),
-            ], percentile: ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
-            fallback: true
-        });
-    } else {
-        maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
-            lockedWritableAccounts: [new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8')], percentile: ctx.session.priorityFee, //PriotitizationFeeLevels.LOW,
-            fallback: true
-        });
+    const raydiumId = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8')
+    if(ctx.session.ispriorityCustomFee){
+      maxPriorityFee = Math.ceil(ctx.session.txPriorityFee);
+      console.log("maxPriorityFee", maxPriorityFee)
+    }else{
+      maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
+        lockedWritableAccounts: [
+          new PublicKey(poolKeys ? poolKeys.id : raydiumId.toBase58()),
+        ], percentile: ctx.session.priorityFees, //PriotitizationFeeLevels.LOW,
+        fallback: true
+      });
     }
 
     const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: (maxPriorityFee), });
-    innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(100_000) }));
+    // innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(100_000) }));
     innerTransactions[0].instructions.push(priorityFeeInstruction);
 
     let tx = new TransactionMessage({
@@ -303,24 +307,24 @@ export async function startSnippeSimulation(
                                 await referralRecord.save();
                         }
 
-                        if (await trackUntilFinalized(ctx, txids[0])) {
+                        // if (await trackUntilFinalized(ctx, txids[0])) {
                             saveUserPosition(
                                 ctx,
                                 userWallet.publicKey.toString(), {
-                                baseMint: ctx.session.originalBaseMint,
+                                baseMint: poolKeys.baseMint,
                                 name: tokenData.name,
                                 symbol: tokenData.symbol,
                                 tradeType: `ray_swap_buy`,
                                 amountIn: oldPositionSol ? oldPositionSol + amountIn.toNumber() : amountIn.toNumber(),
                                 amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount)
                             });
-                        }
+                        // }
 
                     } else {  // Tx not confirmed
                         const priorityFeeLabel = getPriorityFeeLabel(ctx.session.priorityFees);
                         const checkLiquidityMsg = priorityFeeLabel
                         ctx.api.sendMessage(ctx.chat.id,
-                            `Transaction could not be confirmed within the ${priorityFeeLabel.toUpperCase()} priority fee. \n` + checkLiquidityMsg
+                            `Transaction could not be confirmed. \n`
                         );
                     }
                     ctx.session.latestCommand = 'display_after_Snipe_Buy';
@@ -418,6 +422,6 @@ export async function catchSimulationErrors(ctx:any,simulationResult:any){
     const FEES_ERROR = 'InsufficientFundsForFee';
     if (simulationResult.value.err === FEES_ERROR) {
         console.log(simulationResult.value.logs)
-        throw new Error(`🔴 Insufficient balance for transaction fees.`);
+        throw new Error(`🔴 Swap failed! Please try again.`);
     }
 }

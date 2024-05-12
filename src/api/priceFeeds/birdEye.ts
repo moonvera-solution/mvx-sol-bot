@@ -21,7 +21,7 @@ export async function getTokenDataFromBirdEye(tokenAddress: String) {
         const [response, response2,solanaPrice] = await Promise.all([axios.get(url, options), axios.get(url2, options), axios.get(solanDetails, options)]); // [response1, response2
         // const response = await axios.get(url, options);
         // const response2 = await axios.get(url2, options);
-  
+        // console.log("response",response.data.data.realMc)
         return {response,response2,solanaPrice}; // Adjust this based on the actual response structure
     } catch (error:any) {
         console.error(
@@ -30,9 +30,10 @@ export async function getTokenDataFromBirdEye(tokenAddress: String) {
         return null;
     }
 }
-export async function getTokenOwnerPercentageFromBirdEye(tokenAddress: String) {
+
+export async function getTokenOwnerPercentageFromBirdEye() {
     try {
-        const url = `https://public-api.birdeye.so/defi/token_security?address=${tokenAddress}`;
+        const url = 'https://public-api.birdeye.so/v1/wallet/tx_list?wallet=C44ibjuJo38XsYC16CNkq3z1rnyo5mYNf5SLxa8J3koA&limit=30';
         const options = {
             method: 'GET',
             headers: {
@@ -40,10 +41,10 @@ export async function getTokenOwnerPercentageFromBirdEye(tokenAddress: String) {
                 'X-API-KEY': `${process.env.BIRD_EYE_API_KEY}`
             }
         };
-
+        
         const response = await axios.get(url, options);
-        console.log("response",response.data)
-        return await response.data; // Adjust this based on the actual response structure
+        console.log("response",response.data.data.solana)
+        return await response.data.data.solana; // Adjust this based on the actual response structure
     } catch (error:any) {
         console.error(
             error.message
@@ -51,7 +52,7 @@ export async function getTokenOwnerPercentageFromBirdEye(tokenAddress: String) {
         return null;
     }
 }
-
+// getTokenOwnerPercentageFromBirdEye()
 export async function getTokenOwnerFromBirdEye(tokenAddress: String) {
     try {
         const url = `https://public-api.birdeye.so/defi/token_creation_info?address=${tokenAddress}`;
@@ -91,19 +92,12 @@ export async function getSolanaDetails() {
         return null;
     }
 }
-// getSolanaDetails()
-// Example:
-// getTokenDataFromBirdEye('bobaM3u8QmqZhY1HwAtnvze9DLXvkgKYk3td3t8MLva');
-// getTokenOwnerPercentageFromBirdEye('4hw1dhVQA1iveLfnVzGxRnWZKsuuBUv3XzjftGRuRmJf')
-/**
- * Response:
-    {
-    "data": {
-        "value": 23.44450796529084,
-        "updateUnixTime": 1692175119,
-        "updateHumanTime": "2023-08-16T08:38:39"
-    },
-    "success": true
-    }
- */
 
+// get the portfolio of a user and filter 0 value tokens (true)
+// token amount and tokne value and address 
+
+// wallet addres and token address to query the tx
+
+// query the tx of the user portfolio tokens
+// get the amount in
+// do the pnl calculation

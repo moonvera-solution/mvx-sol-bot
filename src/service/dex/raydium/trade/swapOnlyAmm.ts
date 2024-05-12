@@ -163,14 +163,20 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   
   let maxPriorityFee;
   const raydiumId = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8')
-
-  maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
-    lockedWritableAccounts: [
-      new PublicKey(poolKeys ? poolKeys.id.toBase58() : raydiumId.toBase58()),
-    ], percentile: input.ctx.session.priorityFees, //PriotitizationFeeLevels.LOW,
-    fallback: true
-  });
-
+  console.log("ispriorityCustomFee", input.ctx.session.ispriorityCustomFee) 
+  if(input.ctx.session.ispriorityCustomFee){
+    maxPriorityFee = Math.ceil(input.ctx.session.txPriorityFee);
+    console.log("maxPriorityFee", maxPriorityFee)
+  }else{
+    maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
+      lockedWritableAccounts: [
+        new PublicKey(poolKeys ? poolKeys.id.toBase58() : raydiumId.toBase58()),
+      ], percentile: input.ctx.session.priorityFees, //PriotitizationFeeLevels.LOW,
+      fallback: true
+    });
+  }
+ 
+  console.log("maxPriorityFee", maxPriorityFee)
   // if (input.ctx.priorityFees == PriotitizationFeeLevels.HIGH) { maxPriorityFee = maxPriorityFee * 3; }
   // if (input.ctx.priorityFees == PriotitizationFeeLevels.MAX) { maxPriorityFee = maxPriorityFee * 1.5; }
 
@@ -181,13 +187,18 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
   // 1.-  Simulate the transaction and add the compute unit limit instruction to your transaction
-  try {
-    let units = await getSimulationComputeUnits(connection, innerTransactions[0].instructions, input.wallet.publicKey, []);
-    console.log("swap units", units)
-    if (units) innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(units * 1.1) }));
-  } catch (e) { 
-    console.log(e) 
-  }
+  // try {
+  //   let units
+  //   if(input.ctx.session.ispriorityCustomFee == true){
+  //   }else{
+  //     units = await getSimulationComputeUnits(connection, innerTransactions[0].instructions, input.wallet.publicKey, []);
+  //     if (units) innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(units * 1.3) }));
+  //   }
+  //   console.log("swap units", units)
+    
+  // } catch (e) { 
+  //   console.log(e) 
+  // }
 
   // 2.- Circular dependency on units so we need to   simulate again.
   await simulateTx(connection, innerTransactions[0].instructions, input.wallet.publicKey);

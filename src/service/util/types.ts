@@ -38,6 +38,7 @@ export interface ISESSION_DATA {
   latestSlippage: number
   metadataMessageId: number;
   snipeToken: PublicKey;
+  pumpToken: PublicKey;
   latestToken: PublicKey;
   snipeAmount: number;
   snipeSlippage: number;
@@ -52,17 +53,23 @@ export interface ISESSION_DATA {
   poolTime: number;
   positionPool: Array<any>;
   priorityFees: PriotitizationFeeLevels;
+  ispriorityCustomFee: boolean;
+  customPriorityFee: number;
   positionIndex: number;
   tritonRPC: String,
   tritonToken: String,
   allowedReferral:String, // tg Username
+  pump_amountIn: number,
+  pump_side: string,
+  pump_amountOut: number,
+  txPriorityFee: number,
+
 }
 
 export const enum PriotitizationFeeLevels {
-  LOW = 2500,
-  MEDIUM = 5000,
-  HIGH = 7500,
-  MAX = 10000,
+  LOW = 5000,
+  MEDIUM = 7500,
+  HIGH = 10000,
 }
 
 export const DefaultPoolInfoData: RAYDIUM_POOL_TYPE = {
@@ -102,10 +109,18 @@ export const DefaultSessionData: ISESSION_DATA = {
     positions: [],
     activeWalletIndex: 0
   },
+  // pump:{token:'',side:'',amountIn:0,amountOut:0},
+  pump_side: '',
+  pump_amountIn: 0,
+  pump_amountOut: 0,
   referralCommision: 0,
+  txPriorityFee: 100000,
+  customPriorityFee: 0.0001,
+  ispriorityCustomFee: false,
   awaitingWalletAddress: false,
   generatorWallet: DEFAULT_PUBLIC_KEY,
   rugCheckToken: DEFAULT_PUBLIC_KEY,
+  pumpToken: DEFAULT_PUBLIC_KEY,
   solAmount: 0,
   recipientAddress: DEFAULT_PUBLIC_KEY,
   activeTradingPool: DefaultPoolInfoData,

@@ -44,7 +44,7 @@ export async function handleRefreshStart(ctx: any) {
     `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
     `We're always working to bring you new features - stay tuned!\n\n` +
     `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
-    `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(2)}</b> USD\n\n` +
+    `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(4)}</b> USD\n\n` +
     `🖐🏼 For security, we recommend exporting your private key and keeping it paper.`;
 
  // Define the inline keyboard options
@@ -57,7 +57,7 @@ export async function handleRefreshStart(ctx: any) {
 
             // ],
             [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
-            [{ text: '☑️ Rug Check', callback_data: 'rug_check' }],
+            [{ text: "☑️ Rug Check", callback_data: "rug_check" },{ text: "💊 Pump fun", callback_data: "pump_fun" } ],
             [{ text: '🎯 Turbo Snipe', callback_data: 'snipe' }],
             [{ text: '💱 Buy', callback_data: 'buy' }, { text: 'Sell 📈', callback_data: 'sell' }],
             [{ text: 'ℹ️ Help', callback_data: 'help' }, { text: 'Refer Friends', callback_data: 'refer_friends' }],
@@ -115,7 +115,8 @@ export async function handleRereshWallet(ctx: any){
     const options: any = {
         reply_markup: JSON.stringify({
             inline_keyboard: [
-                [{ text: 'Get Private Key', callback_data: 'get_private_key' }, { text: `✏ Slippage (${ctx.session.latestSlippage}%)`, callback_data: 'set_slippage' }],
+                [{ text: 'Get Private Key', callback_data: 'get_private_key' }],
+                [{ text: `✏ Slippage (${ctx.session.latestSlippage}%)`, callback_data: 'set_slippage' },{ text: `✏ Priority Fee (${ctx.session.customPriorityFee} SOL)`, callback_data: 'set_customPriority' } ],
                 [{ text: '🔂 Refresh', callback_data: 'refresh_wallet' }, { text: 'Reset Wallet', callback_data: 'confirm_reset_wallet' }],
                 [{ text: '↗️ Send SOL', callback_data: 'send_sol' }],
                 [{ text: 'Close', callback_data: 'closing' }]

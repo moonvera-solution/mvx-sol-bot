@@ -23,13 +23,14 @@ import {
     LAMPORTS_PER_SOL,
     TransactionInstruction,
     Commitment,
-    SystemProgram
+    SystemProgram,
+    MessageV0
 } from '@solana/web3.js';
 
 import {
     addLookupTableInfo,
-    RAYDIUM_AUTHORITY,
-    makeTxVersion
+    RAYDIUM_AUTHORITY, MVXBOT_FEES,
+    makeTxVersion, WALLET_MVX
 } from '../../../config';
 
 // define some default locations
@@ -40,6 +41,8 @@ const DEFAULT_DEMO_DATA_FILE = "demo.json";
 import bs58 from 'bs58';
 import fs from "fs";
 import path from "path";
+import BigNumber from 'bignumber.js';
+import { Instruction } from '@coral-xyz/anchor';
 
 export async function sendTx(
     connection: Connection,
@@ -51,8 +54,8 @@ export async function sendTx(
     for (const iTx of txs) {
         if (iTx instanceof VersionedTransaction) {
             iTx.sign([payer]);
-            let ixId = await connection.sendRawTransaction(iTx.serialize(),options);
-            console.log("sending versioned tx",ixId);
+            let ixId = await connection.sendRawTransaction(iTx.serialize(), options);
+            console.log("sending versioned tx", ixId);
             txids.push(ixId);
         } else {
             console.log("sending legacy tx");
@@ -65,7 +68,7 @@ export async function sendTx(
 export async function getWalletTokenAccount(connection: Connection, wallet: PublicKey): Promise<TokenAccount[]> {
     const walletTokenAccount = await connection.getTokenAccountsByOwner(wallet, {
         programId: TOKEN_PROGRAM_ID,
-    },'processed');
+    }, 'processed');
     return walletTokenAccount.value.map((i) => ({
         pubkey: i.pubkey,
         programId: i.account.owner,
@@ -73,7 +76,7 @@ export async function getWalletTokenAccount(connection: Connection, wallet: Publ
     }));
 }
 
-export async function buildTx(innerSimpleV0Transaction: InnerSimpleV0Transaction[], connection:Connection, options?: SendOptions):
+export async function buildTx(innerSimpleV0Transaction: InnerSimpleV0Transaction[], connection: Connection, options?: SendOptions):
     Promise<(VersionedTransaction | Transaction)[]> {
     return await buildSimpleTransaction({
         connection,
@@ -84,7 +87,7 @@ export async function buildTx(innerSimpleV0Transaction: InnerSimpleV0Transaction
     });
 }
 
-export async function buildAndSendTx(keypair: Keypair, innerSimpleV0Transaction: InnerSimpleV0Transaction[], connection:Connection,options?: SendOptions) {
+export async function buildAndSendTx(keypair: Keypair, innerSimpleV0Transaction: InnerSimpleV0Transaction[], connection: Connection, options?: SendOptions) {
     const willSendTx: (VersionedTransaction | Transaction)[] = await buildSimpleTransaction({
         connection,
         makeTxVersion,
@@ -558,25 +561,15 @@ export async function sendSol(ctx: any, recipientAddress: PublicKey, solAmount: 
             { commitment: 'processed' }
         );
 
-const solscanUrl = `https://solscan.io/tx/${signature}`;
+        const solscanUrl = `https://solscan.io/tx/${signature}`;
 
-await ctx.api.sendMessage(chatId, `💸 Sent ${solAmount} SOL to ${recipientAddress.toBase58()}.\nView on Solscan: ${solscanUrl}`,{ parse_mode: 'HTML', disable_web_page_preview: true });
+        await ctx.api.sendMessage(chatId, `💸 Sent ${solAmount} SOL to ${recipientAddress.toBase58()}.\nView on Solscan: ${solscanUrl}`, { parse_mode: 'HTML', disable_web_page_preview: true });
     } catch (error) {
         console.error("Transaction Error:", error);
         await ctx.api.sendMessage(chatId, "Transaction failed. Please try again later.");
     }
 }
 
-async function getTokenDescription(tokenUri: string) {
-    try {
-        const response = await axios.get(tokenUri); // Fetch the URI content
-        const metadata = response.data; // Parse the content as JSON
-        return metadata.description; // Extract the description
-    } catch (error: any) {
-        console.error('Error fetching token description:', error.message);
-        return null; // Return null or a default description
-    }
-}
 export function isValidBase58(str: any) {
     const base58Regex = /^[1-9A-HJ-NP-Za-km-z]+$/;
     return base58Regex.test(str);
@@ -584,103 +577,137 @@ export function isValidBase58(str: any) {
 
 export async function waitForConfirmation(ctx: any, txid: string): Promise<boolean> {
     let isConfirmed = false;
-    const maxAttempts = 150;
+    const maxAttempts = 250;
     let attempts = 0;
-
+ try{
     while (!isConfirmed && attempts < maxAttempts) {
         attempts++;
+        const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
         console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
-
-        const status = await getTransactionStatus(txid);
-        console.log('Transaction status:', status);
-
-        if (status === 'confirmed' || status === 'finalized') {
-            // console.log('Transaction is confirmed.');
-            isConfirmed = true;
-        } else {
-            console.log('Waiting for confirmation...');
-            await new Promise(resolve => setTimeout(resolve, 500));
+        const config = {
+            searchTransactionHistory: true 
+        };
+        const sigStatus = await connection.getSignatureStatus(txid,config) 
+        console.log("sigStatus", sigStatus.value?.err)
+        console.log("sigConfrms", sigStatus.value?.confirmations)
+        if( sigStatus.value && sigStatus.value?.err == null && sigStatus.value?.confirmations && sigStatus.value?.confirmationStatus === 'confirmed'){
+           console.log('Transaction is confirmed.');
+           isConfirmed = true;
         }
     }
     return isConfirmed;
+} catch (error: any) {
+    console.error('Error waiting for confirmation:', error.message);
+    return false;
+
+}
+}
+export async function waitForConfirmationPump(ctx: any, txid: string): Promise<boolean> {
+    let isConfirmed = false;
+    const maxAttempts = 300;
+    let attempts = 0;
+ try{
+    while (!isConfirmed && attempts < maxAttempts) {
+        attempts++;
+        const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+        console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
+        const config = {
+            searchTransactionHistory: true 
+        };
+        const sigStatus = await connection.getSignatureStatus(txid,config) 
+        console.log("sigStatus", sigStatus.value?.err)
+        console.log("sigConfrms", sigStatus.value?.confirmations)
+        if( sigStatus.value && sigStatus.value?.err == null && sigStatus.value?.confirmations && sigStatus.value?.confirmationStatus === 'confirmed'){
+           console.log('Transaction is confirmed.');
+           isConfirmed = true;
+        }else if(sigStatus.value?.err){
+            await ctx.api.sendMessage(ctx.chat.id, `❌ Transaction failed!.`);
+            console.log('Transaction pump failed:', sigStatus.value?.err);
+            return false;
+        }
+    }
+    return isConfirmed;
+} catch (error: any) {
+    console.error('Error waiting for confirmation:', error.message);
+    return false;
+
+}
 }
 
-export function getPriorityFeeLabel(fee: number) : string{
+export function getPriorityFeeLabel(fee: number): string {
     let priorityFeeLabel;
-    switch(fee) {
-        case 2500:
+    switch (fee) {
+  
+        case 5000:
             priorityFeeLabel = 'low';
             break;
-        case 5000:
+        case 7500:
             priorityFeeLabel = 'medium';
             break;
-        case 7500:
-            priorityFeeLabel = 'high';
-            break;
         case 10000:
-            priorityFeeLabel = 'max';
+            priorityFeeLabel = 'high';
             break;
     }
     return String(priorityFeeLabel);
 }
-export async function trackUntilFinalized(ctx: any, txid: string): Promise<boolean> {
-    let isFinalized = false;
-    const maxAttempts = 150;
-    let attempts = 0;
+// export async function trackUntilFinalized(ctx: any, txid: string): Promise<boolean> {
+//     let isFinalized = false;
+//     const maxAttempts = 150;
+//     let attempts = 0;
 
-    while (!isFinalized && attempts < maxAttempts) {
-        attempts++;
+//     while (!isFinalized && attempts < maxAttempts) {
+//         attempts++;
 
-        const status = await getTransactionStatus(txid);
-        console.log('Transaction status:', status);
+//         const status = await getTransactionStatus(txid);
+//         console.log('Transaction status:', status);
 
-        if (status === 'finalized') {
-            isFinalized = true;
-        } else {
-            console.log('Waiting for finalization...');
-            await new Promise(resolve => setTimeout(resolve, 500));
-        }
-    }
+//         if (status === 'finalized') {
+//             isFinalized = true;
+//         } else {
+//             console.log('Waiting for finalization...');
+//             await new Promise(resolve => setTimeout(resolve, 500));
+//         }
+//     }
 
-    if (!isFinalized && attempts >= maxAttempts) {
-        ctx.api.sendMessage(ctx.chat.id, 'Transaction could not be finalized within the maximum attempts.');
-        console.error('Transaction could not be finalized within the max attempts.');
-    }
-    console.log('Transaction is finalized:', isFinalized);
-    return isFinalized;
-}
+//     if (!isFinalized && attempts >= maxAttempts) {
+//         ctx.api.sendMessage(ctx.chat.id, 'Transaction could not be finalized within the maximum attempts.');
+//         console.error('Transaction could not be finalized within the max attempts.');
+//     }
+//     console.log('Transaction is finalized:', isFinalized);
+//     return isFinalized;
+// }
 
-export async function getTransactionStatus(txid: string) {
-    const method = 'getSignatureStatuses';
-    const solanaRpcUrl = 'https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'; // Replace with your RPC URL
-    const body = {
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": method,
-        "params": [
-            [txid],
-            { "searchTransactionHistory": true }
-        ]
-    };
+// export async function getTransactionStatus(txid: string) {
+//     const method = 'getSignatureStatuses';
+//     const solanaRpcUrl = 'https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'; // Replace with your RPC URL
+//     const body = {
+//         "jsonrpc": "2.0",
+//         "id": 1,
+//         "method": method,
+//         "params": [
+//             [txid],
+//             { "searchTransactionHistory": true }
+//         ]
+//     };
 
-    try {
-        const response = await axios.post(solanaRpcUrl, body, {
-            headers: { 'Content-Type': 'application/json' },
-        });
-        
-        const data = response.data;
-        // console.log('Transaction status data:', data);
-        // Check if the transaction is confirmed
-        if (data.result && data.result.value && data.result.value[0]) {
-            return data.result.value[0].confirmationStatus;
-        } else {
-            return 'unconfirmed'; // or some other default status
-        }
-    } catch (error) {
-        console.error("Error fetching transaction status:", error);
-        return false;
-    }
-}
+//     try {
+//         const response = await axios.post(solanaRpcUrl, body, {
+//             headers: { 'Content-Type': 'application/json' },
+//         });
+
+//         const data = response.data;
+//         // console.log('Transaction status data:', data);
+//         // Check if the transaction is confirmed
+//         if (data.result && data.result.value && data.result.value[0]) {
+//             return data.result.value[0].confirmationStatus;
+//         } else {
+//             return 'unconfirmed'; // or some other default status
+//         }
+//     } catch (error) {
+//         console.error("Error fetching transaction status:", error);
+//         return false;
+//     }
+// }
 
 export function getTokenExplorerURLS(tokenAddress: string): { birdeyeURL: any; dextoolsURL: string; dexscreenerURL: string; } {
     return {
@@ -691,9 +718,9 @@ export function getTokenExplorerURLS(tokenAddress: string): { birdeyeURL: any; d
 }
 
 export async function getSwapAmountOut(
-    connection:Connection,
+    connection: Connection,
     txids: string[],
-){
+) {
     let extractAmount: number = 0;
     let counter = 0;
 
@@ -706,7 +733,7 @@ export async function getSwapAmountOut(
                 txAmount = JSON.parse(JSON.stringify(tx.instructions));
                 txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
                 txAmount.forEach((tx) => {
-                    if (tx.parsed.info.authority == RAYDIUM_AUTHORITY) { 
+                    if (tx.parsed.info.authority == RAYDIUM_AUTHORITY) {
                         extractAmount = tx.parsed.info.amount;
                     }
                     console.log('inner tx: ', JSON.parse(JSON.stringify(tx)));
@@ -715,4 +742,89 @@ export async function getSwapAmountOut(
         }
     }
     return extractAmount;
+}
+
+export async function getSwapAmountOutPump(
+    connection: Connection,
+    txids: string[],
+    tradeSide: string
+) {
+    let extractAmount: number = 0;
+    let counter = 0;
+
+    while (extractAmount == 0 && counter < 30) { // it has to find it since its a transfer tx
+        counter++;
+        const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
+        let txAmount: Array<any> | undefined;
+        if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions) {
+           console.log('Balance after sell ',txxs.meta.postBalances );
+           console.log('Balance before sell ',txxs.meta.preBalances );
+           console.log('balance change ',txxs.meta.postBalances[0] - txxs.meta.preBalances[0] );
+
+            txxs.meta.innerInstructions.forEach((tx) => {
+                txAmount = JSON.parse(JSON.stringify(tx.instructions));
+                txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
+                txAmount.forEach((tx) => {
+                    console.log('tx.parsed.info', tx)
+                    if (tradeSide == 'buy' && tx.parsed && tx.parsed?.info && tx.parsed?.info?.amount) {
+                        extractAmount = tx.parsed.info.amount;
+                    }else if(tradeSide == 'sell' && txxs && txxs.meta && txxs.meta.postBalances && txxs.meta.preBalances){
+                        extractAmount = txxs.meta.postBalances[0] - txxs.meta.preBalances[0] ;
+                    }
+                    console.log('extractAmount: ', extractAmount);
+                });
+            })
+        }
+    }
+    return extractAmount;
+}
+
+/**
+ * @notice Only use if there is a referral
+ * @returns TransactionInstruction Array
+ */
+export function add_mvx_and_ref_inx_fees(
+    payerKeypair: Keypair,
+    referralWallet: string,
+    solAmount: BigNumber,
+    referralCommision: number): TransactionInstruction[] {
+
+    const mvxFee = solAmount.times(MVXBOT_FEES);
+    const referralAmmount = mvxFee.times(referralCommision);
+    const mvxFeeAfterRefeeralCut = mvxFee.minus(referralAmmount);
+
+    const referralInx = SystemProgram.transfer({
+        fromPubkey: payerKeypair.publicKey,
+        toPubkey: new PublicKey(referralWallet),
+        lamports: referralAmmount.times(1e9).toNumber(), // 5_000 || 6_000
+    });
+
+    const mvxFeeInx = SystemProgram.transfer({
+        fromPubkey: payerKeypair.publicKey,
+        toPubkey: new PublicKey(WALLET_MVX),
+        lamports: mvxFeeAfterRefeeralCut.times(1e9).toNumber(), // 5_000 || 6_000
+    });
+
+    return [referralInx, mvxFeeInx];
+}
+
+/**
+ * @notice Only use if there is NO referral
+ * @returns TransactionInstruction Array
+ */
+export function addMvxFeesInx(payerKeypair: Keypair, solAmount: BigNumber): TransactionInstruction[] {
+    return [SystemProgram.transfer({
+        fromPubkey: payerKeypair.publicKey,
+        toPubkey: new PublicKey(WALLET_MVX),
+        lamports: new BigNumber(solAmount.times(1e9)).times(MVXBOT_FEES).toNumber(), // 5_000 || 6_000
+    })];
+}
+
+
+export function wrapLegacyTx(txInxs: TransactionInstruction[],payerKeypair: Keypair,blockhash: any): MessageV0 {
+    return new TransactionMessage({
+        payerKey: payerKeypair.publicKey,
+        recentBlockhash: blockhash,
+        instructions: txInxs
+    }).compileToV0Message();
 }
