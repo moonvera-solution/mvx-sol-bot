@@ -19,7 +19,7 @@ import dotenv from 'dotenv'; dotenv.config();
 const JUPITER_PROJECT = new PublicKey("45ruCyfdRkWpRNGEqWzjCiXRHkZs8WXCLQ67Pnpye7Hp");
 
 const connection = new Connection(`${process.env.TRITON_RPC_URL!}${process.env.TRITON_RPC_TOKEN!}`);
-const keypair = Keypair.fromSecretKey(bs58.decode(process.env.JUP_REF_KEY!));
+const keypair = Keypair.fromSecretKey(bs58.decode(process.env.JUP_REF_ACCOUNT_AUTHORITY_KEY!));
 console.log(keypair.publicKey.toBase58());
 const provider = new ReferralProvider(connection);
 const referralAccountKeypair = Keypair.generate();

@@ -4,7 +4,7 @@ import {Connection,Keypair,PublicKey} from "@solana/web3.js";
 import dotenv from 'dotenv'; dotenv.config();
 
 const connection = new Connection(`${process.env.TRITON_RPC_URL!}${process.env.TRITON_RPC_TOKEN!}`);
-const keypair = Keypair.fromSecretKey(bs58.decode(process.env.JUP_REF_ACCOUNT_AUTHORITY_KEY || ""));
+const keypair = Keypair.fromSecretKey(bs58.decode(process.env.JUP_REF_ACCOUNT_AUTHORITY_KEY!));
 const provider = new ReferralProvider(connection);
 const MVX_JUP_REFERRAL = "HH2UqSLMJZ9VP9jnneixYKe3oW8873S9MLUuMF3xvjLH";
 
@@ -21,12 +21,13 @@ const MVX_JUP_REFERRAL = "HH2UqSLMJZ9VP9jnneixYKe3oW8873S9MLUuMF3xvjLH";
 
   // Send each claim transaction one by one.
   for (const tx of txs) {
+    tx.message.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
     tx.sign([keypair]);
 
-    const txid = await connection.sendTransaction(tx);
+    const txid = await connection.sendRawTransaction(tx.serialize(), {preflightCommitment: "processed"});
     const { value } = await connection.confirmTransaction({
       signature: txid,
-      blockhash,
+      blockhash:(await connection.getLatestBlockhash()).blockhash,
       lastValidBlockHeight,
     });
 

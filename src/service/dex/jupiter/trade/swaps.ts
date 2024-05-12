@@ -1,6 +1,6 @@
 // // https://station.jup.ag/docs/apis/swap-api
-// import dotenv from 'dotenv';
-// dotenv.config();
+import dotenv from 'dotenv';
+dotenv.config();
 // import {
 //   Connection,Keypair,
 //   VersionedTransaction,
@@ -123,84 +123,81 @@
 // //     console.log(`https://solscan.io/tx/${signature}`);
 // //   }
 // // }
+
 // /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 // /*                            SWAP                            */
 // /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+import { Keypair, Connection, PublicKey, VersionedTransaction, TransactionSignature, TransactionMessage } from "@solana/web3.js";
+import bs58 from 'bs58';
+import {transactionSenderAndConfirmationWaiter} from '../utils/transactionSender';
+const connection = new Connection(`${process.env.TRITON_RPC_URL!}${process.env.TRITON_RPC_TOKEN!}`);
+const MVX_JUP_REFERRAL = "HH2UqSLMJZ9VP9jnneixYKe3oW8873S9MLUuMF3xvjLH";
+const wallet = Keypair.fromSecretKey(bs58.decode(process.env.TEST_WALLET_PK!));
 
-// async function jupiterSimpleSwap() {
-//   const secretKey = bs58.decode('2jaFhsbZMy8n7HzMAKrVYADqi5cYhKca7fWpet1gKGtb8X4EW7k1ZqpX7Qdr5NAaV4wTEK6L2mHvEFNaPg7sFR9L');
-//   // process.env.TEST_WALLET_PK!);
-//   const wallet: Keypair = Keypair.fromSecretKey(secretKey)
-//   // Swapping SOL to USDC with input 0.1 SOL and 0.5% slippage
-//   const quoteResponse = await (
-//     await fetch('https://quote-api.jup.ag/v6/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&amount=100000000&slippageBps=50')
-//   ).json();
+async function jupiterSimpleSwap(
+) {
+  // Swapping SOL to USDC with input 0.1 SOL and 0.5% slippage
+  const quoteResponse = await (
+    // TRITON_RPC_URL=https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41/jupiter/
+    // rrect: https://my-triton-endpoint/my-token/jupiter/quote?inputMint..
+    await fetch('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41/jupiter/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk&amount=10000&slippageBps=50&platformFeeBps=80')
+  ).json();
 
-//   // console.log({ quoteResponse });
+//   const [feeAccount] = await PublicKey.findProgramAddressSync(
+//     [
+//       Buffer.from("referral_ata"),
+//       new PublicKey('HH2UqSLMJZ9VP9jnneixYKe3oW8873S9MLUuMF3xvjLH').toBuffer(), // your referral account public key
+//       new PublicKey('WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk').toBuffer(), // the token mint, output mint for ExactIn, input mint for ExactOut.
+//     ],
+//     new PublicKey("45ruCyfdRkWpRNGEqWzjCiXRHkZs8WXCLQ67Pnpye7Hp") // the Referral Program
+//   );
 
+//   console.log('feeAccount', feeAccount.toBase58());
+  console.log('quoteResponse', quoteResponse);
 
-//   const { swapTransaction } = await (
-//     await fetch('https://quote-api.jup.ag/v6/swap', {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json'
-//       },
-//       body: JSON.stringify({
-//         // quoteResponse from /quote api
-//         quoteResponse,
-//         // user public key to be used for the swap
-//         userPublicKey: wallet.publicKey.toString(),
-//         // auto wrap and unwrap SOL. default is true
-//         wrapAndUnwrapSol: true,
-//         // feeAccount is optional. Use if you want to charge a fee.  feeBps must have been passed in /quote API.
-//         // feeAccount: "fee_account_public_key"
-//       })
-//     })
-//   ).json();
+  const { swapTransaction } = await (
+    await fetch('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41/jupiter/swap', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        // quoteResponse from /quote api
+        quoteResponse,
+        // user public key to be used for the swap
+        userPublicKey: wallet.publicKey.toString(),
+        // auto wrap and unwrap SOL. default is true
+        wrapAndUnwrapSol: true,
+        // feeAccount is optional. Use if you want to charge a fee.  feeBps must have been passed in /quote API.
+         feeAccount:"EsAaFBS5xCqdg3TkmwZTThS5NwKpqFs3jj1XBJyWSqwV",
+      })
+    })
+  ).json();
 
-//   // 6. Deserialize and sign the transaction
-//   const swapTransactionBuf = Buffer.from(swapTransaction, 'base64');
-//   var transaction = VersionedTransaction.deserialize(swapTransactionBuf);
-//   // console.log(transaction);
+    console.log('swapTransaction', swapTransaction);
 
-//   // sign the transaction
-//   transaction.sign([wallet]);
+  // 6. Deserialize and sign the transaction
+  const swapTransactionBuf = Buffer.from(swapTransaction, 'base64');
+  var transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+  // console.log(transaction);
 
-//   // We first simulate whether the transaction would be successful
+  // sign the transaction
+  transaction.message.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+  // We first simulate whether the transaction would be successful
 //   const { value: simulatedTransactionResponse } =
-//     await connection.simulateTransaction(transaction, {
-//       replaceRecentBlockhash: true,
-//       commitment: "processed",
-//     });
-
 //   const { err, logs } = simulatedTransactionResponse;
 
-//   // 7. Execute the transaction
+  // 7. Execute the transaction
 //   const serializedTransaction = Buffer.from(transaction.serialize());
-//   const blockhash = transaction.message.recentBlockhash;
-//   const latestBlockheight= await connection.getBlockHeight();
+  transaction.sign([wallet]);
 
-//   const transactionResponse = await transactionSenderAndConfirmationWaiter({
-//     connection,
-//     serializedTransaction,
-//     blockhashWithExpiryBlockHeight: {
-//       blockhash,
-//       lastValidBlockHeight: latestBlockheight
-//     },
-//   });
 
-//   // If we are not getting a response back, the transaction has not confirmed.
-//   if (!transactionResponse) {
-//     console.error("Transaction not confirmed");
-//     return;
-//   }
+  const tx = await connection.sendRawTransaction(transaction.serialize(), {preflightCommitment: 'processed'});
+  console.log(`https://solscan.io/tx/${tx}`);
 
-//   if (transactionResponse.meta?.err) {
-//     console.error(transactionResponse.meta?.err);
-//   }
-
-// }
-// // jupiterSimpleSwap().then((tx) => console.log('Swap', tx));
+}
+jupiterSimpleSwap().then((tx) => console.log('Swap', tx));
 
 
 // /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
