@@ -26,7 +26,7 @@ import {
   makeTxVersion,
   MVXBOT_FEES,
   TIP_VALIDATOR,
-  WALLET_MVX
+  WALLET_MVX,
 } from "../../../../../config";
 import { formatAmmKeysById } from "../raydium-utils/formatAmmKeysById";
 import { simulateTx, getMaxPrioritizationFeeByPercentile, PriotitizationFeeLevels } from "../../../fees/priorityFees";

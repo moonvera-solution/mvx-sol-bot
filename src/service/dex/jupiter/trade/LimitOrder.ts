@@ -1,4 +1,4 @@
-import { LimitOrderProvider, ownerFilter, OrderHistoryItem, TradeHistoryItem } from "@jup-ag/limit-order-sdk";
++import { LimitOrderProvider, ownerFilter, OrderHistoryItem, TradeHistoryItem } from "@jup-ag/limit-order-sdk";
 import { Keypair, Connection, PublicKey, VersionedTransaction, TransactionSignature, TransactionMessage } from "@solana/web3.js";
 import { addMvxFeesInx, add_mvx_and_ref_inx_fees, sendTx, sendSignedTx, wrapLegacyTx } from '../../../../service/util';
 import { BN } from "@coral-xyz/anchor";
@@ -74,7 +74,7 @@ export async function setLimitJupiterOrder(
     mvxTx.sign([userWallet]);
     versionnedBundle.push(mvxTx);
 
-    // sign all bundle tx's independently before sending
+    // sign each bundle tx's(Inx) independently before sending
     return (await sendSignedTx(connection, versionnedBundle, { preflightCommitment: "processed", }))[0];
   } catch (e: any) {
     console.log(e);

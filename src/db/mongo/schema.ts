@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import { PublicKey } from '@solana/web3.js';
 import { PORTFOLIO_TYPE, ISESSION_DATA, RAYDIUM_POOL_TYPE, USERPOSITION_TYPE, REFERRAL_TYPE } from '../../service/util/types';
 
-
 const Schema = mongoose.Schema;
 const WalletSchema = new Schema({
   chatId: { type: Number, unique: true }, // not unique, will be overriden when reseting wallet
@@ -163,6 +162,12 @@ const UserSessions = new Schema({
   originalBaseMint:String
 });
 
+const JupiterSwapTokenRefs = new Schema({
+  id: { type: String, unique: true },
+  ref:{ type: String, unique: true}
+});
+
+export const JupiterSwapTokenRef = mongoose.model("JupiterSwapTokenRefs", JupiterSwapTokenRefs);
 export const UserSession = mongoose.model("UserSession", UserSessions);
 export const WalletKeys = mongoose.model("WalletKeys", WalletSchema);
 export const Portfolios = mongoose.model("Portfolios", UserPortfolioSchema);

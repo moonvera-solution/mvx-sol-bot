@@ -17,7 +17,7 @@ const authMechanism = 'SCRAM-SHA-1';
 
 const local_url = `mongodb://${user}:${password}@localhost:35048/bot`;
 const ec2_url = `mongodb://${ec2_user}:${ec2_password}@localhost:35048/bot`;
-const connection = new Connection('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41')
+const connection = new Connection('https://rpcpool.com')
 
 
 /**

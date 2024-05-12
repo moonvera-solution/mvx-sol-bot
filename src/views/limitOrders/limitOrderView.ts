@@ -20,7 +20,6 @@ import bs58 from 'bs58';
 import BigNumber from "bignumber.js";
 
 export async function submit_limitOrder(ctx: any) {
-  console.log("logged in the function : ", ctx.session.limitOrders);
   const chatId = ctx.chat.id;
   const wallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
   const userWallet: Keypair = Keypair.fromSecretKey(bs58.decode(String(wallet.secretKey)));

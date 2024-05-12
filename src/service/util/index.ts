@@ -768,10 +768,12 @@ export function add_mvx_and_ref_inx_fees(
  * @returns TransactionInstruction Array
  */
 export function addMvxFeesInx(payerKeypair: Keypair, solAmount: BigNumber): TransactionInstruction[] {
+    const mvxAmount =  new BigNumber(solAmount.times(1e9)).times(MVXBOT_FEES).toNumber();
+    console.log("fee mvxAmount", mvxAmount)
     return [SystemProgram.transfer({
         fromPubkey: payerKeypair.publicKey,
         toPubkey: new PublicKey(WALLET_MVX),
-        lamports: new BigNumber(solAmount.times(1e9)).times(MVXBOT_FEES).toNumber(), // 5_000 || 6_000
+        lamports: mvxAmount, // 5_000 || 6_000
     })];
 }
 
