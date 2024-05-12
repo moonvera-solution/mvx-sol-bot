@@ -7,7 +7,7 @@ export async function refreshAllWallets(ctx: any){
     const chatId = ctx.chat.id;
     const wallets = ctx.session.portfolio.wallets;
     const selectedWalletIndex = ctx.session.activeWalletIndex; // Index of the currently selected wallet
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
 
 
     if (!wallets || wallets.length === 0) {
@@ -56,7 +56,7 @@ export async function refreshAllWallets(ctx: any){
 export async function handleRefreshWallet(ctx: any) {
 
     const chatId = ctx.chat.id;
-    const connection = new Connection(`${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`);
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
     const selectedWallet = ctx.session.activeWalletIndex;
     const userWallet = ctx.session.portfolio.wallets[selectedWallet];
 

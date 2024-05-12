@@ -46,21 +46,35 @@ import { Instruction } from '@coral-xyz/anchor';
 
 export async function sendTx(
     connection: Connection,
-    payer: Keypair | Signer,
+    signers: Keypair[] | Signer[],
     txs: (VersionedTransaction | Transaction)[],
     options?: SendOptions
 ): Promise<string[]> {
     const txids: string[] = [];
     for (const iTx of txs) {
         if (iTx instanceof VersionedTransaction) {
-            iTx.sign([payer]);
+            iTx.sign(signers);
             let ixId = await connection.sendRawTransaction(iTx.serialize(), options);
             console.log("sending versioned tx", ixId);
             txids.push(ixId);
         } else {
             console.log("sending legacy tx");
-            txids.push(await connection.sendTransaction(iTx, [payer], options));
+            txids.push(await connection.sendTransaction(iTx, signers, options));
         }
+    }
+    return txids;
+}
+
+export async function sendSignedTx(
+    connection: Connection,
+    txs: (VersionedTransaction | Transaction)[],
+    options?: SendOptions
+): Promise<string[]> {
+    const txids: string[] = [];
+    for (const iTx of txs) {
+        let ixId = await connection.sendRawTransaction(iTx.serialize(), options);
+        console.log("sending versioned tx", ixId);
+        txids.push(ixId);
     }
     return txids;
 }
@@ -95,7 +109,7 @@ export async function buildAndSendTx(keypair: Keypair, innerSimpleV0Transaction:
         innerTransactions: innerSimpleV0Transaction,
         addLookupTableInfo: addLookupTableInfo,
     });
-    return await sendTx(connection, keypair, willSendTx, options)
+    return await sendTx(connection, [keypair], willSendTx, options)
 }
 
 // export function getATAAddress(programId: PublicKey, owner: PublicKey, mint: PublicKey) {
@@ -762,10 +776,29 @@ export function addMvxFeesInx(payerKeypair: Keypair, solAmount: BigNumber): Tran
 }
 
 
-export function wrapLegacyTx(txInxs: TransactionInstruction[],payerKeypair: Keypair,blockhash: any): MessageV0 {
+export function wrapLegacyTx(txInxs: TransactionInstruction[], payerKeypair: Keypair, blockhash: any): MessageV0 {
     return new TransactionMessage({
         payerKey: payerKeypair.publicKey,
         recentBlockhash: blockhash,
         instructions: txInxs
     }).compileToV0Message();
+}
+export function getTargetDate(msg: any): Date | null {
+    try {  // Split the message into its components
+        const [mins, hrs, days] = msg.split(':').map(Number);
+
+        // Get the current date
+        const date = new Date();
+
+        // Add the time to the date
+        date.setMinutes(date.getMinutes() + mins);
+        date.setHours(date.getHours() + hrs);
+        date.setDate(date.getDate() + days);
+
+        // Return the new date
+        return date;
+    } catch (error: any) {
+        console.error('Error getting target date:', error.message);
+        return null;
+    }
 }

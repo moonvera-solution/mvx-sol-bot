@@ -11,7 +11,6 @@ import BigNumber from 'bignumber.js';
 import axios from 'axios';
 import bs58 from 'bs58';
 import { Referrals, UserPositions } from '../../../db/mongo/schema';
-import BN from 'bn.js';
 
 export async function handle_radyum_swap(
     ctx: any,
@@ -119,12 +118,13 @@ export async function handle_radyum_swap(
                     walletTokenAccounts,
                     wallet: Keypair.fromSecretKey(bs58.decode(String(userWallet.secretKey))),
                     commitment: 'processed'
-                }).then(async ({ txids }) => {
+                }).then(async ( txs ) => {
+                    const txids = txs!.txids[0];
                     let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing with ${getPriorityFeeLabel(ctx.session.priorityFees)} priotity fee. <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>. Please wait for confirmation...`
                     await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
                     
-                    const isConfirmed = await waitForConfirmation(ctx, txids[0]);
-                    let extractAmount =  isConfirmed ? await getSwapAmountOut(connection, txids) : 0;
+                    const isConfirmed = await waitForConfirmation(ctx, txids);
+                    let extractAmount =  isConfirmed ? await getSwapAmountOut(connection, [txids]) : 0;
 
                     if (isConfirmed) { // get swap amountOut
 

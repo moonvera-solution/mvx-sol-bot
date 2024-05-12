@@ -56,6 +56,7 @@ export interface ISESSION_DATA {
   tritonRPC: String,
   tritonToken: String,
   allowedReferral:String, // tg Username
+  limitOrders:{token:String,side:String,amount:number,price:number, time: number |null },
   pump:{token:String,side:String,amountIn:number,amountOut:number}
 }
 
@@ -128,6 +129,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   allowedReferral:'', // tg Username
   tritonRPC : 'https://moonvera-pit.rpcpool.com/',
   tritonToken : process.env.TRITON_RPC_TOKEN!,
+  limitOrders:{token:'',side:'',amount:0,price:0,time:0},
   pump:{token:'',side:'',amountIn:0,amountOut:0}
 }
 

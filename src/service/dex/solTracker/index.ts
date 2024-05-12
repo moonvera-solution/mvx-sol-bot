@@ -38,7 +38,7 @@ export async function swap_solTracker(connection: Connection ,{
     // API CALL TO SOL TRACKER SWAP
     return axios.get(`${process.env.SOL_TRACKER_API_URL}/swap`, { params, headers }).then(async(swapInx) => {
         const swapResponse = swapInx.data;
-        console.log("swap response:", swapResponse);
+
         const serializedTransactionBuffer = Buffer.from(swapResponse.txn, "base64");
         let solAmount: BigNumber = side == 'buy' ? new BigNumber(swapResponse.rate.amountIn) : new BigNumber(swapResponse.rate.amountOut);
         let hasReferral = referralWallet && referralCommision;
@@ -52,12 +52,12 @@ export async function swap_solTracker(connection: Connection ,{
             const txn = VersionedTransaction.deserialize(serializedTransactionBuffer); if (!txn) return false;
             versionnedBundle.push(new VersionedTransaction(wrapLegacyTx(txInxs, payerKeypair,blockhash)));
             versionnedBundle.push(txn);
-            return  await sendTx(connection, payerKeypair, versionnedBundle, { preflightCommitment: 'processed' });
+            return  await sendTx(connection, [payerKeypair], versionnedBundle, { preflightCommitment: 'processed' });
         } else {
             const txn = Transaction.from(serializedTransactionBuffer); if (!txn) return false;
             const tx = new Transaction().add(txn); // add swap inx 
             txInxs.forEach((inx:any) => tx.add(inx));  // add mvx, ref inx
-            return await sendTx(connection, payerKeypair, [tx], { preflightCommitment: 'processed' });
+            return await sendTx(connection, [payerKeypair], [tx], { preflightCommitment: 'processed' });
         }
     }).catch(error => { throw new Error(error) });
 }

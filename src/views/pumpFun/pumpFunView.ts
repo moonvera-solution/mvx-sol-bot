@@ -10,7 +10,7 @@ import { logErrorToFile } from "../../../error/logger";
 import { getTokenDataFromBirdEye } from '../../api/priceFeeds/birdEye';
 import {swap_solTracker} from '../../service/dex/solTracker';
 import { Referrals } from '../../db/mongo/schema';
-import {SOL_ADDR} from '../../../config';
+import {SOL_ADDRESS} from '../../../config';
 
 import bs58 from "bs58";
 
@@ -23,8 +23,8 @@ export async function swap_pump_fun(ctx:any){
     const referralCommision = ctx.session.referralCommision / 100;
     const referralRecord = await Referrals.findOne({ referredUsers: chatId });
     const tradeSide = ctx.session.pump.side;
-    const tokenIn = tradeSide == 'buy' ? SOL_ADDR : ctx.session.pump.token;
-    const tokenOut = tradeSide == 'buy' ? ctx.session.pump.token : SOL_ADDR;
+    const tokenIn = tradeSide == 'buy' ? SOL_ADDRESS : ctx.session.pump.token;
+    const tokenOut = tradeSide == 'buy' ? ctx.session.pump.token : SOL_ADDRESS;
 
     swap_solTracker(connection,{
         side: tradeSide,

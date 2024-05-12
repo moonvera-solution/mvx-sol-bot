@@ -4,23 +4,23 @@ import {
   handleGetPrivateKey,
   checkWalletsLength,
   confirmResetWalletAgain,
-  resetWallet,importWallet, getPortfolio
+  resetWallet, importWallet, getPortfolio
 } from "./service/portfolio/wallets";
 import { handle_radyum_swap } from "./service/portfolio/strategies/swaps";
-import {Bot,Context,GrammyError,HttpError,session,SessionFlavor,webhookCallback} from "grammy";
-import {ISESSION_DATA,DefaultSessionData,PORTFOLIO_TYPE,DefaultPortfolioData} from "./service/util/types";
+import { Bot, Context, GrammyError, HttpError, session, SessionFlavor, webhookCallback } from "grammy";
+import { ISESSION_DATA, DefaultSessionData, PORTFOLIO_TYPE, DefaultPortfolioData } from "./service/util/types";
 import { Keypair, PublicKey, Connection } from "@solana/web3.js";
 import { _initDbConnection } from "./db/mongo/crud";
 import { handleSettings } from "./service/settings";
 import { getSolanaDetails } from "./api";
 import { setSnipe, snipperON } from "./service/portfolio/strategies/snipper";
-import {display_token_details,display_snipe_options,handleCloseKeyboard,display_after_Snipe_Buy} from "./views";
+import { display_token_details, display_snipe_options, handleCloseKeyboard, display_after_Snipe_Buy } from "./views";
 import { getSolBalance, sendSol } from "./service/util";
 import { handleRefreshStart } from "./views/refreshData/refreshStart";
-import {handleRefreshWallet,refreshAllWallets,} from "./views/wallets/walletsView";
+import { handleRefreshWallet, refreshAllWallets, } from "./views/wallets/walletsView";
 import {
   display_limitOrder_token_details,
-  submit_limitOrder,
+  submit_limitOrder, review_limitOrder_details
 } from "./views/limitOrders/limitOrderView";
 import { handleWallets } from "./views/util/dbWallet";
 import { getRayPoolKeys } from "./service/dex/raydium/raydium-utils/formatAmmKeysById";
@@ -28,10 +28,11 @@ import { sendHelpMessage } from "./views/util/helpMessage";
 import { display_rugCheck } from "./views/rugCheck/rugCheck";
 import { _generateReferralLink, _getReferralData } from "../src/db/mongo/crud";
 import { Portfolios, Referrals, AllowedReferrals, UserSession } from "./db/mongo/schema";
-import { display_spl_positions, display_single_spl_positions, display_refresh_single_spl_positions } from "./views/portfolioView";
+import { display_spl_positions, display_single_spl_positions, display_refresh_single_spl_positions } from "./views/portfolio/portfolioView";
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { swap_pump_fun, display_pump_fun_token_details } from "./views/pumpFun/pumpFunView";
 import { logErrorToFile } from "../error/logger";
+import {getTargetDate} from "../src/service/util";
 const express = require("express");
 const app = express();
 
@@ -710,7 +711,7 @@ bot.on("message", async (ctx) => {
         ctx.session.latestCommand = 'display_pump_token';
         if (msgTxt) {
           ctx.session.pump.token = msgTxt;
-          await display_pump_fun_token_details(ctx,false);
+          await display_pump_fun_token_details(ctx, false);
         }
         break;
       }
@@ -741,6 +742,48 @@ bot.on("message", async (ctx) => {
           }
         }
         break;
+      }
+      case "limitOrders": {
+        try {
+          if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
+            ctx.session.limitOrders.token = (ctx.message.text || "").toString();
+            const isTOken = await checkAccountType(ctx, msgTxt);
+            ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
+            ctx.session.latestCommand = "limitOrders";
+            await display_limitOrder_token_details(ctx, false);
+            break;
+          }
+        } catch (error: any) {
+          console.error("ERROR on bot.on txt msg", error, error.message);
+        }
+      }
+      case "set_limit_order_amount":{
+        // TODO: add checks for the amount
+        ctx.session.limitOrders.amount = Number(msgTxt!);
+        await ctx.api.sendMessage(chatId, "Enter the token target price");
+        ctx.session.latestCommand = "set_limit_order_price";
+        break;
+      }
+      case "set_limit_order_price": {
+        // TODO: add checks for the price
+        ctx.session.limitOrders.price = Number(msgTxt!);
+        await ctx.api.sendMessage(chatId, "Enter expiry time min:hrs:days - 00:00:00\n");
+        await ctx.api.sendMessage(chatId, "Or enter NO EXPIRY");
+        ctx.session.latestCommand = "set_limit_order_time";
+        break;
+      }
+      case "set_limit_order_time": {
+        // TODO: parse NO EXPIRY msgTxt and set ctx.session.limitOrders.time = null
+        msgTxt?.includes("NO") ? ctx.session.limitOrders.time = null : null;
+        const time = getTargetDate(msgTxt!);
+        if(time){
+          ctx.session.limitOrders.time = Number(time);
+          await review_limitOrder_details(ctx,false);
+          break;
+        }else{
+          await ctx.api.sendMessage(chatId, "Invalid time format");
+          return;
+        }
       }
     }
   } catch (error: any) {
@@ -1189,7 +1232,6 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "display_spl_positions": {
-        // await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
         await display_spl_positions(ctx, false);
         break;
       }
@@ -1206,13 +1248,16 @@ bot.on("callback_query", async (ctx: any) => {
         await display_single_spl_positions(ctx);
         break;
       }
+
+      // /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+      // /*                -- Priority Fees                            */
+      // /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
       case "priority_low": {
         ctx.session.priorityFees = PriotitizationFeeLevels.LOW;
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);
-        } else if (
-          ctx.session.latestCommand === "display_single_spl_positions"
-        ) {
+        } else if (ctx.session.latestCommand === "display_single_spl_positions") {
           await display_refresh_single_spl_positions(ctx);
         } else if (ctx.session.latestCommand === "display_after_Snipe_Buy") {
           await display_after_Snipe_Buy(ctx, true);
@@ -1229,7 +1274,7 @@ bot.on("callback_query", async (ctx: any) => {
           await display_refresh_single_spl_positions(ctx);
         } else if (ctx.session.latestCommand === 'display_after_Snipe_Buy') {
           await display_after_Snipe_Buy(ctx, true);
-        }else {
+        } else {
           await display_token_details(ctx, true);
         }
         break;
@@ -1251,7 +1296,8 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "priority_max": {
         ctx.session.priorityFees = PriotitizationFeeLevels.MAX;
-        if (ctx.session.latestCommand === "snipe") {await display_snipe_options(ctx, true);
+        if (ctx.session.latestCommand === "snipe") {
+          await display_snipe_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_spl_positions") {
           await display_refresh_single_spl_positions(ctx);
         } else if (ctx.session.latestCommand === "display_after_Snipe_Buy") {
@@ -1261,25 +1307,35 @@ bot.on("callback_query", async (ctx: any) => {
         }
         break;
       }
+      // /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+      // /*                -- Limit Orders                             */
+      // /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
       case "limitOrders": {
         ctx.session.latestCommand = "limitOrders";
-        await ctx.api.sendMessage(
-          chatId,
-          "Enter token address to set limit order."
-        );
+        await ctx.api.sendMessage(chatId, "Enter token address to set limit order.");
         break;
       }
-      case "set_limit_order_side_buy": {
-        ctx.session.latestCommand = "limitOrders";
-        await ctx.api.sendMessage(chatId, "Enter amount to set buying order.");
-        ctx.session.latestCommand = "set_limit_order_side_buy";
+      case "set_limit_order_buy": {
+        ctx.session.latestCommand = "set_limit_order_amount";
+        ctx.session.limitOrders.side = "buy";
+        await ctx.api.sendMessage(chatId, "Enter amount of Buy order.");
         break;
       }
-      case "set_limit_order_side_sell": {
-        ctx.session.latestCommand = "limitOrders";
-        await ctx.api.sendMessage(chatId, "Enter amount to set selling order.");
+      case "set_limit_order_sell": {
+        ctx.session.latestCommand = "set_limit_order_amount";
+        ctx.session.limitOrders.side = "sell";
+        await ctx.api.sendMessage(chatId, "Enter amount of Sell order.");
         break;
       }
+      case "submit_limit_order":{
+        await submit_limitOrder(ctx);
+        break;
+      }
+      // /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+      // /*                   -- Pump Fun                               */
+      // /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
       case 'display_pump_token': {
         ctx.session.latestCommand = 'display_pump_token';
         await ctx.api.sendMessage(chatId, "Please enter the token address.");
@@ -1290,7 +1346,7 @@ bot.on("callback_query", async (ctx: any) => {
         await ctx.api.sendMessage(chatId, "Please enter amount to buy");
         break;
       }
-      case 'buy_pump_X_SOLbuy_pump_X_SOL': {
+      case 'sell_pump_X_SOL': {
         ctx.session.latestCommand = 'sell_pump_X_SOL';
         await ctx.api.sendMessage(chatId, "Please enter amount to sell");
         break;
@@ -1298,13 +1354,7 @@ bot.on("callback_query", async (ctx: any) => {
     }
   } catch (e: any) {
     logErrorToFile("callback_query", e);
-    if (
-      e instanceof GrammyError ||
-      e instanceof HttpError ||
-      e instanceof Error ||
-      e instanceof TypeError ||
-      e instanceof RangeError
-    ) {
+    if (e instanceof GrammyError || e instanceof HttpError || e instanceof Error || e instanceof TypeError || e instanceof RangeError) {
       console.error("Callback query failed due to timeout or invalid ID.");
       console.log("Error in callback_query:", e);
     } else {

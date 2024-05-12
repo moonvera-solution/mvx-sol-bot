@@ -1,29 +1,16 @@
-import { LimitOrderProvider, CreateOrderParams } from "@jup-ag/limit-order-sdk";
-import {
-  Keypair,
-  Connection,
-  PublicKey,
-  sendAndConfirmTransaction,
-  TransactionSignature,
-  TransactionMessage,
-} from "@solana/web3.js";
+import { LimitOrderProvider, ownerFilter, OrderHistoryItem, TradeHistoryItem  } from "@jup-ag/limit-order-sdk";
+import { Keypair, Connection, PublicKey, VersionedTransaction, TransactionSignature, TransactionMessage } from "@solana/web3.js";
+import { addMvxFeesInx, add_mvx_and_ref_inx_fees, sendTx, sendSignedTx, wrapLegacyTx } from '../../../../service/util';
 import { BN } from "@coral-xyz/anchor";
-import bs58 from "bs58";
+import { SOL_ADDRESS } from '../../../../../config';
 import { getTokenDataFromBirdEye } from "../../../../api/priceFeeds/birdEye";
-import dotenv from "dotenv";
-
-dotenv.config();
-
+import dotenv from "dotenv"; dotenv.config();
+import BigNumber from 'bignumber.js';
+import { getSolanaDetails, getTokenPriceFromJupiter } from '../../../../api';
+import bs58 from 'bs58';
 // The Jupiter Limit Order's project account for the Referral Program is
 // 45ruCyfdRkWpRNGEqWzjCiXRHkZs8WXCLQ67Pnpye7Hp referral fees are withdrawable here.
 
-// const connection = new Connection(
-//   `${process.env.TRITON_RPC_URL!}${process.env.TRITON_RPC_TOKEN!}`
-// );
-const MVX_JUP_REFERRAL = "HH2UqSLMJZ9VP9jnneixYKe3oW8873S9MLUuMF3xvjLH";
-// const wallet = Keypair.fromSecretKey(
-//   bs58.decode(process.env.JUP_REF_ACCOUNT_AUTHORITY_KEY!)
-// );
 
 function floatStringToBigNumber(floatStr: string) {
   const parts = floatStr.split(".");
@@ -41,68 +28,115 @@ type LIMIT_ORDER_PARAMS = {
   inputToken: string;
   inAmount: string;
   outputToken: string;
-  outAmount: string;
-  expiredAt: string | null;
+  targetPrice: string;
+  expiredAt: Date | null;
 };
 
+type REFERRAL_INFO = {
+  referralWallet: string | null,
+  referralCommision: number | null,
+  priorityFee: number | null,
+}
 
 export async function setLimitJupiterOrder(
-  connection: Connection, {
+  connection: Connection, referralInfo: REFERRAL_INFO, isBuySide: boolean, {
     userWallet,
     inputToken,
     inAmount,
     outputToken,
-    outAmount,
+    targetPrice,
     expiredAt,
   }: LIMIT_ORDER_PARAMS): Promise<TransactionSignature> {
-  let txSig = "";
-
   try {
     const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
     const base = Keypair.generate(); // random unique order id
+    const hasReferral = referralInfo.referralWallet && referralInfo.referralCommision;
+
+    let outAmount = await calculateLimitOrderAmountOut(inAmount, outputToken, targetPrice);
+    console.log("outAmount", outAmount);
+    console.log(Number(inAmount) * 10 ** 9);
 
     const { tx, orderPubKey } = await limitOrder.createOrder({
       owner: new PublicKey(userWallet.publicKey),
       inputMint: new PublicKey(inputToken),
       outputMint: new PublicKey(outputToken),
-      outAmount: new BN(Number(outAmount) * 1e9),
+      outAmount: new BN(outAmount),
       inAmount: new BN(Number(inAmount) * 1e9),
       base: base.publicKey,
-      expiredAt: null
+      expiredAt: expiredAt ? new BN(expiredAt.valueOf() / 1000) : null,
     });
 
-    // tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-    // tx.sign(userWallet, base);
-    console.log("txSig:---: ", tx);
+    tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+    tx.sign(userWallet, base);
+    const blockhash = (await connection.getLatestBlockhash()).blockhash;
+    let solAmount: BigNumber = isBuySide ? new BigNumber(inAmount) : new BigNumber(outAmount);
 
-    // txSig = await connection.srendRawTransaction(tx.serialize(), {preflightCommitment: "processed",});
-    // txSig = await sendAndConfirmTransaction(connection, tx, [wallet, base]);
-    return txSig;
+    const versionnedBundle: VersionedTransaction[] = [];
+    const pumpTx = new VersionedTransaction(wrapLegacyTx(tx.instructions, userWallet, blockhash));
+    pumpTx.sign([userWallet,base]);
+    versionnedBundle.push(pumpTx);
+
+    const txInxs = hasReferral ?
+      add_mvx_and_ref_inx_fees(userWallet, referralInfo.referralWallet!, solAmount, referralInfo.referralCommision!) :
+      addMvxFeesInx(userWallet, solAmount)
+
+    const mvxTx = new VersionedTransaction(wrapLegacyTx(txInxs, userWallet, blockhash));
+    mvxTx.sign([userWallet]);
+    versionnedBundle.push(mvxTx);
+    
+    // sign all bundle tx's independently before sending
+    return (await sendSignedTx(connection, versionnedBundle, { preflightCommitment: "processed", }))[0];
   } catch (e: any) {
     console.log(e);
     throw new Error(e.message);
   }
-  return txSig;
+}
+
+async function calculateLimitOrderAmountOut(amount: String, token: String, targetPrice: String): Promise<number> {
+  let tokenPrice = new BigNumber(Number(targetPrice)).multipliedBy(1e9);
+  let tokenAmount = new BigNumber(Number(amount)).multipliedBy(1e9);
+  return tokenPrice.times(tokenAmount).toNumber();
+}
+
+async function getOpenOrders(ctx:any){
+  
 }
 
 // urrent price: 000196005
 // target price  '0.001' SOL  /  000186005 = outAmount
 
-// how to use
-// setLimitJupiterOrder(connection,{
-//     userWallet: wallet,
-//     inputToken: 'So11111111111111111111111111111111111111112',
-//     inAmount: new BN(100000).toString(), //'0.001',
-//     outputToken: 'WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk',
-//     outAmount: new BN(1.191 * 1e5).toString(), //'1.191', //  '0.001' SOL  / token unit curret price  = outAmount
-//     expiredAt: null,
-// });
+// type LIMIT_ORDER_PARAMS = {
+//   userWallet: Keypair;
+//   inputToken: string;
+//   inAmount: string;
+//   outputToken: string;
+//   targetPrice: string;
+//   expiredAt: Date | null;
+// };
 
-/**
- * solana transfer --from DDL8apK4Xr3CYa6vxLccNkJAcX2bQdqRS8o51h2sBeTP.json GF7Mi4vZh4pZPCjwVTXHSDCQCAT9s7WMnGHiiqaP2m7s 30000  --allow-unfunded-recipient
- */
+const connection = new Connection(`${process.env.TRITON_RPC_URL!}${process.env.TRITON_RPC_TOKEN!}`);
+const MVX_JUP_REFERRAL = "HH2UqSLMJZ9VP9jnneixYKe3oW8873S9MLUuMF3xvjLH";
+const wallet = Keypair.fromSecretKey(bs58.decode(process.env.TEST_WALLET_PK!));
 
-(()=>{
- const f = new BN(0.001 * 1e9);
- console.log(f.toString());
-})()
+const rf = {
+  referralWallet: null,
+  referralCommision: null,
+  priorityFee: 0,
+}
+
+const params = {
+  userWallet: wallet,
+  inputToken: 'So11111111111111111111111111111111111111112',
+  inAmount: '0.001',
+  outputToken: 'WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk',
+  targetPrice: '0.000001152',
+  expiredAt: null,
+};
+
+// setLimitJupiterOrder(connection, rf, true, params);
+
+
+// (() => {
+//   const f = new BN((0.001 * 0.0000011782225));
+//   console.log(f.toString());
+// })()
