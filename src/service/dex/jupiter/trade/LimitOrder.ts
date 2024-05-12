@@ -2,27 +2,12 @@ import { LimitOrderProvider, ownerFilter, OrderHistoryItem, TradeHistoryItem } f
 import { Keypair, Connection, PublicKey, VersionedTransaction, TransactionSignature, TransactionMessage } from "@solana/web3.js";
 import { addMvxFeesInx, add_mvx_and_ref_inx_fees, sendTx, sendSignedTx, wrapLegacyTx } from '../../../../service/util';
 import { BN } from "@coral-xyz/anchor";
-import { SOL_ADDRESS } from '../../../../../config';
+import { SOL_ADDRESS,MVX_JUP_REFERRAL } from '../../../../../config';
 import { getTokenDataFromBirdEye } from "../../../../api/priceFeeds/birdEye";
 import dotenv from "dotenv"; dotenv.config();
 import BigNumber from 'bignumber.js';
 import { getSolanaDetails, getTokenPriceFromJupiter } from '../../../../api';
 import bs58 from 'bs58';
-
-/*
- * The Jupiter Limit Order's project account for the Referral Program is
- * 45ruCyfdRkWpRNGEqWzjCiXRHkZs8WXCLQ67Pnpye7Hp referral fees are withdrawable here.
- */
-
-function floatStringToBigNumber(floatStr: string) {
-  const parts = floatStr.split(".");
-  const integerPart = new BN(parts[0]);
-  const fractionalPart = new BN(parts[1] || 0);
-  const power = new BN(10).exponentiatedBy(
-    parts[1] ? parts[1].length : 0
-  );
-  return integerPart.times(power).plus(fractionalPart);
-}
 
 type LIMIT_ORDER_PARAMS = {
   userWallet: Keypair;
@@ -38,6 +23,12 @@ type REFERRAL_INFO = {
   referralCommision: number | null,
   priorityFee: number | null,
 }
+
+/*
+ * The Jupiter Limit Order's project account for the Referral Program is
+ * 45ruCyfdRkWpRNGEqWzjCiXRHkZs8WXCLQ67Pnpye7Hp referral fees are withdrawable here.
+ * Ref: https://station.jup.ag/docs/limit-order/limit-order-with-sdk
+ */
 
 export async function setLimitJupiterOrder(
   connection: Connection, referralInfo: REFERRAL_INFO, isBuySide: boolean, {
@@ -91,7 +82,19 @@ export async function setLimitJupiterOrder(
   }
 }
 
-async function getOrderHistory(connection: Connection, owner: Keypair): Promise<OrderHistoryItem[]> {
+export async function calculateLimitOrderAmountOut(amount: String, token: String, targetPrice: String): Promise<number> {
+  let tokenPrice = new BigNumber(Number(targetPrice)).multipliedBy(1e9);
+  let tokenAmount = new BigNumber(Number(amount)).multipliedBy(1e9);
+  return tokenPrice.times(tokenAmount).toNumber();
+}
+
+export async function getOpenOrders(connection: Connection, owner: Keypair): Promise<OrderHistoryItem[]> {
+  const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
+  return await limitOrder.getOrders([ownerFilter(owner.publicKey)]);
+}
+
+
+export async function getOrderHistory(connection: Connection, owner: Keypair): Promise<OrderHistoryItem[]> {
   const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
   return await limitOrder.getOrderHistory({
     wallet: owner.publicKey.toBase58(),
@@ -100,14 +103,14 @@ async function getOrderHistory(connection: Connection, owner: Keypair): Promise<
   });
 }
 
-async function getOrderHistoryCount(connection: Connection, owner: Keypair): Promise<number> {
+export async function getOrderHistoryCount(connection: Connection, owner: Keypair): Promise<number> {
   const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
   return await limitOrder.getOrderHistoryCount({
     wallet: owner.publicKey.toBase58(),
   });
 }
 
-async function getTradeHistory(connection: Connection, owner: Keypair): Promise<TradeHistoryItem[]> {
+export async function getTradeHistory(connection: Connection, owner: Keypair): Promise<TradeHistoryItem[]> {
   const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
   const history =  await limitOrder.getTradeHistory({
     wallet: owner.publicKey.toBase58(),
@@ -118,22 +121,22 @@ async function getTradeHistory(connection: Connection, owner: Keypair): Promise<
   return history; 
 }
 
-async function getTradeHistoryCount(connection: Connection, owner: Keypair): Promise<number> {
+export async function getTradeHistoryCount(connection: Connection, owner: Keypair): Promise<number> {
   const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
   return await limitOrder.getTradeHistoryCount({
     wallet: owner.publicKey.toBase58(),
   });
 }
 
-async function cancelOrder(connection: Connection, owner: Keypair, order: Keypair): Promise<string> {
+export async function cancelOrder(connection: Connection, owner: Keypair, order: PublicKey): Promise<string> {
   const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
-  const tx = await limitOrder.cancelOrder({owner: owner.publicKey,orderPubKey: order.publicKey});
+  const tx = await limitOrder.cancelOrder({owner: owner.publicKey,orderPubKey: order});
   tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
   tx.sign(owner);
   return await connection.sendRawTransaction(tx.serialize(), { preflightCommitment: "processed" });
 }
 
-async function cancelBatchOrder(connection: Connection, owner: Keypair, batchOrdersPubKey: PublicKey[]): Promise<string> {
+export async function cancelBatchOrder(connection: Connection, owner: Keypair, batchOrdersPubKey: PublicKey[]): Promise<string> {
   const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
   const tx = await limitOrder.batchCancelOrder({owner: owner.publicKey, ordersPubKey: batchOrdersPubKey});
   tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
@@ -142,36 +145,29 @@ async function cancelBatchOrder(connection: Connection, owner: Keypair, batchOrd
 }
 
 
-async function calculateLimitOrderAmountOut(amount: String, token: String, targetPrice: String): Promise<number> {
-  let tokenPrice = new BigNumber(Number(targetPrice)).multipliedBy(1e9);
-  let tokenAmount = new BigNumber(Number(amount)).multipliedBy(1e9);
-  return tokenPrice.times(tokenAmount).toNumber();
-}
 
-const connection = new Connection(`${process.env.TRITON_RPC_URL!}${process.env.TRITON_RPC_TOKEN!}`);
-const MVX_JUP_REFERRAL = "HH2UqSLMJZ9VP9jnneixYKe3oW8873S9MLUuMF3xvjLH";
-const wallet = Keypair.fromSecretKey(bs58.decode(process.env.TEST_WALLET_PK!));
+/*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+/*                  FUNCTION TEST                             */
+/*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+// test with : npx ts-node src/service/dex/jupiter/trade/limitOrder.ts
 
-const rf = {
-  referralWallet: null,
-  referralCommision: null,
-  priorityFee: 0,
-}
+// const connection = new Connection(`${process.env.TRITON_RPC_URL!}${process.env.TRITON_RPC_TOKEN!}`);
+// const wallet = Keypair.fromSecretKey(bs58.decode(process.env.TEST_WALLET_PK!));
 
-const params = {
-  userWallet: wallet,
-  inputToken: 'So11111111111111111111111111111111111111112',
-  inAmount: '0.001',
-  outputToken: 'WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk',
-  targetPrice: '0.000001152',
-  expiredAt: null,
-};
+// setLimitJupiterOrder(connection, {
+//   referralWallet: null,
+//   referralCommision: null,
+//   priorityFee: 0,
+// }, true, {
+//   // userWallet: wallet,
+//   inputToken: 'So11111111111111111111111111111111111111112',
+//   inAmount: '0.001',
+//   outputToken: 'WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk',
+//   targetPrice: '0.000001152',
+//   expiredAt: null,
+// });
 
-// setLimitJupiterOrder(connection, rf, true, params);
+
 // getTradeHistory(connection, wallet).then(console.log);
 // getOrderHistory(connection, wallet).then(console.log);
-
-// (() => {
-//   const f = new BN((0.001 * 0.0000011782225));
-//   console.log(f.toString());
-// })()
+// getOpenOrders(connection, wallet).then(console.log);

@@ -20,7 +20,7 @@ import { handleRefreshStart } from "./views/refreshData/refreshStart";
 import { handleRefreshWallet, refreshAllWallets, } from "./views/wallets/walletsView";
 import {
   display_limitOrder_token_details,
-  submit_limitOrder, review_limitOrder_details
+  submit_limitOrder, review_limitOrder_details,display_open_orders
 } from "./views/limitOrders/limitOrderView";
 import { handleWallets } from "./views/util/dbWallet";
 import { getRayPoolKeys } from "./service/dex/raydium/raydium-utils/formatAmmKeysById";
@@ -245,7 +245,7 @@ bot.command("start", async (ctx: any) => {
           [{ text: "☑️ Rug Check", callback_data: "rug_check" }],
           [{ text: "🧙🏻‍♀️ Trade on pump.fun", callback_data: "display_pump_token" }],
           [{ text: "🎯 Turbo Snipe", callback_data: "snipe" }],
-          [{ text: "⏳ Limit Orders", callback_data: "limitOrders" }],
+          [{ text: "⏳ Limit Orders", callback_data: "limitOrders" },{ text: "⏳ Open Orders", callback_data: "display_open_orders" }],
           [
             { text: "💱 Buy", callback_data: "buy" },
             { text: "Sell 📈", callback_data: "sell" },
@@ -1330,6 +1330,10 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "submit_limit_order":{
         await submit_limitOrder(ctx);
+        break;
+      }
+      case "display_open_orders":{
+        await display_open_orders(ctx);
         break;
       }
       // /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/

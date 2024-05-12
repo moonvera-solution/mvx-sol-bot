@@ -12,7 +12,8 @@ import { logErrorToFile } from "../../../error/logger";
 import { UserPositions } from "../../db";
 import { getTokenDataFromBirdEye } from "../../api/priceFeeds/birdEye";
 import { getTokenPriceFromJupiter } from "../../api/priceFeeds/jupiter";
-import { setLimitJupiterOrder } from "../../service/dex/jupiter/trade/limitOrder";
+import { LimitOrderProvider, ownerFilter, OrderHistoryItem, TradeHistoryItem } from "@jup-ag/limit-order-sdk";
+import { setLimitJupiterOrder, getOpenOrders,cancelOrder,cancelBatchOrder } from "../../service/dex/jupiter/trade/limitOrder";
 import { SOL_ADDRESS } from "../../../config";
 import { getPriorityFeeLabel, waitForConfirmation } from "../../service/util";
 import bs58 from 'bs58';
@@ -69,7 +70,7 @@ export async function review_limitOrder_details(ctx: any, isRefresh: boolean) {
     }
   }
 
-  await ctx.api.sendMessage(ctx.chat.id ,orderSummary, options);
+  await ctx.api.sendMessage(ctx.chat.id, orderSummary, options);
 }
 
 export async function display_limitOrder_token_details(ctx: any, isRefresh: boolean) {
@@ -184,4 +185,61 @@ export async function display_limitOrder_token_details(ctx: any, isRefresh: bool
       { parse_mode: "HTML" }
     );
   }
+}
+
+/**
+ * TODO: 
+ * Update display & manage orders as on positions flow
+ * Cap order to max 10 orders to display
+ * 
+ * Display orders:
+ * 
+ * 1.- Order: 0.001 SOL -> 11620 WEN  (get token symbols by inputMint/outputMint)
+ * 2.- Order Price: 0.0₇8606 -> SOL per $WEN (oriTakingAmount / oriMakingAmount)
+ * 3.- Current Price: outputMint price in SOL (get token price from jupiter api)
+ * 3.- Expiry:  9:13 17/05/2024 (-05) (use expiredAt, readable timezone local string time ex: 9:13 17/05/2024 (-05))
+ * 4.- Status: Waiting (if waiting) or Filled (if not waiting) - (waiting property)
+ * delete unnecessary properties of orderHtml
+ *
+ * Manage Orders:
+ * Like on next/prev of positions management
+ * Button to cancel orders (order.account.base) is order id for function cancelOrder(..., id)
+ * Button to cancel all orders with function cancelBatchOrder([id1,id2,id3,...]) 
+ * 
+ */
+export async function display_open_orders(ctx: any) {
+  const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
+  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const orders: OrderHistoryItem[] = await getOpenOrders(connection, wallet);
+  let orderHtml: string = '';
+  for (const order of orders) {
+    orderHtml +=
+      ` - maker: ${order.account.maker.toBase58()} \n` +
+      ` - inputMint: ${order.account.inputMint.toBase58()} \n` +
+      ` - outputMint: ${order.account.outputMint.toBase58()} \n` +
+      ` - waiting: ${order.account.waiting} \n` +
+      ` - oriMakingAmount: ${order.account.oriMakingAmount.toNumber()} \n` +
+      ` - oriTakingAmount: ${order.account.oriTakingAmount.toNumber()} \n` +
+      ` - makingAmount: ${order.account.makingAmount.toNumber()} \n` +
+      ` - takingAmount: ${order.account.takingAmount.toNumber()} \n` +
+      ` - makerInputAccount: ${order.account.makerInputAccount.toBase58()} \n` +
+      ` - makerOutputAccount: ${order.account.makerOutputAccount.toBase58()} \n` +
+      ` - reserve: ${order.account.reserve.toBase58()} \n` +
+      ` - borrowMakingAmount: ${order.account.borrowMakingAmount.toNumber()} \n` +
+      ` - expiredAt: ${order.account.expiredAt} \n` +
+      ` - base: ${order.account.base} \n` +
+      ` - referral: ${order.account.referral} \n`;
+  }
+
+  const options = {
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: `Manage Orders `, callback_data: "manage_limit_orders" }, { text: `Refresh Orders `, callback_data: "refresh_limit_orders" },],
+      ]
+    }
+  }
+
+  await ctx.api.sendMessage(ctx.chat.id, orderHtml, options);
 }

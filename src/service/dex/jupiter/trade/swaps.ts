@@ -143,14 +143,14 @@ async function jupiterSimpleSwap(
     await fetch('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41/jupiter/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk&amount=10000&slippageBps=50&platformFeeBps=80')
   ).json();
 
-//   const [feeAccount] = await PublicKey.findProgramAddressSync(
-//     [
-//       Buffer.from("referral_ata"),
-//       new PublicKey('HH2UqSLMJZ9VP9jnneixYKe3oW8873S9MLUuMF3xvjLH').toBuffer(), // your referral account public key
-//       new PublicKey('WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk').toBuffer(), // the token mint, output mint for ExactIn, input mint for ExactOut.
-//     ],
-//     new PublicKey("45ruCyfdRkWpRNGEqWzjCiXRHkZs8WXCLQ67Pnpye7Hp") // the Referral Program
-//   );
+  const [feeAccount] = await PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("referral_ata"),
+      new PublicKey('HH2UqSLMJZ9VP9jnneixYKe3oW8873S9MLUuMF3xvjLH').toBuffer(), // your referral account public key
+      new PublicKey('WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk').toBuffer(), // the token mint, output mint for ExactIn, input mint for ExactOut.
+    ],
+    new PublicKey("45ruCyfdRkWpRNGEqWzjCiXRHkZs8WXCLQ67Pnpye7Hp") // the Referral Program
+  );
 
 //   console.log('feeAccount', feeAccount.toBase58());
   console.log('quoteResponse', quoteResponse);
@@ -158,9 +158,7 @@ async function jupiterSimpleSwap(
   const { swapTransaction } = await (
     await fetch('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41/jupiter/swap', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         // quoteResponse from /quote api
         quoteResponse,
@@ -197,7 +195,7 @@ async function jupiterSimpleSwap(
   console.log(`https://solscan.io/tx/${tx}`);
 
 }
-jupiterSimpleSwap().then((tx) => console.log('Swap', tx));
+// jupiterSimpleSwap().then((tx) => console.log('Swap', tx));
 
 
 // /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
