@@ -87,6 +87,7 @@ let backupSession: ISESSION_DATA;
 if (isProd) {
   const webhookUrl = 'https://drib.ngrok.app';
   const url = `${webhookUrl}/${botToken}`;
+  console.log("url", url);
 
   // Create the HTTP server and define request handling logic
   app.use(express.json()); // for parsing application/json
