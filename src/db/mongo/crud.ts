@@ -86,7 +86,7 @@ export async function _savePortfolio(
 
     });
     walletInfoV2.save();
-  } catch (err) {
+  } catch (err:any) {
     console.error(err);
   }
 }

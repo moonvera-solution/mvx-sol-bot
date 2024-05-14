@@ -4,7 +4,7 @@
 //     ctx.session.env["tritonRPC"] = "https://moonvera-pit.rpcpool.com/";
 // ctx.session.env["tritonToken"] = process.env.TRITON_RPC_TOKEN!;
 // const connection = new Connection(
-//     `${ctx.session.env.tritonRPC}${ctx.session.env.tritonToken}`
+//     `${ctx.session.tritonRPC}${ctx.session.tritonToken}`
 //   );
 //     const walletPublicKey = new PublicKey('');
 //     const poolAddress = ''; 
