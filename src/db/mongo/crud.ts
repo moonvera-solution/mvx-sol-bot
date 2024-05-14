@@ -51,7 +51,7 @@ export async function _initDbConnection(): Promise<any> {
     autoIndex: true,
   });
 
-  console.log("isProd",isProd);
+  console.log("isProd",isProd, _anon.usr);
 
   const db = mongoose.connection;
   db.on('error', console.error.bind(console, 'ERR connection error:'));
