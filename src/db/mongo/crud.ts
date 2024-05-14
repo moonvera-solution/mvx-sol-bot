@@ -8,7 +8,7 @@ import bs58 from "bs58";
 import { SecretsManagerClient, GetSecretValueCommand, } from "@aws-sdk/client-secrets-manager";
 const user = 'mvxKing'//encodeURIComponent(process.env.DB_USER!);
 const password = 'kingstonEmpireOfTheSun'// encodeURIComponent(process.env.DB_PASSWORD!);
-const isProd = process.env.NODE_ENV == 'PROD';
+const isProd = true// process.env.NODE_ENV == 'PROD';
 const local_url = `mongodb://127.0.0.1:27017/test`;
 
 // https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/getting-started.html
