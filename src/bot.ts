@@ -61,6 +61,7 @@ const isProd = process.env.NODE_ENV == "PROD";
 _initDbConnection();
 const keys = process.env.TELEGRAM_BOT_TOKEN;
 const bot = new Bot<MyContext>(keys!);
+console.log(keys,bot)
 bot.use(
   session({ initial: () => JSON.parse(JSON.stringify(DefaultSessionData)) })
 );
