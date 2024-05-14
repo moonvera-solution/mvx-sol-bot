@@ -49,7 +49,7 @@ import { _generateReferralLink, _getReferralData } from "../src/db/mongo/crud";
 import { Portfolios, Referrals, AllowedReferrals, UserSession } from "./db/mongo/schema";
 import { display_spl_positions, display_single_spl_positions, display_refresh_single_spl_positions } from "./views/portfolioView";
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
-import { logErrorToFile } from "../error/logger";
+
 const express = require('express');
 const app = express();
 
@@ -276,8 +276,6 @@ bot.command("start", async (ctx: any) => {
     // ctx.session.latestCommand = "rug_check";
   } catch (error: any) {
 
-    logErrorToFile("bot on start cmd", error);
-
     if (error instanceof GrammyError || error instanceof HttpError || error instanceof Error || error instanceof TypeError || error instanceof RangeError) {
       console.error("Callback query failed due to timeout or invalid ID.", error);
     } else {
@@ -301,7 +299,7 @@ bot.command("positions", async (ctx) => {
     await display_spl_positions(ctx, false);
     
   } catch (error: any) {
-    logErrorToFile("bot on positions cmd", error);
+    console.log("bot on positions cmd", error);
   }
 });
 
@@ -313,7 +311,7 @@ bot.command("rugchecking", async (ctx) => {
     );
     ctx.session.latestCommand = "rug_check";
   } catch (error: any) {
-    logErrorToFile("bot on rugchecking cmd", error);
+    console.log("bot on rugchecking cmd", error);
   }
 });
 
@@ -335,7 +333,7 @@ bot.command("buy", async (ctx) => {
       "Enter the token Address you would like to Buy."
     );
   } catch (error: any) {
-    logErrorToFile("bot on buy cmd", error);
+    console.log("bot on buy cmd", error);
   }
 });
 
@@ -357,7 +355,7 @@ bot.command("sell", async (ctx) => {
       "Enter the token Address you would like to sell."
     );
   } catch (error: any) {
-    logErrorToFile("bot on sell cmd", error);
+    console.log("bot on sell cmd", error);
   }
 });
 
@@ -380,7 +378,7 @@ bot.command("snipe", async (ctx) => {
       "Enter the token Address you would like to snipe."
     );
   } catch (error: any) {
-    logErrorToFile("bot on snipe cmd", error);
+    console.log("bot on snipe cmd", error);
   }
 });
 
@@ -390,7 +388,7 @@ bot.command("settings", async (ctx) => {
   try {
     await handleSettings(ctx);
   } catch (error: any) {
-    logErrorToFile("bot.command('settings',", error);
+    console.log("bot.command('settings',", error);
   }
 });
 
@@ -681,7 +679,7 @@ bot.on("message", async (ctx) => {
   } catch (error: any) {
     await ctx.api.sendMessage(chatId, `${error.message})`);
     console.error("ERROR on bot.on txt msg", error, error.message);
-    logErrorToFile("bot.on('message'", error);
+    console.log("bot.on('message'", error);
   }
 });
 
@@ -1216,7 +1214,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
     }
   } catch (e: any) {
-    logErrorToFile("callback_query", e);
+    console.log("callback_query", e);
 
     if (e instanceof GrammyError || e instanceof HttpError || e instanceof Error || e instanceof TypeError || e instanceof RangeError) {
       console.error("Callback query failed due to timeout or invalid ID.",e);
@@ -1234,13 +1232,13 @@ bot.catch((err) => {
   console.error(`Error while handling update ${ctx.update.update_id}:`);
   const e = err.error;
   if (e instanceof GrammyError) {
-    logErrorToFile("GrammyError bot.catch((err)", e);
+    console.log("GrammyError bot.catch((err)", e);
     console.error("Error in request:", e.description);
   } else if (e instanceof HttpError) {
-    logErrorToFile("HttpError bot.catch((err)", e);
+    console.log("HttpError bot.catch((err)", e);
     console.error("Could not contact Telegram:", e);
   } else {
-    logErrorToFile("Unknown bot.catch((err)", e);
+    console.log("Unknown bot.catch((err)", e);
     console.error("Unknown error:", e);
   }
 });

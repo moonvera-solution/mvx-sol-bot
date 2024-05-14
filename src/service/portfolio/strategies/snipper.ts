@@ -1,4 +1,4 @@
-import { logErrorToFile } from '../../../../error/logger';
+
 import BigNumber from 'bignumber.js';
 import {
     Liquidity, TokenAmount, LiquidityPoolKeys, Token, SPL_ACCOUNT_LAYOUT,
@@ -79,7 +79,7 @@ export async function snipperON(ctx: any, amount: string) {
         });
     } catch (e:any) {
         console.log(e);
-        logErrorToFile("bot on snipperON", e);
+        console.log("bot on snipperON", e);
         return await ctx.api.sendMessage(ctx.chat.id, e.message);
     }
 }
@@ -113,7 +113,7 @@ export async function setSnipe(ctx: any, amountIn: any) {
     simulationPromise.catch(async (error: any) => {
         console.log("Error setting snipper", error);
         await ctx.api.sendMessage(ctx.chat.id, `🔴 Snipe fail: ${error}`);
-        logErrorToFile("bot on snipe simmulation", error);
+        console.log("bot on snipe simmulation", error);
     });
     await simulationPromise;
 }

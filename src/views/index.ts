@@ -7,7 +7,7 @@ import { RAYDIUM_POOL_TYPE } from '../service/util/types';
 import { Keypair, Connection } from '@solana/web3.js';
 import { runAllFees} from './util/getPriority';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
-import { logErrorToFile } from "../../error/logger";
+
 import { UserPositions } from '../db';
 import { getTokenDataFromBirdEye } from '../api/priceFeeds/birdEye';
 
@@ -351,7 +351,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
     }
     }catch (error: any) {
         console.log('display_snipe_options:',error);
-        logErrorToFile("display_snipe_options", error);
+        console.log("display_snipe_options", error);
     }
 }
 
