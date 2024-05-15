@@ -2315,4 +2315,172 @@ Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range.
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 4:40:03 PM - bot.on('message'
+ TypeError 
+ Cannot read properties of undefined (reading 'secretKey')
+ TypeError: Cannot read properties of undefined (reading 'secretKey')
+    at submit_limitOrder (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:23:115)
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:777:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 4:41:20 PM - bot.on('message'
+ Error 
+ bad secret key size
+ Error: bad secret key size
+    at Function.fromSecretKey (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/@solana/web3.js/src/keypair.ts:56:13)
+    at submit_limitOrder (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:23:40)
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:779:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 4:43:09 PM - bot.on('message'
+ Error 
+ bad secret key size
+ Error: bad secret key size
+    at Function.fromSecretKey (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/@solana/web3.js/src/keypair.ts:56:13)
+    at submit_limitOrder (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:26:40)
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:779:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+ 5/11/2024, 4:44:05 PM - bot.on('message'
+ TypeError 
+ wallet.secretKey.toBase58 is not a function
+ TypeError: wallet.secretKey.toBase58 is not a function
+    at submit_limitOrder (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:26:71)
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:779:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 5:17:44 PM - bot.on('message'
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message can't be edited)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message can't be edited)
+    at toGrammyError (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async review_limitOrder_details (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:72:3)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:781:11
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/11/2024, 5:19:14 PM - bot.on('message'
+ GrammyError 
+ Call to 'sendMessage' failed! (400: Bad Request: chat not found)
+ GrammyError: Call to 'sendMessage' failed! (400: Bad Request: chat not found)
+    at toGrammyError (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async review_limitOrder_details (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:72:3)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:781:11
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/12/2024, 11:02:12 AM - callback_query
+ TypeError 
+ publicKey.toBase58 is not a function
+ TypeError: publicKey.toBase58 is not a function
+    at ownerFilter (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/@jup-ag/limit-order-sdk/src/getOrderFilter.ts:7:24)
+    at getOpenOrders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/service/dex/jupiter/trade/limitOrder.ts:96:49)
+    at display_open_orders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:194:57)
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1336:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/12/2024, 11:05:01 AM - callback_query
+ TypeError 
+ publicKey.toBase58 is not a function
+ TypeError: publicKey.toBase58 is not a function
+    at ownerFilter (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/@jup-ag/limit-order-sdk/src/getOrderFilter.ts:7:24)
+    at getOpenOrders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/service/dex/jupiter/trade/limitOrder.ts:96:49)
+    at display_open_orders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:195:57)
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1336:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/12/2024, 11:07:36 AM - callback_query
+ TypeError 
+ Cannot read properties of undefined (reading 'secretKey')
+ TypeError: Cannot read properties of undefined (reading 'secretKey')
+    at display_open_orders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:192:123)
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1336:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/12/2024, 11:07:36 AM - callback_query
+ TypeError 
+ Cannot read properties of undefined (reading 'secretKey')
+ TypeError: Cannot read properties of undefined (reading 'secretKey')
+    at display_open_orders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:192:123)
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1336:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/12/2024, 11:07:43 AM - callback_query
+ TypeError 
+ Cannot read properties of undefined (reading 'toBase58')
+ TypeError: Cannot read properties of undefined (reading 'toBase58')
+    at display_open_orders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:198:32)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1336:9
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/12/2024, 11:07:44 AM - callback_query
+ TypeError 
+ Cannot read properties of undefined (reading 'toBase58')
+ TypeError: Cannot read properties of undefined (reading 'toBase58')
+    at display_open_orders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:198:32)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1336:9
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
  

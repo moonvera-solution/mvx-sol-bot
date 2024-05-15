@@ -1,5 +1,6 @@
 import {
     BlockhashWithExpiryBlockHeight,
+    Commitment,
     Connection,
     TransactionExpiredBlockheightExceededError,
     VersionedTransactionResponse,
@@ -12,9 +13,11 @@ import {
     serializedTransaction: Buffer;
     blockhashWithExpiryBlockHeight: BlockhashWithExpiryBlockHeight;
   };
+
   
   const SEND_OPTIONS = {
     skipPreflight: true,
+    maxRetries: 0,
   };
   
   export async function transactionSenderAndConfirmationWaiter({
@@ -22,6 +25,7 @@ import {
     serializedTransaction,
     blockhashWithExpiryBlockHeight,
   }: TransactionSenderAndConfirmationWaiterArgs): Promise<VersionedTransactionResponse | null> {
+    const blockHash = await connection.getLatestBlockhash({commitment: 'processed'});
     const txid = await connection.sendRawTransaction(
       serializedTransaction,
       SEND_OPTIONS

@@ -34,7 +34,9 @@
     "src/service/**/*.ts",
     "src/service/*.ts",
     "src/db/*.ts",
-    "test/"
+    "test/",
+    "./lib/**/*.ts",
+    "./node_modules/bn.js-typings/index.d.ts"
   ],
   "exclude": [
     "node_modules",
