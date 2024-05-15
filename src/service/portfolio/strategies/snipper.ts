@@ -284,7 +284,7 @@ export async function startSnippeSimulation(
         if (simulationResult.value.err == null) {
             sim = false;
            
-                buildAndSendTx(userWallet, innerTransactions, connection, { preflightCommitment: 'processed' }).then(async (txids: any) => {
+                buildAndSendTx(userWallet, innerTransactions, connection, {skipPreflight: true, preflightCommitment: 'processed' , maxRetries: 0 }).then(async (txids: any) => {
                     let msg = `🟢 Snipe <a href="https://solscan.io/tx/${txids[0]}">transaction</a> sent. Please wait for confirmation...`
                     await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
                    

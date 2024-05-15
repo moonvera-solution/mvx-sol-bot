@@ -114,14 +114,32 @@ class SolanaTracker {
       skipConfirmationCheck: false,
     }
   ): Promise<string> {
-    const serializedTransactionBuffer = Buffer.from(swapResponse.txn, "base64");
+    let serializedTransactionBuffer: Buffer | Uint8Array;
+
+    if (Buffer) {
+      serializedTransactionBuffer = Buffer.from(swapResponse.txn, "base64");
+    } else {
+      const base64Str = swapResponse.txn;
+      const binaryStr = atob(base64Str);
+      const buffer = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) {
+        buffer[i] = binaryStr.charCodeAt(i);
+      }
+      serializedTransactionBuffer = buffer;
+    }
     let txn: VersionedTransaction | Transaction;
+   
     if (swapResponse.isJupiter && !swapResponse.forceLegacy) {
       txn = VersionedTransaction.deserialize(serializedTransactionBuffer);
       txn.sign([this.keypair]);
+      
     } else {
       txn = Transaction.from(serializedTransactionBuffer);
+
       txn.sign(this.keypair);
+   
+
+      
     }
     const blockhash = await this.connection.getLatestBlockhash();
     const blockhashWithExpiryBlockHeight: BlockhashWithExpiryBlockHeight = {

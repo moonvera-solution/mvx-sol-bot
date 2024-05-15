@@ -165,7 +165,12 @@ const UserSessions = new Schema({
   ispriorityCustomFee: Boolean,
   customPriorityFee: Number
 });
+const JupiterSwapTokenRefs = new Schema({
+  id: { type: String, unique: true },
+  ref:{ type: String, unique: true}
+});
 
+export const JupiterSwapTokenRef = mongoose.model("JupiterSwapTokenRefs", JupiterSwapTokenRefs);
 export const UserSession = mongoose.model("UserSession", UserSessions);
 export const WalletKeys = mongoose.model("WalletKeys", WalletSchema);
 export const Portfolios = mongoose.model("Portfolios", UserPortfolioSchema);

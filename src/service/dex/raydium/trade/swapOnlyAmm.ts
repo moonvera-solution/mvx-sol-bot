@@ -16,6 +16,7 @@ import {
   SystemProgram,
   ComputeBudgetProgram,
   Connection,
+  SendOptions,
 } from "@solana/web3.js";
 import {
   Keypair,
@@ -53,6 +54,8 @@ export type TxInputInfo = {
   walletTokenAccounts: WalletTokenAccounts;
   wallet: Keypair;
   commitment: any;
+  skipPreflight: boolean;
+  maxRetries: number;
 };
 
 export async function swapOnlyAmm(input: TxInputInfo) {
@@ -208,7 +211,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
       input.wallet,
       innerTransactions,
       connection,
-      input.commitment
+      (input.skipPreflight, input.commitment, input.maxRetries ) as SendOptions
     ),
   };
 }

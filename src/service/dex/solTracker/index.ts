@@ -55,6 +55,7 @@ export async function swap_solTracker(connection: Connection ,{
             const txn = Transaction.from(serializedTransactionBuffer); if (!txn) return false;
             const tx = new Transaction().add(txn); // add swap inx 
             txInxs.forEach((inx:any) => tx.add(inx));  // add mvx, ref inx
+            // let recentBlockhash = await connection.getLatestBlockhash('processed');
             // console.log('txInxs:', txn);
             // console.log('tx:', tx.signatures[0]);
             const transx = await sendTx(connection, payerKeypair, [tx], { preflightCommitment: 'processed' });
@@ -119,7 +120,7 @@ async function swap_solTracker_sdk(
         lastValidBlockHeightBuffer: 150,
         resendInterval: 1000,
         confirmationCheckInterval: 1000,
-        skipConfirmationCheck: false, // Set to true if you want to skip confirmation checks and return txid immediately
+        skipConfirmationCheck: true, // Set to true if you want to skip confirmation checks and return txid immediately
     });
     // Returns txid when the swap is successful or throws an error if the swap fails
     console.log("Transaction ID:", txid);

@@ -70,7 +70,7 @@ import {
         while (true) {
           const status = await connection.getSignatureStatus(signature);
   
-          if (status.value && status.value.confirmationStatus === "finalized") {
+          if (status.value && status.value.confirmationStatus === "confirmed") {
             return signature;
           }
   

@@ -10,7 +10,7 @@ import { logErrorToFile } from "../../../error/logger";
 import { getTokenDataFromBirdEye } from '../../api/priceFeeds/birdEye';
 import {SOL_TRACKER_SWAP_PARAMS, getSwapDetails, swap_solTracker} from '../../service/dex/solTracker';
 import { Referrals } from '../../db/mongo/schema';
-import {SOL_ADDR} from '../../../config';
+import {SOL_ADDRESS} from '../../../config';
 
 import bs58 from "bs58";
 import BigNumber from 'bignumber.js';
@@ -23,8 +23,8 @@ export async function swap_pump_fun(ctx:any){
     const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
     const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
     const tradeSide = ctx.session.pump_side;
-    const tokenIn = tradeSide == 'buy' ? SOL_ADDR : ctx.session.pumpToken;
-    const tokenOut = tradeSide == 'buy' ? ctx.session.pumpToken : SOL_ADDR;
+    const tokenIn = tradeSide == 'buy' ? SOL_ADDRESS : ctx.session.pumpToken;
+    const tokenOut = tradeSide == 'buy' ? ctx.session.pumpToken : SOL_ADDRESS;
     const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
     const userTokenBalanceAndDetails = tradeSide =='buy'?  await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection): await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
     const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
