@@ -18,10 +18,10 @@ import axios from "axios";
 // /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 const COMMITMENT_LEVEL = "confirmed";
 const PRIORITY_FEE_LAMPORTS = 1;
-const TX_RETRY_INTERVAL =50;
+const TX_RETRY_INTERVAL =25;
 
 const connection = new Connection(`${process.env.TRITON_RPC_URL!}${process.env.TRITON_RPC_TOKEN!}`);
-const wallet = Keypair.fromSecretKey(bs58.decode(process.env.TEST_WALLET_PK!));
+// const wallet = Keypair.fromSecretKey(bs58.decode(process.env.TEST_WALLET_PK!));
 type REFERRAL_INFO = {
   referralWallet: string | null,
   referralCommision: number | null
@@ -52,24 +52,24 @@ export async function jupiterSimpleSwap(
 
   const lastRouteHop = swapApiResult.data.routePlan[swapApiResult.data.routePlan.length - 1].swapInfo.ammKey;
   console.log("lastRouteHop::",lastRouteHop, ":: ",swapApiResult.data.routePlan);
-
+  
   if (!(swapApiResult.status >= 200) && swapApiResult.status < 300) {
     throw new Error(`Failed to fetch jupiter swap quote: ${swapApiResult.status}`);
   }
   quoteResponse = swapApiResult.data;
-  const maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {lockedWritableAccounts: [new PublicKey(String(lastRouteHop))], percentile: priorityFeeLevel});
+  // const maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {lockedWritableAccounts: [new PublicKey(String(lastRouteHop))], percentile: priorityFeeLevel});
 
   swapApiResult = await axios.post(`${rpcUrl}/jupiter/swap`, {
     quoteResponse: quoteResponse,
-    prioritizationFeeLamports: maxPriorityFee,
-    userPublicKey: wallet.publicKey.toBase58(),
+    prioritizationFeeLamports: 100000,
+    userPublicKey: userWallet.publicKey.toBase58(),
     wrapAndUnwrapSol: true,
     dynamicComputeUnitLimit: true, // Setting this to `true` allows the endpoint to set the dynamic compute unit limit as required by the transaction
     jitoTipLamports: 5000, // Setting the priority fees. This can be `auto` or lamport numeric value
-    skipUserAccountsRpcCalls: true,
+    skipUserAccountsRpcCalls: false,
   });
   
-
+  // console.log("swapApiResult:: ",swapApiResult);
   // throw error if response is not ok
   if (!(swapApiResult.status >= 200) && swapApiResult.status < 300) {
     throw new Error(
@@ -88,11 +88,11 @@ export async function jupiterSimpleSwap(
     tx.message.recentBlockhash = blockhash.blockhash;
 
     // Sign the transaction
-    tx.sign([wallet]);
+    tx.sign([userWallet]);
 
     // Simulating the transaction
-    const simulationResult = await connection.simulateTransaction(tx, {commitment: "confirmed",});
-
+    const simulationResult = await connection.simulateTransaction(tx, {commitment: "processed",});
+    console.log(`${new Date().toISOString()} Transaction simulation result:`,simulationResult);
     if (simulationResult.value.err) {
       throw new Error(
         `Transaction simulation failed with error ${JSON.stringify(
@@ -163,9 +163,12 @@ export async function jupiterSimpleSwap(
       console.log(`${new Date().toISOString()} Transaction failed`);
       return;
     }
-
     console.log(`${new Date().toISOString()} Transaction successful`);
     console.log(`${new Date().toISOString()} Explorer URL: https://solscan.io/tx/${txSignature}`);
+
+    // txSignature = `https://solscan.io/tx/${txSignature}`;
+    return txSignature;
+
   }
 
 // jupiterSimpleSwap(
@@ -175,7 +178,7 @@ export async function jupiterSimpleSwap(
 //   false,
 //   SOL_ADDRESS,
 //   WEN_ADDRESS,
-//   10000,
+//   1000000,
 //   5000,
 //   5000,
 //   {referralWallet:null, referralCommision:null},
@@ -184,86 +187,86 @@ export async function jupiterSimpleSwap(
 // TOOK LESS THAN HALF SECOND
 // FASTER 56 -49 ms than the previous one
 // WE GOT IT - not the FUCKIN UI
-/*
 
-  const feeAccount = null// await getTokenRefFeeAccount(tokenIn);
-  const { swapTransaction } = await ( await fetch(`${rpcUrl}/jupiter/swap`, { method: 'POST', headers: {'Content-Type': 'applixcation/json'},
-      body: JSON.stringify({ quoteResponse, userPublicKey: wallet.publicKey.toString(), wrapAndUnwrapSol: true}),  // Optional feeAccount Use if you want to charge a fee. feeBps must have been passed in /quote API.
-    })).json();
-  const maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {lockedWritableAccounts: [new PublicKey(JUP_AGGREGATOR_V6)], percentile: priorityFeeLevel});
-  const pFeeInx = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee })
 
-  // 1. Deserialize and sign jupiter api quote swap instruction
-  console.log("swapTransaction:: ",typeof swapTransaction)
-  // const swapTransactionBuf = Buffer.from(swapTransaction, 'base64');
-  var transaction = VersionedTransaction.deserialize(swapTransactionBuf);
-  transaction.sign([wallet]);
+//   const feeAccount = null// await getTokenRefFeeAccount(tokenIn);
+//   const { swapTransaction } = await ( await fetch(`${rpcUrl}/jupiter/swap`, { method: 'POST', headers: {'Content-Type': 'applixcation/json'},
+//       body: JSON.stringify({ quoteResponse, userPublicKey: wallet.publicKey.toString(), wrapAndUnwrapSol: true}),  // Optional feeAccount Use if you want to charge a fee. feeBps must have been passed in /quote API.
+//     })).json();
+//   const maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {lockedWritableAccounts: [new PublicKey(JUP_AGGREGATOR_V6)], percentile: priorityFeeLevel});
+//   const pFeeInx = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee })
 
-  const txId = getSignature(transaction);
+//   // 1. Deserialize and sign jupiter api quote swap instruction
+//   console.log("swapTransaction:: ",typeof swapTransaction)
+//   // const swapTransactionBuf = Buffer.from(swapTransaction, 'base64');
+//   var transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+//   transaction.sign([wallet]);
 
-  // 1.1 Simulate swap
-  const { value: simulatedTransactionResponse } =
-    await connection.simulateTransaction(transaction, {
-      replaceRecentBlockhash: true,
-      commitment: "processed",
-    });
-  const { err, logs } = simulatedTransactionResponse;
+//   const txId = getSignature(transaction);
 
-  if (err) {
-    // Simulation error, we can check the logs for more details
-    // If you are getting an invalid account error, make sure that you have the input mint account to actually swap from.
-    console.error("Simulation Error:");
-    console.error({ err, logs });
-    return;
-  }
+//   // 1.1 Simulate swap
+//   const { value: simulatedTransactionResponse } =
+//     await connection.simulateTransaction(transaction, {
+//       replaceRecentBlockhash: true,
+//       commitment: "processed",
+//     });
+//   const { err, logs } = simulatedTransactionResponse;
 
-  // 2.- Init tx bundle and add swap inx
-  // const versionnedBundle: VersionedTransaction[] = [];
-  // const swapTx = new VersionedTransaction(transaction.message);
-  // versionnedBundle.push(swapTx);
+//   if (err) {
+//     // Simulation error, we can check the logs for more details
+//     // If you are getting an invalid account error, make sure that you have the input mint account to actually swap from.
+//     console.error("Simulation Error:");
+//     console.error({ err, logs });
+//     return;
+//   }
 
-  // // 3.- Add mvx fee & referral fee inx if ref exists
-  const hasReferral = referralInfo.referralWallet && referralInfo.referralCommision;
-  let solAmount: BigNumber = isBuySide ? new BigNumber(amountIn) : new BigNumber(quoteResponse.outAmount);
-  solAmount = solAmount.dividedBy(1e9);
+//   // 2.- Init tx bundle and add swap inx
+//   // const versionnedBundle: VersionedTransaction[] = [];
+//   // const swapTx = new VersionedTransaction(transaction.message);
+//   // versionnedBundle.push(swapTx);
 
-  // const mvxTx = new VersionedTransaction(wrapLegacyTx(txInxs, userWallet, blockHash));
-  // versionnedBundle.push(mvxTx);
+//   // // 3.- Add mvx fee & referral fee inx if ref exists
+//   const hasReferral = referralInfo.referralWallet && referralInfo.referralCommision;
+//   let solAmount: BigNumber = isBuySide ? new BigNumber(amountIn) : new BigNumber(quoteResponse.outAmount);
+//   solAmount = solAmount.dividedBy(1e9);
 
-  // // 4.- Add priority fees inx
-  // const maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {lockedWritableAccounts: [new PublicKey(JUP_AGGREGATOR_V6)], percentile: priorityFeeLevel});
-  // console.log(`Max Priority Fee: ${maxPriorityFee}`);
-  // let pFeeTx = new TransactionMessage({payerKey: userWallet.publicKey,recentBlockhash: blockHash,instructions: [pFeeInx]});
-  // let pFeeTxx = new VersionedTransaction(wrapLegacyTx(pFeeTx.instructions, userWallet, blockHash));
-  // // versionnedBundle.push(pFeeTxx);
+//   // const mvxTx = new VersionedTransaction(wrapLegacyTx(txInxs, userWallet, blockHash));
+//   // versionnedBundle.push(mvxTx);
 
-  const txInxs = hasReferral ?
-  add_mvx_and_ref_inx_fees(userWallet, referralInfo.referralWallet!, solAmount, referralInfo.referralCommision!) :
-  addMvxFeesInx(userWallet, solAmount)
-  // swapTransaction.add(pFeeInx);
+//   // // 4.- Add priority fees inx
+//   // const maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {lockedWritableAccounts: [new PublicKey(JUP_AGGREGATOR_V6)], percentile: priorityFeeLevel});
+//   // console.log(`Max Priority Fee: ${maxPriorityFee}`);
+//   // let pFeeTx = new TransactionMessage({payerKey: userWallet.publicKey,recentBlockhash: blockHash,instructions: [pFeeInx]});
+//   // let pFeeTxx = new VersionedTransaction(wrapLegacyTx(pFeeTx.instructions, userWallet, blockHash));
+//   // // versionnedBundle.push(pFeeTxx);
 
-  // swapTransaction.add(txInxs);
+//   const txInxs = hasReferral ?
+//   add_mvx_and_ref_inx_fees(userWallet, referralInfo.referralWallet!, solAmount, referralInfo.referralCommision!) :
+//   addMvxFeesInx(userWallet, solAmount)
+//   // swapTransaction.add(pFeeInx);
 
-  // 5.- Send tx bundle
-  // const tx = (await sendAndConfirmTransaction(connection,versionnedBundle,[userWallet],{ preflightCommitment: "processed", }))[0];
-  const serializedTransaction = Buffer.from(transaction.serialize());
-  const blockhash = transaction.message.recentBlockhash;
+//   // swapTransaction.add(txInxs);
 
-    const transactionResponse = await transactionSenderAndConfirmationWaiter({
-      connection,
-      serializedTransaction,
-      blockhashWithExpiryBlockHeight: {
-        blockhash,
-        lastValidBlockHeight: quoteResponse.lastValidBlockHeight,
-      },
-    });
+//   // 5.- Send tx bundle
+//   // const tx = (await sendAndConfirmTransaction(connection,versionnedBundle,[userWallet],{ preflightCommitment: "processed", }))[0];
+//   const serializedTransaction = Buffer.from(transaction.serialize());
+//   const blockhash = transaction.message.recentBlockhash;
+
+//     const transactionResponse = await transactionSenderAndConfirmationWaiter({
+//       connection,
+//       serializedTransaction,
+//       blockhashWithExpiryBlockHeight: {
+//         blockhash,
+//         lastValidBlockHeight: quoteResponse.lastValidBlockHeight,
+//       },
+//     });
   
-  console.log("transactionResponse: ",transactionResponse);
-  console.log("txId: ",`https://solscan.io/tx/${txId}`);
-  return txId;
+//   console.log("transactionResponse: ",transactionResponse);
+//   console.log("txId: ",`https://solscan.io/tx/${txId}`);
+//   return txId;
   
-}
-*/
+// }
+
 
 
 /**

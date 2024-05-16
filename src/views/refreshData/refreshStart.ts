@@ -58,7 +58,7 @@ export async function handleRefreshStart(ctx: any) {
             // ],
             [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
             [{ text: "☑️ Rug Check", callback_data: "rug_check" },{ text: "💊 Pump fun", callback_data: "pump_fun" } ],
-            [{ text: '🎯 Turbo Snipe', callback_data: 'snipe' }],
+            [{ text: "Jupiter", callback_data: "jupiter_swap" },{ text: "🎯 Turbo Snipe", callback_data: "snipe" }],
             [{ text: '💱 Buy', callback_data: 'buy' }, { text: 'Sell 📈', callback_data: 'sell' }],
             [{ text: 'ℹ️ Help', callback_data: 'help' }, { text: 'Refer Friends', callback_data: 'refer_friends' }],
             [{ text: 'Refresh', callback_data: 'refresh_start' }],

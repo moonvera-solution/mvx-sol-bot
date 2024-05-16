@@ -56,6 +56,7 @@ import { connection } from "mongoose";
 import bs58 from "bs58";
 import { swap_pump_fun } from "./views/pumpFun/pumpFunView";
 import { setCustomPriority } from "./views/util/getPriority";
+import { display_jupSwapDetails, jupiterSwap } from "./views/jupiter/jupiterSwapView";
 
 const express = require('express');
 const app = express();
@@ -265,7 +266,7 @@ bot.command("start", async (ctx: any) => {
             { text: "💼 Wallets & Settings⚙️", callback_data: "show_wallets" },
           ],
           [{ text: "☑️ Rug Check", callback_data: "rug_check" },{ text: "💊 Pump fun", callback_data: "pump_fun" } ],
-          [{ text: "🎯 Turbo Snipe", callback_data: "snipe" }],
+          [{ text: "Jupiter", callback_data: "jupiter_swap" },{ text: "🎯 Turbo Snipe", callback_data: "snipe" }],
           [
             { text: "💱 Buy", callback_data: "buy" },
             { text: "Sell 📈", callback_data: "sell" },
@@ -510,6 +511,37 @@ bot.on("message", async (ctx) => {
         }
         break;
       }
+      case "jupiter_swap": {
+        if (msgTxt) {
+          // let address = msgTxt;
+      
+          // // Check if the input is a link and extract the token address
+          // const linkRegex = /https:\/\/pump\.fun\/([A-Za-z0-9]+)/;
+          // const match = msgTxt.match(linkRegex);
+          // if (match) {
+          //   address = match[1];  // Extract the token address from the link
+          // }
+      
+          if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {
+            const isToken = await checkAccountType(ctx, msgTxt);
+            if (!isToken) {
+              ctx.api.sendMessage(chatId, "Invalid address");
+              return;
+            }
+            ctx.session.latestCommand = "pump_fun";
+
+            ctx.session.jupSwap_token = msgTxt;
+            console.log('ctx.session.jupSwap.token', ctx.session.jupSwap_token)
+            // ctx.session.activeTradingPool = await getRayPoolKeys(ctx, address);
+      
+            await display_jupSwapDetails(ctx, false);
+          } else {
+            ctx.api.sendMessage(chatId, "Invalid address");
+          }
+        }
+        break;
+      }
+
       
       case "buy_X_PUMP": {
         ctx.session.latestCommand = "buy_X_PUMP";
@@ -527,16 +559,49 @@ bot.on("message", async (ctx) => {
           }
         }
       }
+      case "buy_X_JUP": {
+        ctx.session.latestCommand = "buy_X_JUP";
+        if (msgTxt) {
+          const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
+      
+          if (!isNaN(amt)) {
+            console.log('ctx.session.pump_amountIn',ctx.session.pump_amountIn)
+            ctx.session.jupSwap_amount = amt;
+            ctx.session.jupSwap_side = 'buy';
+            await jupiterSwap(ctx);
+            break;
+          } else {
+            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+          }
+        }
+      }
         
       case "sell_X_PUMP": {
         ctx.session.latestCommand = "sell_X_PUMP";
         if (msgTxt) {
           const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
           if (!isNaN(amt) && amt >= 0 && amt <= 100) {
-            console.log('ctx.session.pump_amountIn', ctx.session.pump_amountIn)
-            ctx.session.pump_amountIn = amt;
+            // console.log('ctx.session.pump_amountIn', ctx.session.pump_amountIn)
+            ctx.session.pump_amountIn= amt;
             ctx.session.pump_side = 'sell';
             await swap_pump_fun(ctx);
+            break;
+          } else {
+            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount. Please enter a number between 0 and 100 to represent the percentage.");
+          }
+        }
+        break;
+      }
+      case "sell_X_JUP": {
+        ctx.session.latestCommand = "sell_X_JUP";
+        if (msgTxt) {
+          const amt = msgTxt.includes('.') ? Number.parseFloat(msgTxt) : Number.parseInt(msgTxt);
+          if (!isNaN(amt) && amt >= 0 && amt <= 100) {
+            ctx.session.jupSwap_amount = amt;
+            console.log('ctx.session.JUP_amountIn', ctx.session.jupSwap_amount)
+
+            ctx.session.jupSwap_side = 'sell';
+            await jupiterSwap(ctx);
             break;
           } else {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount. Please enter a number between 0 and 100 to represent the percentage.");
@@ -922,6 +987,11 @@ bot.on("callback_query", async (ctx: any) => {
         await display_pumpFun(ctx, true);
         break;
 
+        case "refresh_Jupiter_swap":
+
+        await display_jupSwapDetails(ctx, true);
+        break;
+
       case "select_wallet_0":
         const portfolio = await Portfolios.findOne({ chatId });
         console.log("portfolio", portfolio);
@@ -1032,6 +1102,12 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.api.sendMessage(chatId,"Please provide the token address or the pump fun link.");
         break;
       }
+      case "jupiter_swap": {
+        ctx.session.latestCommand = "jupiter_swap";
+        ctx.api.sendMessage(chatId,"Please provide the token address or the jupiter swap link.");
+        break;
+      }
+
       case "sell": {
         ctx.session.latestCommand = "sell";
         const referralRecord = await Referrals.findOne({
@@ -1126,6 +1202,16 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "sell_X_PUMP": {
         ctx.session.latestCommand = "sell_X_PUMP";
+        ctx.api.sendMessage(chatId, "Please enter x percentage to sell (eg. 25 for 25%)");
+        break;
+      }
+      case "buy_X_JUP": {
+        ctx.session.latestCommand = "buy_X_JUP";
+        ctx.api.sendMessage(chatId, "Please enter SOL amount");
+        break;
+      }
+      case "sell_X_JUP": {
+        ctx.session.latestCommand = "sell_X_JUP";
         ctx.api.sendMessage(chatId, "Please enter x percentage to sell (eg. 25 for 25%)");
         break;
       }

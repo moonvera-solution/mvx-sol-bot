@@ -82,6 +82,37 @@ const getMaxPrioritizationFeeByPercentile = async (
   return {result2,result3,result4};
   }
 
+  // export  async function runPriorityLevels(ctx: any, ammKey: any) {
+  //   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  //  const priorityCalculation = ammKey? ammKey : ctx.session.jupSwap_token;
+    
+  //   const [result2,result3,result4] = await Promise.all([
+
+  //     getMaxPrioritizationFeeByPercentile(connection, {
+  //       lockedWritableAccounts: [
+  //           new PublicKey(priorityCalculation),
+  //       ],
+  //       percentile: PriotitizationFeeLevels.LOW,
+  //       fallback: false,
+  //   }),
+  //   getMaxPrioritizationFeeByPercentile(connection, {
+  //     lockedWritableAccounts: [
+  //         new PublicKey(priorityCalculation),
+  //     ],
+  //     percentile: PriotitizationFeeLevels.MEDIUM,
+  //     fallback: false,
+  // }),
+  //   getMaxPrioritizationFeeByPercentile(connection, {
+  //   lockedWritableAccounts: [
+  //       new PublicKey(priorityCalculation),
+  //   ],
+  //   percentile: PriotitizationFeeLevels.HIGH,
+  //   fallback: false,
+  //   }),
+  // ]);
+  // return {result2,result3,result4};
+  // }
+
 
 export async function setCustomPriority(ctx: any) {
 

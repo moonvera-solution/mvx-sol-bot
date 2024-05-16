@@ -63,6 +63,11 @@ export interface ISESSION_DATA {
   pump_side: string,
   pump_amountOut: number,
   txPriorityFee: number,
+  jupSwap_token: string,
+  jupSwap_side: string,
+  jupSwap_amount: number,
+  jupSwap:{token:String,side:String,amount:number}
+
 
 }
 
@@ -113,6 +118,8 @@ export const DefaultSessionData: ISESSION_DATA = {
   pump_side: '',
   pump_amountIn: 0,
   pump_amountOut: 0,
+  jupSwap_amount: 0,
+  jupSwap_side: '',
   referralCommision: 0,
   txPriorityFee: 100000,
   customPriorityFee: 0.0001,
@@ -141,7 +148,11 @@ export const DefaultSessionData: ISESSION_DATA = {
   positionIndex: 0,
   allowedReferral:'', // tg Username
   tritonRPC : 'https://moonvera-pit.rpcpool.com/',
-  tritonToken : process.env.TRITON_RPC_TOKEN!
+  tritonToken : process.env.TRITON_RPC_TOKEN!,
+  jupSwap_token: '',
+  jupSwap:{token:'',side:'',amount:0}
+
+  
 }
 
 export type RAYDIUM_POOL_TYPE = {
