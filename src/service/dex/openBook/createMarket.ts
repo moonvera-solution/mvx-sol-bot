@@ -14,12 +14,11 @@ import {
     getProvider,
 } from "@coral-xyz/anchor";
 import { searcherClient, getRandomTipAccount ,sendJitoBundleFromIx} from '../jito/index';
-import { createAccount } from "./solana_utils";
 import { MintUtils } from "./mint_utils";
 import { OpenBookV2Client, OpenBookClientOptions } from "@openbook-dex/openbook-v2";
-import { wallet } from '../../../../config';
 import { sign } from "crypto";
 
+const  wallet:any = '';
 
 export const programId = new PublicKey(
     "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"

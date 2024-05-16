@@ -6,11 +6,10 @@ import { formatNumberToKOrM, getPriorityFeeLabel, getSolBalance, getSwapAmountOu
 import { Keypair, Connection } from '@solana/web3.js';
 import { runAllFees } from '../util/getPriority';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
-import { logErrorToFile } from "../../../error/logger";
 import { getTokenDataFromBirdEye } from '../../api/priceFeeds/birdEye';
 import {SOL_TRACKER_SWAP_PARAMS, getSwapDetails, swap_solTracker} from '../../service/dex/solTracker';
 import { Referrals } from '../../db/mongo/schema';
-import {SOL_ADDRESS} from '../../../config';
+import {SOL_ADDRESS} from '../../config';
 
 import bs58 from "bs58";
 import BigNumber from 'bignumber.js';
