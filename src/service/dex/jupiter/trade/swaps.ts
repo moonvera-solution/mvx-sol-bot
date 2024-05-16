@@ -5,7 +5,7 @@ import { Keypair, Connection, PublicKey, VersionedTransaction, ComputeBudgetProg
 import bs58 from 'bs58';
 import {transactionSenderAndConfirmationWaiter} from '../utils/transactionSender';
 import {getSignature} from '../utils/getSignature';
-import {MVX_JUP_REFERRAL,JUP_REF_PROGRAM, SOL_ADDRESS,WEN_ADDRESS,JUP_AGGREGATOR_V6} from '../../../../../config';
+import {MVX_JUP_REFERRAL,JUP_REF_PROGRAM, SOL_ADDRESS,WEN_ADDRESS,JUP_AGGREGATOR_V6} from '../../../../config';
 import {sendTx,add_mvx_and_ref_inx_fees,addMvxFeesInx,wrapLegacyTx} from '../../../util';
 import {JupiterSwapTokenRef} from '../../../../../src/db/mongo/schema';
 import { getMaxPrioritizationFeeByPercentile } from "../../../fees/priorityFees";

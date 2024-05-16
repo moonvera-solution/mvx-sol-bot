@@ -31,7 +31,7 @@ import {
     addLookupTableInfo,
     RAYDIUM_AUTHORITY, MVXBOT_FEES,
     makeTxVersion, WALLET_MVX
-} from '../../../config';
+} from '../../config';
 
 // define some default locations
 const DEFAULT_KEY_DIR_NAME = "local_keys";

@@ -1,7 +1,7 @@
 import { SecretsManagerClient, GetSecretValueCommand, } from "@aws-sdk/client-secrets-manager";
 import dotenv from 'dotenv'; dotenv.config();
 const isProd = process.env.NODE_ENV == 'PROD';
-import { logErrorToFile } from "../../../error/logger";
+import { console.log } from "../../../error/logger";
 
 
 export async function _loadEnvVars(ctx: any) {
@@ -9,7 +9,7 @@ export async function _loadEnvVars(ctx: any) {
         let keys = isProd ? JSON.parse(await loadSecrets()) : null;
         ctx.session.triton = keys ? keys.tritonToken : process.env.TRITON_RPC_TOKEN;
     } catch (error: any) {
-        logErrorToFile("_loadEnvVars", error);
+        console.log("_loadEnvVars", error);
         console.error(error);
     }
 }

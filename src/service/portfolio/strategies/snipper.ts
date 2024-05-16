@@ -1,11 +1,10 @@
-import { logErrorToFile } from '../../../../error/logger';
 import BigNumber from 'bignumber.js';
 import {
     Liquidity, TokenAmount, LiquidityPoolKeys, Token, SPL_ACCOUNT_LAYOUT,
     TOKEN_PROGRAM_ID, TokenAccount, TxVersion, jsonInfo2PoolKeys
 } from "@raydium-io/raydium-sdk";
 import { Connection, PublicKey, Keypair, SystemProgram, VersionedTransaction, TransactionMessage, ComputeBudgetProgram } from "@solana/web3.js";
-import { MVXBOT_FEES, WALLET_MVX, SNIPE_SIMULATION_COUNT_LIMIT, RAYDIUM_AUTHORITY } from "../../../../config";
+import { MVXBOT_FEES, WALLET_MVX, SNIPE_SIMULATION_COUNT_LIMIT, RAYDIUM_AUTHORITY } from "../../../config";
 import { buildAndSendTx, getPriorityFeeLabel,getSwapAmountOut } from '../../util';
 import { saveUserPosition } from '../positions';
 const log = (k: any, v: any) => console.log(k, v);
@@ -85,7 +84,7 @@ export async function snipperON(ctx: any, amount: string) {
         });
     } catch (e:any) {
         console.log(e);
-        logErrorToFile("bot on snipperON", e);
+        console.log("bot on snipperON", e);
         return await ctx.api.sendMessage(ctx.chat.id, e.message);
     }
 }
@@ -120,7 +119,7 @@ export async function setSnipe(ctx: any, amountIn: any) {
     simulationPromise.catch(async (error: any) => {
         console.log("Error setting snipper", error);
         await ctx.api.sendMessage(ctx.chat.id, `🔴 Snipe fail: ${error}`);
-        logErrorToFile("bot on snipe simmulation", error);
+        console.log("bot on snipe simmulation", error);
     });
     await simulationPromise;
 }
