@@ -88,6 +88,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
     if(priority_custom === true){
       priority_Level = 0;
     }
+    const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
 
     let userWallet: any;
     if(ctx.session.portfolio){
@@ -95,35 +96,43 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         userWallet = ctx.session.portfolio.wallets[selectedWallet];
     }
     const publicKeyString: any = userWallet.publicKey; 
+    console.log('rpcUrl:', rpcUrl)
     if (token) {
       const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
       const [
         birdeyeData,
         tokenMetadataResult,
-        getSolBalanceData
-   
+        getSolBalanceData,
+        jupTokenRate
       ] = await Promise.all([
         getTokenDataFromBirdEye(token),
         getTokenMetadata(ctx, token),
         getSolBalance(publicKeyString, connection),
-        
+        axios.get(
+          `https://price.jup.ag/v6/price?ids=${token}&vsToken=So11111111111111111111111111111111111111112`
+        )
       ]);
-
+     
+      // const jupTokenPrice = jupTokenRate.data.routePlan[jupTokenRate.data.routePlan.length - 1].swapInfo.ammKey;
+      const jupTokenValue: any = Object.values(jupTokenRate.data.data)
+      const jupTokenPrice = jupTokenValue[0].price;
+     
      
       const {
         tokenData,
       } = tokenMetadataResult;
       const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
-      // const tokenPriceUSD = birdeyeData
+      // console.log('jupTokenPrice:', jupTokenPrice * solPrice)
+      const tokenPriceUSD = birdeyeData
 
-      // && birdeyeData.response
-      // && birdeyeData.response.data
-      // && birdeyeData.response.data.data
-      // && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
-      // ? birdeyeData.response.data.data.price
-      // : tokenInfo.price.times(solPrice).toNumber();
+      && birdeyeData.response
+      && birdeyeData.response.data
+      && birdeyeData.response.data.data
+      && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
+      ? birdeyeData.response.data.data.price
+      : jupTokenPrice.times(solPrice).toNumber();
       // console.log('birdeyeData:', birdeyeData)
-      console.log('solPrice:', solPrice)
+      // console.log('tokenPriceUSD:', tokenPriceUSD)
       const baseDecimals = tokenData.mint.decimals;
       const totalSupply = new BigNumber(tokenData.mint.supply.basisPoints);
       // const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(swapRates)) * solPrice);
