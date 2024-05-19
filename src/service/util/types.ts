@@ -67,8 +67,6 @@ export interface ISESSION_DATA {
   jupSwap_side: string,
   jupSwap_amount: number,
   jupSwap:{token:String,side:String,amount:number}
-
-
 }
 
 export const enum PriotitizationFeeLevels {

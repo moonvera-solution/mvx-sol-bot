@@ -1,7 +1,7 @@
 // // https://station.jup.ag/docs/apis/swap-api
 import dotenv from 'dotenv';
 dotenv.config();
-import { Keypair, Connection, PublicKey, VersionedTransaction, ComputeBudgetProgram,sendAndConfirmTransaction,TransactionMessage} from "@solana/web3.js";
+import { Keypair, Connection, AddressLookupTableAccount,TransactionInstruction,PublicKey, VersionedTransaction,Transaction, ComputeBudgetProgram,sendAndConfirmTransaction,TransactionMessage} from "@solana/web3.js";
 import bs58 from 'bs58';
 import {transactionSenderAndConfirmationWaiter} from '../utils/transactionSender';
 import {getSignature} from '../utils/getSignature';
@@ -10,22 +10,165 @@ import {sendTx,add_mvx_and_ref_inx_fees,addMvxFeesInx,wrapLegacyTx} from '../../
 import {JupiterSwapTokenRef} from '../../../../../src/db/mongo/schema';
 import { getMaxPrioritizationFeeByPercentile } from "../../../fees/priorityFees";
 import BigNumber from 'bignumber.js';
+import {optimizedSendAndConfirmTransaction} from '../../../util';
 import axios from "axios";
 
-
-// /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
-// /*                  Jupiter SimpleSwap                        */
-// /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 const COMMITMENT_LEVEL = "confirmed";
 const PRIORITY_FEE_LAMPORTS = 1;
-const TX_RETRY_INTERVAL =25;
+const TX_RETRY_INTERVAL = 2000;
 
 const connection = new Connection(`${process.env.TRITON_RPC_URL!}${process.env.TRITON_RPC_TOKEN!}`);
-// const wallet = Keypair.fromSecretKey(bs58.decode(process.env.TEST_WALLET_PK!));
+const wallet = Keypair.fromSecretKey(bs58.decode(process.env.TEST_WALLET_PK!));
 type REFERRAL_INFO = {
   referralWallet: string | null,
   referralCommision: number | null
 }
+
+// /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+// /*           Instructions Instead of Transaction              */
+// /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
+type refObject = { referralWallet: string, referralCommision: number };
+
+export async function jupiterInxSwap(
+  connection:Connection,
+  rpcUrl:string,
+  wallet:Keypair,
+  tokenIn:string,
+  tokenOut:string,
+  amountIn:number,
+  slippage:number,
+  priorityFeeLevel:number,
+  refObject:refObject
+) : Promise<string | null>{
+  const feeAccount = null;
+  let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}${feeAccount ? '&platformFeeBps=08' : ''}`.trim();
+  let quoteResponse : any = await axios.get(swapUrl);
+
+  console.log(
+    "tokenIn",tokenIn,"\n",
+    "tokenOut",tokenOut,"\n",
+    "amountIn",amountIn,"\n",
+    "slippage",slippage,"\n",
+    "priorityFeeLevel",priorityFeeLevel,"\n",
+    "refObject",refObject,"\n",
+  );
+  
+  // TODO add priority fee
+  const lastRouteHop = quoteResponse.data.routePlan[quoteResponse.data.routePlan.length - 1].swapInfo.ammKey;
+  
+  quoteResponse = quoteResponse.data;
+
+  const solAmount = tokenIn === SOL_ADDRESS ? new BigNumber(quoteResponse.inAmount) : new BigNumber(quoteResponse.outAmount);
+  const instructions = await (
+    await fetch('https://quote-api.jup.ag/v6/swap-instructions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({quoteResponse,userPublicKey: wallet.publicKey.toBase58(),
+      })
+    })
+  ).json();
+
+  if (instructions.error) {
+    throw new Error("Failed to get swap instructions: " + instructions.error);
+  }
+
+  const {
+    tokenLedgerInstruction, // If you are using `useTokenLedger = true`.
+    computeBudgetInstructions, // The necessary instructions to setup the compute budget.
+    setupInstructions, // Setup missing ATA for the users.
+    swapInstruction: swapInstructionPayload, // The actual swap instruction.
+    cleanupInstruction, // Unwrap the SOL if `wrapAndUnwrapSol = true`.
+    addressLookupTableAddresses, // The lookup table addresses that you can use if you are using versioned transaction.
+  } = instructions;
+
+  const deserializeInstruction = (instruction:any) => {
+    return new TransactionInstruction({
+      programId: new PublicKey(instruction.programId),
+      keys: instruction.accounts.map((key:any) => ({
+        pubkey: new PublicKey(key.pubkey),
+        isSigner: key.isSigner,
+        isWritable: key.isWritable,
+      })),
+      data: Buffer.from(instruction.data, "base64"),
+    });
+  };
+
+  const getAddressLookupTableAccounts = async (
+    keys: string[]
+  ): Promise<AddressLookupTableAccount[]> => {
+    const addressLookupTableAccountInfos =
+      await connection.getMultipleAccountsInfo(
+        keys.map((key) => new PublicKey(key))
+      );
+
+    return addressLookupTableAccountInfos.reduce((acc, accountInfo, index) => {
+      const addressLookupTableAddress = keys[index];
+      if (accountInfo) {
+        const addressLookupTableAccount = new AddressLookupTableAccount({
+          key: new PublicKey(addressLookupTableAddress),
+          state: AddressLookupTableAccount.deserialize(accountInfo.data),
+        });
+        acc.push(addressLookupTableAccount);
+      }
+
+      return acc;
+    }, new Array<AddressLookupTableAccount>());
+  };
+
+  const addressLookupTableAccounts: AddressLookupTableAccount[] = [];
+
+  addressLookupTableAccounts.push(
+    ...(await getAddressLookupTableAccounts(addressLookupTableAddresses))
+  );
+
+  const blockhash = (await connection.getLatestBlockhash()).blockhash;
+  const hasReferral = refObject.referralWallet && refObject.referralCommision;
+  const txInxs = hasReferral ?
+    add_mvx_and_ref_inx_fees(wallet, refObject.referralWallet!, solAmount, refObject.referralCommision!) :
+    addMvxFeesInx(wallet, solAmount);
+
+  const messageV0 = new TransactionMessage({
+    payerKey: wallet.publicKey,
+    recentBlockhash: blockhash,
+    instructions: [
+      ...txInxs,
+      ...setupInstructions.map(deserializeInstruction),
+      deserializeInstruction(swapInstructionPayload),
+      deserializeInstruction(cleanupInstruction),
+    ],
+  }).compileToV0Message(addressLookupTableAccounts);
+
+  const transaction = new VersionedTransaction(messageV0);
+  transaction.sign([wallet]);
+
+  // const tx = await connection.sendTransaction(transaction, {skipPreflight: true});
+  // console.log("tx:: ",tx);
+
+  return await optimizedSendAndConfirmTransaction(
+    transaction,
+    connection,
+    blockhash,
+    TX_RETRY_INTERVAL
+  );
+  
+}
+
+
+// swapInstructions(
+//   wallet,
+//   SOL_ADDRESS,
+//   WEN_ADDRESS,
+//   1_0000,
+//   5000
+// ).then((tx) => tx);;
+
+// /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+// /*                  Jupiter SimpleSwap                        */
+// /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
 export async function jupiterSimpleSwap(
   connection:Connection,
   rpcUrl:string,
@@ -41,17 +184,12 @@ export async function jupiterSimpleSwap(
   let quoteResponse;
   let jupiterSwapTransaction;
 
-  let txSignature = '';
-  let confirmTransactionPromise :any= null;
-  let confirmedTx = null;
-  let blockhash = await connection.getLatestBlockhash();
+  let blockhash = (await connection.getLatestBlockhash()).blockhash;
+  let feeAccount : PublicKey | null = null //(await getTokenRefFeeAccount(tokenOut);
+  let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}${feeAccount ? '&platformFeeBps=08' : ''}`.trim()
+  let swapApiResult = await axios.get(swapUrl);
 
-  let swapApiResult = await axios.get(
-    `${rpcUrl}/jupiter/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}`
-  );
-
-  const lastRouteHop = swapApiResult.data.routePlan[swapApiResult.data.routePlan.length - 1].swapInfo.ammKey;
-  console.log("lastRouteHop::",lastRouteHop, ":: ",swapApiResult.data.routePlan);
+  // console.log("lastRouteHop::",lastRouteHop, ":: ",swapApiResult.data.routePlan);
   
   if (!(swapApiResult.status >= 200) && swapApiResult.status < 300) {
     throw new Error(`Failed to fetch jupiter swap quote: ${swapApiResult.status}`);
@@ -67,6 +205,7 @@ export async function jupiterSimpleSwap(
     dynamicComputeUnitLimit: true, // Setting this to `true` allows the endpoint to set the dynamic compute unit limit as required by the transaction
     jitoTipLamports: 5000, // Setting the priority fees. This can be `auto` or lamport numeric value
     skipUserAccountsRpcCalls: false,
+    // feeAccount: feeAccount?.toBase58(),
   });
   
   // console.log("swapApiResult:: ",swapApiResult);
@@ -79,97 +218,48 @@ export async function jupiterSimpleSwap(
 
   jupiterSwapTransaction = swapApiResult.data;
 
-  try {
     console.log(`${new Date().toISOString()} Fetched jupiter swap transaction`);
 
     const swapTransactionBuf = Buffer.from(jupiterSwapTransaction.swapTransaction,"base64");
 
     const tx = VersionedTransaction.deserialize(swapTransactionBuf);
-    tx.message.recentBlockhash = blockhash.blockhash;
+    tx.message.recentBlockhash = blockhash
 
-    // Sign the transaction
-    tx.sign([userWallet]);
+    tx.sign([wallet]);
 
-    // Simulating the transaction
-    const simulationResult = await connection.simulateTransaction(tx, {commitment: "processed",});
-    console.log(`${new Date().toISOString()} Transaction simulation result:`,simulationResult);
-    if (simulationResult.value.err) {
-      throw new Error(
-        `Transaction simulation failed with error ${JSON.stringify(
-          simulationResult.value.err
-        )}`
-      );
-    }
-
-    console.log(`${new Date().toISOString()} Transaction simulation successful result:`);
-    console.log(simulationResult);
-
-    const signatureRaw = tx.signatures[0];
-    txSignature = bs58.encode(signatureRaw);
-
-    let txSendAttempts = 1;
-
-    console.log(`${new Date().toISOString()} Subscribing to transaction confirmation`);
-
-    // confirmTransaction throws error, handle it
-    confirmTransactionPromise = connection.confirmTransaction({
-        signature: txSignature,
-        blockhash: blockhash.blockhash,
-        lastValidBlockHeight: blockhash.lastValidBlockHeight,
-      },
-      "confirmed"
-    );
-
-    console.log(`${new Date().toISOString()} Sending Transaction ${txSignature}`);
-    await connection.sendRawTransaction(tx.serialize(), {
-      // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
-      // This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery
-      skipPreflight: true,
-      // Setting max retries to 0 as we are handling retries manually
-      // Set this manually so that the default is skipped
-      maxRetries: 0,
-    });
-
-    confirmedTx = null;
-        while (!confirmedTx) {
-          confirmedTx = await Promise.race([
-            confirmTransactionPromise,
-            new Promise((resolve) =>
-              setTimeout(() => {
-                resolve(null);
-              }, TX_RETRY_INTERVAL)
-            ),
-          ]);
-          if (confirmedTx) {
-            break;
-          }
-
-          console.log(`${new Date().toISOString()} Tx not confirmed after ${TX_RETRY_INTERVAL * txSendAttempts++}ms, resending`);
-
-          await connection.sendRawTransaction(tx.serialize(), {
-            // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
-            // This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery
-            skipPreflight: true,
-            // Setting max retries to 0 as we are handling retries manually
-            // Set this manually so that the default is skipped
-            maxRetries: 0,
-          });
-        }
-    } catch (e) {
-      console.error(`${new Date().toISOString()} Error: ${e}`);
-    }
-
-    if (!confirmedTx) {
-      console.log(`${new Date().toISOString()} Transaction failed`);
-      return;
-    }
-    console.log(`${new Date().toISOString()} Transaction successful`);
-    console.log(`${new Date().toISOString()} Explorer URL: https://solscan.io/tx/${txSignature}`);
-
-    // txSignature = `https://solscan.io/tx/${txSignature}`;
-    return txSignature;
-
+    optimizedSendAndConfirmTransaction(tx,connection,blockhash,TX_RETRY_INTERVAL);
   }
+
+/**
+ * Every token to swap requires a token referral fee account for tx.
+ * Independent of user, we store ref tokens in db
+ * @param token Swap token out, not SOL
+ * @returns refTokenAccount if id tokenIn exists in db else creates and returns
+ */
+async function getTokenRefFeeAccount(token:string) : Promise<PublicKey | null> {
+  try{
+    let refEntry = await JupiterSwapTokenRef.findOne({id: token})
+    console.log("1_refEntry:: ",refEntry);
+    if(!refEntry){
+      const [feeAccount] = await PublicKey.findProgramAddressSync([Buffer.from("referral_ata"),
+          new PublicKey(MVX_JUP_REFERRAL).toBuffer(), // your referral account public key
+          new PublicKey(token).toBuffer(), // the token mint, output mint for ExactIn, input mint for ExactOut.
+        ],new PublicKey(JUP_REF_PROGRAM) // the Referral Program
+      );
+      refEntry = new JupiterSwapTokenRef({ id: token, ref: feeAccount.toBase58() });
+      await refEntry.save();
+      return feeAccount;
+    }else if(refEntry){
+      console.log("2_refEntry",refEntry.ref)
+      return new PublicKey(refEntry.ref!);
+    }
+    return null;
+  }catch(error:any){
+    console.log(error)
+    return null;
+  }
+}
+
 
 // jupiterSimpleSwap(
 //   connection,
@@ -177,7 +267,7 @@ export async function jupiterSimpleSwap(
 //   wallet,
 //   false,
 //   SOL_ADDRESS,
-//   WEN_ADDRESS,
+//   'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN',
 //   1000000,
 //   5000,
 //   5000,
@@ -189,7 +279,7 @@ export async function jupiterSimpleSwap(
 // WE GOT IT - not the FUCKIN UI
 
 
-//   const feeAccount = null// await getTokenRefFeeAccount(tokenIn);
+
 //   const { swapTransaction } = await ( await fetch(`${rpcUrl}/jupiter/swap`, { method: 'POST', headers: {'Content-Type': 'applixcation/json'},
 //       body: JSON.stringify({ quoteResponse, userPublicKey: wallet.publicKey.toString(), wrapAndUnwrapSol: true}),  // Optional feeAccount Use if you want to charge a fee. feeBps must have been passed in /quote API.
 //     })).json();
@@ -266,36 +356,6 @@ export async function jupiterSimpleSwap(
 //   return txId;
   
 // }
-
-
-
-/**
- * Every token to swap requires a token referral fee account for tx.
- * Independent of user, we store ref tokens in db
- * @param token Swap token out, not SOL
- * @returns refTokenAccount if id tokenIn exists in db else creates and returns
- */
-async function getTokenRefFeeAccount(token:string) : Promise<PublicKey | null> {
-  try{
-    let refEntry = await JupiterSwapTokenRef.findOne({id: token})
-    if(!refEntry){
-      const [feeAccount] = await PublicKey.findProgramAddressSync([Buffer.from("referral_ata"),
-          new PublicKey(MVX_JUP_REFERRAL).toBuffer(), // your referral account public key
-          new PublicKey(token).toBuffer(), // the token mint, output mint for ExactIn, input mint for ExactOut.
-        ],new PublicKey(JUP_REF_PROGRAM) // the Referral Program
-      );
-      refEntry = new JupiterSwapTokenRef({ id: token, ref: feeAccount.toBase58() });
-      await refEntry.save();
-      return feeAccount;
-    }else if(refEntry){
-      return new PublicKey(refEntry.ref!);
-    }
-    return null;
-  }catch(error:any){
-    console.log(error)
-    return null;
-  }
-}
 
 // /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 // /*                            SWAP                            */
@@ -431,94 +491,32 @@ async function getTokenRefFeeAccount(token:string) : Promise<PublicKey | null> {
 //   ).json();
 // } 
 // */
-// /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
-// /*           Instructions Instead of Transaction              */
-// /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
 // /**
-// async function swapInstructions() {
-//   const instructions = await (
-//     await fetch('https://quote-api.jup.ag/v6/swap-instructions', {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json'
-//       },
-//       body: JSON.stringify({
-//         // quoteResponse from /quote api
-//         quoteResponse,
-//         userPublicKey: swapUserKeypair.publicKey.toBase58(),
-//       })
-//     })
-//   ).json();
 
-//   if (instructions.error) {
-//     throw new Error("Failed to get swap instructions: " + instructions.error);
-//   }
 
-//   const {
-//     tokenLedgerInstruction, // If you are using `useTokenLedger = true`.
-//     computeBudgetInstructions, // The necessary instructions to setup the compute budget.
-//     setupInstructions, // Setup missing ATA for the users.
-//     swapInstruction: swapInstructionPayload, // The actual swap instruction.
-//     cleanupInstruction, // Unwrap the SOL if `wrapAndUnwrapSol = true`.
-//     addressLookupTableAddresses, // The lookup table addresses that you can use if you are using versioned transaction.
-//   } = instructions;
 
-//   const deserializeInstruction = (instruction) => {
-//     return new TransactionInstruction({
-//       programId: new PublicKey(instruction.programId),
-//       keys: instruction.accounts.map((key) => ({
-//         pubkey: new PublicKey(key.pubkey),
-//         isSigner: key.isSigner,
-//         isWritable: key.isWritable,
-//       })),
-//       data: Buffer.from(instruction.data, "base64"),
-//     });
-//   };
+/*
+jupiterSimpleSwap(
+  connection,
+  'https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41',
+  wallet,
+  false,
+  SOL_ADDRESS,
+  'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN',
+  1000000,
+  5000,
+  5000,
+  {referralWallet:null, referralCommision:null},
+).then((tx) => tx);
 
-//   const getAddressLookupTableAccounts = async (
-//     keys: string[]
-//   ): Promise<AddressLookupTableAccount[]> => {
-//     const addressLookupTableAccountInfos =
-//       await connection.getMultipleAccountsInfo(
-//         keys.map((key) => new PublicKey(key))
-//       );
+*/
+//
 
-//     return addressLookupTableAccountInfos.reduce((acc, accountInfo, index) => {
-//       const addressLookupTableAddress = keys[index];
-//       if (accountInfo) {
-//         const addressLookupTableAccount = new AddressLookupTableAccount({
-//           key: new PublicKey(addressLookupTableAddress),
-//           state: AddressLookupTableAccount.deserialize(accountInfo.data),
-//         });
-//         acc.push(addressLookupTableAccount);
-//       }
 
-//       return acc;
-//     }, new Array<AddressLookupTableAccount>());
-//   };
-
-//   const addressLookupTableAccounts: AddressLookupTableAccount[] = [];
-
-//   addressLookupTableAccounts.push(
-//     ...(await getAddressLookupTableAccounts(addressLookupTableAddresses))
-//   );
-
-//   const blockhash = (await connection.getLatestBlockhash()).blockhash;
-//   const messageV0 = new TransactionMessage({
-//     payerKey: payerPublicKey,
-//     recentBlockhash: blockhash,
-//     instructions: [
-//       // uncomment if needed: ...setupInstructions.map(deserializeInstruction),
-//       deserializeInstruction(swapInstructionPayload),
-//       // uncomment if needed: deserializeInstruction(cleanupInstruction),
-//     ],
-//   }).compileToV0Message(addressLookupTableAccounts);
-//   const transaction = new VersionedTransaction(messageV0);
-// }
 //  */
 // /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 // /*           Using Token Ledger Instruction                  */
-
 // // * If 'auto' is used, Jupiter will automatically set a priority
 // // * fee for the transaction, it will be capped at 5,000,000
 // // * lamports / 0.005 SOL.

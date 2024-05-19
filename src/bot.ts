@@ -166,7 +166,7 @@ bot.command("start", async (ctx: any) => {
     const user = await AllowedReferrals.find({ tgUserName: userName });
     // console.log("user:", user[0]);
     if(user[0] != undefined){
-      ctx.session.allowedReferral = user[0];
+      ctx.session.allowedReferral = user[0].tgUserName;
       // console.log("ctx.session.allowedReferral:", ctx.session.allowedReferral);
 
     }
@@ -528,9 +528,7 @@ bot.on("message", async (ctx) => {
               return;
             }
             ctx.session.latestCommand = "pump_fun";
-
             ctx.session.jupSwap_token = msgTxt;
-            console.log('ctx.session.jupSwap.token', ctx.session.jupSwap_token)
             // ctx.session.activeTradingPool = await getRayPoolKeys(ctx, address);
       
             await display_jupSwapDetails(ctx, false);
@@ -1506,7 +1504,6 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 process.on('SIGINT', async () => {
-  console.log("backupSession",backupSession);
   if (backupSession) {
       await UserSession.findOneAndUpdate({ chatId: backupSession.chatId }, backupSession, { upsert: true })
       .then(() => { console.log(":: Stored user session to DB") })

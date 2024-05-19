@@ -757,9 +757,6 @@ export async function getSwapAmountOutPump(
         const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
         let txAmount: Array<any> | undefined;
         if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions) {
-           console.log('Balance after sell ',txxs.meta.postBalances );
-           console.log('Balance before sell ',txxs.meta.preBalances );
-           console.log('balance change ',txxs.meta.postBalances[0] - txxs.meta.preBalances[0] );
 
             txxs.meta.innerInstructions.forEach((tx) => {
                 txAmount = JSON.parse(JSON.stringify(tx.instructions));
@@ -789,20 +786,21 @@ export function add_mvx_and_ref_inx_fees(
     solAmount: BigNumber,
     referralCommision: number): TransactionInstruction[] {
 
-    const mvxFee = solAmount.times(MVXBOT_FEES);
-    const referralAmmount = mvxFee.times(referralCommision);
-    const mvxFeeAfterRefeeralCut = mvxFee.minus(referralAmmount);
+    const mvxFee = solAmount.multipliedBy(MVXBOT_FEES);
+    let referralAmmount = mvxFee.multipliedBy(referralCommision).dividedBy(10_000);
+    let mvxFeeAfterRefeeralCut = mvxFee.minus(referralAmmount);
 
     const referralInx = SystemProgram.transfer({
         fromPubkey: payerKeypair.publicKey,
         toPubkey: new PublicKey(referralWallet),
-        lamports: referralAmmount.times(1e9).toNumber(), // 5_000 || 6_000
+        lamports: BigInt(Math.round(Number.parseFloat(String(referralAmmount.toNumber())))),
     });
 
     const mvxFeeInx = SystemProgram.transfer({
         fromPubkey: payerKeypair.publicKey,
         toPubkey: new PublicKey(WALLET_MVX),
-        lamports: mvxFeeAfterRefeeralCut.times(1e9).toNumber(), // 5_000 || 6_000
+        lamports: BigInt(Math.round(Number.parseFloat(String(mvxFeeAfterRefeeralCut.toNumber())))),
+
     });
 
     return [referralInx, mvxFeeInx];
@@ -813,10 +811,11 @@ export function add_mvx_and_ref_inx_fees(
  * @returns TransactionInstruction Array
  */
 export function addMvxFeesInx(payerKeypair: Keypair, solAmount: BigNumber): TransactionInstruction[] {
+    const mvxFee = solAmount.multipliedBy(MVXBOT_FEES);
     return [SystemProgram.transfer({
         fromPubkey: payerKeypair.publicKey,
         toPubkey: new PublicKey(WALLET_MVX),
-        lamports: new BigNumber(solAmount.times(1e9)).times(MVXBOT_FEES).toNumber(), // 5_000 || 6_000
+        lamports: BigInt(Math.round(Number.parseFloat(String(mvxFee.toNumber()))))
     })];
 }
 
@@ -827,4 +826,104 @@ export function wrapLegacyTx(txInxs: TransactionInstruction[],payerKeypair: Keyp
         recentBlockhash: blockhash,
         instructions: txInxs
     }).compileToV0Message();
+}
+
+
+export async function optimizedSendAndConfirmTransaction(
+    tx: VersionedTransaction,
+    connection: Connection,
+    blockhash: any,
+    txRetryInterval:number
+): Promise<string | null> {
+
+    let txSignature :any= null;
+    let confirmTransactionPromise :any= null;
+    let confirmedTx = null;
+
+    try {
+        // Simulating the transaction
+        const simulationResult = await connection.simulateTransaction(tx, {commitment: "processed",});
+        console.log(`${new Date().toISOString()} Transaction simulation result:`,simulationResult);
+        if (simulationResult.value.err) {
+            await catchSimulationErrors(simulationResult);
+        }
+    
+        console.log(`${new Date().toISOString()} Transaction simulation successful result:`);
+        console.log(simulationResult);
+    
+        const signatureRaw :any= tx.signatures[0];
+        txSignature = bs58.encode(signatureRaw);
+    
+        let txSendAttempts = 1;
+    
+        console.log(`${new Date().toISOString()} Subscribing to transaction confirmation`);
+        let blockhash = await connection.getLatestBlockhash();
+
+        // confirmTransaction throws error, handle it
+        confirmTransactionPromise = connection.confirmTransaction({
+            signature: txSignature,
+            blockhash: blockhash.blockhash,
+            lastValidBlockHeight: blockhash.lastValidBlockHeight,
+          },
+          "confirmed"
+        );
+    
+        console.log(`${new Date().toISOString()} Sending Transaction ${txSignature}`);
+        await connection.sendRawTransaction(tx.serialize(), {skipPreflight: true,maxRetries: 0,});
+    
+        confirmedTx = null;
+            while (!confirmedTx) {
+              confirmedTx = await Promise.race([
+                confirmTransactionPromise,
+                new Promise((resolve) =>
+                  setTimeout(() => {
+                    resolve(null);
+                  }, 2000)
+                ),
+              ]);
+              if (confirmedTx) {
+                break;
+              }
+    
+              console.log(`${new Date().toISOString()} Tx not confirmed after ${txRetryInterval * txSendAttempts++}ms, resending`);
+    
+              await connection.sendRawTransaction(tx.serialize(), {
+                skipPreflight: true, // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above - This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery
+                maxRetries: 0,  // Setting max retries to 0 as we are handling retries manually - Set this manually so that the default is skipped
+              });
+            }
+        } catch (e) {
+          console.error(`${new Date().toISOString()} Error: ${e}`);
+          throw new Error(`Transaction failed: ${e}`)
+        }
+    
+        if (!confirmedTx) {
+          console.log(`${new Date().toISOString()} Transaction failed`);
+          return null;
+        }
+        console.log(`${new Date().toISOString()} Transaction successful`);
+        console.log(`${new Date().toISOString()} Explorer URL: https://solscan.io/tx/${txSignature}`);
+
+        return txSignature;
+}
+
+export async function catchSimulationErrors(simulationResult:any){
+    const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
+    const SLIPPAGE_ERROR_ANCHOR = /SlippageToleranceExceeded/;
+    if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg)) ||
+        simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR_ANCHOR.test(logMsg) )) {
+
+        console.log(simulationResult.value.logs)
+        throw new Error(`🔴 Slippage error, try increasing your slippage %.`);
+    }
+    const BALANCE_ERROR = /Transfer: insufficient lamports/;
+    if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
+        console.log(simulationResult.value.logs)
+        throw new Error(`🔴 Insufficient balance for transaction.`);
+    }
+    const FEES_ERROR = 'InsufficientFundsForFee';
+    if (simulationResult.value.err === FEES_ERROR) {
+        console.log(simulationResult.value.logs)
+        throw new Error(`🔴 Swap failed! Please try again.`);
+    }
 }

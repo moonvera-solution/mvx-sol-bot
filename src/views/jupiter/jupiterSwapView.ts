@@ -11,7 +11,7 @@ export const DEFAULT_PUBLIC_KEY = new PublicKey('1111111111111111111111111111111
 import { UserPositions } from '../../db';
 import { getTokenDataFromBirdEye } from '../../api/priceFeeds/birdEye';
 import { SOL_ADDRESS } from "../../config";
-import {jupiterSimpleSwap} from '../../service/dex/jupiter/trade/swaps';
+import {jupiterInxSwap} from '../../service/dex/jupiter/trade/swaps';
 import bs58 from 'bs58';
 import BigNumber from 'bignumber.js';
 import axios from 'axios';
@@ -22,35 +22,30 @@ export async function jupiterSwap(ctx:any){
     const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
     const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
     const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
-   
     const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
    
     const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
 
-    console.log('upSwap.amount', ctx.session.jupSwap_amount)
     const isBuySide = ctx.session.jupSwap_side == "buy";
     const tokenIn = isBuySide ? SOL_ADDRESS : ctx.session.jupSwap_token;
     const tokenOut = isBuySide ? ctx.session.jupSwap_token : SOL_ADDRESS;
     const userTokenBalanceAndDetails = isBuySide ?  await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection): await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
-    console.log('userTokenBalanceAndDetails:', userTokenBalanceAndDetails);
 
     const amountToSell = Math.floor((ctx.session.jupSwap_amount /100) * userTokenBalanceAndDetails.userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals));
 
     const amountIn = isBuySide ? ctx.session.jupSwap_amount * 1e9 : amountToSell;
    
-   
     const refObject = { referralWallet: ctx.session.referralWallet, referralCommision: ctx.referralCommision};
-   
     await ctx.api.sendMessage(chatId, `🟢 <b>Transaction ${ctx.session.jupSwap_side.toUpperCase()}:</b> Processing ... Please wait for confirmation...`, { parse_mode: 'HTML', disable_web_page_preview: true });
-    jupiterSimpleSwap(
+
+    jupiterInxSwap(
         connection,
         rpcUrl,
         payerKeypair,
-        isBuySide,
         tokenIn,
         tokenOut,
         amountIn,
-        500,
+        ctx.session.latestSlippage,
         ctx.session.priorityFees,
         refObject
       ).then(async(txSig) => {
@@ -61,8 +56,6 @@ export async function jupiterSwap(ctx:any){
         if(txSig){
           let tokenAmount,confirmedMsg;
           let solFromSell = 0;
-
-
           const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
           let extractAmount =  await getSwapAmountOutPump(connection, [txSig.toString()], tradeType) 
           const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
