@@ -1512,7 +1512,6 @@ process.on('SIGINT', async () => {
     await UserSession.findOneAndUpdate({ chatId: backupSession.chatId }, backupSession, { upsert: true })
       .then(() => { console.log(":: Stored user session to DB") })
       .catch((e: any) => {
-        logErrorToFile("Error on restore session, process exit", e);
         console.log("error", e)
       }
       );

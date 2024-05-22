@@ -315,7 +315,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
 
 
-      const [balanceInSOL, birdeyeData, jupRate,userTokenDetails,tokenMetadataResult,        jupPriceImpact_5,
+      const [balanceInSOL, birdeyeData, jupRate,userTokenDetails,tokenMetadataResult, jupPriceImpact_5,
       ] = await Promise.all([
         getSolBalance(userWallet, connection),
         getTokenDataFromBirdEyePositions(token,userWallet),

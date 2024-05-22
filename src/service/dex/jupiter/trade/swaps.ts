@@ -4,8 +4,7 @@ dotenv.config();
 import { Keypair, Connection, AddressLookupTableAccount,TransactionInstruction,PublicKey, VersionedTransaction,Transaction, ComputeBudgetProgram,sendAndConfirmTransaction,TransactionMessage} from "@solana/web3.js";
 import bs58 from 'bs58';
 
-import {MVX_JUP_REFERRAL,JUP_REF_PROGRAM} from '../../../../config';
-import {JupiterSwapTokenRef} from '../../../../../src/db/mongo/schema';
+import {MVX_JUP_REFERRAL,JUP_REF_PROGRAM,SOL_ADDRESS} from '../../../../config';
 import { getMaxPrioritizationFeeByPercentile } from "../../../fees/priorityFees";
 import BigNumber from 'bignumber.js';
 import {optimizedSendAndConfirmTransaction,add_mvx_and_ref_inx_fees,addMvxFeesInx} from '../../../util';
@@ -142,9 +141,6 @@ export async function jupiterInxSwap(
   const transaction = new VersionedTransaction(messageV0);
   transaction.sign([wallet]);
 
-  // const tx = await connection.sendTransaction(transaction, {skipPreflight: true});
-  // console.log("tx:: ",tx);
-
   return await optimizedSendAndConfirmTransaction(
     transaction,
     connection,
@@ -230,11 +226,13 @@ export async function jupiterSimpleSwap(
   }
 
 /**
+ * NOT IN USE - WE USE MVX FEE NOT JUP STYLE FEE
+ * 
  * Every token to swap requires a token referral fee account for tx.
  * Independent of user, we store ref tokens in db
  * @param token Swap token out, not SOL
  * @returns refTokenAccount if id tokenIn exists in db else creates and returns
- */
+ 
 async function getTokenRefFeeAccount(token:string) : Promise<PublicKey | null> {
   try{
     let refEntry = await JupiterSwapTokenRef.findOne({id: token})
@@ -258,7 +256,7 @@ async function getTokenRefFeeAccount(token:string) : Promise<PublicKey | null> {
     return null;
   }
 }
-
+*/
 
 // jupiterSimpleSwap(
 //   connection,
