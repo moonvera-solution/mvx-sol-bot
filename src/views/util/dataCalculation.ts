@@ -26,7 +26,7 @@ Promise<{ baseTokenVaultSupply: BigNumber, quoteTokenVaultSupply: BigNumber, bas
 
 export async function quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply, connection }:
     { baseVault: PublicKey, quoteVault: PublicKey, baseDecimals: number, quoteDecimals: number, baseSupply: PublicKey, connection: Connection}):
-    Promise<{ price: BigNumber, marketCap: BigNumber, liquidity: number, priceImpact: number, priceImpact_1: number, baseTokenSupply: BigNumber }> {
+    Promise<{ price: BigNumber, marketCap: BigNumber, liquidity: number, priceImpact: number, baseTokenSupply: BigNumber }> {
     let { baseTokenVaultSupply, quoteTokenVaultSupply, baseTokenSupply } = await getPoolToken_details(baseVault, quoteVault, baseSupply,connection);
     if (quoteDecimals < baseDecimals) {
         baseTokenVaultSupply = new BigNumber(baseTokenVaultSupply.toNumber() * Math.pow(10, quoteDecimals - baseDecimals));
@@ -35,7 +35,7 @@ export async function quoteToken({ baseVault, quoteVault, baseDecimals, quoteDec
     }
     const price: BigNumber = quoteTokenVaultSupply.div(baseTokenVaultSupply);
     const marketCap: BigNumber = price.times(baseTokenSupply.dividedBy(Math.pow(10, baseDecimals)));
-    // price impact calculation
+
     const tradeAmount_SOL = new BigNumber(5).times(Math.pow(10, baseDecimals)); // 5 SOL in lamports
     const tradeAmount_SOL_1 = new BigNumber(1).times(Math.pow(10, baseDecimals)); // 1 SOL in lamports
     const newQuoteVaultSupply = quoteTokenVaultSupply.plus(tradeAmount_SOL);
@@ -43,16 +43,16 @@ export async function quoteToken({ baseVault, quoteVault, baseDecimals, quoteDec
     const newBaseVaultSupply = baseTokenVaultSupply.times(quoteTokenVaultSupply).div(newQuoteVaultSupply);
     const newBaseVaultSupply_1 = baseTokenVaultSupply.times(quoteTokenVaultSupply).div(newQuoteVaultSupply_1);
     const tokenReceived = (baseTokenVaultSupply.minus(newBaseVaultSupply));
-    const tokenReceived_1 = (baseTokenVaultSupply.minus(newBaseVaultSupply_1));
+    // const tokenReceived_1 = (baseTokenVaultSupply.minus(newBaseVaultSupply_1));
     const newPrice = new BigNumber(tradeAmount_SOL.toNumber() / tokenReceived.toNumber());
-    const newPrice_1 = new BigNumber(tradeAmount_SOL_1.toNumber() / tokenReceived_1.toNumber());
+    // const newPrice_1 = new BigNumber(tradeAmount_SOL_1.toNumber() / tokenReceived_1.toNumber());
     const priceImpact = newPrice.minus(price).div(price).times(100).toNumber();
-    const priceImpact_1 = newPrice_1.minus(price).div(price).times(100).toNumber();
-    // liquid
+    // const priceImpact_1 = newPrice_1.minus(price).div(price).times(100).toNumber();
+
     const liquidityInfo: BigNumber = quoteTokenVaultSupply;
     const liquidity = liquidityInfo.toNumber() * Math.pow(10, -baseDecimals);
 
-    return { price, marketCap, liquidity, priceImpact, priceImpact_1, baseTokenSupply};
+    return { price, marketCap, liquidity, priceImpact,  baseTokenSupply};
 }
 
 

@@ -3,11 +3,12 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-export async function getTokenDataFromBirdEye(tokenAddress: String) {
+export async function getTokenDataFromBirdEye(tokenAddress: String, userWallet: String) {
     try {
         const url = `https://public-api.birdeye.so/defi/token_overview?address=${tokenAddress}`;
         const url2 = `https://public-api.birdeye.so/defi/token_security?address=${tokenAddress}`;
         const solanDetails = 'https://public-api.birdeye.so/defi/price?address=So11111111111111111111111111111111111111112';
+        const walletTokenBalance = `https://public-api.birdeye.so/v1/wallet/token_balance?wallet=${userWallet}&token_address=${tokenAddress}`;
 
 
         const options = {
@@ -18,11 +19,39 @@ export async function getTokenDataFromBirdEye(tokenAddress: String) {
                 'X-API-KEY': `${process.env.BIRD_EYE_API_KEY}`
             }
         };
-        const [response, response2,solanaPrice] = await Promise.all([axios.get(url, options), axios.get(url2, options), axios.get(solanDetails, options)]); // [response1, response2
+        const [response, response2,solanaPrice, walletTokenPosition] = await Promise.all([axios.get(url, options), axios.get(url2, options), axios.get(solanDetails, options), axios.get(walletTokenBalance, options)]); // [response1, response2
         // const response = await axios.get(url, options);
         // const response2 = await axios.get(url2, options);
         // console.log("response",response.data.data.realMc)
-        return {response,response2,solanaPrice}; // Adjust this based on the actual response structure
+        return {response,response2,solanaPrice,walletTokenPosition}; // Adjust this based on the actual response structure
+    } catch (error:any) {
+        console.error(
+            error.message
+        );
+        return null;
+    }
+}
+export async function getTokenDataFromBirdEyePositions(tokenAddress: String, userWallet: String) {
+    try {
+        const url = `https://public-api.birdeye.so/defi/token_overview?address=${tokenAddress}`;
+        const url2 = `https://public-api.birdeye.so/defi/token_security?address=${tokenAddress}`;
+        const solanDetails = 'https://public-api.birdeye.so/defi/price?address=So11111111111111111111111111111111111111112';
+        const walletTokenBalance = `https://public-api.birdeye.so/v1/wallet/token_balance?wallet=BufhUw6vTmPB5ytaAWfHb6xUCUdVqHGZn9eQenSJmgmP&token_address=${tokenAddress}`;
+        const birdeyeTokenPosition = `https://public-api.birdeye.so/v1/wallet/token_list?wallet=${userWallet}`
+
+        const options = {
+            method: 'GET',
+            headers: {
+               
+                "x-chain": "solana",
+                'X-API-KEY': `${process.env.BIRD_EYE_API_KEY}`
+            }
+        };
+        const [response, response2,solanaPrice, walletTokenPosition,birdeyePosition] = await Promise.all([axios.get(url, options), axios.get(url2, options), axios.get(solanDetails, options), axios.get(walletTokenBalance, options), axios.get(birdeyeTokenPosition, options)]); // [response1, response2
+        // const response = await axios.get(url, options);
+        // const response2 = await axios.get(url2, options);
+        // console.log("response",response.data.data.realMc)
+        return {response,response2,solanaPrice,walletTokenPosition,birdeyePosition}; // Adjust this based on the actual response structure
     } catch (error:any) {
         console.error(
             error.message

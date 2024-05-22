@@ -1,14 +1,12 @@
 import {
     buildSimpleTransaction,
-    findProgramAddress,
     InnerSimpleV0Transaction,
     SPL_ACCOUNT_LAYOUT,
     TOKEN_PROGRAM_ID,
     TokenAccount,
     LiquidityPoolKeys, Liquidity, TokenAmount, Token, Percent, publicKey
 } from '@raydium-io/raydium-sdk';
-import { Metaplex } from "@metaplex-foundation/js";
-import axios from 'axios';
+
 
 import {
     Connection,
@@ -757,21 +755,19 @@ export async function getSwapAmountOutPump(
         const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
         let txAmount: Array<any> | undefined;
         if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions) {
-           console.log('Balance after sell ',txxs.meta.postBalances );
-           console.log('Balance before sell ',txxs.meta.preBalances );
-           console.log('balance change ',txxs.meta.postBalances[0] - txxs.meta.preBalances[0] );
+  
 
             txxs.meta.innerInstructions.forEach((tx) => {
                 txAmount = JSON.parse(JSON.stringify(tx.instructions));
                 txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
                 txAmount.forEach((tx) => {
-                    console.log('tx.parsed.info', tx)
-                    if (tradeSide == 'buy' && tx.parsed && tx.parsed?.info && tx.parsed?.info?.amount) {
-                        extractAmount = tx.parsed.info.amount;
+                    if (tradeSide == 'buy' && tx.parsed && tx.parsed?.info && (tx.parsed.info.amount || tx.parsed.info.tokenAmount)) {
+                   
+                        extractAmount = tx.parsed.info.amount ? tx.parsed.info.amount : tx.parsed.info.tokenAmount.amount;
                     }else if(tradeSide == 'sell' && txxs && txxs.meta && txxs.meta.postBalances && txxs.meta.preBalances){
                         extractAmount = txxs.meta.postBalances[0] - txxs.meta.preBalances[0] ;
                     }
-                    console.log('extractAmount: ', extractAmount);
+            
                 });
             })
         }

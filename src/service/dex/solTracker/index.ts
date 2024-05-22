@@ -1,6 +1,5 @@
 import axios from 'axios';
 import dotenv from "dotenv"; dotenv.config();
-import bs58 from 'bs58';
 import SolanaTracker from "./solTrackerUtils";
 import { sendTx, add_mvx_and_ref_inx_fees, addMvxFeesInx, wrapLegacyTx } from '../../../../src/service/util';
 import { Keypair, Connection, Transaction, VersionedTransaction, TransactionMessage } from '@solana/web3.js';
@@ -28,7 +27,7 @@ export async function swap_solTracker(connection: Connection ,{
         from, to, fromAmount: amount.toString(),
         slippage: slippage.toString(),
         payer: payerKeypair.publicKey.toBase58(),
-        priorityFee:  '0.001',
+        priorityFee:  '0.002',
         forceLegacy: forceLegacy ? "true" : "false",
     });
     console.log('priorityFee:', priorityFee)
@@ -50,7 +49,7 @@ export async function swap_solTracker(connection: Connection ,{
             const txn = VersionedTransaction.deserialize(serializedTransactionBuffer); if (!txn) return false;
             versionnedBundle.push(new VersionedTransaction(wrapLegacyTx(txInxs, payerKeypair,blockhash)));
             versionnedBundle.push(txn);
-            return  await sendTx(connection, payerKeypair, versionnedBundle, { preflightCommitment: 'processed' });
+            return  await sendTx(connection, payerKeypair, versionnedBundle, { preflightCommitment: 'confirmed' });
         } else {
             const txn = Transaction.from(serializedTransactionBuffer); if (!txn) return false;
             const tx = new Transaction().add(txn); // add swap inx 
@@ -58,7 +57,7 @@ export async function swap_solTracker(connection: Connection ,{
             // let recentBlockhash = await connection.getLatestBlockhash('processed');
             // console.log('txInxs:', txn);
             // console.log('tx:', tx.signatures[0]);
-            const transx = await sendTx(connection, payerKeypair, [tx], { preflightCommitment: 'processed' });
+            const transx = await sendTx(connection, payerKeypair, [tx], { preflightCommitment: 'confirmed' });
             console.log('transx:', transx);
             return transx
         }
@@ -75,7 +74,7 @@ export async function getSwapDetails(
     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
     try {
         const response = await axios.get(`${process.env.SOL_TRACKER_API_URL}/rate?`, { params, headers });
-        console.log("rate response:", response.data);
+        // console.log("rate response:", response.data);
         return response.data.currentPrice;
     } catch (error: any) {
         throw new Error(error);

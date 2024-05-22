@@ -78,7 +78,7 @@ export async function display_spl_positions(ctx: any, isRefresh: boolean) {
       const mint = pos.baseMint.toString();
       const [tokenInfo, birdeyeData] = await Promise.all([
         quoteToken(quoteTokenData),
-        getTokenDataFromBirdEye(mint)
+        getTokenDataFromBirdEye(mint,userWallet)
       ]);
       return formatPositionMessage(pos, poolKeys, userBalance, tokenInfo, solprice, birdeyeData);
     });
@@ -298,7 +298,7 @@ export async function display_single_spl_positions(ctx: any) {
       const [balanceInSOL,solPrice, birdeyeData] = await Promise.all([
         getSolBalance(userWallet, connection),
         getSolanaDetails(),
-        getTokenDataFromBirdEye(token)
+        getTokenDataFromBirdEye(token,userWallet)
       ]);
 
       function poolKeysExists(poolKeysArray: any, newPoolKeys: any) {
@@ -466,7 +466,7 @@ export async function display_refresh_single_spl_positions(ctx: any) {
       const [balanceInSOL,solPrice, birdeyeData] = await Promise.all([
         getSolBalance(userWallet, connection),
         getSolanaDetails(),
-        getTokenDataFromBirdEye(token)
+        getTokenDataFromBirdEye(token,userWallet)
       ]);
       function poolKeysExists(poolKeysArray: any, newPoolKeys: any) {
         return poolKeysArray.some((existingKeys: any) =>

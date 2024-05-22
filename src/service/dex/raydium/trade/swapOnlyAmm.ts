@@ -10,7 +10,6 @@ import {
   TokenAmount
 } from "@raydium-io/raydium-sdk";
 
-import { getSimulationComputeUnits } from "@solana-developers/helpers";
 import BigNumber from "bignumber.js";
 import {
   SystemProgram,
@@ -22,11 +21,9 @@ import {
   Keypair,
   PublicKey,
 } from "@solana/web3.js";
-import base58 from "bs58";
 import {
   makeTxVersion,
   MVXBOT_FEES,
-  TIP_VALIDATOR,
   WALLET_MVX
 } from "../../../../config";
 import { formatAmmKeysById } from "../raydium-utils/formatAmmKeysById";
@@ -34,9 +31,7 @@ import { simulateTx, getMaxPrioritizationFeeByPercentile, PriotitizationFeeLevel
 import {
   buildAndSendTx,
   getWalletTokenAccount,
-  buildTx,
-  sendTx,
-  getSolBalance
+
 } from "../../../util";
 
 type WalletTokenAccounts = Awaited<ReturnType<typeof getWalletTokenAccount>>;

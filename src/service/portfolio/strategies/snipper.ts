@@ -11,11 +11,10 @@ const log = (k: any, v: any) => console.log(k, v);
 import base58 from 'bs58';
 import { getRayPoolKeys, formatAmmKeysById } from "../../dex/raydium/raydium-utils/formatAmmKeysById";
 import { getTokenMetadata } from "../../feeds";
-import { waitForConfirmation, getSolBalance, getTokenExplorerURLS } from '../../util';
+import { waitForConfirmation, getSolBalance } from '../../util';
 import { Referrals, UserPositions } from "../../../db/mongo/schema";
-import { PriotitizationFeeLevels, getMaxPrioritizationFeeByPercentile, getSimulationUnits } from "../../../service/fees/priorityFees";
-import { display_after_Snipe_Buy, display_token_details } from '../../../views';
-import { RAYDIUM_POOL_TYPE } from '../../../service/util/types';
+import {  getMaxPrioritizationFeeByPercentile } from "../../../service/fees/priorityFees";
+import { display_after_Snipe_Buy } from '../../../views';
 
 export async function snipperON(ctx: any, amount: string) {
     try {

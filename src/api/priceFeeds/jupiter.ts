@@ -1,10 +1,8 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
 import {
-    Connection,
-    Keypair,
+
     PublicKey,
-    sendAndConfirmTransaction,
 } from "@solana/web3.js";
 dotenv.config();
 

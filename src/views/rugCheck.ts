@@ -1,12 +1,11 @@
 import { PublicKey } from '@metaplex-foundation/js';
-import { getLiquityFromOwner, getTokenMetadata, getUserTokenBalanceAndDetails } from '../service/feeds';
+import { getLiquityFromOwner, getTokenMetadata } from '../service/feeds';
 import { quoteToken } from './util/dataCalculation';
-import { getSolanaDetails } from '../api';
-import { formatNumberToKOrM, getSolBalance } from '../service/util';
+import { formatNumberToKOrM } from '../service/util';
 import { Connection } from '@solana/web3.js';
 import { getTokenDataFromBirdEye } from '../api/priceFeeds/birdEye';
 import BigNumber from 'bignumber.js';
-import { display_snipe_options } from '.';
+
 
 export async function display_rugCheck(ctx: any, isRefresh: boolean) {
   try {
@@ -36,11 +35,9 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
   
         parsedAccounts
       ] = await Promise.all([
-        getTokenDataFromBirdEye(token),
+        getTokenDataFromBirdEye(token, ''),
         getTokenMetadata(ctx, token),
-
         quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
-     
         connection.getMultipleParsedAccounts([
           new PublicKey(quoteVault),
           new PublicKey(baseMint),
@@ -74,7 +71,7 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
     //   console.log("creatorAddress", creatorAddress);
       const circulatedSupply = Number(((Number(circulatingSupply.tokenAmount.amount)) / Math.pow(10, baseDecimals)));
       const baseTokenSupply = Number(((Number(getBaseSupply.supply)) / Math.pow(10, baseDecimals)));
-     const mcap = baseTokenSupply * tokenPriceUSD.toNumber();
+      const mcap = baseTokenSupply * tokenPriceUSD.toNumber();
       //Get the user balance
       let [getCreatorPercentage, lpSupplyOwner, formattedCirculatingSupply, formattedSupply, formattedLiquidity, formattedmac] = await Promise.all([
         getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(baseMint), connection),
@@ -84,7 +81,6 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
         formatNumberToKOrM((tokenInfo.liquidity * solPrice) / 0.5),
         formatNumberToKOrM(mcap)
       ]);
-      
       const MutableInfo = birdeyeData?.response2.data.data.mutableMetadata ? '⚠️ Mutable' : '✅ Immutable';
       const renounced = tokenData.mint.mintAuthorityAddress?.toString() !== tokenData.updateAuthorityAddress.toString() ? "✅" : "❌ No";
       const top10 = Number(birdeyeData?.response2.data.data.top10HolderPercent) * 100;
@@ -131,7 +127,7 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
         reply_markup: {
           inline_keyboard: [
             [{ text: ' 🔂 Refresh ', callback_data: 'refrech_rug_check' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
-            [{ text: `🎯 Snipe  ${tokenMetadataResult.tokenData.symbol}`, callback_data: 'snipe' }, { text: `💱 Buy  ${tokenMetadataResult.tokenData.symbol}`, callback_data: 'buy' }],
+            [{ text: `🎯 Snipe  ${tokenMetadataResult.tokenData.symbol}`, callback_data: 'snipe' }, { text: `💱 Buy  ${tokenMetadataResult.tokenData.symbol}`, callback_data: 'jupiter_swap' }],
             [{ text: 'Close', callback_data: 'closing' }]
           ]
         }
@@ -141,9 +137,8 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
       } else {
         await ctx.api.sendMessage(chatId, messageText, options);
       }
-    } else {
-      ctx.api.sendMessage(chatId, "No pool for this token. You can set a snipe.");
-
+    }  else{
+      ctx.api.sendMessage(chatId, "Token not found. Please try again.");
     }
 
   } catch (e) {

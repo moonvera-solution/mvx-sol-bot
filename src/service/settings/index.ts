@@ -1,8 +1,7 @@
 
-import { RefreshAllWallets } from '../../views/refreshData/RefresHandleWallets';
 import { getSolanaDetails } from '../../api';
 import { getSolBalance } from '../util';
-import { PublicKey, Connection } from '@solana/web3.js';
+import {  Connection } from '@solana/web3.js';
 
 
 export async function handleSettings(ctx: any) {

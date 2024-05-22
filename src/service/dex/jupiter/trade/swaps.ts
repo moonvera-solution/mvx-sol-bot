@@ -3,13 +3,9 @@ import dotenv from 'dotenv';
 dotenv.config();
 import { Keypair, Connection, PublicKey, VersionedTransaction, ComputeBudgetProgram,sendAndConfirmTransaction,TransactionMessage} from "@solana/web3.js";
 import bs58 from 'bs58';
-import {transactionSenderAndConfirmationWaiter} from '../utils/transactionSender';
-import {getSignature} from '../utils/getSignature';
-import {MVX_JUP_REFERRAL,JUP_REF_PROGRAM, SOL_ADDRESS,WEN_ADDRESS,JUP_AGGREGATOR_V6} from '../../../../config';
-import {sendTx,add_mvx_and_ref_inx_fees,addMvxFeesInx,wrapLegacyTx} from '../../../util';
+
+import {MVX_JUP_REFERRAL,JUP_REF_PROGRAM} from '../../../../config';
 import {JupiterSwapTokenRef} from '../../../../../src/db/mongo/schema';
-import { getMaxPrioritizationFeeByPercentile } from "../../../fees/priorityFees";
-import BigNumber from 'bignumber.js';
 import axios from "axios";
 
 
@@ -18,7 +14,7 @@ import axios from "axios";
 // /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 const COMMITMENT_LEVEL = "confirmed";
 const PRIORITY_FEE_LAMPORTS = 1;
-const TX_RETRY_INTERVAL =25;
+const TX_RETRY_INTERVAL =5;
 
 const connection = new Connection(`${process.env.TRITON_RPC_URL!}${process.env.TRITON_RPC_TOKEN!}`);
 // const wallet = Keypair.fromSecretKey(bs58.decode(process.env.TEST_WALLET_PK!));
@@ -27,6 +23,7 @@ type REFERRAL_INFO = {
   referralCommision: number | null
 }
 export async function jupiterSimpleSwap(
+
   connection:Connection,
   rpcUrl:string,
   userWallet:Keypair,
@@ -52,7 +49,7 @@ export async function jupiterSimpleSwap(
 
   const lastRouteHop = swapApiResult.data.routePlan[swapApiResult.data.routePlan.length - 1].swapInfo.ammKey;
   console.log("lastRouteHop::",lastRouteHop, ":: ",swapApiResult.data.routePlan);
-  
+
   if (!(swapApiResult.status >= 200) && swapApiResult.status < 300) {
     throw new Error(`Failed to fetch jupiter swap quote: ${swapApiResult.status}`);
   }
@@ -65,7 +62,7 @@ export async function jupiterSimpleSwap(
     userPublicKey: userWallet.publicKey.toBase58(),
     wrapAndUnwrapSol: true,
     dynamicComputeUnitLimit: true, // Setting this to `true` allows the endpoint to set the dynamic compute unit limit as required by the transaction
-    jitoTipLamports: 5000, // Setting the priority fees. This can be `auto` or lamport numeric value
+    jitoTipLamports: 50000, // Setting the priority fees. This can be `auto` or lamport numeric value
     skipUserAccountsRpcCalls: false,
   });
   
@@ -80,7 +77,7 @@ export async function jupiterSimpleSwap(
   jupiterSwapTransaction = swapApiResult.data;
 
   try {
-    console.log(`${new Date().toISOString()} Fetched jupiter swap transaction`);
+    // console.log(`${new Date().toISOString()} Fetched jupiter swap transaction`);
 
     const swapTransactionBuf = Buffer.from(jupiterSwapTransaction.swapTransaction,"base64");
 
@@ -91,8 +88,8 @@ export async function jupiterSimpleSwap(
     tx.sign([userWallet]);
 
     // Simulating the transaction
-    const simulationResult = await connection.simulateTransaction(tx, {commitment: "processed",});
-    console.log(`${new Date().toISOString()} Transaction simulation result:`,simulationResult);
+    const simulationResult = await connection.simulateTransaction(tx, {commitment: "confirmed",});
+    // console.log(`${new Date().toISOString()} Transaction simulation result:`,simulationResult);
     if (simulationResult.value.err) {
       throw new Error(
         `Transaction simulation failed with error ${JSON.stringify(
@@ -101,15 +98,15 @@ export async function jupiterSimpleSwap(
       );
     }
 
-    console.log(`${new Date().toISOString()} Transaction simulation successful result:`);
-    console.log(simulationResult);
+    // console.log(`${new Date().toISOString()} Transaction simulation successful result:`);
+    // console.log(simulationResult);
 
     const signatureRaw = tx.signatures[0];
     txSignature = bs58.encode(signatureRaw);
 
     let txSendAttempts = 1;
 
-    console.log(`${new Date().toISOString()} Subscribing to transaction confirmation`);
+    // console.log(`${new Date().toISOString()} Subscribing to transaction confirmation`);
 
     // confirmTransaction throws error, handle it
     confirmTransactionPromise = connection.confirmTransaction({
@@ -120,7 +117,7 @@ export async function jupiterSimpleSwap(
       "confirmed"
     );
 
-    console.log(`${new Date().toISOString()} Sending Transaction ${txSignature}`);
+    // console.log(`${new Date().toISOString()} Sending Transaction ${txSignature}`);
     await connection.sendRawTransaction(tx.serialize(), {
       // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
       // This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery

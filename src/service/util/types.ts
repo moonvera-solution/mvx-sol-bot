@@ -66,7 +66,8 @@ export interface ISESSION_DATA {
   jupSwap_token: string,
   jupSwap_side: string,
   jupSwap_amount: number,
-  jupSwap:{token:String,side:String,amount:number}
+  jupSwap:{token:String,side:String,amount:number},
+  ammAddress: string
 
 
 }
@@ -115,6 +116,7 @@ export const DefaultSessionData: ISESSION_DATA = {
     activeWalletIndex: 0
   },
   // pump:{token:'',side:'',amountIn:0,amountOut:0},
+  ammAddress: '',
   pump_side: '',
   pump_amountIn: 0,
   pump_amountOut: 0,

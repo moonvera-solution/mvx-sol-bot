@@ -51,9 +51,9 @@ const getMaxPrioritizationFeeByPercentile = async (
   };
 
 
-  export  async function runAllFees(ctx: any, raydiumId: any) {
+  export  async function runAllFees(ctx: any, amm: any) {
     const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
-   const priorityCalculation = ctx.session.activeTradingPool.id? ctx.session.activeTradingPool.id : raydiumId;
+   const priorityCalculation = amm? amm : ctx.session.pumpToken;
     
     const [result2,result3,result4] = await Promise.all([
 
@@ -117,8 +117,11 @@ const getMaxPrioritizationFeeByPercentile = async (
 export async function setCustomPriority(ctx: any) {
 
     const FeeInMicroLamports = (ctx.session.customPriorityFee * 1e9 ) ;
+    console.log('customPriorityFee', ctx.session.customPriorityFee);
     console.log('userFees', FeeInMicroLamports);
     ctx.session.txPriorityFee = FeeInMicroLamports;
+    console.log('txPriorityFee', ctx.session.txPriorityFee);
+
     return ctx.session.txPriorityFee;
     
     

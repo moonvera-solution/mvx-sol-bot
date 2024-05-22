@@ -1,17 +1,17 @@
-import { Liquidity, LiquidityPoolKeys, Percent, jsonInfo2PoolKeys, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken, publicKey } from '@raydium-io/raydium-sdk';
-import { PublicKey, Keypair, Connection, SendTransactionError } from '@solana/web3.js';
-import { getWalletTokenAccount, getSolBalance, waitForConfirmation, getPriorityFeeLabel, getTokenExplorerURLS, getSwapAmountOut } from '../../util';
-import { DEFAULT_TOKEN, MVXBOT_FEES, RAYDIUM_AUTHORITY } from '../../../config';
+import { Percent, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken } from '@raydium-io/raydium-sdk';
+import { PublicKey, Keypair, Connection } from '@solana/web3.js';
+import { getWalletTokenAccount, getSolBalance, waitForConfirmation, getSwapAmountOut } from '../../util';
+import { DEFAULT_TOKEN, MVXBOT_FEES  } from '../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
-import { display_after_Snipe_Buy, display_token_details } from '../../../views';
+import { display_after_Snipe_Buy,  } from '../../../views';
 import { ISESSION_DATA } from '../../util/types';
 import { saveUserPosition } from "../positions";
 import { raydium_amm_swap } from '../../dex';
 import BigNumber from 'bignumber.js';
-import axios from 'axios';
 import bs58 from 'bs58';
 import { Referrals, UserPositions } from '../../../db/mongo/schema';
 import { display_single_spl_positions } from '../../../views/portfolioView';
+import { display_jupSwapDetails } from '../../../views/jupiter/jupiterSwapView';
 
 export async function handle_radyum_swap(
   ctx: any,
@@ -26,6 +26,7 @@ export async function handle_radyum_swap(
   let mvxFee = new BigNumber(0);
   let refferalFeePay = new BigNumber(0);
   const referralWallet = ctx.session.generatorWallet;
+  console.log('customPriorityFee', ctx.session.customPriorityFee);
 
   try {
     const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
@@ -215,8 +216,9 @@ export async function handle_radyum_swap(
           }
           await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
           if (side == 'buy') {
-            ctx.session.latestCommand = 'display_after_Snipe_Buy';
-            await display_after_Snipe_Buy(ctx, false);
+            ctx.session.latestCommand = 'jupiter_swap';
+            ctx.session.jupSwap_token = poolKeys.baseMint;
+            await display_jupSwapDetails(ctx, false);
           }
         } else {  // Tx not confirmed
           ctx.api.sendMessage(ctx.chat.id,

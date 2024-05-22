@@ -1,14 +1,13 @@
 import { PublicKey } from '@metaplex-foundation/js';
 import { getTokenMetadata, getUserTokenBalanceAndDetails } from '../service/feeds';
 import { quoteToken } from './util/dataCalculation';
-import { getSolanaDetails } from '../api';
 import { formatNumberToKOrM, getSolBalance } from '../service/util';
 import { RAYDIUM_POOL_TYPE } from '../service/util/types';
-import { Keypair, Connection } from '@solana/web3.js';
+import {  Connection } from '@solana/web3.js';
 import { runAllFees } from './util/getPriority';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import { UserPositions } from '../db';
-import { getTokenDataFromBirdEye } from '../api/priceFeeds/birdEye';
+import { getTokenDataFromBirdEye, getTokenDataFromBirdEyePositions } from '../api/priceFeeds/birdEye';
 
 export async function handleCloseKeyboard(ctx: any) {
   const chatId = ctx.chat.id;
@@ -24,6 +23,7 @@ export async function handleCloseKeyboard(ctx: any) {
 
 
 export async function display_token_details(ctx: any, isRefresh: boolean) {
+  
   let priority_Level = ctx.session.priorityFees;
   const priority_custom = ctx.session.ispriorityCustomFee;
   if(priority_custom === true){
@@ -32,11 +32,11 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
   let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
   const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
-  if (!rayPoolKeys) {
-    // Handle the case where the pool information is not available
-    await ctx.reply("Pool information not available.");
-    return;
-  }
+  // if (!rayPoolKeys) {
+  //   // Handle the case where the pool information is not available
+  //   await ctx.reply("Pool information not available.");
+  //   return;
+  // }
   const baseVault = rayPoolKeys.baseVault;
   const quoteVault = rayPoolKeys.quoteVault;
   const baseDecimals = rayPoolKeys.baseDecimals;
@@ -57,7 +57,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
     AllpriorityFees,
 
   ] = await Promise.all([
-    getTokenDataFromBirdEye(tokenAddress.toString()),
+    getTokenDataFromBirdEyePositions(tokenAddress.toString(),userPublicKey),
     getTokenMetadata(ctx, tokenAddress.toBase58()),
     // getSolanaDetails(),
     quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
@@ -118,22 +118,27 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
   ? birdeyeData.response.data.data.supply
   : Number(tokenInfo.baseTokenSupply.dividedBy(Math.pow(10, baseDecimals)));
   const mcap = baseSupply * tokenPriceUSD;  
+  const netWorth = birdeyeData
+  && birdeyeData.birdeyePosition
+  && birdeyeData.birdeyePosition.data
+  && birdeyeData.birdeyePosition.data.data
+  && birdeyeData.birdeyePosition.data.data.totalUsd
+  ? birdeyeData.birdeyePosition.data.data.totalUsd : NaN;
+
+  const netWorthSol = netWorth / solPrice;
   try {
 
     const formattedmac = await formatNumberToKOrM(mcap) ?? "NA";
 
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
-    const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
+    // const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
     // Construct the message
     let options: any;
     let messageText: any;
 
-    if (
-      ctx.session.latestCommand == 'buy'
-      || ctx.session.latestCommand == 'buy_X_SOL'
-    ) {
-      ctx.session.currentMode = 'buy';
+
+      // ctx.session.currentMode = 'buy';
       messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
         `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
         `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
@@ -144,9 +149,11 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
         `Initial : <b>${(initialInSOL).toFixed(4)} SOL</b> | <b>${(initialInUSD.toFixed(4))} USD</b>\n` +
         `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n` +
         `Token Balance: <b>${userTokenBalance.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
-        `Price Impact (5.0 SOL) : <b>${priceImpact}%</b>  |  (1.0 SOL): <b> ${priceImpact_1}%</b>\n\n` +
+        `Price Impact (5.0 SOL) : <b>${priceImpact}%</b> \n\n` +
         `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
-        `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
+        `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `+
+        `Net Worth: <b>${netWorthSol.toFixed(4)}</b> SOL | <b>${netWorth.toFixed(4)}</b> USD\n` ;
+
 
 
 
@@ -157,8 +164,8 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
         reply_markup: {
           inline_keyboard: [
             [{ text: ' 🔂 Refresh ', callback_data: 'refresh_trade' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
-            [{ text: 'Buy (X SOL)', callback_data: 'buy_X_SOL' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_SOL' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_SOL' }],
-            // [{ text: '⏮️ Previous', callback_data: 'previous_token' }, { text: `${tokenData.name} (${tokenData.symbol})`, callback_data: 'current_token' }, { text: 'Next ⏭️', callback_data: 'next_token' }],
+            [{ text: 'Buy (X SOL)', callback_data: 'buy_X_RAY' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_RAY' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_RAY' }],
+            [{ text: `Sell X %`, callback_data: 'sell_X_RAY' },{ text: 'Sell 50%  ', callback_data: 'sell_50_RAY' },{ text: 'Sell 100%  ', callback_data: 'sell_100_RAY' }],
             [{ text: '📈 Priority fees', callback_data: '_' }],
             [
               { text: `Low ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_low' },
@@ -166,43 +173,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
             [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: 'Close', callback_data: 'closing' }]]
         },
       };
-    } else if (ctx.session.latestCommand == 'sell'
-      || ctx.session.latestCommand == 'sell_X_TOKEN'
-    ) {
-      ctx.session.currentMode = 'sell';
-      messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
-        `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
-        `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
-        `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
-        `Market Cap: <b>${formattedmac} USD</b>\n` +
-        `Token Price: <b> ${tokenPriceUSD.toFixed(9)} USD</b> | <b> ${tokenPriceSOL.toFixed(9)} SOL</b> \n\n` +
-        `---<code>Trade Position</code>---\n` +
-        `Initial : <b>${(initialInSOL).toFixed(3)} SOL</b> | <b>${(initialInUSD.toFixed(3))} USD</b>\n` +
-        `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n` +
-        `Token Balance: <b>${userTokenBalance.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
-        `Price Impact (5.0 SOL) : <b>${priceImpact}%</b>  |  (1.0 SOL): <b> ${priceImpact_1}%</b>\n\n` +
-        `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
-        `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n`;
-
-      // Handle sell mode and define inline keyboard
-      options = {
-        parse_mode: 'HTML',
-        disable_web_page_preview: true,
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: ' 🔂 Refresh ', callback_data: 'refresh_trade' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
-            [{ text: '  Sell 25%  ', callback_data: 'sell_25_TOKEN' }, { text: '  Sell 50%  ', callback_data: 'sell_50_TOKEN' }, { text: 'Sell 75%', callback_data: '  sell_75_TOKEN  ' },],
-            [{ text: '  Sell 100%  ', callback_data: 'sell_100_TOKEN' }, { text: '  Sell X Amount  ', callback_data: 'sell_X_TOKEN' }],
-            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: ' Buy Mode', callback_data: 'buy' }],
-            [{ text: '📈 Priority fees', callback_data: '_' }],
-            [
-              { text: `Low ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_low' },
-              { text: `Medium ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_medium' }, { text: `High ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_high' },{ text: `Custom ${priority_custom === true ? '✅' : ''}`, callback_data: 'priority_custom' }],
-            [{ text: 'Close', callback_data: 'closing' }]
-          ],
-        },
-      };
-    }
+  
 
     if (isRefresh) {
       await ctx.editMessageText(messageText, options);
@@ -254,7 +225,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
         AllpriorityFees,
 
       ] = await Promise.all([
-        getTokenDataFromBirdEye(tokenAddress.toString()),
+        getTokenDataFromBirdEye(tokenAddress.toString(),userPublicKey),
         getTokenMetadata(ctx, tokenAddress.toBase58()),
         // getSolanaDetails(),
         quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
@@ -313,7 +284,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
       const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solPrice) : tokenInfo.price.toNumber();
 
       const priceImpact = tokenInfo.priceImpact.toFixed(2);
-      const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
+      // const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
 
 
       const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
@@ -325,7 +296,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
         `Market Cap: <b>${formattedmac} USD</b>\n` +
         `Token Price: <b> ${tokenPriceUSD.toFixed(9)} USD</b> | <b> ${tokenPriceSOL.toFixed(9)} SOL</b> \n\n` +
         // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
-        `price Impact (5.0 SOL) : <b>${priceImpact}%</b> | (1.0 SOL): <b>${priceImpact_1}%</b> \n\n` +
+        `price Impact (5.0 SOL) : <b>${priceImpact}%</b> \n\n` +
         `Pool Status: <b>${poolStatusMessage}</b>\n\n` +
         `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
         `Token Balance: <b>${userTokenBalance.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
@@ -415,7 +386,7 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
     userTokenDetails,
     AllpriorityFees,
   ] = await Promise.all([
-    getTokenDataFromBirdEye(tokenAddress.toString()),
+    getTokenDataFromBirdEye(tokenAddress.toString(),userPublicKey),
     getTokenMetadata(ctx, tokenAddress.toBase58()),
     quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
     getSolBalance(userPublicKey, connection),
@@ -455,7 +426,7 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
       ? birdeyeData.response.data.data.supply
       : Number(tokenInfo.baseTokenSupply.dividedBy(Math.pow(10, baseDecimals)));
       const priceImpact = tokenInfo.priceImpact.toFixed(2);
-    const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
+    // const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
     const specificPosition = userPosition[0].positions.find((pos: any) => new PublicKey(pos.baseMint).equals(tokenAddress));
     let initialInUSD = 0;
@@ -493,7 +464,7 @@ export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
       `Market Cap: <b>${formattedmac} USD</b>\n` +
       `Token Price: <b> ${tokenPriceUSD.toFixed(4)} USD</b> | <b> ${tokenPriceSOL.toFixed(4)} SOL</b> \n\n` +
       // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
-      `Price Impact (5.0 SOL) : <b>${priceImpact}%</b>  |  (1.0 SOL): <b> ${priceImpact_1}%</b>\n\n` +
+      `Price Impact (5.0 SOL) : <b>${priceImpact}%</b> \n\n` +
       `---<code>Trade Position</code>---\n` +
       `Initial : <b>${(initialInSOL).toFixed(3)} SOL</b> | <b>${(initialInUSD.toFixed(3))} USD</b>\n` +
       `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n` +
