@@ -138,7 +138,6 @@ const UserSessions = new Schema({
       lookupTableAccount: String,
     }
   },
-
   currentMode: String,
   latestSlippage: Number,
   metadataMessageId: Number,
@@ -161,16 +160,19 @@ const UserSessions = new Schema({
   tritonRPC: String,
   tritonToken: String,
   allowedReferral:String, // tg Username
-  originalBaseMint:String,
-  ispriorityCustomFee: Boolean,
-  customPriorityFee: Number
-});
-const JupiterSwapTokenRefs = new Schema({
-  id: { type: String, unique: true },
-  ref:{ type: String, unique: true}
+  poolSchedule: {
+    status: String,
+    baseDecimals: Number,
+    quoteDecimals: Number,
+    lpDecimals: Number,
+    baseReserve: String,
+    quoteReserve: String,
+    lpSupply: String,
+    startTime: String
+  },
+  originalBaseMint:String
 });
 
-export const JupiterSwapTokenRef = mongoose.model("JupiterSwapTokenRefs", JupiterSwapTokenRefs);
 export const UserSession = mongoose.model("UserSession", UserSessions);
 export const WalletKeys = mongoose.model("WalletKeys", WalletSchema);
 export const Portfolios = mongoose.model("Portfolios", UserPortfolioSchema);

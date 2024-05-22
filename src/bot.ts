@@ -162,7 +162,6 @@ bot.command("start", async (ctx: any) => {
       isNewUser = true;
     }
     const userName = ctx.message.from.username;
-    console.log("userName:", userName);
 
     const user = await AllowedReferrals.find({ tgUserName: userName });
     // console.log("user:", user[0]);

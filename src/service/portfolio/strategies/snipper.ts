@@ -113,7 +113,8 @@ export async function setSnipe(ctx: any, amountIn: any) {
         );
         return;
     }
-    const poolStartTime = ctx.session.poolTime;
+    const liqInfo = ctx.session.poolSchedule;
+    const poolStartTime = liqInfo.startTime.toNumber();
     const simulationPromise = startSnippeSimulation(ctx, userKeypair, amountInLamports, snipeSlippage, poolStartTime, tokenData);
     simulationPromise.catch(async (error: any) => {
         console.log("Error setting snipper", error);
@@ -309,7 +310,7 @@ export async function startSnippeSimulation(
                             saveUserPosition(
                                 ctx,
                                 userWallet.publicKey.toString(), {
-                                baseMint: poolKeys.baseMint,
+                                baseMint: ctx.session.originalBaseMint,
                                 name: tokenData.name,
                                 symbol: tokenData.symbol,
                                 tradeType: `ray_swap_buy`,
