@@ -11,7 +11,6 @@ import {
   TxVersion,
 } from '@raydium-io/raydium-sdk';
 import {
-  Connection,
   PublicKey,
 } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
@@ -25,6 +24,12 @@ export const DEFAULT_KEY_DIR_NAME = ".local_keys";
 export const DEFAULT_PUBLIC_KEY_FILE = "keys.json";
 export const DEFAULT_DEMO_DATA_FILE = "demo.json";
 export const RAYDIUM_AUTHORITY = '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1';
+export const SOL_ADDRESS = "So11111111111111111111111111111111111111112";
+export const WEN_ADDRESS = "WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk";
+export const DEFAULT_PUBLIC_KEY = new PublicKey("11111111111111111111111111111111");
+export const MVX_JUP_REFERRAL = "HH2UqSLMJZ9VP9jnneixYKe3oW8873S9MLUuMF3xvjLH";
+export const JUP_REF_PROGRAM = "45ruCyfdRkWpRNGEqWzjCiXRHkZs8WXCLQ67Pnpye7Hp";  
+export const JUP_AGGREGATOR_V6 = "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4";
 
 
 export const DEFAULT_TOKEN = {
@@ -45,4 +50,3 @@ export const SNIPE_SIMULATION_COUNT_LIMIT = 2000;
 export const DEFAULT_PRIORITY_FEE_UNITS = 500_000;
 export const DEFAULT_PRIORITY_FEE_MICRO_LAMPORTS = 100_000;
 export const WALLET_MVX = 'MvXfSe3TeEwsEi731Udae7ecReLQPgrNuKWZzX6RB41';
-export const SOL_ADDR = 'So11111111111111111111111111111111111111112'
