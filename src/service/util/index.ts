@@ -788,7 +788,7 @@ export function getTargetDate(msg: any): Date | null {
         const [mins, hrs, days] = msg.split(':').map(Number);
 
         // Get the current date
-        const date = new Date();
+        const date = new Date(Date.now());
 
         // Add the time to the date
         date.setMinutes(date.getMinutes() + mins);
@@ -796,6 +796,8 @@ export function getTargetDate(msg: any): Date | null {
         date.setDate(date.getDate() + days);
 
         // Return the new date
+        console.log('expiry date: ', date.toLocaleString());
+        
         return date;
     } catch (error: any) {
         console.error('Error getting target date:', error.message);

@@ -46,15 +46,36 @@ export async function submit_limitOrder(ctx: any) {
     isConfirmed
       ? await ctx.api.sendMessage(chatId, `🟢 <b>Submit ${isBuySide ? "Buy" : "Sell"} Limit Order:</b> Order has been successfully submitted.\n` + `Order will ${isBuySide ? "Buy" : "Sell"} when price reaches ${ctx.session.limitOrders.price}`, { parse_mode: "HTML" })
       : await ctx.api.sendMessage(chatId, `🔴 <b>${isBuySide ? "Buy" : "Sell"} Limit Order:</b> Order has been failed.`, { parse_mode: "HTML" });
+
+    if (isConfirmed) {
+      // pre-fetch the order data
+      const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
+      console.log('wallet:', wallet.publicKey);
+      ctx.session.orders = await getOpenOrders(connection, wallet);
+      ctx.session.startTriggered = true;
+    }
+
     console.log(txSig);
   });
 }
 
 export async function review_limitOrder_details(ctx: any, isRefresh: boolean) {
   const timeTxt = ctx.session.limitOrders.time ? new Date(ctx.session.limitOrders.time).toLocaleString() : "NA";
+  const priority_Level = ctx.session.priorityFees;
+  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  let raydiumId = "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8";
+  const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
+  if (!rayPoolKeys) {
+    // Handle the case where the pool information is not available
+    await ctx.reply("Pool information not available.");
+    return;
+  }
+  const baseMint = rayPoolKeys.baseMint;
+  const tokenAddress = new PublicKey(baseMint);
+  const tokenMetadataResult = await getTokenMetadata(ctx, tokenAddress.toBase58())
   let orderSummary =
     `📄 <b> Order Summary:</b> \n\n` +
-    `- Token: WEN \n` +
+    `- Token: ${tokenMetadataResult.tokenData.symbol} \n` +
     `- Side: ${ctx.session.limitOrders.side} \n` +
     `- SOL Amount: ${ctx.session.limitOrders.amount}  \n` +
     `- Target Price: ${ctx.session.limitOrders.price}  \n` +
@@ -141,8 +162,8 @@ export async function display_limitOrder_token_details(ctx: any, isRefresh: bool
         `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n\n` +
         `<b>Limit Order Steps:</b>\n` +
         `1. Select order side buy or sell.\n` +
-        `2. Enter the amount to buy/sell. \n` +
-        `3. Set the target price.\n` +
+        `2. Enter the amount to buy/sell. (in SOL)\n` +
+        `3. Set the target price. (in SOL)\n` +
         `3. Set the expiration time.\n` +
         `3. Set the target price to trigger your order.\n`;
 
@@ -211,35 +232,36 @@ export async function display_open_orders(ctx: any) {
   const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
   console.log('wallet:', wallet.publicKey);
-  const orders: OrderHistoryItem[] = await getOpenOrders(connection, wallet);
+  const orders: OrderHistoryItem[] =
+    ctx.session.startTriggered ? ctx.session.orders.filter((order: any) => {
+      return new Date(order.account.expiredAt.toNumber()) > new Date(Date.now())
+        || new Date(order.account.expiredAt.toNumber()).getFullYear() < 2000;
+    }) : await getOpenOrders(connection, wallet);
 
   if (orders.length > 0) {
     console.log('orders:', orders.toString());
 
     let messageText = '';
     for (const order of orders) {
-      const [
-        birdeyeData,
-        solPrice,
-        tokenInfo,
-      ] = await Promise.all([
-        getTokenDataFromBirdEye(order.account.outputMint.toString()),
-        getTokenMetadata(ctx, order.account.outputMint.toBase58()),
-        getSolanaDetails(),
-      ]);
-
-      const tokenPriceUSD =
-        birdeyeData && birdeyeData.response && birdeyeData.response.data && birdeyeData.response.data.data && birdeyeData.response.data.data.price != null ? birdeyeData.response.data.data.price : tokenInfo.price.times(solPrice).toNumber();
-      const tokenPriceSOL = birdeyeData ? tokenPriceUSD / solPrice : tokenInfo.price.toNumber();
+      const birdeyeData = await getTokenDataFromBirdEye(order.account.outputMint.toBase58());
+      console.log('birdeyeData', birdeyeData?.response.data.data);
+      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+      const tokenPriceSOL = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price).div(solPrice).toFixed(9) : 0;
+      console.log('tokenPriceSOL', tokenPriceSOL);
 
       let status = order.account.waiting ? 'Waiting' : 'Filled';
+      const expiryDate = new Date(order.account.expiredAt.toNumber());
+      console.log('expiryDate', expiryDate);
+      console.log('order.account.expiredAt.toNumber()', order.account.expiredAt.toNumber());
+      
+      const expiry = expiryDate.getFullYear() < 2000 ? 'NO EXPIRY' : expiryDate.toLocaleString();
 
       messageText +=
-        ` - Ordered Token: ${order.account.outputMint.toBase58()} \n` +
-        ` - Order Amount: ${order.account.oriMakingAmount.toNumber() / 10000000000} \n` +
-        ` - Order Price: ${order.account.oriTakingAmount.toNumber() / 1000000000000000} \n` +
-        ` - Current Price: <b> ${tokenPriceUSD.toFixed(9)} SOL</b> \n` +
-        ` - Expiry: ${new Date(order.account.expiredAt)} \n` +
+        ` - Ordered Token: ${birdeyeData?.response.data.data.symbol} \n` +
+        ` - Order Amount: ${order.account.oriMakingAmount.toNumber() / 10000000000} SOL \n` +
+        ` - Target Price: ${order.account.oriTakingAmount.toNumber() / 1000000000000000} SOL \n` +
+        ` - Current Price: <b> ${tokenPriceSOL} SOL</b> \n` +
+        ` - Expiration: ${expiry} \n` +
         ` - Status: ${status} \n\n`;
     }
 
@@ -256,6 +278,7 @@ export async function display_open_orders(ctx: any) {
       }
     }
     await ctx.api.sendMessage(ctx.chat.id, messageText, options);
+    ctx.session.startTriggered = false;
   } else {
     await ctx.api.sendMessage(ctx.chat.id, 'your order list is empty.');
   }
@@ -266,39 +289,41 @@ export async function display_single_order(ctx: any, isRefresh: boolean) {
   const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
   console.log('wallet:', wallet.publicKey);
-  const orders: OrderHistoryItem[] = await getOpenOrders(connection, wallet);
+  const orders: OrderHistoryItem[] =
+    ctx.session.startTriggered ? ctx.session.orders.filter((order: any) => {
+      return new Date(order.account.expiredAt.toNumber()) > new Date(Date.now())
+        || new Date(order.account.expiredAt.toNumber()).getFullYear() < 2000;
+    }) : await getOpenOrders(connection, wallet);
 
   if (orders.length > 0) {
     let index = ctx.session.orderIndex ?? 0;
     let order = orders[index];
 
     let messageText;
-    const [
-      birdeyeData,
-      solPrice,
-      tokenInfo,
-    ] = await Promise.all([
-      getTokenDataFromBirdEye(order.account.outputMint.toString()),
-      getTokenMetadata(ctx, order.account.outputMint.toBase58()),
-      getSolanaDetails(),
-    ]);
+    const birdeyeData = await getTokenDataFromBirdEye(order.account.outputMint.toBase58());
+    console.log('birdeyeData', birdeyeData?.response.data.data);
 
-    const tokenPriceUSD =
-      birdeyeData && birdeyeData.response && birdeyeData.response.data && birdeyeData.response.data.data && birdeyeData.response.data.data.price != null ? birdeyeData.response.data.data.price : tokenInfo.price.times(solPrice).toNumber();
-    const tokenPriceSOL = birdeyeData ? tokenPriceUSD / solPrice : tokenInfo.price.toNumber();
+    const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+    const tokenPriceSOL = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price).div(solPrice).toFixed(9) : 0;
+    console.log('tokenPriceSOL', tokenPriceSOL);
+
 
     let status = order.account.waiting ? 'Waiting' : 'Filled';
+    const expiryDate = new Date(order.account.expiredAt.toNumber());
+    const expiry = expiryDate.getFullYear() < 2000 ? 'NO EXPIRY' : expiryDate.toLocaleString();
+    console.log('expiryDate', expiryDate);
+    console.log('order.account.expiredAt.toNumber()', order.account.expiredAt.toNumber());
 
     messageText =
-      ` - Ordered Token: ${order.account.outputMint.toBase58()} \n` +
-      ` - Order Amount: ${order.account.oriMakingAmount.toNumber() / 10000000000} \n` +
-      ` - Order Price: ${order.account.oriTakingAmount.toNumber() / 1000000000000000} \n` +
-      ` - Current Price: <b> ${tokenPriceUSD.toFixed(9)} SOL</b> \n` +
-      ` - Expiry: ${new Date(order.account.expiredAt)} \n` +
-      ` - Status: ${status} \n`;
+      ` - Ordered Token: ${birdeyeData?.response.data.data.symbol} \n` +
+      ` - Order Amount: ${order.account.oriMakingAmount.toNumber() / 10000000000} SOL \n` +
+      ` - Target Price: ${order.account.oriTakingAmount.toNumber() / 1000000000000000} SOL \n` +
+      ` - Current Price: <b> ${tokenPriceSOL} SOL</b> \n` +
+      ` - Expiration: ${expiry} \n` +
+      ` - Status: ${status} \n\n`;
 
-    let prevIndex = index - 1 < 0 ? orders[0].length - 1 : index - 1;
-    let nextIndex = index + 1 >= orders[0].length ? 0 : index + 1;
+    let prevIndex = index - 1 < 0 ? orders.length - 1 : index - 1;
+    let nextIndex = index + 1 >= orders.length ? 0 : index + 1;
 
     console.log('order', order);
 

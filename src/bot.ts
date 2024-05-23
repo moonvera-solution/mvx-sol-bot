@@ -15,7 +15,7 @@ import { handleSettings } from "./service/settings";
 import { getSolanaDetails } from "./api";
 import { setSnipe, snipperON } from "./service/portfolio/strategies/snipper";
 import { display_token_details, display_snipe_options, handleCloseKeyboard, display_after_Snipe_Buy } from "./views";
-import { getSolBalance, sendSol } from "./service/util";
+import { getSolBalance, sendSol, waitForConfirmation } from "./service/util";
 import { handleRefreshStart } from "./views/refreshData/refreshStart";
 import { handleRefreshWallet, refreshAllWallets, } from "./views/wallets/walletsView";
 import {
@@ -34,7 +34,7 @@ import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { swap_pump_fun, display_pump_fun_token_details } from "./views/pumpFun/pumpFunView";
 import { logErrorToFile } from "../error/logger";
 import { getTargetDate } from "../src/service/util";
-import { cancelOrder } from "./service/dex/jupiter/trade/LimitOrder";
+import { cancelOrder, getOpenOrders } from "./service/dex/jupiter/trade/LimitOrder";
 import bs58 from 'bs58';
 
 const express = require("express");
@@ -267,6 +267,14 @@ bot.command("start", async (ctx: any) => {
     // Send the message with the inline keyboard
     ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
     ctx.session.portfolio = await getPortfolio(chatId);
+
+    // pre-fetch the order data
+    const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
+    console.log('wallet:', wallet.publicKey);
+    ctx.session.orders = await getOpenOrders(connection, wallet);
+    ctx.session.startTriggered = true;
+    console.log('ctx.session.orders', ctx.session.orders);
+    
     // ctx.session.latestCommand = "rug_check";
   } catch (error: any) {
     logErrorToFile("bot on start cmd", error);
@@ -764,7 +772,7 @@ bot.on("message", async (ctx) => {
       case "set_limit_order_amount": {
         // TODO: add checks for the amount
         ctx.session.limitOrders.amount = Number(msgTxt!);
-        await ctx.api.sendMessage(chatId, "Enter the token target price");
+        await ctx.api.sendMessage(chatId, "Enter the token target price (in SOL)");
         ctx.session.latestCommand = "set_limit_order_price";
         break;
       }
@@ -868,8 +876,15 @@ bot.on("callback_query", async (ctx: any) => {
       const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
       console.log('tokenKey', tokenKey);
       const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
-      await cancelOrder(connection, wallet, tokenKey);
-      ctx.api.sendMessage(chatId, `Order cancelled successfully for: \n ${tokenKey}`);
+
+      const txSig = await cancelOrder(connection, wallet, tokenKey);
+      console.log('txSig', txSig);
+      const isConfirmed = await waitForConfirmation(ctx, txSig);
+
+      const msg = `🟢 <b>Order cancelled successfully:</b><a href="https://solscan.io/tx/${txSig}"> view transaction</a> on Solscan.`;
+      isConfirmed ?
+        ctx.api.sendMessage(chatId, msg, { parse_mode: "HTML" }) :
+        ctx.api.sendMessage(chatId, `🔴 <b> Cancel Order has been failed.</b> `, { parse_mode: "HTML" });
       // display_single_spl_positions
       ctx.session.latestCommand = "manage_limit_orders";
 
@@ -1361,13 +1376,13 @@ bot.on("callback_query", async (ctx: any) => {
       case "set_limit_order_buy": {
         ctx.session.latestCommand = "set_limit_order_amount";
         ctx.session.limitOrders.side = "buy";
-        await ctx.api.sendMessage(chatId, "Enter amount of Buy order.");
+        await ctx.api.sendMessage(chatId, "Enter amount of Buy order (in SOL).");
         break;
       }
       case "set_limit_order_sell": {
         ctx.session.latestCommand = "set_limit_order_amount";
         ctx.session.limitOrders.side = "sell";
-        await ctx.api.sendMessage(chatId, "Enter amount of Sell order.");
+        await ctx.api.sendMessage(chatId, "Enter amount of Sell order (in SOL).");
         break;
       }
       case "submit_limit_order": {
