@@ -238,7 +238,7 @@ export async function display_open_orders(ctx: any) {
   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
   console.log('wallet:', wallet.publicKey);
   const orders: OrderHistoryItem[] =
-    ctx.session.startTriggered ? ctx.session.orders.filter((order: any) => {
+    ctx.session.startTriggered && ctx.session.orders !== undefined ? ctx.session.orders.filter((order: any) => {
       return new Date(order.account.expiredAt.toNumber()) > new Date(Date.now())
         || new Date(order.account.expiredAt.toNumber()).getFullYear() < 2000;
     }) : await getOpenOrders(connection, wallet);
@@ -295,7 +295,7 @@ export async function display_single_order(ctx: any, isRefresh: boolean) {
   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
   console.log('wallet:', wallet.publicKey);
   const orders: OrderHistoryItem[] =
-    ctx.session.startTriggered ? ctx.session.orders.filter((order: any) => {
+    ctx.session.startTriggered && ctx.session.orders !== undefined ? ctx.session.orders.filter((order: any) => {
       return new Date(order.account.expiredAt.toNumber()) > new Date(Date.now())
         || new Date(order.account.expiredAt.toNumber()).getFullYear() < 2000;
     }) : await getOpenOrders(connection, wallet);
