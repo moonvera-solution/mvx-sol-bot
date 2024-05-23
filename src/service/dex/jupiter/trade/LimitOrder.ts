@@ -53,7 +53,7 @@ export async function setLimitJupiterOrder(
       outAmount: new BN(outAmount),
       inAmount: new BN(Number(inAmount) * 1e9),
       base: base.publicKey,
-      expiredAt: expiredAt ? new BN(expiredAt.valueOf() / 1000) : null,
+      expiredAt: expiredAt ? new BN(expiredAt.valueOf()) : null,
     });
 
     tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;

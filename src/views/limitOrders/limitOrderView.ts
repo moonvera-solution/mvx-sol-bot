@@ -30,14 +30,19 @@ export async function submit_limitOrder(ctx: any) {
   const tokenOut = isBuySide ? ctx.session.limitOrders.token : SOL_ADDRESS;
   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
   const referralInfo = { referralWallet: ctx.session.referralWallet, referralCommision: ctx.referralCommision, priorityFee: ctx.session.priorityFees };
-
+  const targetPrice = ctx.session.limitOrders.price;
+  const expiredAt = new Date(ctx.session.limitOrders.time);
+  console.log('00100-targetPrice', targetPrice);
+  console.log('00100-expiredAt', expiredAt);
+  
+  
   setLimitJupiterOrder(connection, referralInfo, isBuySide, {
     userWallet: userWallet,
     inputToken: tokenIn,
     inAmount: amountIn,
     outputToken: tokenOut,
-    targetPrice: ctx.session.limitOrders.price,
-    expiredAt: ctx.session.limitOrders.time,
+    targetPrice: targetPrice,
+    expiredAt: expiredAt,
   }).then(async (txSig: string) => {
     let msg = `🟢 <b>Submit ${isBuySide ? "Buy" : "Sell"} Limit Order:</b> Processing with ${getPriorityFeeLabel(ctx.session.priorityFees)} priotity fee. <a href="https://solscan.io/tx/${txSig}">View on Solscan</a>. Please wait for confirmation...`;
     await ctx.api.sendMessage(chatId, msg, { parse_mode: "HTML", disable_web_page_preview: true, });

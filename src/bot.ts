@@ -264,6 +264,9 @@ bot.command("start", async (ctx: any) => {
       }),
       parse_mode: "HTML",
     };
+    // set the startTriggered to false so that the data refreshes on every start command
+    ctx.session.startTriggered = false;
+    ctx.session.orders = undefined;
     // Send the message with the inline keyboard
     ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
     ctx.session.portfolio = await getPortfolio(chatId);
@@ -885,8 +888,9 @@ bot.on("callback_query", async (ctx: any) => {
       isConfirmed ?
         ctx.api.sendMessage(chatId, msg, { parse_mode: "HTML" }) :
         ctx.api.sendMessage(chatId, `🔴 <b> Cancel Order has been failed.</b> `, { parse_mode: "HTML" });
-      // display_single_spl_positions
+      // display_single_order
       ctx.session.latestCommand = "manage_limit_orders";
+      display_single_order(ctx, true);
 
       return;
     }
