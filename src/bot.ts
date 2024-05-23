@@ -20,7 +20,8 @@ import { handleRefreshStart } from "./views/refreshData/refreshStart";
 import { handleRefreshWallet, refreshAllWallets, } from "./views/wallets/walletsView";
 import {
   display_limitOrder_token_details,
-  submit_limitOrder, review_limitOrder_details,display_open_orders
+  submit_limitOrder, review_limitOrder_details, display_open_orders,
+  display_single_order
 } from "./views/limitOrders/limitOrderView";
 import { handleWallets } from "./views/util/dbWallet";
 import { getRayPoolKeys } from "./service/dex/raydium/raydium-utils/formatAmmKeysById";
@@ -32,7 +33,10 @@ import { display_spl_positions, display_single_spl_positions, display_refresh_si
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { swap_pump_fun, display_pump_fun_token_details } from "./views/pumpFun/pumpFunView";
 import { logErrorToFile } from "../error/logger";
-import {getTargetDate} from "../src/service/util";
+import { getTargetDate } from "../src/service/util";
+import { cancelOrder } from "./service/dex/jupiter/trade/LimitOrder";
+import bs58 from 'bs58';
+
 const express = require("express");
 const app = express();
 
@@ -245,7 +249,7 @@ bot.command("start", async (ctx: any) => {
           [{ text: "☑️ Rug Check", callback_data: "rug_check" }],
           [{ text: "🧙🏻‍♀️ Trade on pump.fun", callback_data: "display_pump_token" }],
           [{ text: "🎯 Turbo Snipe", callback_data: "snipe" }],
-          [{ text: "⏳ Limit Orders", callback_data: "limitOrders" },{ text: "⏳ Open Orders", callback_data: "display_open_orders" }],
+          [{ text: "⏳ Limit Orders", callback_data: "limitOrders" }, { text: "⏳ Open Orders", callback_data: "display_open_orders" }],
           [
             { text: "💱 Buy", callback_data: "buy" },
             { text: "Sell 📈", callback_data: "sell" },
@@ -757,7 +761,7 @@ bot.on("message", async (ctx) => {
           console.error("ERROR on bot.on txt msg", error, error.message);
         }
       }
-      case "set_limit_order_amount":{
+      case "set_limit_order_amount": {
         // TODO: add checks for the amount
         ctx.session.limitOrders.amount = Number(msgTxt!);
         await ctx.api.sendMessage(chatId, "Enter the token target price");
@@ -776,11 +780,11 @@ bot.on("message", async (ctx) => {
         // TODO: parse NO EXPIRY msgTxt and set ctx.session.limitOrders.time = null
         msgTxt?.includes("NO") ? ctx.session.limitOrders.time = null : null;
         const time = getTargetDate(msgTxt!);
-        if(time){
+        if (time) {
           ctx.session.limitOrders.time = Number(time);
-          await review_limitOrder_details(ctx,false);
+          await review_limitOrder_details(ctx, false);
           break;
-        }else{
+        } else {
           await ctx.api.sendMessage(chatId, "Invalid time format");
           return;
         }
@@ -808,11 +812,15 @@ bot.on("callback_query", async (ctx: any) => {
     const positionCallSell = /^sellpos_\d+_\d+$/;
     const positionCallBuy = /^buypos_x_\d+$/;
     const positionNavigate = /^(prev_position|next_position)_\d+$/;
+    const orderNavigate = /^(prev_order|next_order)_\d+$/;
+    const cancelSingleOrder = /^cancel_limit_orders_\S+$/;
     ctx.api.answerCallbackQuery(ctx.callbackQuery.id);
 
     const matchSell = data.match(positionCallSell);
     const matchBuy = data.match(positionCallBuy);
-    const matchNavigate = data.match(positionNavigate);
+    const matchPositionNavigate = data.match(positionNavigate);
+    const matchOrderNavigate = data.match(orderNavigate);
+    const matchCancelOrder = data.match(cancelSingleOrder);
 
     if (matchSell) {
       const parts = data.split("_");
@@ -838,7 +846,7 @@ bot.on("callback_query", async (ctx: any) => {
       ctx.session.latestCommand = "buy_X_SOL_IN_POSITION";
 
       return;
-    } else if (matchNavigate) {
+    } else if (matchPositionNavigate) {
       const parts = data.split("_");
       const newPositionIndex = parseInt(parts[2]); // New position index
 
@@ -846,6 +854,26 @@ bot.on("callback_query", async (ctx: any) => {
       console.log('positionIndex', ctx.session.positionIndex)
       ctx.session.activeTradingPool = ctx.session.positionPool[ctx.session.positionIndex];
       await display_refresh_single_spl_positions(ctx);
+
+    } else if (matchOrderNavigate) {
+      const parts = data.split("_");
+      const newOrderIndex = parseInt(parts[2]); // New order index
+      ctx.session.orderIndex = newOrderIndex;
+      console.log('orderIndex', ctx.session.orderIndex)
+      await display_single_order(ctx, true);
+
+    } else if (matchCancelOrder) {
+      const parts = data.split("_");
+      const tokenKey = parts[3]; // Token Public Key
+      const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
+      console.log('tokenKey', tokenKey);
+      const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+      await cancelOrder(connection, wallet, tokenKey);
+      ctx.api.sendMessage(chatId, `Order cancelled successfully for: \n ${tokenKey}`);
+      // display_single_spl_positions
+      ctx.session.latestCommand = "manage_limit_orders";
+
+      return;
     }
 
     switch (data) {
@@ -968,6 +996,20 @@ bot.on("callback_query", async (ctx: any) => {
 
       case "refresh_trade":
         await display_token_details(ctx, true);
+        break;
+      case "refresh_limit_order":
+        await display_limitOrder_token_details(ctx, true);
+        break;
+      case "display_open_orders":
+        await display_open_orders(ctx);
+        break;
+      case "manage_limit_orders":
+        ctx.session.latestCommand = "manage_limit_orders";
+        await display_single_order(ctx, false);
+        break;
+      case "refresh_single_orders":
+        ctx.session.latestCommand = "refresh_single_orders";
+        await display_single_order(ctx, true);
         break;
       case "delete_wallet":
         await resetWallet(ctx);
@@ -1328,11 +1370,11 @@ bot.on("callback_query", async (ctx: any) => {
         await ctx.api.sendMessage(chatId, "Enter amount of Sell order.");
         break;
       }
-      case "submit_limit_order":{
+      case "submit_limit_order": {
         await submit_limitOrder(ctx);
         break;
       }
-      case "display_open_orders":{
+      case "display_open_orders": {
         await display_open_orders(ctx);
         break;
       }

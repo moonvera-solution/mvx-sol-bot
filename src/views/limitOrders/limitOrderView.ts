@@ -13,7 +13,7 @@ import { UserPositions } from "../../db";
 import { getTokenDataFromBirdEye } from "../../api/priceFeeds/birdEye";
 import { getTokenPriceFromJupiter } from "../../api/priceFeeds/jupiter";
 import { LimitOrderProvider, ownerFilter, OrderHistoryItem, TradeHistoryItem } from "@jup-ag/limit-order-sdk";
-import { setLimitJupiterOrder, getOpenOrders,cancelOrder,cancelBatchOrder } from "../../service/dex/jupiter/trade/limitOrder";
+import { setLimitJupiterOrder, getOpenOrders, cancelOrder, cancelBatchOrder } from "../../service/dex/jupiter/trade/LimitOrder";
 import { SOL_ADDRESS } from "../../../config";
 import { getPriorityFeeLabel, waitForConfirmation } from "../../service/util";
 import bs58 from 'bs58';
@@ -140,7 +140,7 @@ export async function display_limitOrder_token_details(ctx: any, isRefresh: bool
         `Token Price: <b> ${tokenPriceUSD.toFixed(9)} USD</b> | <b> ${tokenPriceSOL.toFixed(9)} SOL</b> \n\n` +
         `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n\n` +
         `<b>Limit Order Steps:</b>\n` +
-        `1. Select oder side buy or sell.\n` +
+        `1. Select order side buy or sell.\n` +
         `2. Enter the amount to buy/sell. \n` +
         `3. Set the target price.\n` +
         `3. Set the expiration time.\n` +
@@ -160,7 +160,7 @@ export async function display_limitOrder_token_details(ctx: any, isRefresh: bool
         disable_web_page_preview: true,
         reply_markup: {
           inline_keyboard: [
-            [{ text: " 🔂 Refresh ", callback_data: "refresh_trade" }, { text: " ⚙️ Settings ", callback_data: "settings" },],
+            [{ text: " 🔂 Refresh ", callback_data: "refresh_limit_order" }, { text: " ⚙️ Settings ", callback_data: "settings" },],
             [{ text: ` Buy `, callback_data: "set_limit_order_buy" }, { text: ` Sell `, callback_data: "set_limit_order_sell" },],
             [{ text: "Cancel", callback_data: "closing" }]
           ]
@@ -210,36 +210,126 @@ export async function display_limitOrder_token_details(ctx: any, isRefresh: bool
 export async function display_open_orders(ctx: any) {
   const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  console.log('wallet:', wallet.publicKey);
   const orders: OrderHistoryItem[] = await getOpenOrders(connection, wallet);
-  let orderHtml: string = '';
-  for (const order of orders) {
-    orderHtml +=
-      ` - maker: ${order.account.maker.toBase58()} \n` +
-      ` - inputMint: ${order.account.inputMint.toBase58()} \n` +
-      ` - outputMint: ${order.account.outputMint.toBase58()} \n` +
-      ` - waiting: ${order.account.waiting} \n` +
-      ` - oriMakingAmount: ${order.account.oriMakingAmount.toNumber()} \n` +
-      ` - oriTakingAmount: ${order.account.oriTakingAmount.toNumber()} \n` +
-      ` - makingAmount: ${order.account.makingAmount.toNumber()} \n` +
-      ` - takingAmount: ${order.account.takingAmount.toNumber()} \n` +
-      ` - makerInputAccount: ${order.account.makerInputAccount.toBase58()} \n` +
-      ` - makerOutputAccount: ${order.account.makerOutputAccount.toBase58()} \n` +
-      ` - reserve: ${order.account.reserve.toBase58()} \n` +
-      ` - borrowMakingAmount: ${order.account.borrowMakingAmount.toNumber()} \n` +
-      ` - expiredAt: ${order.account.expiredAt} \n` +
-      ` - base: ${order.account.base} \n` +
-      ` - referral: ${order.account.referral} \n`;
-  }
 
-  const options = {
-    parse_mode: "HTML",
-    disable_web_page_preview: true,
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: `Manage Orders `, callback_data: "manage_limit_orders" }, { text: `Refresh Orders `, callback_data: "refresh_limit_orders" },],
-      ]
+  if (orders.length > 0) {
+    console.log('orders:', orders.toString());
+
+    let messageText = '';
+    for (const order of orders) {
+      const [
+        birdeyeData,
+        solPrice,
+        tokenInfo,
+      ] = await Promise.all([
+        getTokenDataFromBirdEye(order.account.outputMint.toString()),
+        getTokenMetadata(ctx, order.account.outputMint.toBase58()),
+        getSolanaDetails(),
+      ]);
+
+      const tokenPriceUSD =
+        birdeyeData && birdeyeData.response && birdeyeData.response.data && birdeyeData.response.data.data && birdeyeData.response.data.data.price != null ? birdeyeData.response.data.data.price : tokenInfo.price.times(solPrice).toNumber();
+      const tokenPriceSOL = birdeyeData ? tokenPriceUSD / solPrice : tokenInfo.price.toNumber();
+
+      let status = order.account.waiting ? 'Waiting' : 'Filled';
+
+      messageText +=
+        ` - Ordered Token: ${order.account.outputMint.toBase58()} \n` +
+        ` - Order Amount: ${order.account.oriMakingAmount.toNumber() / 10000000000} \n` +
+        ` - Order Price: ${order.account.oriTakingAmount.toNumber() / 1000000000000000} \n` +
+        ` - Current Price: <b> ${tokenPriceUSD.toFixed(9)} SOL</b> \n` +
+        ` - Expiry: ${new Date(order.account.expiredAt)} \n` +
+        ` - Status: ${status} \n\n`;
     }
+
+    const options = {
+      parse_mode: "HTML",
+      disable_web_page_preview: true,
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: `Manage Orders `, callback_data: "manage_limit_orders" },
+            { text: `Refresh Orders `, callback_data: "refresh_limit_orders" },
+          ],
+        ]
+      }
+    }
+    await ctx.api.sendMessage(ctx.chat.id, messageText, options);
+  } else {
+    await ctx.api.sendMessage(ctx.chat.id, 'your order list is empty.');
   }
 
-  await ctx.api.sendMessage(ctx.chat.id, orderHtml, options);
 }
+
+export async function display_single_order(ctx: any, isRefresh: boolean) {
+  const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
+  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  console.log('wallet:', wallet.publicKey);
+  const orders: OrderHistoryItem[] = await getOpenOrders(connection, wallet);
+
+  if (orders.length > 0) {
+    let index = ctx.session.orderIndex ?? 0;
+    let order = orders[index];
+
+    let messageText;
+    const [
+      birdeyeData,
+      solPrice,
+      tokenInfo,
+    ] = await Promise.all([
+      getTokenDataFromBirdEye(order.account.outputMint.toString()),
+      getTokenMetadata(ctx, order.account.outputMint.toBase58()),
+      getSolanaDetails(),
+    ]);
+
+    const tokenPriceUSD =
+      birdeyeData && birdeyeData.response && birdeyeData.response.data && birdeyeData.response.data.data && birdeyeData.response.data.data.price != null ? birdeyeData.response.data.data.price : tokenInfo.price.times(solPrice).toNumber();
+    const tokenPriceSOL = birdeyeData ? tokenPriceUSD / solPrice : tokenInfo.price.toNumber();
+
+    let status = order.account.waiting ? 'Waiting' : 'Filled';
+
+    messageText =
+      ` - Ordered Token: ${order.account.outputMint.toBase58()} \n` +
+      ` - Order Amount: ${order.account.oriMakingAmount.toNumber() / 10000000000} \n` +
+      ` - Order Price: ${order.account.oriTakingAmount.toNumber() / 1000000000000000} \n` +
+      ` - Current Price: <b> ${tokenPriceUSD.toFixed(9)} SOL</b> \n` +
+      ` - Expiry: ${new Date(order.account.expiredAt)} \n` +
+      ` - Status: ${status} \n`;
+
+    let prevIndex = index - 1 < 0 ? orders[0].length - 1 : index - 1;
+    let nextIndex = index + 1 >= orders[0].length ? 0 : index + 1;
+
+    console.log('order', order);
+
+    const options = {
+      parse_mode: "HTML",
+      disable_web_page_preview: true,
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: '⏮️ Previous', callback_data: `prev_order_${prevIndex}` },
+            { text: 'Next ⏭️', callback_data: `next_order_${nextIndex}` }
+          ],
+          [
+            { text: `Cancel Order`, callback_data: `cancel_limit_orders_${order.publicKey}` },
+            { text: `Refresh Order`, callback_data: "refresh_single_orders" },
+          ],
+        ]
+      }
+    }
+
+    if (isRefresh) {
+      await ctx.editMessageText(messageText, options);
+    } else {
+
+      await ctx.api.sendMessage(ctx.chat.id, messageText, options);
+    }
+
+  } else {
+    await ctx.api.sendMessage(ctx.chat.id, 'your order list is empty.');
+  }
+
+}
+
+
