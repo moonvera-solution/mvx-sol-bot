@@ -31,11 +31,11 @@ export async function submit_limitOrder(ctx: any) {
   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
   const referralInfo = { referralWallet: ctx.session.referralWallet, referralCommision: ctx.referralCommision, priorityFee: ctx.session.priorityFees };
   const targetPrice = ctx.session.limitOrders.price;
-  const expiredAt = new Date(ctx.session.limitOrders.time);
+  const expiredAt = ctx.session.limitOrders.time ? new Date(ctx.session.limitOrders.time) : null;
   console.log('00100-targetPrice', targetPrice);
   console.log('00100-expiredAt', expiredAt);
-  
-  
+
+
   setLimitJupiterOrder(connection, referralInfo, isBuySide, {
     userWallet: userWallet,
     inputToken: tokenIn,
@@ -239,8 +239,8 @@ export async function display_open_orders(ctx: any) {
   console.log('wallet:', wallet.publicKey);
   const orders: OrderHistoryItem[] =
     ctx.session.startTriggered && ctx.session.orders !== undefined ? ctx.session.orders.filter((order: any) => {
-      return new Date(order.account.expiredAt.toNumber()) > new Date(Date.now())
-        || new Date(order.account.expiredAt.toNumber()).getFullYear() < 2000;
+      return new Date(order.account.expiredAt?.toNumber()) > new Date(Date.now())
+        || order.account.expiredAt === null;
     }) : await getOpenOrders(connection, wallet);
 
   if (orders.length > 0) {
@@ -255,11 +255,11 @@ export async function display_open_orders(ctx: any) {
       console.log('tokenPriceSOL', tokenPriceSOL);
 
       let status = order.account.waiting ? 'Waiting' : 'Filled';
-      const expiryDate = new Date(order.account.expiredAt.toNumber());
+      const expiryDate = new Date(order.account.expiredAt?.toNumber());
       console.log('expiryDate', expiryDate);
-      console.log('order.account.expiredAt.toNumber()', order.account.expiredAt.toNumber());
-      
-      const expiry = expiryDate.getFullYear() < 2000 ? 'NO EXPIRY' : expiryDate.toLocaleString();
+      console.log('order.account.expiredAt?.toNumber()', order.account.expiredAt?.toNumber());
+
+      const expiry = order.account.expiredAt == null ? 'NO EXPIRY' : expiryDate.toLocaleString();
 
       messageText +=
         ` - Ordered Token: ${birdeyeData?.response.data.data.symbol} \n` +
@@ -296,8 +296,8 @@ export async function display_single_order(ctx: any, isRefresh: boolean) {
   console.log('wallet:', wallet.publicKey);
   const orders: OrderHistoryItem[] =
     ctx.session.startTriggered && ctx.session.orders !== undefined ? ctx.session.orders.filter((order: any) => {
-      return new Date(order.account.expiredAt.toNumber()) > new Date(Date.now())
-        || new Date(order.account.expiredAt.toNumber()).getFullYear() < 2000;
+      return new Date(order.account.expiredAt?.toNumber()) > new Date(Date.now())
+        || order.account.expiredAt === null;
     }) : await getOpenOrders(connection, wallet);
 
   if (orders.length > 0) {
@@ -314,10 +314,10 @@ export async function display_single_order(ctx: any, isRefresh: boolean) {
 
 
     let status = order.account.waiting ? 'Waiting' : 'Filled';
-    const expiryDate = new Date(order.account.expiredAt.toNumber());
-    const expiry = expiryDate.getFullYear() < 2000 ? 'NO EXPIRY' : expiryDate.toLocaleString();
+    const expiryDate = new Date(order.account.expiredAt?.toNumber());
+    const expiry = order.account.expiredAt == null ? 'NO EXPIRY' : expiryDate.toLocaleString();
     console.log('expiryDate', expiryDate);
-    console.log('order.account.expiredAt.toNumber()', order.account.expiredAt.toNumber());
+    console.log('order.account.expiredAt?.toNumber()', order.account.expiredAt?.toNumber());
 
     messageText =
       ` - Ordered Token: ${birdeyeData?.response.data.data.symbol} \n` +

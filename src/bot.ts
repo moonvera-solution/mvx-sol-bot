@@ -277,7 +277,7 @@ bot.command("start", async (ctx: any) => {
     ctx.session.orders = await getOpenOrders(connection, wallet);
     ctx.session.startTriggered = true;
     console.log('ctx.session.orders', ctx.session.orders);
-    
+
     // ctx.session.latestCommand = "rug_check";
   } catch (error: any) {
     logErrorToFile("bot on start cmd", error);
@@ -789,12 +789,18 @@ bot.on("message", async (ctx) => {
       }
       case "set_limit_order_time": {
         // TODO: parse NO EXPIRY msgTxt and set ctx.session.limitOrders.time = null
-        msgTxt?.includes("NO") ? ctx.session.limitOrders.time = null : null;
         const time = getTargetDate(msgTxt!);
-        if (time) {
+
+        if (msgTxt?.includes("NO")) {
+          ctx.session.limitOrders.time = null;
+          await review_limitOrder_details(ctx, false);
+          break;
+
+        } else if (time) {
           ctx.session.limitOrders.time = Number(time);
           await review_limitOrder_details(ctx, false);
           break;
+          
         } else {
           await ctx.api.sendMessage(chatId, "Invalid time format");
           return;
