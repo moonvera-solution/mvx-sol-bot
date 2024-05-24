@@ -57,7 +57,7 @@ export async function submit_limitOrder(ctx: any) {
       const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
       console.log('wallet:', wallet.publicKey);
       ctx.session.orders = await getOpenOrders(connection, wallet);
-      ctx.session.startTriggered = true;
+      ctx.session.isOrdersLoaded = true;
     }
 
     console.log(txSig);
@@ -237,11 +237,13 @@ export async function display_open_orders(ctx: any) {
   const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
   console.log('wallet:', wallet.publicKey);
-  const orders: OrderHistoryItem[] =
-    ctx.session.startTriggered && ctx.session.orders !== undefined ? ctx.session.orders.filter((order: any) => {
+  const orders: OrderHistoryItem[] = ctx.session.isOrdersLoaded ?
+    ctx.session.orders.filter((order: any) => {
       return new Date(order.account.expiredAt?.toNumber()) > new Date(Date.now())
         || order.account.expiredAt === null;
-    }) : await getOpenOrders(connection, wallet);
+    }) :
+    await getOpenOrders(connection, wallet);
+  ctx.session.orders = orders;
 
   if (orders.length > 0) {
     console.log('orders:', orders.toString());
@@ -279,11 +281,14 @@ export async function display_open_orders(ctx: any) {
             { text: `Manage Orders `, callback_data: "manage_limit_orders" },
             { text: `Refresh Orders `, callback_data: "refresh_limit_orders" },
           ],
+          [
+            { text: `Cancel All Orders `, callback_data: "cancel_all_orders" }
+          ],
         ]
       }
     }
     await ctx.api.sendMessage(ctx.chat.id, messageText, options);
-    ctx.session.startTriggered = false;
+    ctx.session.isOrdersLoaded = false;
   } else {
     await ctx.api.sendMessage(ctx.chat.id, 'your order list is empty.');
   }
@@ -294,11 +299,13 @@ export async function display_single_order(ctx: any, isRefresh: boolean) {
   const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
   console.log('wallet:', wallet.publicKey);
-  const orders: OrderHistoryItem[] =
-    ctx.session.startTriggered && ctx.session.orders !== undefined ? ctx.session.orders.filter((order: any) => {
+  const orders: OrderHistoryItem[] = ctx.session.isOrdersLoaded ?
+    ctx.session.orders.filter((order: any) => {
       return new Date(order.account.expiredAt?.toNumber()) > new Date(Date.now())
         || order.account.expiredAt === null;
-    }) : await getOpenOrders(connection, wallet);
+    }) :
+    await getOpenOrders(connection, wallet);
+  ctx.session.orders = orders;
 
   if (orders.length > 0) {
     let index = ctx.session.orderIndex ?? 0;
@@ -354,6 +361,42 @@ export async function display_single_order(ctx: any, isRefresh: boolean) {
     } else {
 
       await ctx.api.sendMessage(ctx.chat.id, messageText, options);
+    }
+
+  } else {
+    await ctx.api.sendMessage(ctx.chat.id, 'your order list is empty.');
+  }
+
+}
+
+export async function cancel_all_orders(ctx: any) {
+  const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
+  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  console.log('wallet:', wallet.publicKey);
+  const orders: OrderHistoryItem[] = await getOpenOrders(connection, wallet);
+
+  if (orders.length > 0) {
+    let index = ctx.session.orderIndex ?? 0;
+    let order = orders[index];
+
+    let orderKeys: PublicKey[] = [];
+    for (const order of orders) {
+      orderKeys.push(order.publicKey);
+    }
+
+    const txSig = await cancelBatchOrder(connection, wallet, orderKeys);
+    console.log('txSig', txSig);
+    const isConfirmed = await waitForConfirmation(ctx, txSig);
+
+    const msg = `🟢 <b>All Orders cancelled successfully:</b><a href="https://solscan.io/tx/${txSig}"> view transaction</a> on Solscan.`;
+    isConfirmed ?
+      ctx.api.sendMessage(ctx.chat.id, msg, { parse_mode: "HTML" }) :
+      ctx.api.sendMessage(ctx.chat.id, `🔴 <b> Cancel Order has been failed.</b> `, { parse_mode: "HTML" });
+    // display_single_order
+    if (isConfirmed) {
+      ctx.session.orders = null;
+      ctx.session.latestCommand = "manage_limit_orders";
+      display_single_order(ctx, false);
     }
 
   } else {

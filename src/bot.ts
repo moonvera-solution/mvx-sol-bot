@@ -21,7 +21,8 @@ import { handleRefreshWallet, refreshAllWallets, } from "./views/wallets/wallets
 import {
   display_limitOrder_token_details,
   submit_limitOrder, review_limitOrder_details, display_open_orders,
-  display_single_order
+  display_single_order,
+  cancel_all_orders
 } from "./views/limitOrders/limitOrderView";
 import { handleWallets } from "./views/util/dbWallet";
 import { getRayPoolKeys } from "./service/dex/raydium/raydium-utils/formatAmmKeysById";
@@ -264,9 +265,9 @@ bot.command("start", async (ctx: any) => {
       }),
       parse_mode: "HTML",
     };
-    // set the startTriggered to false so that the data refreshes on every start command
-    ctx.session.startTriggered = false;
-    ctx.session.orders = undefined;
+    // set the isOrdersLoaded to false so that the data refreshes on every start command
+    ctx.session.isOrdersLoaded = false;
+    ctx.session.orders = null;
     // Send the message with the inline keyboard
     ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
     ctx.session.portfolio = await getPortfolio(chatId);
@@ -275,7 +276,7 @@ bot.command("start", async (ctx: any) => {
     const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
     console.log('wallet:', wallet.publicKey);
     ctx.session.orders = await getOpenOrders(connection, wallet);
-    ctx.session.startTriggered = true;
+    ctx.session.isOrdersLoaded = true;
     console.log('ctx.session.orders', ctx.session.orders);
 
     // ctx.session.latestCommand = "rug_check";
@@ -800,7 +801,7 @@ bot.on("message", async (ctx) => {
           ctx.session.limitOrders.time = Number(time);
           await review_limitOrder_details(ctx, false);
           break;
-          
+
         } else {
           await ctx.api.sendMessage(chatId, "Invalid time format");
           return;
@@ -895,8 +896,11 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.api.sendMessage(chatId, msg, { parse_mode: "HTML" }) :
         ctx.api.sendMessage(chatId, `🔴 <b> Cancel Order has been failed.</b> `, { parse_mode: "HTML" });
       // display_single_order
-      ctx.session.latestCommand = "manage_limit_orders";
-      display_single_order(ctx, true);
+      if (isConfirmed) {
+        ctx.session.isOrdersLoaded = false;
+        ctx.session.latestCommand = "manage_limit_orders";
+        display_single_order(ctx, true);
+      }
 
       return;
     }
@@ -1401,6 +1405,10 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "display_open_orders": {
         await display_open_orders(ctx);
+        break;
+      }
+      case "cancel_all_orders": {
+        await cancel_all_orders(ctx);
         break;
       }
       // /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
