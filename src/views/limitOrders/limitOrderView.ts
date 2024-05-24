@@ -237,7 +237,7 @@ export async function display_open_orders(ctx: any) {
   const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
   console.log('wallet:', wallet.publicKey);
-  const orders: OrderHistoryItem[] = ctx.session.isOrdersLoaded ?
+  const orders: OrderHistoryItem[] = ctx.session.isOrdersLoaded && ctx.session.orders !== null ?
     ctx.session.orders.filter((order: any) => {
       return new Date(order.account.expiredAt?.toNumber()) > new Date(Date.now())
         || order.account.expiredAt === null;
@@ -299,7 +299,7 @@ export async function display_single_order(ctx: any, isRefresh: boolean) {
   const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
   console.log('wallet:', wallet.publicKey);
-  const orders: OrderHistoryItem[] = ctx.session.isOrdersLoaded ?
+  const orders: OrderHistoryItem[] = ctx.session.isOrdersLoaded && ctx.session.orders !== null ?
     ctx.session.orders.filter((order: any) => {
       return new Date(order.account.expiredAt?.toNumber()) > new Date(Date.now())
         || order.account.expiredAt === null;
