@@ -395,8 +395,6 @@ export async function cancel_all_orders(ctx: any) {
     // display_single_order
     if (isConfirmed) {
       ctx.session.orders = null;
-      ctx.session.latestCommand = "manage_limit_orders";
-      display_single_order(ctx, false);
     }
 
   } else {
