@@ -776,6 +776,13 @@ bot.on("message", async (ctx) => {
       case "set_limit_order_amount": {
         // TODO: add checks for the amount
         ctx.session.limitOrders.amount = Number(msgTxt!);
+        const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+        const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+        let userSolBalance = await getSolBalance(userWallet.publicKey, connection);
+        if (userSolBalance < ctx.session.limitOrders.amount && ctx.session.limitOrders.side == "buy") {
+          await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
+          break;
+        }
         await ctx.api.sendMessage(chatId, "Enter the token target price (in SOL)");
         ctx.session.latestCommand = "set_limit_order_price";
         break;
