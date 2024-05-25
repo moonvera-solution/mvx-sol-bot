@@ -16,6 +16,8 @@ import {
   ComputeBudgetProgram,
   Connection,
   SendOptions,
+  VersionedTransaction,
+  TransactionMessage
 } from "@solana/web3.js";
 import {
   Keypair,
@@ -31,7 +33,8 @@ import { simulateTx, getMaxPrioritizationFeeByPercentile, PriotitizationFeeLevel
 import {
   buildAndSendTx,
   getWalletTokenAccount,
-
+  optimizedSendAndConfirmTransaction,
+  wrapLegacyTx
 } from "../../../util";
 
 type WalletTokenAccounts = Awaited<ReturnType<typeof getWalletTokenAccount>>;
@@ -158,14 +161,14 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                      PRIORITY FEES                         */
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
-  
+
   let maxPriorityFee;
   const raydiumId = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8')
-  console.log("ispriorityCustomFee", input.ctx.session.ispriorityCustomFee) 
-  if(input.ctx.session.ispriorityCustomFee){
+  console.log("ispriorityCustomFee", input.ctx.session.ispriorityCustomFee)
+  if (input.ctx.session.ispriorityCustomFee) {
     maxPriorityFee = Math.ceil(input.ctx.session.txPriorityFee);
     console.log("maxPriorityFee", maxPriorityFee)
-  }else{
+  } else {
     maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
       lockedWritableAccounts: [
         new PublicKey(poolKeys ? poolKeys.id.toBase58() : raydiumId.toBase58()),
@@ -173,7 +176,7 @@ export async function swapOnlyAmm(input: TxInputInfo) {
       fallback: true
     });
   }
- 
+
   console.log("maxPriorityFee", maxPriorityFee)
   // if (input.ctx.priorityFees == PriotitizationFeeLevels.HIGH) { maxPriorityFee = maxPriorityFee * 3; }
   // if (input.ctx.priorityFees == PriotitizationFeeLevels.MAX) { maxPriorityFee = maxPriorityFee * 1.5; }
@@ -193,20 +196,23 @@ export async function swapOnlyAmm(input: TxInputInfo) {
   //     if (units) innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(units * 1.3) }));
   //   }
   //   console.log("swap units", units)
-    
+
   // } catch (e) { 
   //   console.log(e) 
   // }
 
-  // 2.- Circular dependency on units so we need to   simulate again.
-  await simulateTx(connection, innerTransactions[0].instructions, input.wallet.publicKey);
+  const testVersionedTxn = new VersionedTransaction(
+    new TransactionMessage({
+      instructions: innerTransactions[0].instructions,
+      payerKey: input.wallet.publicKey,
+      recentBlockhash: PublicKey.default.toString(),
+    }).compileToV0Message());
 
   return {
-    txids: await buildAndSendTx(
-      input.wallet,
-      innerTransactions,
-      connection,
-      (input.skipPreflight, input.commitment, input.maxRetries ) as SendOptions
-    ),
+    txids: await optimizedSendAndConfirmTransaction(
+      testVersionedTxn, connection,
+      (await connection.getLatestBlockhash()).blockhash,
+      2000 // RETRY INTERVAL
+    )
   };
 }

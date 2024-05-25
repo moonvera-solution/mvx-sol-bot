@@ -40,7 +40,6 @@ export async function handle_radyum_swap(
     let tokenIn, outputToken;
     const referralFee = ctx.session.referralCommision / 100;
 
-
     // ------- check user balanace in DB --------
     const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
     // console.log("userPosition", userPosition);
@@ -107,7 +106,7 @@ export async function handle_radyum_swap(
     // console.log("pfee from swap", ctx.session.priorityFees);
 
     if (poolKeys) {
-    //   console.log('poolKeys');
+      //   console.log('poolKeys');
       raydium_amm_swap({
         ctx,
         side,
@@ -158,16 +157,16 @@ export async function handle_radyum_swap(
           if (side == 'buy') {
             console.log('extractAmount', extractAmount);
             // if (await trackUntilFinalized(ctx, txids[0])) {
-              await saveUserPosition( // to display portfolio positions
-                ctx,
-                userWallet.publicKey.toString(), {
-                baseMint: poolKeys.baseMint,
-                name: userTokenBalanceAndDetails.userTokenName,
-                symbol: _symbol,
-                tradeType: `ray_swap_${side}`,
-                amountIn: oldPositionSol ? oldPositionSol + swapAmountIn : swapAmountIn,
-                amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
-              });
+            await saveUserPosition( // to display portfolio positions
+              ctx,
+              userWallet.publicKey.toString(), {
+              baseMint: poolKeys.baseMint,
+              name: userTokenBalanceAndDetails.userTokenName,
+              symbol: _symbol,
+              tradeType: `ray_swap_${side}`,
+              amountIn: oldPositionSol ? oldPositionSol + swapAmountIn : swapAmountIn,
+              amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
+            });
             // }
 
           } else if (side == 'sell') {

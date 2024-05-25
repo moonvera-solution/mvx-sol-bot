@@ -68,8 +68,16 @@ export interface ISESSION_DATA {
   jupSwap_amount: number,
   jupSwap:{token:String,side:String,amount:number},
   ammAddress: string
-
-
+  poolSchedule: {
+    status: String,
+    baseDecimals: Number,
+    quoteDecimals: Number,
+    lpDecimals: Number,
+    baseReserve: String,
+    quoteReserve: String,
+    lpSupply: String,
+    startTime: String
+  },
 }
 
 export const enum PriotitizationFeeLevels {
@@ -152,9 +160,17 @@ export const DefaultSessionData: ISESSION_DATA = {
   tritonRPC : 'https://moonvera-pit.rpcpool.com/',
   tritonToken : process.env.TRITON_RPC_TOKEN!,
   jupSwap_token: '',
-  jupSwap:{token:'',side:'',amount:0}
-
-  
+  jupSwap:{token:'',side:'',amount:0},
+  poolSchedule: {
+    status: '',
+    baseDecimals: 0,
+    quoteDecimals: 0,
+    lpDecimals: 0,
+    baseReserve: '',
+    quoteReserve: '',
+    lpSupply: '',
+    startTime: ''
+  },
 }
 
 export type RAYDIUM_POOL_TYPE = {

@@ -9,7 +9,7 @@ export const DEFAULT_PUBLIC_KEY = new PublicKey('1111111111111111111111111111111
 import { UserPositions } from '../../db';
 import { getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
 import { SOL_ADDRESS } from "../../config";
-import {jupiterSimpleSwap} from '../../service/dex/jupiter/trade/swaps';
+import {jupiterInxSwap,jupiterSimpleSwap} from '../../service/dex/jupiter/trade/swaps';
 import bs58 from 'bs58';
 import BigNumber from 'bignumber.js';
 import { saveUserPosition } from "../../service/portfolio/positions";
@@ -39,19 +39,17 @@ export async function jupiterSwap(ctx:any){
 
     }
     await ctx.api.sendMessage(chatId, `🟢 <b>Transaction ${ctx.session.jupSwap_side.toUpperCase()}:</b> Processing ... Please wait for confirmation...`, { parse_mode: 'HTML', disable_web_page_preview: true });
-    jupiterSimpleSwap(
-
+    jupiterInxSwap(
         connection,
         rpcUrl,
         payerKeypair,
-        isBuySide,
         tokenIn,
         tokenOut,
         amountIn,
         600,
         ctx.session.priorityFees,
         refObject
-      ).then(async(txSig) => {
+      ).then(async(txSig:any) => {
         console.log('txSigs:', txSig)
         const tradeType = isBuySide ? 'buy' : 'sell';
 

@@ -392,7 +392,6 @@ export async function display_refresh_single_spl_positions(ctx: any) {
   const userPosition: any = await UserPositions.find({ positionChatId: chatId, walletId: userWallet }, { positions: { $slice: -7 } });
   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
 
- 
 
   try {
     if (!userPosition[0]) {
