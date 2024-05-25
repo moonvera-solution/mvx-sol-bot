@@ -212,11 +212,11 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       } = tokenMetadataResult;
       const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
       const ammAddress = jupPriceImpact_5.routePlan[jupPriceImpact_5?.routePlan?.length - 1].swapInfo.ammKey;
-      const AllpriorityFees = await runAllFees(ctx, ammAddress);
+      // const AllpriorityFees = await runAllFees(ctx, ammAddress);
 
-      const mediumpriorityFees = (AllpriorityFees.result2);
-      const highpriorityFees = (AllpriorityFees.result3);
-      const maxpriorityFees = (AllpriorityFees.result4);
+      // const mediumpriorityFees = (AllpriorityFees.result2);
+      // const highpriorityFees = (AllpriorityFees.result3);
+      // const maxpriorityFees = (AllpriorityFees.result4);
       const tokenPriceUSD = birdeyeData
       && birdeyeData.response
       && birdeyeData.response.data
@@ -284,7 +284,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         `Initial : <b>${(initialInSOL).toFixed(4)} SOL</b> | <b>${(initialInUSD.toFixed(4))} USD</b>\n` +
         `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n` +
         `Token Balance: <b>${userTokenBalance.toFixed(3)} $${userTokenDetails.userTokenSymbol} </b> | <b>${((userTokenBalance) * Number(tokenPriceUSD)).toFixed(4)} USD </b>| <b>${((userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n\n` +
-        `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
+        // `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
         `Wallet balance: <b>${getSolBalanceData.toFixed(4)}</b> SOL | <b>${(getSolBalanceData * Number(solPrice)).toFixed(4)}</b> USD\n` +
         `Net Worth: <b>${netWorthSol.toFixed(4)}</b> SOL | <b>${netWorth.toFixed(4)}</b> USD\n` ;
 
@@ -297,11 +297,12 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
             [{ text: ' 🔂 Refresh ', callback_data: 'refresh_Jupiter_swap' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
             [{ text: `Buy (X SOL)`, callback_data: 'buy_X_JUP' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_JUP' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_JUP' }],
             [{ text: `Sell X %`, callback_data: 'sell_X_JUP' },{ text: 'Sell 50%  ', callback_data: 'sell_50_JUP' },{ text: 'Sell 100%  ', callback_data: 'sell_100_JUP' }],
-            [{ text: '📈 Priority fees', callback_data: '_' }],
-            [
-              { text: `Low ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_low' },
-              { text: `Medium ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_medium' }, { text: `High ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_high' },{ text: `Custom ${priority_custom === true ? '✅' : ''}`, callback_data: 'priority_custom' }],
-            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: 'Close', callback_data: 'closing' }]
+            // [{ text: '📈 Priority fees', callback_data: '_' }],
+            // [
+            //   { text: `Low ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_low' },
+            //   { text: `Medium ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_medium' }, { text: `High ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_high' },{ text: `Custom ${priority_custom === true ? '✅' : ''}`, callback_data: 'priority_custom' }],
+            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority`, callback_data: 'priority_custom' }],
+            [{ text: 'Close', callback_data: 'closing' }]
       
           ]
         }

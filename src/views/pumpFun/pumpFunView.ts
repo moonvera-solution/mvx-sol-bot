@@ -156,7 +156,7 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
           getSolBalanceData,
           userTokenDetails,
           userPosition,
-          AllpriorityFees
+          // AllpriorityFees
     
         ] = await Promise.all([
           getTokenDataFromBirdEyePositions(token,publicKeyString),
@@ -165,12 +165,12 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
           getSolBalance(publicKeyString, connection),
           getUserTokenBalanceAndDetails(new PublicKey(publicKeyString), token, connection),
           UserPositions.find({ positionChatId: chatId, walletId: publicKeyString }, { positions: { $slice: -7 } }),
-          runAllFees(ctx, token)
+          // runAllFees(ctx, token)
         ]);
 
-        const mediumpriorityFees = (AllpriorityFees.result2);
-        const highpriorityFees = (AllpriorityFees.result3);
-        const maxpriorityFees = (AllpriorityFees.result4);
+        // const mediumpriorityFees = (AllpriorityFees.result2);
+        // const highpriorityFees = (AllpriorityFees.result3);
+        // const maxpriorityFees = (AllpriorityFees.result4);
        
         const {
           tokenData,
@@ -228,7 +228,7 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
           `Initial : <b>${(initialInSOL).toFixed(4)} SOL</b> | <b>${(initialInUSD.toFixed(4))} USD</b>\n` +
           `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n` +
           `Token Balance: <b>${userTokenBalance.toFixed(4)}</b> ${tokenData.symbol} | <b>${((userTokenBalance) * Number(swapRates * solPrice)).toFixed(3)} USD </b> |  <b>${((userTokenBalance) * Number(swapRates)).toFixed(4)} SOL </b> \n\n` +
-          `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
+          // `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
           `Wallet balance: <b>${getSolBalanceData.toFixed(4)}</b> SOL | <b>${(getSolBalanceData * solPrice).toFixed(4)}</b> USD\n` +
           `Net Worth: <b>${netWorthSol.toFixed(4)}</b> SOL | <b>${netWorth.toFixed(4)}</b> USD\n` ;
  
@@ -242,10 +242,7 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
               [{ text: ' 🔂 Refresh ', callback_data: 'refresh_pump_fun' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
               [{ text: `Buy X  (SOL)`, callback_data: 'buy_X_PUMP' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_PUMP' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_PUMP' }], 
               [{ text: `Sell X %`, callback_data: 'sell_X_PUMP' },{ text: 'Sell 50%  ', callback_data: 'sell_50_PUMP' },{ text: 'Sell 100%  ', callback_data: 'sell_100_PUMP' }],
-              // [{ text: '📈 Priority fees', callback_data: '_' }],
-              // [
-              //   { text: `Low ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_low' },
-              //   { text: `Medium ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_medium' }, { text: `High ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_high' },{ text: `Custom ${priority_custom === true ? '✅' : ''}`, callback_data: 'priority_custom' }],
+              [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority`, callback_data: 'priority_custom' }],
               [{ text: 'Close', callback_data: 'closing' }]
             ]
           }

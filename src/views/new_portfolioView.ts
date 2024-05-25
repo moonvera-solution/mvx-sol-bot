@@ -271,15 +271,11 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
     }
 
     return [
-      [{ text: 'Sell 25%', callback_data: `sellpos_25_${currentIndex}` }, { text: `Sell 50%`, callback_data: `sellpos_50_${currentIndex}` }],
-      [{ text: 'Sell 75%', callback_data: `sellpos_75_${currentIndex}` }, { text: `Sell 100%`, callback_data: `sellpos_100_${currentIndex}` }],
-      [{ text: 'Buy more', callback_data: `buypos_x_${currentIndex}` }],
+      [{ text: 'Sell X %', callback_data: `sellpos_X_${currentIndex}` }, { text: `Sell 50%`, callback_data: `sellpos_50_${currentIndex}`}, { text: `Sell 100%`, callback_data: `sellpos_100_${currentIndex}` }],
       [{ text: '⏮️ Previous', callback_data: `prev_position_${prevIndex}` },
       { text: 'Next ⏭️', callback_data: `next_position_${nextIndex}` }],
-      [{ text: '📈 Priority fees', callback_data: '_' }],
-      [
-        { text: `Low ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_low' },
-        { text: `Medium ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_medium' }, { text: `High ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_high' },{ text: `Custom ${priority_custom === true ? '✅' : ''}`, callback_data: 'priority_custom' }],
+      [{ text: 'Buy more', callback_data: `buypos_x_${currentIndex}` }],
+      [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority`, callback_data: 'priority_custom' }],
       [{ text: 'Refresh', callback_data: 'display_refresh_single_spl_positions' }]
     ];
   };
@@ -354,12 +350,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       const baseDecimals = tokenData.mint.decimals;
       const totalSupply = new BigNumber(tokenData.mint.supply.basisPoints);
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(tokenPriceUSD)));
-      const ammAddress = jupPriceImpact_5.routePlan[jupPriceImpact_5.routePlan.length - 1].swapInfo.ammKey;
-      const AllpriorityFees = await runAllFees(ctx, ammAddress);
-
-      const mediumpriorityFees = (AllpriorityFees.result2);
-      const highpriorityFees = (AllpriorityFees.result3);
-      const maxpriorityFees = (AllpriorityFees.result4);
+  
       
       let initialInUSD = 0;
       let initialInSOL = 0;
@@ -401,7 +392,6 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
         `Current value: ${valueInSOL != 'N/A' ? valueInSOL.toFixed(4) : 'N/A'} <b>SOL</b> | ${valueInUSD != 'N/A' ? valueInUSD.toFixed(4) : 'N/A'} <b>USD </b>\n` +
         `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n\n` +
         `Token Balance: ${userTokenBalance.toFixed(4)} <b>${pos.symbol}</b> | ${((userTokenBalance) * Number(tokenPriceUSD)).toFixed(4)}<b>USD</b> |${((userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} <b>SOL</b>\n\n`+
-        `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
 
         `Wallet Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(
           balanceInSOL * solPrice

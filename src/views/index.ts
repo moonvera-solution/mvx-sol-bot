@@ -54,7 +54,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
     balanceInSOL,
     userPosition,
     userTokenDetails,
-    AllpriorityFees,
+    // AllpriorityFees,
 
   ] = await Promise.all([
     getTokenDataFromBirdEyePositions(tokenAddress.toString(),userPublicKey),
@@ -64,12 +64,12 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
     getSolBalance(userPublicKey, connection),
     UserPositions.find({ positionChatId: chatId, walletId: userPublicKey }, { positions: { $slice: -7 } }),
     getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
-    runAllFees(ctx, raydiumId),
+    // runAllFees(ctx, raydiumId),
   ]);
   // const lowpriorityFees = (AllpriorityFees.result);
-  const mediumpriorityFees = (AllpriorityFees.result2);
-  const highpriorityFees = (AllpriorityFees.result3);
-  const maxpriorityFees = (AllpriorityFees.result4);
+  // const mediumpriorityFees = (AllpriorityFees.result2);
+  // const highpriorityFees = (AllpriorityFees.result3);
+  // const maxpriorityFees = (AllpriorityFees.result4);
   const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
 
   const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
@@ -150,7 +150,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
         `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n` +
         `Token Balance: <b>${userTokenBalance.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
         `Price Impact (5.0 SOL) : <b>${priceImpact}%</b> \n\n` +
-        `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
+        // `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
         `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `+
         `Net Worth: <b>${netWorthSol.toFixed(4)}</b> SOL | <b>${netWorth.toFixed(4)}</b> USD\n` ;
 
@@ -166,11 +166,10 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
             [{ text: ' 🔂 Refresh ', callback_data: 'refresh_trade' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
             [{ text: 'Buy (X SOL)', callback_data: 'buy_X_RAY' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_RAY' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_RAY' }],
             [{ text: `Sell X %`, callback_data: 'sell_X_RAY' },{ text: 'Sell 50%  ', callback_data: 'sell_50_RAY' },{ text: 'Sell 100%  ', callback_data: 'sell_100_RAY' }],
-            [{ text: '📈 Priority fees', callback_data: '_' }],
-            [
-              { text: `Low ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_low' },
-              { text: `Medium ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_medium' }, { text: `High ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_high' },{ text: `Custom ${priority_custom === true ? '✅' : ''}`, callback_data: 'priority_custom' }],
-            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: 'Close', callback_data: 'closing' }]]
+      
+            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority`, callback_data: 'priority_custom' }],
+            [{ text: 'Cancel', callback_data: 'closing' }]
+          ]
         },
       };
   
@@ -222,7 +221,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
         tokenInfo,
         balanceInSOL,
         userTokenDetails,
-        AllpriorityFees,
+        // AllpriorityFees,
 
       ] = await Promise.all([
         getTokenDataFromBirdEye(tokenAddress.toString(),userPublicKey),
@@ -231,12 +230,12 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
         quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
         getSolBalance(userPublicKey, connection),
         getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
-        runAllFees(ctx, raydiumId),
+        // runAllFees(ctx, raydiumId),
 
       ]);
-      const mediumpriorityFees = (AllpriorityFees.result2);
-      const highpriorityFees = (AllpriorityFees.result3);
-      const maxpriorityFees = (AllpriorityFees.result4);
+      // const mediumpriorityFees = (AllpriorityFees.result2);
+      // const highpriorityFees = (AllpriorityFees.result3);
+      // const maxpriorityFees = (AllpriorityFees.result4);
       const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
 
 
@@ -298,7 +297,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
         // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
         `price Impact (5.0 SOL) : <b>${priceImpact}%</b> \n\n` +
         `Pool Status: <b>${poolStatusMessage}</b>\n\n` +
-        `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
+        // `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
         `Token Balance: <b>${userTokenBalance.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
         `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
     } else {
@@ -316,10 +315,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
             [{ text: ' 🔂 Refresh ', callback_data: 'refresh_snipe' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
             [{ text: `⛷️ Set snipe slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }],
             [{ text: '🎯 X SOL', callback_data: 'snipe_X_SOL' }, { text: '🎯 0.5 SOL', callback_data: 'snipe_0.5_SOL' }, { text: '🎯 1 SOL', callback_data: 'snipe_1_SOL' }],
-            [{ text: '📈 Priority fees', callback_data: '_' }],
-            [
-              { text: `Low ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_low' },
-              { text: `Medium ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_medium' }, { text: `High ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_high' },{ text: `Custom ${priority_custom === true ? '✅' : ''}`, callback_data: 'priority_custom' }],
+            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority`, callback_data: 'priority_custom' }],
             [{ text: 'Cancel', callback_data: 'closing' }]
           ]
 
@@ -334,10 +330,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
             [{ text: ' 🔂 Refresh ', callback_data: 'refresh_snipe' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
             [{ text: `⛷️ Set snipe slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }],
             [{ text: '🎯 X SOL', callback_data: 'snipe_X_SOL' }, { text: '🎯 0.5 SOL', callback_data: 'snipe_0.5_SOL' }, { text: '🎯 1 SOL', callback_data: 'snipe_1_SOL' }],
-            [{ text: '📈 Priority fees', callback_data: '_' }],
-            [
-              { text: `Low ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_low' },
-              { text: `Medium ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_medium' }, { text: `High ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_high' },{ text: `Custom ${priority_custom === true ? '✅' : ''}`, callback_data: 'priority_custom' }],
+            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority`, callback_data: 'priority_custom' }],
             [{ text: 'Cancel', callback_data: 'closing' }]
           ]
 

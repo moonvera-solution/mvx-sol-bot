@@ -49,6 +49,7 @@
     "package.json": "^2.0.1",
     "pino": "^8.17.2",
     "pino-pretty": "^10.3.1",
+    "solana-swap": "^1.0.10",
     "ts-mocha": "^10.0.0"
   },
   "devDependencies": {

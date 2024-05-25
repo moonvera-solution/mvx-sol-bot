@@ -1431,9 +1431,7 @@ bot.on("callback_query", async (ctx: any) => {
           await display_snipe_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_position") {
           await display_single_position(ctx, true);
-        } else if (ctx.session.latestCommand === "display_after_Snipe_Buy") {
-          await display_after_Snipe_Buy(ctx, true);
-        } else if (ctx.session.latestCommand === "pump_fun") {
+        }  else if (ctx.session.latestCommand === "pump_fun") {
           await display_pumpFun(ctx, true);
         } else if (ctx.session.latestCommand === "jupiter_swap") {
           await display_jupSwapDetails(ctx, true);
