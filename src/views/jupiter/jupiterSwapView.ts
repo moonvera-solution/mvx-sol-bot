@@ -188,22 +188,22 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
 
       if(jupTokenValue[0] && jupTokenValue[0].price ){
         jupTokenPrice = jupTokenValue[0].price;
+        console.log('jupToken')
       }else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined) {
-        ctx.session.latestCommand = 'raydium_swap';
+        // ctx.session.latestCommand = 'raydium_swap';
         ctx.session.activeTradingPool = await getRayPoolKeys(ctx, token);
         console.log('activeTradingPool:', ctx.session.activeTradingPool)
         if(ctx.session.activeTradingPool){
         await display_token_details(ctx, false);
         return;
         } else {
-          ctx.session.latestCommand = 'pump_fun';
+          // ctx.session.latestCommand = 'pump_fun';
           ctx.session.pumpToken = new PublicKey(token);
           await display_pumpFun(ctx, false);
           return;
 
         }
     
-        // return ctx.session.activeTradingPool;
       }  
       const {
         tokenData,

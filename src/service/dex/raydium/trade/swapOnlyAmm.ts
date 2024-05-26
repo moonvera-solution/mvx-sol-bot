@@ -56,7 +56,8 @@ export type TxInputInfo = {
   maxRetries: number;
 };
 
-export async function swapOnlyAmm(input: TxInputInfo) {
+export async function swapOnlyAmm(input: TxInputInfo) : Promise< any | null >
+{
   const connection = new Connection(`${input.ctx.session.tritonRPC}${input.ctx.session.tritonToken}`);
   const targetPoolInfo = await formatAmmKeysById(input.targetPool, connection);
   assert(targetPoolInfo, "cannot find the target pool");

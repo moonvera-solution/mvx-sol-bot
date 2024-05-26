@@ -417,10 +417,14 @@ const commandNumbers = [
   'sell_0.5_RAY',
   'buy_1_RAY',
   'sell_1_RAY',
+//  'pump_fun',
+  'rug_check',
+  // 'jupiter_swap',
 
 ];
 
 bot.on("message", async (ctx) => {
+  console.log('latestCommand', ctx.session.latestCommand);
   await _validateSession(ctx);
   backupSession = ctx.session;
   const chatId = ctx.chat.id;
@@ -456,17 +460,7 @@ bot.on("message", async (ctx) => {
         await display_jupSwapDetails(ctx, false);
         return;
       }
-      if (
-        (!isNaN(parseFloat(msgTxt!)) &&
-          ctx.session.latestCommand !== "jupiter_swap" &&
-          ctx.session.latestCommand !== "snipe" &&
-          ctx.session.latestCommand !== "send_sol" &&
-          ctx.session.latestCommand !== "ask_for_sol_amount") ||
-          ctx.session.latestCommand === "start" ||
-          ctx.session.latestCommand === "display_singl_position" ||
-          ctx.session.latestCommand == "pump_fun" ||
-          ctx.session.latestCommand !== "raydium_swap"
-      ) {
+      if (!isNaN(parseFloat(msgTxt!))) {
         if (
           (msgTxt && PublicKey.isOnCurve(msgTxt)) ||
           (msgTxt && !PublicKey.isOnCurve(msgTxt))
@@ -478,7 +472,7 @@ bot.on("message", async (ctx) => {
           }
           ctx.session.latestCommand = "jupiter_swap";
           ctx.session.jupSwap_token = msgTxt;
-          await display_jupSwapDetails(ctx, false);
+          // await display_jupSwapDetails(ctx, false);
         } else {
           ctx.api.sendMessage(chatId, "Invalid address");
         }
@@ -1135,7 +1129,8 @@ bot.on("callback_query", async (ctx: any) => {
             chatId,
             "Please provide the token address or the jupiter swap link."
           );
-        } else {
+        } 
+        else {
           ctx.session.latestCommand = "jupiter_swap";
           await display_jupSwapDetails(ctx, false);
         }
