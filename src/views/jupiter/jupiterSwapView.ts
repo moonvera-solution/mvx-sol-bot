@@ -47,7 +47,7 @@ export async function jupiterSwap(ctx:any){
         tokenIn,
         tokenOut,
         amountIn,
-        600,
+       ( ctx.session.latestSlippage * 100),
         (ctx.session.customPriorityFee * 1e9),
         refObject
       ).then(async(txSig:any) => {

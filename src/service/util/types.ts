@@ -52,7 +52,7 @@ export interface ISESSION_DATA {
   referralCommision: number;
   poolTime: number;
   positionPool: Array<any>;
-  priorityFees: PriotitizationFeeLevels;
+  // priorityFees: PriotitizationFeeLevels;
   ispriorityCustomFee: boolean;
   customPriorityFee: number;
   positionIndex: number;
@@ -154,7 +154,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   snipeSlippage: 80,
   poolTime: 0,
   positionPool: [],
-  priorityFees: PriotitizationFeeLevels.LOW,
+  // priorityFees: PriotitizationFeeLevels.LOW,
   positionIndex: 0,
   allowedReferral:'', // tg Username
   tritonRPC : 'https://moonvera-pit.rpcpool.com/',

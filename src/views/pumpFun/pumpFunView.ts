@@ -38,6 +38,7 @@ export async function swap_pump_fun(ctx:any){
         payerKeypair: payerKeypair,
         referralWallet: new PublicKey(ctx.session.generatorWallet).toBase58(),
         referralCommision: ctx.session.referralCommision,
+        priorityFee: ctx.session.customPriorityFee,
         forceLegacy: true
     }).then(async (txSigs) => {  
         console.log('txSigs:', txSigs)

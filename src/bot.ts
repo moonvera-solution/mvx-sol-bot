@@ -411,7 +411,7 @@ const commandNumbers = [
   "sell_0.5_PUMP",
   "sell_1_PUMP",
   "set_customPriority",
-  'buy_x_RAY',
+  'buy_X_RAY',
   'sell_x_RAY',
   'buy_0.5_RAY',
   'sell_0.5_RAY',
@@ -434,6 +434,7 @@ bot.on("message", async (ctx) => {
     const latestCommand = ctx.session.latestCommand;
     const msgTxt = ctx.update.message.text;
     if (msgTxt && !commandNumbers.includes(latestCommand)) {
+      console.log('going here');
       const pumpRegex = /https:\/\/(www\.)?pump\.fun\/([A-Za-z0-9]+)/;
       const birdEyeRegex = /https:\/\/(www\.)?birdeye\.so\/token\/([A-Za-z0-9]+)\?chain=solana/;
       const match_pump = msgTxt.match(pumpRegex);
@@ -623,6 +624,7 @@ bot.on("message", async (ctx) => {
       }
 
       case "buy_X_RAY":
+        console.log("buy_X_RAY here")
         ctx.session.latestCommand = "buy_X_RAY";
         if (msgTxt) {
           const amt = msgTxt.includes(".")

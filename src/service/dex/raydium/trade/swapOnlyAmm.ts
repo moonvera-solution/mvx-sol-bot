@@ -163,22 +163,13 @@ export async function swapOnlyAmm(input: TxInputInfo) : Promise< any | null >
   /*                      PRIORITY FEES                         */
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
-  let maxPriorityFee;
-  const raydiumId = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8')
-  console.log("ispriorityCustomFee", input.ctx.session.ispriorityCustomFee)
-  if (input.ctx.session.ispriorityCustomFee) {
-    maxPriorityFee = Math.ceil(input.ctx.session.txPriorityFee);
-    console.log("maxPriorityFee", maxPriorityFee)
-  } else {
-    maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {
-      lockedWritableAccounts: [
-        new PublicKey(poolKeys ? poolKeys.id.toBase58() : raydiumId.toBase58()),
-      ], percentile: input.ctx.session.priorityFees, //PriotitizationFeeLevels.LOW,
-      fallback: true
-    });
-  }
+    let maxPriorityFee;
 
-  console.log("maxPriorityFee", maxPriorityFee)
+    maxPriorityFee = Math.ceil(input.ctx.session.customPriorityFee * 1e12);
+    // console.log("maxPriorityFee", maxPriorityFee)
+ 
+
+ 
   // if (input.ctx.priorityFees == PriotitizationFeeLevels.HIGH) { maxPriorityFee = maxPriorityFee * 3; }
   // if (input.ctx.priorityFees == PriotitizationFeeLevels.MAX) { maxPriorityFee = maxPriorityFee * 1.5; }
 
@@ -208,7 +199,7 @@ export async function swapOnlyAmm(input: TxInputInfo) : Promise< any | null >
       payerKey: input.wallet.publicKey,
       recentBlockhash: PublicKey.default.toString(),
     }).compileToV0Message());
-
+    testVersionedTxn.sign([input.wallet]);
   return {
     txids: await optimizedSendAndConfirmTransaction(
       testVersionedTxn, connection,
