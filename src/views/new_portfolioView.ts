@@ -275,7 +275,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       [{ text: '⏮️ Previous', callback_data: `prev_position_${prevIndex}` },
       { text: 'Next ⏭️', callback_data: `next_position_${nextIndex}` }],
       [{ text: 'Buy more', callback_data: `buypos_x_${currentIndex}` }],
-      [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority`, callback_data: 'priority_custom' }],
+      [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority`, callback_data: 'set_customPriority' }],
       [{ text: 'Refresh', callback_data: 'display_refresh_single_spl_positions' }]
     ];
   };

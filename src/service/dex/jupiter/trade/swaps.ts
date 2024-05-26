@@ -12,7 +12,7 @@ import axios from "axios";
 
 const COMMITMENT_LEVEL = "confirmed";
 const PRIORITY_FEE_LAMPORTS = 1;
-const TX_RETRY_INTERVAL = 2000;
+const TX_RETRY_INTERVAL = 5;
 
 const connection = new Connection(`${process.env.TRITON_RPC_URL!}${process.env.TRITON_RPC_TOKEN!}`);
 const wallet = Keypair.fromSecretKey(bs58.decode(process.env.TEST_WALLET_PK!));
@@ -63,7 +63,7 @@ export async function jupiterInxSwap(
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({quoteResponse,userPublicKey: wallet.publicKey.toBase58(),
+      body: JSON.stringify({quoteResponse,userPublicKey: wallet.publicKey.toBase58(), dynamicComputeUnitLimit: true, prioritizationFeeLamports: priorityFeeLevel
       })
     })
   ).json();
@@ -131,10 +131,12 @@ export async function jupiterInxSwap(
     payerKey: wallet.publicKey,
     recentBlockhash: blockhash,
     instructions: [
+      ...computeBudgetInstructions.map(deserializeInstruction),
       ...txInxs,
       ...setupInstructions.map(deserializeInstruction),
       deserializeInstruction(swapInstructionPayload),
       deserializeInstruction(cleanupInstruction),
+  
     ],
   }).compileToV0Message(addressLookupTableAccounts);
 
@@ -163,67 +165,67 @@ export async function jupiterInxSwap(
 // /*                  Jupiter SimpleSwap                        */
 // /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
-export async function jupiterSimpleSwap(
+// export async function jupiterSimpleSwap(
 
-  connection:Connection,
-  rpcUrl:string,
-  userWallet:Keypair,
-  isBuySide: boolean,
-  tokenIn:string,
-  tokenOut:string,
-  amountIn:number,
-  slippage:number,
-  priorityFeeLevel:number,
-  referralInfo:REFERRAL_INFO,
-){
-  let quoteResponse;
-  let jupiterSwapTransaction;
+//   connection:Connection,
+//   rpcUrl:string,
+//   userWallet:Keypair,
+//   isBuySide: boolean,
+//   tokenIn:string,
+//   tokenOut:string,
+//   amountIn:number,
+//   slippage:number,
+//   priorityFeeLevel:number,
+//   referralInfo:REFERRAL_INFO,
+// ){
+//   let quoteResponse;
+//   let jupiterSwapTransaction;
 
-  let blockhash = (await connection.getLatestBlockhash()).blockhash;
-  let feeAccount : PublicKey | null = null //(await getTokenRefFeeAccount(tokenOut);
-  let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}${feeAccount ? '&platformFeeBps=08' : ''}`.trim()
-  let swapApiResult = await axios.get(swapUrl);
+//   let blockhash = (await connection.getLatestBlockhash()).blockhash;
+//   let feeAccount : PublicKey | null = null //(await getTokenRefFeeAccount(tokenOut);
+//   let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}${feeAccount ? '&platformFeeBps=08' : ''}`.trim()
+//   let swapApiResult = await axios.get(swapUrl);
 
-  // console.log("lastRouteHop::",lastRouteHop, ":: ",swapApiResult.data.routePlan);
+//   // console.log("lastRouteHop::",lastRouteHop, ":: ",swapApiResult.data.routePlan);
   
-  if (!(swapApiResult.status >= 200) && swapApiResult.status < 300) {
-    throw new Error(`Failed to fetch jupiter swap quote: ${swapApiResult.status}`);
-  }
-  quoteResponse = swapApiResult.data;
-  // const maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {lockedWritableAccounts: [new PublicKey(String(lastRouteHop))], percentile: priorityFeeLevel});
+//   if (!(swapApiResult.status >= 200) && swapApiResult.status < 300) {
+//     throw new Error(`Failed to fetch jupiter swap quote: ${swapApiResult.status}`);
+//   }
+//   quoteResponse = swapApiResult.data;
+//   // const maxPriorityFee = await getMaxPrioritizationFeeByPercentile(connection, {lockedWritableAccounts: [new PublicKey(String(lastRouteHop))], percentile: priorityFeeLevel});
 
-  swapApiResult = await axios.post(`${rpcUrl}/jupiter/swap`, {
-    quoteResponse: quoteResponse,
-    prioritizationFeeLamports: 100000,
-    userPublicKey: userWallet.publicKey.toBase58(),
-    wrapAndUnwrapSol: true,
-    dynamicComputeUnitLimit: true, // Setting this to `true` allows the endpoint to set the dynamic compute unit limit as required by the transaction
-    jitoTipLamports: 50000, // Setting the priority fees. This can be `auto` or lamport numeric value
-    skipUserAccountsRpcCalls: false,
-    // feeAccount: feeAccount?.toBase58(),
-  });
+//   swapApiResult = await axios.post(`${rpcUrl}/jupiter/swap`, {
+//     quoteResponse: quoteResponse,
+//     prioritizationFeeLamports: 100000,
+//     userPublicKey: userWallet.publicKey.toBase58(),
+//     wrapAndUnwrapSol: true,
+//     dynamicComputeUnitLimit: true, // Setting this to `true` allows the endpoint to set the dynamic compute unit limit as required by the transaction
+//     jitoTipLamports: 50000, // Setting the priority fees. This can be `auto` or lamport numeric value
+//     skipUserAccountsRpcCalls: false,
+//     // feeAccount: feeAccount?.toBase58(),
+//   });
   
-  // console.log("swapApiResult:: ",swapApiResult);
-  // throw error if response is not ok
-  if (!(swapApiResult.status >= 200) && swapApiResult.status < 300) {
-    throw new Error(
-      `Failed to fetch jupiter swap transaction: ${swapApiResult.status}`
-    );
-  }
+//   // console.log("swapApiResult:: ",swapApiResult);
+//   // throw error if response is not ok
+//   if (!(swapApiResult.status >= 200) && swapApiResult.status < 300) {
+//     throw new Error(
+//       `Failed to fetch jupiter swap transaction: ${swapApiResult.status}`
+//     );
+//   }
 
-  jupiterSwapTransaction = swapApiResult.data;
+//   jupiterSwapTransaction = swapApiResult.data;
 
-    console.log(`${new Date().toISOString()} Fetched jupiter swap transaction`);
+//     console.log(`${new Date().toISOString()} Fetched jupiter swap transaction`);
 
-    const swapTransactionBuf = Buffer.from(jupiterSwapTransaction.swapTransaction,"base64");
+//     const swapTransactionBuf = Buffer.from(jupiterSwapTransaction.swapTransaction,"base64");
 
-    const tx = VersionedTransaction.deserialize(swapTransactionBuf);
-    tx.message.recentBlockhash = blockhash
+//     const tx = VersionedTransaction.deserialize(swapTransactionBuf);
+//     tx.message.recentBlockhash = blockhash
 
-    tx.sign([wallet]);
+//     tx.sign([wallet]);
 
-    optimizedSendAndConfirmTransaction(tx,connection,blockhash,TX_RETRY_INTERVAL);
-  }
+//     optimizedSendAndConfirmTransaction(tx,connection,blockhash,TX_RETRY_INTERVAL);
+//   }
 
 /**
  * NOT IN USE - WE USE MVX FEE NOT JUP STYLE FEE

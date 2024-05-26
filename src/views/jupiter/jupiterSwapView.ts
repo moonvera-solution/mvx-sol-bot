@@ -9,7 +9,7 @@ export const DEFAULT_PUBLIC_KEY = new PublicKey('1111111111111111111111111111111
 import { UserPositions } from '../../db';
 import { getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
 import { SOL_ADDRESS } from "../../config";
-import {jupiterInxSwap,jupiterSimpleSwap} from '../../service/dex/jupiter/trade/swaps';
+import {jupiterInxSwap} from '../../service/dex/jupiter/trade/swaps';
 import bs58 from 'bs58';
 import BigNumber from 'bignumber.js';
 import { saveUserPosition } from "../../service/portfolio/positions";
@@ -38,6 +38,7 @@ export async function jupiterSwap(ctx:any){
       return;
 
     }
+    console.log('priorityFees:', ctx.session.priorityFees)
     await ctx.api.sendMessage(chatId, `🟢 <b>Transaction ${ctx.session.jupSwap_side.toUpperCase()}:</b> Processing ... Please wait for confirmation...`, { parse_mode: 'HTML', disable_web_page_preview: true });
     jupiterInxSwap(
         connection,
@@ -47,7 +48,7 @@ export async function jupiterSwap(ctx:any){
         tokenOut,
         amountIn,
         600,
-        ctx.session.priorityFees,
+        (ctx.session.customPriorityFee * 1e9),
         refObject
       ).then(async(txSig:any) => {
         console.log('txSigs:', txSig)
@@ -299,7 +300,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
             // [
             //   { text: `Low ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_low' },
             //   { text: `Medium ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_medium' }, { text: `High ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_high' },{ text: `Custom ${priority_custom === true ? '✅' : ''}`, callback_data: 'priority_custom' }],
-            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority`, callback_data: 'priority_custom' }],
+            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage ' }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
             [{ text: 'Close', callback_data: 'closing' }]
       
           ]

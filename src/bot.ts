@@ -419,6 +419,7 @@ const commandNumbers = [
   'sell_1_RAY',
 //  'pump_fun',
   'rug_check',
+  
   // 'jupiter_swap',
 
 ];
@@ -433,33 +434,24 @@ bot.on("message", async (ctx) => {
     const latestCommand = ctx.session.latestCommand;
     const msgTxt = ctx.update.message.text;
     if (msgTxt && !commandNumbers.includes(latestCommand)) {
-      const pumpRegex = /https:\/\/pump\.fun\/([A-Za-z0-9]+)/;
-      const birdEyeRegex =
-        /https:\/\/birdeye\.so\/token\/([A-Za-z0-9]+)\?chain=solana/;
-      const dexscreenerRegex =
-        /https:\/\/dexscreener\.com\/solana\/([A-Za-z0-9]+)/;
+      const pumpRegex = /https:\/\/(www\.)?pump\.fun\/([A-Za-z0-9]+)/;
+      const birdEyeRegex = /https:\/\/(www\.)?birdeye\.so\/token\/([A-Za-z0-9]+)\?chain=solana/;
       const match_pump = msgTxt.match(pumpRegex);
       const match_birdEye = msgTxt.match(birdEyeRegex);
-      const match_dexscreener = msgTxt.match(dexscreenerRegex);
+
       if (match_pump) {
         ctx.session.latestCommand = "jupiter_swap";
-        let jupToken = match_pump[1];
+        let jupToken = match_pump[2];
         ctx.session.jupSwap_token = jupToken;
         await display_jupSwapDetails(ctx, false);
         return;
       } else if (match_birdEye) {
         ctx.session.latestCommand = "jupiter_swap";
-        let jupToken = match_birdEye[1];
+        let jupToken = match_birdEye[2];
         ctx.session.jupSwap_token = jupToken;
         await display_jupSwapDetails(ctx, false);
         return;
-      } else if (match_dexscreener) {
-        ctx.session.latestCommand = "jupiter_swap";
-        let jupToken = match_dexscreener[1];
-        ctx.session.jupSwap_token = jupToken;
-        await display_jupSwapDetails(ctx, false);
-        return;
-      }
+      } 
       if (!isNaN(parseFloat(msgTxt!))) {
         if (
           (msgTxt && PublicKey.isOnCurve(msgTxt)) ||
