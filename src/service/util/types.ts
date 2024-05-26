@@ -123,7 +123,6 @@ export const DefaultSessionData: ISESSION_DATA = {
     positions: [],
     activeWalletIndex: 0
   },
-  // pump:{token:'',side:'',amountIn:0,amountOut:0},
   ammAddress: '',
   pump_side: '',
   pump_amountIn: 0,

@@ -94,7 +94,6 @@ export const Referrals = mongoose.model<REFERRAL_TYPE>(
 
 const UserSessions = new Schema({
   chatId: { type: Number, unique: true },
-  latestCommand: String,
   portfolio: {
     type: {
       chatId: Number,
@@ -138,10 +137,13 @@ const UserSessions = new Schema({
       lookupTableAccount: String,
     }
   },
+  latestCommand: String,
+  previousCommand: String,
   currentMode: String,
   latestSlippage: Number,
   metadataMessageId: Number,
   snipeToken: String,
+  pumpToken: String,
   latestToken: String,
   snipeAmount: Number,
   snipeSlippage: Number,
@@ -154,23 +156,40 @@ const UserSessions = new Schema({
   generatorWallet: String,
   referralCommision: Number,
   poolTime: Number,
-  positionPool: Array<any>,
-  priorityFees: Number,
+  positionPool: Array,
+  ispriorityCustomFee: Boolean,
+  customPriorityFee: Number,
   positionIndex: Number,
   tritonRPC: String,
   tritonToken: String,
-  allowedReferral:String, // tg Username
-  poolSchedule: {
-    status: String,
-    baseDecimals: Number,
-    quoteDecimals: Number,
-    lpDecimals: Number,
-    baseReserve: String,
-    quoteReserve: String,
-    lpSupply: String,
-    startTime: String
+  allowedReferral: String,
+  pump_amountIn: Number,
+  pump_side: String,
+  pump_amountOut: Number,
+  txPriorityFee: Number,
+  jupSwap_token: String,
+  jupSwap_side: String,
+  jupSwap_amount: Number,
+  jupSwap: {
+    type: {
+      token: String,
+      side: String,
+      amount: Number
+    }
   },
-  originalBaseMint:String
+  ammAddress: String,
+  poolSchedule: {
+    type: {
+      status: String,
+      baseDecimals: Number,
+      quoteDecimals: Number,
+      lpDecimals: Number,
+      baseReserve: String,
+      quoteReserve: String,
+      lpSupply: String,
+      startTime: String
+    }
+  }
 });
 
 export const UserSession = mongoose.model("UserSession", UserSessions);

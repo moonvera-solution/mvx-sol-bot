@@ -56,8 +56,8 @@ export type TxInputInfo = {
   maxRetries: number;
 };
 
-export async function swapOnlyAmm(input: TxInputInfo) : Promise< any | null >
-{
+export async function swapOnlyAmm(input: TxInputInfo) : Promise< any | null > {
+
   const connection = new Connection(`${input.ctx.session.tritonRPC}${input.ctx.session.tritonToken}`);
   const targetPoolInfo = await formatAmmKeysById(input.targetPool, connection);
   assert(targetPoolInfo, "cannot find the target pool");
@@ -163,10 +163,11 @@ export async function swapOnlyAmm(input: TxInputInfo) : Promise< any | null >
   /*                      PRIORITY FEES                         */
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
-    let maxPriorityFee;
 
-    maxPriorityFee = Math.ceil(input.ctx.session.customPriorityFee * 1e12);
-    // console.log("maxPriorityFee", maxPriorityFee)
+    console.log("session maxPriorityFee------> ", input.ctx.session.customPriorityFee)
+
+    let maxPriorityFee = Math.ceil(Number.parseFloat(input.ctx.session.customPriorityFee) * 1e12);
+    console.log("maxPriorityFee------> ", maxPriorityFee)
  
 
  
@@ -193,18 +194,32 @@ export async function swapOnlyAmm(input: TxInputInfo) : Promise< any | null >
   //   console.log(e) 
   // }
 
-  const testVersionedTxn = new VersionedTransaction(
-    new TransactionMessage({
-      instructions: innerTransactions[0].instructions,
-      payerKey: input.wallet.publicKey,
-      recentBlockhash: PublicKey.default.toString(),
-    }).compileToV0Message());
-    testVersionedTxn.sign([input.wallet]);
+  // const testVersionedTxn = new VersionedTransaction(
+  //   new TransactionMessage({
+  //     instructions: innerTransactions[0].instructions,
+  //     payerKey: input.wallet.publicKey,
+  //     recentBlockhash: PublicKey.default.toString(),
+  //   }).compileToV0Message());
+
+  //   testVersionedTxn.sign([input.wallet]);
+
+  // return {
+  //   txids: await optimizedSendAndConfirmTransaction(
+  //     testVersionedTxn, connection,
+  //     (await connection.getLatestBlockhash()).blockhash,
+  //     2000 // RETRY INTERVAL
+  //   )
+  // };
+
+  await simulateTx(connection, innerTransactions[0].instructions, input.wallet.publicKey);
+
   return {
-    txids: await optimizedSendAndConfirmTransaction(
-      testVersionedTxn, connection,
-      (await connection.getLatestBlockhash()).blockhash,
-      2000 // RETRY INTERVAL
-    )
+    txids: await buildAndSendTx(
+      input.wallet,
+      innerTransactions,
+      connection,
+      (input.skipPreflight, input.commitment, input.maxRetries ) as SendOptions
+    ),
   };
+
 }
