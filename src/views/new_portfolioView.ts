@@ -275,7 +275,8 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
     }
 
     return [
-      [{ text: 'Sell X %', callback_data: `sellpos_x_${currentIndex}` }, { text: `Sell 50%`, callback_data: `sellpos_50_${currentIndex}`}, { text: `Sell 100%`, callback_data: `sellpos_100_${currentIndex}` }],
+      [{ text: `Sell 25%`, callback_data: `sellpos_25_${currentIndex}`}, { text: `Sell 50%`, callback_data: `sellpos_50_${currentIndex}`},{ text: `Sell 75%`, callback_data: `sellpos_75_${currentIndex}`}],
+      [{ text: `Sell 100%`, callback_data: `sellpos_100_${currentIndex}` }],
       [{ text: '⏮️ Previous', callback_data: `prev_position_${prevIndex}` },
       { text: 'Next ⏭️', callback_data: `next_position_${nextIndex}` }],
       [{ text: 'Buy more', callback_data: `buypos_x_${currentIndex}` }],
@@ -331,14 +332,14 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
 
       ]);
       const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+      console.log('solPrice', solPrice);
       let tokenPriceUSD = 0;
 
         const jupTokenValue: any =  Object.values(jupRate.data);
         let jupTokenPrice = 0;
         if(jupTokenValue[0] && jupTokenValue[0].price ){
-          jupTokenPrice = jupTokenValue[0].price;
-
-}
+          jupTokenPrice = jupTokenValue[0].price;   
+        }
       if (tradeDex.includes('jup_swap') || tradeDex.includes('ray_swap')) {
         tokenPriceUSD = birdeyeData
         && birdeyeData.response
@@ -350,9 +351,11 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       }else {
         const tokenRatePuMP =  await getSwapDetails(pos.baseMint,SOL_ADDRESS, 1, 0 )
          tokenPriceUSD = tokenRatePuMP * solPrice;
+         console.log('tokenPricePUMP', tokenPriceUSD);
        }
       console.log('birdeyeData.response.data.data.price', birdeyeData?.response.data.data.price);
-      const tokenPriceSOL = tokenPriceUSD / solPrice;
+     
+     
       const {
         tokenData,
       } = tokenMetadataResult;
@@ -361,8 +364,8 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       console.log('totalSupply', Number(totalSupply));
       console.log('tokeprice', tokenPriceUSD);
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(tokenPriceUSD)));
-  
-      
+      const tokenPriceSOL = Number(tokenPriceUSD) / Number(solPrice);
+      console.log('tokenPriceSOL', tokenPriceSOL);
       let initialInUSD = 0;
       let initialInSOL = 0;
       let valueInUSD: any;
@@ -387,7 +390,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
   && birdeyeData.walletTokenPosition.data.data.balance > 0
   && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
   ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance / Math.pow(10, userTokenDetails.decimals));
-
+  console.log('userTokenBalance', userTokenBalance);
   const netWorth = birdeyeData
   && birdeyeData.birdeyePosition
   && birdeyeData.birdeyePosition.data
@@ -396,13 +399,13 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
   ? birdeyeData.birdeyePosition.data.data.totalUsd : NaN;
 
     const netWorthSol = netWorth / solPrice;
-
+  console.log('balnceInSOL', userTokenBalance * Number(tokenPriceSOL));
       fullMessage += `<b>${pos.name} (${pos.symbol})</b> | <code>${pos.baseMint}</code>\n` +
         `Mcap: ${Mcap} <b>USD</b>\n` +
         `Initial: ${initialInSOL.toFixed(4)} <b>SOL</b> | ${initialInUSD.toFixed(4)} <b>USD </b>\n` +
         `Current value: ${valueInSOL != 'N/A' ? valueInSOL.toFixed(4) : 'N/A'} <b>SOL</b> | ${valueInUSD != 'N/A' ? valueInUSD.toFixed(4) : 'N/A'} <b>USD </b>\n` +
         `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n\n` +
-        `Token Balance: ${userTokenBalance.toFixed(4)} <b>${pos.symbol}</b> | ${((userTokenBalance) * Number(tokenPriceUSD)).toFixed(4)}<b>USD</b> |${((userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} <b>SOL</b>\n\n`+
+        `Token Balance: ${userTokenBalance.toFixed(4)} <b>${pos.symbol}</b> | ${(Number(userTokenBalance) * Number(tokenPriceUSD)).toFixed(4)} <b>USD</b> |${(Number(userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} <b>SOL</b>\n\n`+
 
         `Wallet Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(
           balanceInSOL * solPrice

@@ -66,6 +66,7 @@ import {
   display_all_positions,
   display_single_position,
 } from "./views/new_portfolioView";
+import { get } from "axios";
 
 const express = require("express");
 const app = express();
@@ -417,7 +418,7 @@ const commandNumbers = [
   'sell_0.5_RAY',
   'buy_1_RAY',
   'sell_1_RAY',
-//  'pump_fun',
+  'buy_X_SOL_IN_POSITION',
   'rug_check',
   
   // 'jupiter_swap',
@@ -650,13 +651,37 @@ bot.on("message", async (ctx) => {
             ? Number.parseFloat(msgTxt)
             : Number.parseInt(msgTxt);
           if (!isNaN(amt)) {
-            // ctx.session.latestCommand = "buy_X_SOL";
-            await handle_radyum_swap(
-              ctx,
-              ctx.session.activeTradingPool.baseMint,
-              "buy",
-              Number(msgTxt)
-            );
+            if(ctx.session.swaptypeDex == 'ray_swap'){
+              const  poolkey = await getRayPoolKeys(ctx, ctx.session.positionPool[ctx.session.positionIndex]);
+              ctx.session.activeTradingPool = poolkey as RAYDIUM_POOL_TYPE;
+                await handle_radyum_swap(
+                  ctx,
+                  ctx.session.activeTradingPool.baseMint,
+                  "buy",
+                  Number(msgTxt)
+                );
+            }else if(ctx.session.swaptypeDex == 'jup_swap'){
+              ctx.session.jupSwap_amount = amt;
+              ctx.session.jupSwap_side = "buy";
+              await jupiterSwap(ctx);
+            } else{
+              const  poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[ctx.session.positionIndex]);
+              if(poolKeys){
+                ctx.session.activeTradingPool = poolKeys as RAYDIUM_POOL_TYPE;
+                await handle_radyum_swap(
+                  ctx,
+                  ctx.session.activeTradingPool.baseMint,
+                  "buy",
+                  Number(msgTxt)
+                );
+              }else{
+                ctx.session.pumpToken = new PublicKey(ctx.session.positionPool[ctx.session.positionIndex]);
+                ctx.session.pump_amountIn = amt;
+                ctx.session.pump_side = "buy";
+                await swap_pump_fun(ctx);
+              }
+            }
+          
             break;
           } else {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
@@ -926,7 +951,7 @@ bot.on("callback_query", async (ctx: any) => {
             sellPercentage
           );
         }else{
-        ctx.session.pumpToken = ctx.session.positionPool[positionIndex];
+        ctx.session.pumpToken = new PublicKey(ctx.session.positionPool[positionIndex]);
         ctx.session.pump_amountIn = sellPercentage;
         ctx.session.pump_side = "sell";
         await swap_pump_fun(ctx);

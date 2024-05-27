@@ -89,7 +89,7 @@ export async function jupiterSwap(ctx:any){
             baseMint: tokenOut,
             name: userTokenBalanceAndDetails.userTokenName,
             symbol: _symbol,
-            tradeType: `jup_swap_${tradeType}`,
+            tradeType: `jup_swap`,
             amountIn: oldPositionSol ? oldPositionSol + (ctx.session.jupSwap_amount *1e9) : (ctx.session.jupSwap_amount *1e9),
             amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
            
@@ -109,7 +109,7 @@ export async function jupiterSwap(ctx:any){
                 { walletId: userWallet.publicKey.toString() },
                 { $pull: { positions: { baseMint: tokenIn } } }
               );
-              // ctx.session.positionIndex = 0;
+              ctx.session.positionIndex = 0;
               // await display_single_spl_positions(ctx);
             } else {
               await saveUserPosition(ctx,
@@ -124,7 +124,10 @@ export async function jupiterSwap(ctx:any){
             }
           }
           await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
-          await display_jupSwapDetails(ctx, false);
+          if( tradeType == 'buy')  {
+            ctx.session.latestCommand = 'jupiter_swap';
+            await display_jupSwapDetails(ctx, false);   
+          }
         }else{
           await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
         }
