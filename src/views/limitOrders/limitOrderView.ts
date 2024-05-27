@@ -250,7 +250,8 @@ export async function display_open_orders(ctx: any) {
 
     let messageText = '';
     for (const order of orders) {
-      const birdeyeData = await getTokenDataFromBirdEye(order.account.outputMint);
+      const dealToken = order.account.inputMint == SOL_ADDRESS ? order.account.outputMint : order.account.inputMint;
+      const birdeyeData = await getTokenDataFromBirdEye(dealToken);
       console.log('birdeyeData', birdeyeData?.response.data.data);
       const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
       const tokenPriceSOL = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price).div(solPrice).toFixed(9) : 0;
@@ -263,9 +264,18 @@ export async function display_open_orders(ctx: any) {
 
       const expiry = order.account.expiredAt == null ? 'NO EXPIRY' : expiryDate.toLocaleString();
 
+      const orderAmount = order.account.inputMint == SOL_ADDRESS ? // check if it is buy order
+        order.account.oriInAmount / 1e9 : // for buy order
+        order.account.oriOutAmount / (10 ** birdeyeData?.response.data.data.decimals); // for sell order
+
+      const targetPrice = order.account.inputMint == SOL_ADDRESS ? // check if it is buy order
+        order.account.oriOutAmount / (10 ** birdeyeData?.response.data.data.decimals) : // for buy order
+        order.account.oriInAmount / 1e9; // for sell order
+
+
       messageText +=
         ` - Ordered Token: ${birdeyeData?.response.data.data.symbol} \n` +
-        
+
         // We cannot hardcode the decimals, it will fail when token decimals change 
         // we need to get decimals from the token metadata
 
@@ -275,11 +285,11 @@ export async function display_open_orders(ctx: any) {
 
         // for this buy case:
         // this has to be oriTakingAmount / 10 ** 9, (SOL DECIMALS = 1e9)
-        ` - Order Amount: ${order.account.oriMakingAmount.toNumber() / 10000000000} SOL \n` +
-        
+        ` - Order Amount: ${orderAmount} SOL \n` +
+
         // this has to be oriTakingAmount / 10 ** tokenDecimals
-        ` - Target Price: ${order.account.oriTakingAmount.toNumber() / 1000000000000000} SOL \n` +
-        
+        ` - Target Price: ${targetPrice} SOL \n` +
+
         ` - Current Price: <b> ${tokenPriceSOL} SOL</b> \n` +
         ` - Expiration: ${expiry} \n` +
         ` - Status: ${status} \n\n`;
@@ -325,24 +335,33 @@ export async function display_single_order(ctx: any, isRefresh: boolean) {
     let order = orders[index];
 
     let messageText;
-    const birdeyeData = await getTokenDataFromBirdEye(order.account.outputMint.toBase58());
+    const dealToken = order.account.inputMint == SOL_ADDRESS ? order.account.outputMint : order.account.inputMint;
+    const birdeyeData = await getTokenDataFromBirdEye(dealToken);
     console.log('birdeyeData', birdeyeData?.response.data.data);
-
     const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
     const tokenPriceSOL = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price).div(solPrice).toFixed(9) : 0;
     console.log('tokenPriceSOL', tokenPriceSOL);
 
-
     let status = order.account.waiting ? 'Waiting' : 'Filled';
     const expiryDate = new Date(order.account.expiredAt?.toNumber());
-    const expiry = order.account.expiredAt == null ? 'NO EXPIRY' : expiryDate.toLocaleString();
     console.log('expiryDate', expiryDate);
     console.log('order.account.expiredAt?.toNumber()', order.account.expiredAt?.toNumber());
 
+    const expiry = order.account.expiredAt == null ? 'NO EXPIRY' : expiryDate.toLocaleString();
+
+    const orderAmount = order.account.inputMint == SOL_ADDRESS ? // check if it is buy order
+      order.account.oriInAmount / 1e9 : // for buy order
+      order.account.oriOutAmount / (10 ** birdeyeData?.response.data.data.decimals); // for sell order
+
+    const targetPrice = order.account.inputMint == SOL_ADDRESS ? // check if it is buy order
+      order.account.oriOutAmount / (10 ** birdeyeData?.response.data.data.decimals) : // for buy order
+      order.account.oriInAmount / 1e9; // for sell order
+
+
     messageText =
       ` - Ordered Token: ${birdeyeData?.response.data.data.symbol} \n` +
-      ` - Order Amount: ${order.account.oriMakingAmount.toNumber() / 10000000000} SOL \n` +
-      ` - Target Price: ${order.account.oriTakingAmount.toNumber() / 1000000000000000} SOL \n` +
+      ` - Order Amount: ${orderAmount} SOL \n` +
+      ` - Target Price: ${targetPrice} SOL \n` +
       ` - Current Price: <b> ${tokenPriceSOL} SOL</b> \n` +
       ` - Expiration: ${expiry} \n` +
       ` - Status: ${status} \n\n`;
