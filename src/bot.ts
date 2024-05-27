@@ -915,7 +915,24 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.jupSwap_amount = sellPercentage;
         ctx.session.jupSwap_side = "sell";
         await jupiterSwap(ctx);
+      }else {
+        const  poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
+        if(poolKeys){
+          ctx.session.activeTradingPool = poolKeys as RAYDIUM_POOL_TYPE;
+          await handle_radyum_swap(
+            ctx,
+            ctx.session.activeTradingPool.baseMint,
+            "sell",
+            sellPercentage
+          );
+        }else{
+        ctx.session.pumpToken = ctx.session.positionPool[positionIndex];
+        ctx.session.pump_amountIn = sellPercentage;
+        ctx.session.pump_side = "sell";
+        await swap_pump_fun(ctx);
+        }
       }
+      return;
     } else if (matchBuy) {
       const parts = data.split("_");
       const positionIndex = parts[2]; // Position index

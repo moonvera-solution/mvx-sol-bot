@@ -86,6 +86,7 @@ export async function swap_pump_fun(ctx:any){
                 amountIn: oldPositionSol ? oldPositionSol + ctx.session.pump_amountIn *1e9 : ctx.session.pump_amountIn *1e9,
                 amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
               });
+                 await display_pumpFun(ctx, false);
            }else {
             let newAmountIn, newAmountOut;
             if (Number(extractAmount) === oldPositionToken || oldPositionSol <= extractAmount) {
@@ -115,7 +116,7 @@ export async function swap_pump_fun(ctx:any){
               });
             }
           }
-          await display_pumpFun(ctx, false);
+       
          }else{
           await ctx.api.sendMessage(chatId, `❌ ${tradeSide.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
          }
