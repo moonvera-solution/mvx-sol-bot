@@ -278,7 +278,7 @@ bot.command("start", async (ctx: any) => {
     console.log('wallet:', wallet.publicKey);
     ctx.session.orders = await getOpenOrders(connection, wallet);
     ctx.session.isOrdersLoaded = true;
-    console.log('ctx.session.orders', ctx.session.orders);
+    console.log('ctx.session.orders---', ctx.session.orders);
 
     // ctx.session.latestCommand = "rug_check";
   } catch (error: any) {

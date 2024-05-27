@@ -2315,4 +2315,186 @@ Caused By: RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range.
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:532:13
     at async /Users/ghalebdamaj/mvx-sol-bot_stage/node_modules/grammy/out/composer.js:61:13
+ 5/26/2024, 8:40:39 PM - callback_query
+ TypeError 
+ Cannot read properties of undefined (reading 'secretKey')
+ TypeError: Cannot read properties of undefined (reading 'secretKey')
+    at display_open_orders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:237:123)
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1158:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/26/2024, 8:40:39 PM - callback_query
+ TypeError 
+ Cannot read properties of undefined (reading 'secretKey')
+ TypeError: Cannot read properties of undefined (reading 'secretKey')
+    at display_open_orders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:237:123)
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1158:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/26/2024, 8:49:30 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async display_single_order (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:360:7)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1006:7
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/26/2024, 8:49:33 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async display_single_order (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:360:7)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1006:7
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/26/2024, 8:49:36 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async display_single_order (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:360:7)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1006:7
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/26/2024, 8:49:38 PM - callback_query
+ GrammyError 
+ Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+ GrammyError: Call to 'editMessageText' failed! (400: Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message)
+    at toGrammyError (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/core/error.js:35:12)
+    at ApiClient.callApi (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/core/client.js:90:48)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async display_single_order (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:360:7)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1166:9
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/26/2024, 9:09:09 PM - callback_query
+ TypeError 
+ Cannot read properties of undefined (reading 'filter')
+ TypeError: Cannot read properties of undefined (reading 'filter')
+    at display_open_orders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:241:24)
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1158:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/26/2024, 9:09:22 PM - callback_query
+ TypeError 
+ Cannot read properties of undefined (reading 'filter')
+ TypeError: Cannot read properties of undefined (reading 'filter')
+    at display_open_orders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:241:24)
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1158:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/26/2024, 9:12:02 PM - callback_query
+ TypeError 
+ order.account.outputMint.toBase58 is not a function
+ TypeError: order.account.outputMint.toBase58 is not a function
+    at display_open_orders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:253:82)
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1158:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/26/2024, 9:12:51 PM - callback_query
+ TypeError 
+ order.account.outputMint.toBase58 is not a function
+ TypeError: order.account.outputMint.toBase58 is not a function
+    at display_open_orders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:253:82)
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1158:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/26/2024, 9:15:01 PM - callback_query
+ TypeError 
+ order.account.outputMint.toBase58 is not a function
+ TypeError: order.account.outputMint.toBase58 is not a function
+    at display_open_orders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:253:82)
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1158:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/26/2024, 9:16:18 PM - callback_query
+ TypeError 
+ Cannot read properties of undefined (reading 'toNumber')
+ TypeError: Cannot read properties of undefined (reading 'toNumber')
+    at display_open_orders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:268:59)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1158:9
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+ 5/26/2024, 9:20:22 PM - callback_query
+ TypeError 
+ order.account.expiredAt?.toNumber is not a function
+ TypeError: order.account.expiredAt?.toNumber is not a function
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:242:48
+    at Array.filter (<anonymous>)
+    at display_open_orders (/Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/views/limitOrders/limitOrderView.ts:241:24)
+    at /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/src/bot.ts:1158:34
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:61:13
+    at async /Users/danielguerrero/workspace/SOLANA/mvx-sol-bot/node_modules/grammy/out/composer.js:532:13
  

@@ -2,7 +2,7 @@ import { LimitOrderProvider, ownerFilter, OrderHistoryItem, TradeHistoryItem } f
 import { Keypair, Connection, PublicKey, VersionedTransaction, TransactionSignature, TransactionMessage } from "@solana/web3.js";
 import { addMvxFeesInx, add_mvx_and_ref_inx_fees, sendTx, sendSignedTx, wrapLegacyTx } from '../../../../service/util';
 import { BN } from "@coral-xyz/anchor";
-import { SOL_ADDRESS,MVX_JUP_REFERRAL } from '../../../../../config';
+import { SOL_ADDRESS, MVX_JUP_REFERRAL } from '../../../../../config';
 import { getTokenDataFromBirdEye } from "../../../../api/priceFeeds/birdEye";
 import dotenv from "dotenv"; dotenv.config();
 import BigNumber from 'bignumber.js';
@@ -24,11 +24,8 @@ type REFERRAL_INFO = {
   priorityFee: number | null,
 }
 
-/*
- * The Jupiter Limit Order's project account for the Referral Program is
- * 45ruCyfdRkWpRNGEqWzjCiXRHkZs8WXCLQ67Pnpye7Hp referral fees are withdrawable here.
- * Ref: https://station.jup.ag/docs/limit-order/limit-order-with-sdk
- */
+const connection = new Connection("https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41");
+
 
 export async function setLimitJupiterOrder(
   connection: Connection, referralInfo: REFERRAL_INFO, isBuySide: boolean, {
@@ -88,9 +85,22 @@ export async function calculateLimitOrderAmountOut(amount: String, token: String
   return tokenPrice.times(tokenAmount).toNumber();
 }
 
-export async function getOpenOrders(connection: Connection, owner: Keypair): Promise<OrderHistoryItem[]> {
-  const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
-  return await limitOrder.getOrders([ownerFilter(owner.publicKey)]);
+export async function getxOpenOrdersAPI(connection: Connection, owner: string): Promise<OrderHistoryItem[] | void> {
+  // Add query parameters to the URL
+  let url = new URL('https://jup.ag/api/limit/v1/openOrders');
+  if (owner) url.searchParams.append('wallet', owner);
+  return fetch(url)
+    .then(response => response.json())
+    .then((data: OrderHistoryItem[]) => {
+      if (data) return data
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+export async function getOpenOrders(connection: Connection, owner: Keypair): Promise<any> {
+  // const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
+  // return await limitOrder.getOrders([ownerFilter(owner.publicKey)]);
+  return getxOpenOrdersAPI(connection, owner.publicKey.toBase58());
 }
 
 
@@ -112,13 +122,13 @@ export async function getOrderHistoryCount(connection: Connection, owner: Keypai
 
 export async function getTradeHistory(connection: Connection, owner: Keypair): Promise<TradeHistoryItem[]> {
   const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
-  const history =  await limitOrder.getTradeHistory({
+  const history = await limitOrder.getTradeHistory({
     wallet: owner.publicKey.toBase58(),
     take: 20, // optional, default is 20, maximum is 100
     // lastCursor: order.id // optional, for pagination
   });
   console.log(history);
-  return history; 
+  return history;
 }
 
 export async function getTradeHistoryCount(connection: Connection, owner: Keypair): Promise<number> {
@@ -130,7 +140,7 @@ export async function getTradeHistoryCount(connection: Connection, owner: Keypai
 
 export async function cancelOrder(connection: Connection, owner: Keypair, order: PublicKey): Promise<string> {
   const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
-  const tx = await limitOrder.cancelOrder({owner: owner.publicKey,orderPubKey: order});
+  const tx = await limitOrder.cancelOrder({ owner: owner.publicKey, orderPubKey: order });
   tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
   tx.sign(owner);
   return await connection.sendRawTransaction(tx.serialize(), { preflightCommitment: "processed" });
@@ -138,7 +148,7 @@ export async function cancelOrder(connection: Connection, owner: Keypair, order:
 
 export async function cancelBatchOrder(connection: Connection, owner: Keypair, batchOrdersPubKey: PublicKey[]): Promise<string> {
   const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
-  const tx = await limitOrder.batchCancelOrder({owner: owner.publicKey, ordersPubKey: batchOrdersPubKey});
+  const tx = await limitOrder.batchCancelOrder({ owner: owner.publicKey, ordersPubKey: batchOrdersPubKey });
   tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
   tx.sign(owner);
   return await connection.sendRawTransaction(tx.serialize(), { preflightCommitment: "processed" });
@@ -171,3 +181,4 @@ export async function cancelBatchOrder(connection: Connection, owner: Keypair, b
 // getTradeHistory(connection, wallet).then(console.log);
 // getOrderHistory(connection, wallet).then(console.log);
 // getOpenOrders(connection, wallet).then(console.log);
+// getxOpenOrdersAPI(connection,"8nyXRBJAJJ9ckeiD5fLN9UGoG9wqRuwiWxjJX6vXgPN8");

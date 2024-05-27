@@ -250,7 +250,7 @@ export async function display_open_orders(ctx: any) {
 
     let messageText = '';
     for (const order of orders) {
-      const birdeyeData = await getTokenDataFromBirdEye(order.account.outputMint.toBase58());
+      const birdeyeData = await getTokenDataFromBirdEye(order.account.outputMint);
       console.log('birdeyeData', birdeyeData?.response.data.data);
       const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
       const tokenPriceSOL = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price).div(solPrice).toFixed(9) : 0;
@@ -265,8 +265,21 @@ export async function display_open_orders(ctx: any) {
 
       messageText +=
         ` - Ordered Token: ${birdeyeData?.response.data.data.symbol} \n` +
+        
+        // We cannot hardcode the decimals, it will fail when token decimals change 
+        // we need to get decimals from the token metadata
+
+        // If its a buy oriMakingAmount is sol = 1e9 and oriTakingAmount is tokenDecimals
+        // and the inverse for sell
+        // check config.ts for ref of some tokens with diff decimals
+
+        // for this buy case:
+        // this has to be oriTakingAmount / 10 ** 9, (SOL DECIMALS = 1e9)
         ` - Order Amount: ${order.account.oriMakingAmount.toNumber() / 10000000000} SOL \n` +
+        
+        // this has to be oriTakingAmount / 10 ** tokenDecimals
         ` - Target Price: ${order.account.oriTakingAmount.toNumber() / 1000000000000000} SOL \n` +
+        
         ` - Current Price: <b> ${tokenPriceSOL} SOL</b> \n` +
         ` - Expiration: ${expiry} \n` +
         ` - Status: ${status} \n\n`;
