@@ -8,12 +8,10 @@ import {  getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye'
 import {getSwapDetails, swap_solTracker} from '../../service/dex/solTracker';
 import {  UserPositions } from '../../db/mongo/schema';
 import {SOL_ADDRESS} from '../../config';
-
 import bs58 from "bs58";
 import BigNumber from 'bignumber.js';
-import { getMaxPrioritizationFeeByPercentile } from '../../service/fees/priorityFees';
 import { saveUserPosition } from '../../service/portfolio/positions';
-import { runAllFees } from '../util/getPriority';
+
 
 export async function swap_pump_fun(ctx:any){
   try{
@@ -84,7 +82,7 @@ export async function swap_pump_fun(ctx:any){
                 baseMint: ctx.session.pumpToken,
                 name: userTokenBalanceAndDetails.userTokenName,
                 symbol: _symbol,
-                tradeType: `pump_swap_${tradeSide}`,
+                tradeType: `pump_swap`,
                 amountIn: oldPositionSol ? oldPositionSol + ctx.session.pump_amountIn *1e9 : ctx.session.pump_amountIn *1e9,
                 amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
               });
@@ -111,7 +109,7 @@ export async function swap_pump_fun(ctx:any){
                 baseMint: tokenIn,
                 name: userTokenBalanceAndDetails.userTokenName,
                 symbol: _symbol,
-                tradeType: `jup_swap_${tradeSide}`,
+                tradeType: `pump_swap`,
                 amountIn: oldPositionSol ? oldPositionSol - amountToSell : amountToSell,
                 amountOut: oldPositionToken ? oldPositionToken - Number(extractAmount) : Number(extractAmount),
               });

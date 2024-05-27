@@ -10,7 +10,7 @@ import BigNumber from 'bignumber.js';
 import { Position, UserPosition } from '../service/portfolio/positions';
 import { getTokenMetadata, getUserTokenBalanceAndDetails } from '../service/feeds';
 import { SOL_ADDRESS } from '../config';
-import { runAllFees } from './util/getPriority';
+import { getSwapDetails } from '../service/dex/solTracker';
 
 
 export async function display_all_positions(ctx: any, isRefresh: boolean) {
@@ -101,7 +101,8 @@ if(jupTokenValue[0] && jupTokenValue[0].price ){
   jupTokenPrice = jupTokenValue[0].price;
 
 }
-if (tradeDex.includes('jup_swap')) {
+const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+if (tradeDex.includes('jup_swap') || tradeDex.includes('ray_swap')) {
   tokenPriceUSD = birdeyeData
   && birdeyeData.response
   && birdeyeData.response.data
@@ -109,9 +110,12 @@ if (tradeDex.includes('jup_swap')) {
   && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
   ? birdeyeData.response.data.data.price
   : jupTokenPrice;
+}else {
+ const tokenRatePuMP =  await getSwapDetails(pos.baseMint,SOL_ADDRESS, 1, 0 )
+  tokenPriceUSD = tokenRatePuMP * solPrice;
 }
 
-  const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+
   const tokenPriceSOL = tokenPriceUSD / solPrice;
   const {
     tokenData,
@@ -271,7 +275,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
     }
 
     return [
-      [{ text: 'Sell X %', callback_data: `sellpos_X_${currentIndex}` }, { text: `Sell 50%`, callback_data: `sellpos_50_${currentIndex}`}, { text: `Sell 100%`, callback_data: `sellpos_100_${currentIndex}` }],
+      [{ text: 'Sell X %', callback_data: `sellpos_x_${currentIndex}` }, { text: `Sell 50%`, callback_data: `sellpos_50_${currentIndex}`}, { text: `Sell 100%`, callback_data: `sellpos_100_${currentIndex}` }],
       [{ text: '⏮️ Previous', callback_data: `prev_position_${prevIndex}` },
       { text: 'Next ⏭️', callback_data: `next_position_${nextIndex}` }],
       [{ text: 'Buy more', callback_data: `buypos_x_${currentIndex}` }],
@@ -288,6 +292,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       console.log('pos', pos);
       const token = String(pos.baseMint);
       const tradeDex = String(pos.tradeType);
+      ctx.session.swaptypeDex = pos.tradeType;
       const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
       let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
 
@@ -334,7 +339,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
           jupTokenPrice = jupTokenValue[0].price;
 
 }
-      if (tradeDex.includes('jup_swap')) {
+      if (tradeDex.includes('jup_swap') || tradeDex.includes('ray_swap')) {
         tokenPriceUSD = birdeyeData
         && birdeyeData.response
         && birdeyeData.response.data
@@ -342,13 +347,19 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
         && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
         ? birdeyeData.response.data.data.price
         : jupTokenPrice;
-      }
+      }else {
+        const tokenRatePuMP =  await getSwapDetails(pos.baseMint,SOL_ADDRESS, 1, 0 )
+         tokenPriceUSD = tokenRatePuMP * solPrice;
+       }
+      console.log('birdeyeData.response.data.data.price', birdeyeData?.response.data.data.price);
       const tokenPriceSOL = tokenPriceUSD / solPrice;
       const {
         tokenData,
       } = tokenMetadataResult;
       const baseDecimals = tokenData.mint.decimals;
       const totalSupply = new BigNumber(tokenData.mint.supply.basisPoints);
+      console.log('totalSupply', Number(totalSupply));
+      console.log('tokeprice', tokenPriceUSD);
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(tokenPriceUSD)));
   
       

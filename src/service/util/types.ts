@@ -52,7 +52,7 @@ export interface ISESSION_DATA {
   referralCommision: number;
   poolTime: number;
   positionPool: Array<any>;
-  // priorityFees: PriotitizationFeeLevels;
+  swaptypeDex: string;
   ispriorityCustomFee: boolean;
   customPriorityFee: number;
   positionIndex: number;
@@ -123,6 +123,7 @@ export const DefaultSessionData: ISESSION_DATA = {
     positions: [],
     activeWalletIndex: 0
   },
+  swaptypeDex: '',
   ammAddress: '',
   pump_side: '',
   pump_amountIn: 0,

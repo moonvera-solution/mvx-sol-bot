@@ -117,7 +117,7 @@ export async function jupiterSwap(ctx:any){
                 baseMint: tokenIn,
                 name: userTokenBalanceAndDetails.userTokenName,
                 symbol: _symbol,
-                tradeType: `jup_swap_${tradeType}`,
+                tradeType: `jup_swap`,
                 amountIn: oldPositionSol ? oldPositionSol - amountToSell : amountToSell,
                 amountOut: oldPositionToken ? oldPositionToken - Number(extractAmount) : Number(extractAmount),
               });

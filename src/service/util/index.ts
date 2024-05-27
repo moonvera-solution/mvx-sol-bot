@@ -877,7 +877,7 @@ export async function optimizedSendAndConfirmTransaction(
                 new Promise((resolve) =>
                   setTimeout(() => {
                     resolve(null);
-                  }, 500)
+                  }, 200)
                 ),
               ]);
               if (confirmedTx) {

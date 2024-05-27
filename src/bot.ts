@@ -22,6 +22,7 @@ import {
   DefaultSessionData,
   PORTFOLIO_TYPE,
   DefaultPortfolioData,
+  RAYDIUM_POOL_TYPE,
 } from "./service/util/types";
 import { Keypair, PublicKey, Connection } from "@solana/web3.js";
 import { _initDbConnection } from "./db/mongo/crud";
@@ -242,16 +243,14 @@ bot.command("start", async (ctx: any) => {
     }
 
     // Combine the welcome message, SOL price message, and instruction to create a wallet
-    const welcomeMessage =
-      `✨ Welcome to <b>DRIBs bot</b>✨\n` +
-      `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
-      `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
-      `We're always working to bring you new features - stay tuned!\n\n` +
-      `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
-      `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(
-        balanceInSOL * details
-      ).toFixed(4)}</b> USD\n\n` +
-      `🖐🏼 For security, we recommend exporting your private key and keeping it paper.`;
+    const welcomeMessage = `✨ Welcome to <b>DRIBs bot</b>✨\n` +
+    `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
+    `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
+    // `We're always working to bring you new features - stay tuned!\n\n` +
+    `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
+    `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(4)}</b> USD\n\n` +
+    `🖐🏼 For security, we recommend exporting your private key and keeping it paper.\n` +
+    `<i> Currently DRIBs bot supports Jupiter, Raydium and Pump fun.</i>\n` ;
 
     // Set the options for th e inline keyboard with social links
     const options: any = {
@@ -883,11 +882,11 @@ bot.on("callback_query", async (ctx: any) => {
   await _validateSession(ctx);
   backupSession = ctx.session;
   const chatId = ctx.chat.id;
-
   try {
     ctx.session.portfolio.chatId = chatId;
     const data = ctx.callbackQuery.data;
     const positionCallSell = /^sellpos_\d+_\d+$/;
+  
     const positionCallBuy = /^buypos_x_\d+$/;
     const positionNavigate = /^(prev_position|next_position)_\d+$/;
     ctx.api.answerCallbackQuery(ctx.callbackQuery.id);
@@ -899,15 +898,24 @@ bot.on("callback_query", async (ctx: any) => {
       const parts = data.split("_");
       const sellPercentage = parts[1]; // '25', '50', '75', or '100'
       const positionIndex = parts[2]; // Position index
-      ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
-
-      await handle_radyum_swap(
-        ctx,
-        ctx.session.activeTradingPool.baseMint,
-        "sell",
-        sellPercentage
-      );
+      if(ctx.session.swaptypeDex == 'ray_swap'){
+        const  poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
+        ctx.session.activeTradingPool = poolKeys as RAYDIUM_POOL_TYPE;
+        await handle_radyum_swap(
+          ctx,
+          ctx.session.activeTradingPool.baseMint,
+          "sell",
+          sellPercentage
+        );
       return;
+      } else if(ctx.session.swaptypeDex == 'jup_swap'){
+        ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
+        // ctx.session.latestCommand = "sell_100_JUP";
+        console.log('percentage', sellPercentage)
+        ctx.session.jupSwap_amount = sellPercentage;
+        ctx.session.jupSwap_side = "sell";
+        await jupiterSwap(ctx);
+      }
     } else if (matchBuy) {
       const parts = data.split("_");
       const positionIndex = parts[2]; // Position index

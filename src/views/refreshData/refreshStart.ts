@@ -42,10 +42,11 @@ export async function handleRefreshStart(ctx: any) {
     const welcomeMessage = `✨ Welcome to <b>DRIBs bot</b>✨\n` +
     `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
     `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
-    `We're always working to bring you new features - stay tuned!\n\n` +
+    // `We're always working to bring you new features - stay tuned!\n\n` +
     `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
     `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(4)}</b> USD\n\n` +
-    `🖐🏼 For security, we recommend exporting your private key and keeping it paper.`;
+    `🖐🏼 For security, we recommend exporting your private key and keeping it paper.\n` +
+    `<i> Currently DRIBs bot supports Jupiter, Raydium and Pump fun.</i>\n` ;
 
  // Define the inline keyboard options
  const options: any = {

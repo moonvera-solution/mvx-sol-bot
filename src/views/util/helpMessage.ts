@@ -6,18 +6,13 @@ export async function sendHelpMessage(ctx: any) {
 <b>DRIBs bot - Help & Information</b>
 
 <i>🌟 Current Features</i>
-<b>Exchange Integration:</b> DRIBs bot is currently integrated with Raydium. Stay tuned for our upcoming integration with Jupiter, expanding your trading possibilities!
+<b>Exchange Integration:</b>  DRIBs bot currently supports Jupiter, Raydium and Pump fun. 
 <b>Fees:</b> We are committed to transparency and affordability. Currently, our transaction fee is only 0.8%. Note that this fee may increase in the future to support exciting features.
 
-<i>🔜 What’s Coming</i>
-<b>Jupiter Integration:</b> Our bot is evolving, promising to enhance your trading experience with more options and flexibility.
+<i>To start trading, simply paste the token address, birdeye link or pumpfun link and DRIBs bot will handle the rest.</i>
 
 <i>💸 Referral Program</i>
-<b>Exclusive Early Access:</b> We're introducing a limited availability referral program. Invite your friends to join the DRIBs bot and gain early access to our premium features. Stay tuned for more updates!
-
-<b>NFT for Early Access:</b> We're leveraging the power of NFTs to offer you early access to our referral program and premium features. This is your ticket to a world of exclusive benefits with DRIBs bot.
-
-<b>Free Trading FOR LIFE:</b> Free Trading for Life: Exclusive to our NFT holders! Enjoy no trading fees forever with DRIBs bot and enhance your trading experience at no extra cost.
+<b>Exclusive Early Access:</b> We're introducing a limited availability referral program. Invite your friends to join the DRIBs bot and gain % of the transaction fees.
 
 <b>Future Rewards:</b> To show our appreciation for our loyal DRIBs users, we're planning special rewards in the future.
 

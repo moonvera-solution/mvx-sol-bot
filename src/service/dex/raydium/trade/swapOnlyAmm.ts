@@ -166,7 +166,7 @@ export async function swapOnlyAmm(input: TxInputInfo) : Promise< any | null > {
 
     console.log("session maxPriorityFee------> ", input.ctx.session.customPriorityFee)
 
-    let maxPriorityFee = Math.ceil(Number.parseFloat(input.ctx.session.customPriorityFee) * 1e12);
+    let maxPriorityFee = Math.ceil(Number.parseFloat(input.ctx.session.customPriorityFee) * 1e9);
     console.log("maxPriorityFee------> ", maxPriorityFee)
  
 

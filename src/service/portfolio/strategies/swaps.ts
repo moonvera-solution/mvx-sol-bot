@@ -10,7 +10,7 @@ import { raydium_amm_swap } from '../../dex';
 import BigNumber from 'bignumber.js';
 import bs58 from 'bs58';
 import { Referrals, UserPositions } from '../../../db/mongo/schema';
-import { display_single_spl_positions } from '../../../views/portfolioView';
+// import { display_single_spl_positions } from '../../../views/portfolioView';
 import { display_jupSwapDetails } from '../../../views/jupiter/jupiterSwapView';
 
 export async function handle_radyum_swap(
@@ -163,7 +163,7 @@ export async function handle_radyum_swap(
               baseMint: poolKeys.baseMint,
               name: userTokenBalanceAndDetails.userTokenName,
               symbol: _symbol,
-              tradeType: `ray_swap_${side}`,
+              tradeType: `ray_swap`,
               amountIn: oldPositionSol ? oldPositionSol + swapAmountIn : swapAmountIn,
               amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
             });
@@ -199,7 +199,7 @@ export async function handle_radyum_swap(
                 { $pull: { positions: { baseMint: poolKeys.baseMint } } }
               );
               ctx.session.positionIndex = 0;
-              await display_single_spl_positions(ctx);
+              // await display_single_spl_positions(ctx);
             } else {
               await saveUserPosition(
                 ctx,
@@ -207,7 +207,7 @@ export async function handle_radyum_swap(
                 baseMint: poolKeys.baseMint,
                 name: userTokenBalanceAndDetails.userTokenName,
                 symbol: _symbol,
-                tradeType: `ray_swap_${side}`,
+                tradeType: `ray_swap`,
                 amountIn: newAmountIn,
                 amountOut: newAmountOut,
               });
