@@ -1,16 +1,18 @@
 import axios from 'axios';
 import dotenv from "dotenv"; dotenv.config();
 import SolanaTracker from "./solTrackerUtils";
-import { sendTx, add_mvx_and_ref_inx_fees, addMvxFeesInx, wrapLegacyTx } from '../../../../src/service/util';
-import { Keypair, Connection, Transaction, VersionedTransaction, TransactionMessage } from '@solana/web3.js';
+import { sendTx, add_mvx_and_ref_inx_fees, addMvxFeesInx, wrapLegacyTx, optimizedSendAndConfirmTransaction } from '../../../../src/service/util';
+import { Keypair, Connection, Transaction, AddressLookupTableAccount, VersionedTransaction, TransactionMessage } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
+
+const TX_RETRY_INTERVAL = 2000;
 
 /**
  * @notice Quotes from solTracker API then sends swap tx adding mvx&ref fees
  * @param passing connection b4 SOL_TRACKER_SWAP_PARAMS 
  * @returns Arrays of tx ids, false if fails
  */
-export async function swap_solTracker(connection: Connection ,{
+export async function swap_solTracker(connection: Connection, {
     side,
     from,
     to,
@@ -21,47 +23,59 @@ export async function swap_solTracker(connection: Connection ,{
     referralCommision,
     priorityFee,
     forceLegacy,
-}: SOL_TRACKER_SWAP_PARAMS ) : Promise<string[] | false> {
-    
+}: SOL_TRACKER_SWAP_PARAMS): Promise<string | null> {
+
     const params = new URLSearchParams({
         from, to, fromAmount: amount.toString(),
         slippage: slippage.toString(),
         payer: payerKeypair.publicKey.toBase58(),
-        priorityFee:  '0.002',
+        priorityFee: '0.002',
         forceLegacy: forceLegacy ? "true" : "false",
     });
-    console.log('priorityFee:', priorityFee)
-    // if (priorityFee) params.append("priorityFee", '0.005');
     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
-    const blockhash = (await connection.getLatestBlockhash()).blockhash;
-
+    const blockhash = await connection.getLatestBlockhash();
     // API CALL TO SOL TRACKER SWAP
-    return axios.get(`${process.env.SOL_TRACKER_API_URL}/swap`, { params, headers }).then(async(swapInx) => {
-        const swapResponse = swapInx.data;
-        const serializedTransactionBuffer = Buffer.from(swapResponse.txn, "base64");
-        let solAmount: BigNumber = side == 'buy' ? new BigNumber(swapResponse.rate.amountIn) : new BigNumber(swapResponse.rate.amountOut);
-        let hasReferral = referralWallet && referralCommision;
-        const versionnedBundle: VersionedTransaction[] = [];
-        const txInxs = hasReferral ?
-            add_mvx_and_ref_inx_fees(payerKeypair, referralWallet!, solAmount, referralCommision!) :
-            addMvxFeesInx(payerKeypair, solAmount);
-        if (swapResponse.isJupiter && !swapResponse.forceLegacy) {
-            const txn = VersionedTransaction.deserialize(serializedTransactionBuffer); if (!txn) return false;
-            versionnedBundle.push(new VersionedTransaction(wrapLegacyTx(txInxs, payerKeypair,blockhash)));
-            versionnedBundle.push(txn);
-            return  await sendTx(connection, payerKeypair, versionnedBundle, { preflightCommitment: 'confirmed' });
-        } else {
-            const txn = Transaction.from(serializedTransactionBuffer); if (!txn) return false;
-            const tx = new Transaction().add(txn); // add swap inx 
-            txInxs.forEach((inx:any) => tx.add(inx));  // add mvx, ref inx
-            // let recentBlockhash = await connection.getLatestBlockhash('processed');
-            // console.log('txInxs:', txn);
-            // console.log('tx:', tx.signatures[0]);
-            const transx = await sendTx(connection, payerKeypair, [tx], { preflightCommitment: 'confirmed' });
-            console.log('transx:', transx);
-            return transx
-        }
-    }).catch(error => { console.error('swap_solTracker:', error); return false;});
+    const swapInx = await axios.get(`${process.env.SOL_TRACKER_API_URL}/swap`, { params, headers });
+
+    const swapResponse = swapInx.data;
+    const serializedTransactionBuffer = Buffer.from(swapResponse.txn, "base64");
+    let solAmount: BigNumber = side == 'buy' ? new BigNumber(swapResponse.rate.amountIn) : new BigNumber(swapResponse.rate.amountOut);
+    let hasReferral = referralWallet && referralCommision;
+    const mvxInxs = hasReferral ?
+        add_mvx_and_ref_inx_fees(payerKeypair, referralWallet!, solAmount, referralCommision!) :
+        addMvxFeesInx(payerKeypair, solAmount);
+
+    if (swapResponse.isJupiter && !swapResponse.forceLegacy) {
+        console.log("== JUPINX ==");
+        const transaction = VersionedTransaction.deserialize(serializedTransactionBuffer); if (!transaction) return null;
+        const addressLookupTableAccounts = await Promise.all(
+            transaction.message.addressTableLookups.map(async (lookup) => {
+                return new AddressLookupTableAccount({
+                    key: lookup.accountKey,
+                    state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data)),
+                })
+            }));
+        var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
+        message.instructions.push(...mvxInxs)
+        transaction.message = message.compileToV0Message(addressLookupTableAccounts);
+        transaction.sign([payerKeypair]);
+
+        return await optimizedSendAndConfirmTransaction(
+            new VersionedTransaction(transaction.message),
+            connection, blockhash, TX_RETRY_INTERVAL
+        );
+
+    } else {
+
+        let txx: Transaction = new Transaction({blockhash: blockhash.blockhash,lastValidBlockHeight:blockhash.lastValidBlockHeight});
+        let pumpInx = Transaction.from(serializedTransactionBuffer); if (!pumpInx) return null;
+        txx.add(pumpInx); // add pump inx
+        mvxInxs.forEach((inx: any) => txx.add(inx));  // add mvx, ref inx
+        const vTxx = new VersionedTransaction(wrapLegacyTx(txx.instructions, payerKeypair, blockhash.blockhash));
+        vTxx.sign([payerKeypair]);
+
+        return await optimizedSendAndConfirmTransaction(vTxx,connection, blockhash, TX_RETRY_INTERVAL);
+    }
 }
 
 export async function getSwapDetails(
@@ -125,7 +139,7 @@ async function swap_solTracker_sdk(
     console.log("Transaction ID:", txid);
     console.log("Transaction URL:", `https://explorer.solana.com/tx/${txid}`);
 }
-export type SOL_TRACKER_SWAP_PARAMS =     {
+export type SOL_TRACKER_SWAP_PARAMS = {
     side: 'buy' | 'sell',
     from: string,
     to: string,

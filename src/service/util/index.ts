@@ -790,13 +790,13 @@ export function add_mvx_and_ref_inx_fees(
     const referralInx = SystemProgram.transfer({
         fromPubkey: payerKeypair.publicKey,
         toPubkey: new PublicKey(referralWallet),
-        lamports: BigInt(Math.round(Number.parseFloat(String(referralAmmount.toNumber())))),
+        lamports: new BigNumber(Math.ceil(Number.parseFloat(String(referralAmmount.toNumber())))).toNumber(),
     });
 
     const mvxFeeInx = SystemProgram.transfer({
         fromPubkey: payerKeypair.publicKey,
         toPubkey: new PublicKey(WALLET_MVX),
-        lamports: BigInt(Math.round(Number.parseFloat(String(mvxFeeAfterRefeeralCut.toNumber())))),
+        lamports: new BigNumber(Math.ceil(Number.parseFloat(String(mvxFeeAfterRefeeralCut.toNumber())))).toNumber(),
 
     });
 
@@ -808,21 +808,22 @@ export function add_mvx_and_ref_inx_fees(
  * @returns TransactionInstruction Array
  */
 export function addMvxFeesInx(payerKeypair: Keypair, solAmount: BigNumber): TransactionInstruction[] {
-    const mvxFee = solAmount.multipliedBy(MVXBOT_FEES);
+    let mvxFee:any = solAmount.multipliedBy(MVXBOT_FEES);
+    mvxFee = new BigNumber(Math.ceil(Number.parseFloat(String(mvxFee.toNumber())))).toNumber();
     return [SystemProgram.transfer({
         fromPubkey: payerKeypair.publicKey,
         toPubkey: new PublicKey(WALLET_MVX),
-        lamports: BigInt(Math.round(Number.parseFloat(String(mvxFee.toNumber()))))
+        lamports:mvxFee
     })];
 }
 
 
-export function wrapLegacyTx(txInxs: TransactionInstruction[],payerKeypair: Keypair,blockhash: any): MessageV0 {
+export function wrapLegacyTx(txInxs: TransactionInstruction[],payerKeypair: Keypair,blockhash: any,lookupTable?:any): MessageV0 {
     return new TransactionMessage({
         payerKey: payerKeypair.publicKey,
         recentBlockhash: blockhash,
         instructions: txInxs
-    }).compileToV0Message();
+    }).compileToV0Message(lookupTable);
 }
 
 
@@ -835,7 +836,7 @@ export async function optimizedSendAndConfirmTransaction(
     txRetryInterval:number
 ): Promise<string | null> {
 
-    let txSignature :any= null;
+    let txSignature;
     let confirmTransactionPromise :any= null;
     let confirmedTx = null;
 
