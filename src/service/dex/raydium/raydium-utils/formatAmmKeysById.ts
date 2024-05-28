@@ -17,6 +17,7 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
     // console.log('keys', keys);
     if (keys) {
       ctx.session.poolTime = Number((await fetchPoolSchedule(keys, connection)).startTime);
+    
       ctx.session.originalBaseMint = keys.baseMint;
     } else {
       keys = await _getRayPoolKeys({ t1: quoteMint, t2: shitcoin, connection });

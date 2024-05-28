@@ -42,15 +42,7 @@ export async function jupiterInxSwap(
   let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}${feeAccount ? '&platformFeeBps=08' : ''}`.trim();
   let quoteResponse : any = await axios.get(swapUrl);
 
-  console.log(
-    "tokenIn",tokenIn,"\n",
-    "tokenOut",tokenOut,"\n",
-    "amountIn",amountIn,"\n",
-    "slippage",slippage,"\n",
-    "priorityFeeLevel",priorityFeeLevel,"\n",
-    "refObject",refObject,"\n",
-  );
-  
+
   // TODO add priority fee
   const lastRouteHop = quoteResponse.data.routePlan[quoteResponse.data.routePlan.length - 1].swapInfo.ammKey;
   

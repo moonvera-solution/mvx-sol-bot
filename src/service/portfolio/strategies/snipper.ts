@@ -14,7 +14,8 @@ import { getTokenMetadata } from "../../feeds";
 import { waitForConfirmation, getSolBalance } from '../../util';
 import { Referrals, UserPositions } from "../../../db/mongo/schema";
 import {  getMaxPrioritizationFeeByPercentile } from "../../../service/fees/priorityFees";
-import { display_after_Snipe_Buy } from '../../../views';
+
+import { display_jupSwapDetails } from '../../../views/jupiter/jupiterSwapView';
 
 export async function snipperON(ctx: any, amount: string) {
     try {
@@ -113,8 +114,9 @@ export async function setSnipe(ctx: any, amountIn: any) {
         );
         return;
     }
-    const liqInfo = ctx.session.poolSchedule;
-    const poolStartTime = liqInfo.startTime.toNumber();
+    // const liqInfo = ctx.session.poolSchedule;
+    // console.log('liqInfo', liqInfo);
+    const poolStartTime = Number(ctx.session.poolTime);
     const simulationPromise = startSnippeSimulation(ctx, userKeypair, amountInLamports, snipeSlippage, poolStartTime, tokenData);
     simulationPromise.catch(async (error: any) => {
         console.log("Error setting snipper", error);
@@ -313,7 +315,7 @@ export async function startSnippeSimulation(
                                 baseMint: ctx.session.originalBaseMint,
                                 name: tokenData.name,
                                 symbol: tokenData.symbol,
-                                tradeType: `ray_swap_buy`,
+                                tradeType: `ray_swap`,
                                 amountIn: oldPositionSol ? oldPositionSol + amountIn.toNumber() : amountIn.toNumber(),
                                 amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount)
                             });
@@ -326,8 +328,9 @@ export async function startSnippeSimulation(
                             `Transaction could not be confirmed. \n`
                         );
                     }
-                    ctx.session.latestCommand = 'display_after_Snipe_Buy';
-                    await display_after_Snipe_Buy(ctx, false);
+                    ctx.session.latestCommand = 'jupiter_swap';
+                    ctx.session.jupSwap_token= ctx.session.originalBaseMint;
+                    await display_jupSwapDetails(ctx, false);
                 }).catch(async (error: any) => {
                     let msg = `🔴 Snipe fail, busy Network, try again.`;
                     await ctx.api.sendMessage(chatId, msg); console.info('error', error);

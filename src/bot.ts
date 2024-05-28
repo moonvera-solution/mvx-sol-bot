@@ -146,7 +146,6 @@ bot.command("start", async (ctx: any) => {
     const chatId = ctx.chat.id;
     ctx.session.chatId = chatId;
     const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
-    // console.log("portfolio:", portfolio);
     let isNewUser = false;
     const connection = new Connection(
       `${ctx.session.tritonRPC}${ctx.session.tritonToken}`
@@ -156,7 +155,6 @@ bot.command("start", async (ctx: any) => {
     if (ctx.message.text.includes(" ")) {
       referralCode = ctx.message.text.split(" ")[1];
     }
-    // console.log('ctx.message.text', ctx.message.text);
     // if user already exists
     if (portfolio == DefaultPortfolioData) {
       // User is new
@@ -165,10 +163,8 @@ bot.command("start", async (ctx: any) => {
     const userName = ctx.message.from.username;
 
     const user = await AllowedReferrals.find({ tgUserName: userName });
-    // console.log("user:", user[0]);
     if (user[0] != undefined) {
       ctx.session.allowedReferral = user[0].tgUserName;
-      // console.log("ctx.session.allowedReferral:", ctx.session.allowedReferral);
     }
     // console.log("referralCode:", referralCode);
     if (referralCode || ctx.session.allowedReferral) {
@@ -421,12 +417,12 @@ const commandNumbers = [
   "sell_1_RAY",
   "buy_X_SOL_IN_POSITION",
   "rug_check",
+  'snipe_X_SOL'
 
   // 'jupiter_swap',
 ];
 
 bot.on("message", async (ctx) => {
-  console.log("latestCommand", ctx.session.latestCommand);
   await _validateSession(ctx);
   backupSession = ctx.session;
   const chatId = ctx.chat.id;
@@ -435,7 +431,6 @@ bot.on("message", async (ctx) => {
     const latestCommand = ctx.session.latestCommand;
     const msgTxt = ctx.update.message.text;
     if (msgTxt && !commandNumbers.includes(latestCommand)) {
-      console.log("going here");
       const pumpRegex = /https:\/\/(www\.)?pump\.fun\/([A-Za-z0-9]+)/;
       const birdEyeRegex =
         /https:\/\/(www\.)?birdeye\.so\/token\/([A-Za-z0-9]+)\?chain=solana/;
@@ -622,7 +617,6 @@ bot.on("message", async (ctx) => {
             : Number.parseInt(msgTxt);
           if (!isNaN(amt) && amt >= 0 && amt <= 100) {
             ctx.session.jupSwap_amount = amt;
-            console.log("ctx.session.JUP_amountIn", ctx.session.jupSwap_amount);
             ctx.session.jupSwap_side = "sell";
             await jupiterSwap(ctx);
             break;
@@ -823,14 +817,12 @@ bot.on("message", async (ctx) => {
             (msgTxt && !PublicKey.isOnCurve(msgTxt))
           ) {
             const isTOken = await checkAccountType(ctx, msgTxt);
-            // console.log("isTOken", isTOken);
             if (!isTOken) {
               ctx.api.sendMessage(chatId, "Invalid address");
               return;
             }
 
             ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
-            // console.log("ctx.session.activeTradingPool", ctx.session.activeTradingPool);
             if (!ctx.session.activeTradingPool) {
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
@@ -903,10 +895,8 @@ bot.on("message", async (ctx) => {
       }
       case "set_customPriority": {
         if (msgTxt) {
-          console.log("msgTxt", msgTxt);
           // convert the string to an integer
           const priority = parseFloat(msgTxt);
-          console.log("priority", priority);
           if (!isNaN(priority)) {
             ctx.session.customPriorityFee = priority;
             await setCustomPriority(ctx);
@@ -964,7 +954,6 @@ bot.on("callback_query", async (ctx: any) => {
       } else if (ctx.session.swaptypeDex == "jup_swap") {
         ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
         // ctx.session.latestCommand = "sell_100_JUP";
-        console.log("percentage", sellPercentage);
         ctx.session.jupSwap_amount = sellPercentage;
         ctx.session.jupSwap_side = "sell";
         await jupiterSwap(ctx);
@@ -1003,7 +992,6 @@ bot.on("callback_query", async (ctx: any) => {
       const parts = data.split("_");
       const newPositionIndex = parseInt(parts[2]); // New position index
       ctx.session.positionIndex = newPositionIndex;
-      console.log("positionIndex", ctx.session.positionIndex);
       ctx.session.jupSwap_token =
         ctx.session.positionPool[ctx.session.positionIndex].baseMint;
       await display_single_position(ctx, true);
@@ -1198,7 +1186,6 @@ bot.on("callback_query", async (ctx: any) => {
         if (ctx.session.latestCommand === "rug_check") {
           ctx.session.jupSwap_token = ctx.session.rugCheckToken.toBase58();
           ctx.session.latestCommand = "jupiter_swap";
-          console.log("ctx.session.jupSwap_token", ctx.session.jupSwap_token);
 
           await display_jupSwapDetails(ctx, false);
         } else if (!ctx.session.jupSwap_token) {
@@ -1306,7 +1293,6 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "buy_0.5_JUP":
-        console.log("buy_0.5_JUP");
         ctx.session.latestCommand = "buy_0.5_JUP";
         ctx.session.jupSwap_amount = 0.5;
         ctx.session.jupSwap_side = "buy";
@@ -1492,7 +1478,6 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "priority_custom": {
-        console.log("MAX");
         ctx.session.ispriorityCustomFee = true;
         if (ctx.session.latestCommand === "snipe") {
           await display_snipe_options(ctx, true);

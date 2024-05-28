@@ -48,9 +48,7 @@ export async function getTokenDataFromBirdEyePositions(tokenAddress: String, use
             }
         };
         const [response, response2,solanaPrice, walletTokenPosition,birdeyePosition] = await Promise.all([axios.get(url, options), axios.get(url2, options), axios.get(solanDetails, options), axios.get(walletTokenBalance, options), axios.get(birdeyeTokenPosition, options)]); // [response1, response2
-        // const response = await axios.get(url, options);
-        // const response2 = await axios.get(url2, options);
-        // console.log("response",response.data.data.realMc)
+  
         return {response,response2,solanaPrice,walletTokenPosition,birdeyePosition}; // Adjust this based on the actual response structure
     } catch (error:any) {
         console.error(
