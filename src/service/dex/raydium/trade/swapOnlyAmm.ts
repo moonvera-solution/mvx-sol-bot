@@ -56,7 +56,7 @@ export type TxInputInfo = {
   maxRetries: number;
 };
 
-export async function swapOnlyAmm(input: TxInputInfo) : Promise< any | null > {
+export async function swapOnlyAmm(input: TxInputInfo): Promise<any | null> {
 
   const connection = new Connection(`${input.ctx.session.tritonRPC}${input.ctx.session.tritonToken}`);
   const targetPoolInfo = await formatAmmKeysById(input.targetPool, connection);
@@ -159,67 +159,19 @@ export async function swapOnlyAmm(input: TxInputInfo) : Promise< any | null > {
     innerTransactions[0].instructions.push(mvxFeeInx);
     minSwapAmountBalance += input.mvxFee.toNumber();
   }
-  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
-  /*                      PRIORITY FEES                         */
-  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
-
-
-    console.log("session maxPriorityFee------> ", input.ctx.session.customPriorityFee)
-
-    let maxPriorityFee = Math.ceil(Number.parseFloat(input.ctx.session.customPriorityFee) * 1e9);
-    console.log("maxPriorityFee------> ", maxPriorityFee)
- 
-
- 
-  // if (input.ctx.priorityFees == PriotitizationFeeLevels.HIGH) { maxPriorityFee = maxPriorityFee * 3; }
-  // if (input.ctx.priorityFees == PriotitizationFeeLevels.MAX) { maxPriorityFee = maxPriorityFee * 1.5; }
-
+  
+  let maxPriorityFee = Math.ceil(Number.parseFloat(input.ctx.session.customPriorityFee) * 1e9);
   innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee }));
 
-  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
-  /*                       Tx Simulation                        */
-  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
-
-  // 1.-  Simulate the transaction and add the compute unit limit instruction to your transaction
-  // try {
-  //   let units
-  //   if(input.ctx.session.ispriorityCustomFee == true){
-  //   }else{
-  //     units = await getSimulationComputeUnits(connection, innerTransactions[0].instructions, input.wallet.publicKey, []);
-  //     if (units) innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: Math.ceil(units * 1.3) }));
-  //   }
-  //   console.log("swap units", units)
-
-  // } catch (e) { 
-  //   console.log(e) 
-  // }
-
-  // const testVersionedTxn = new VersionedTransaction(
-  //   new TransactionMessage({
-  //     instructions: innerTransactions[0].instructions,
-  //     payerKey: input.wallet.publicKey,
-  //     recentBlockhash: PublicKey.default.toString(),
-  //   }).compileToV0Message());
-
-  //   testVersionedTxn.sign([input.wallet]);
-
-  // return {
-  //   txids: await optimizedSendAndConfirmTransaction(
-  //     testVersionedTxn, connection,
-  //     (await connection.getLatestBlockhash()).blockhash,
-  //     2000 // RETRY INTERVAL
-  //   )
-  // };
-
-  await simulateTx(connection, innerTransactions[0].instructions, input.wallet.publicKey);
-
+  const vTxx = new VersionedTransaction(wrapLegacyTx(innerTransactions[0].instructions, input.wallet, (await connection.getLatestBlockhash()).blockhash));
+  vTxx.sign([input.wallet]);
   return {
-    txids: await buildAndSendTx(
-      input.wallet,
-      innerTransactions,
+    txids: await optimizedSendAndConfirmTransaction(
+      vTxx,
       connection,
-      (input.skipPreflight, input.commitment, input.maxRetries ) as SendOptions
-    ),
+      (await connection.getLatestBlockhash()).blockhash,
+      2000 // RETRY INTERVAL
+    )
   };
 
 }

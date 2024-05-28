@@ -214,7 +214,7 @@ bot.command("start", async (ctx: any) => {
     const publicKeyString: PublicKey | String = userWallet
       ? userWallet.publicKey
       : ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex]
-          .publicKey;
+        .publicKey;
 
     // Retrieve the current SOL details
     let solPriceMessage = "";
@@ -437,19 +437,12 @@ bot.on("message", async (ctx) => {
       const match_pump = msgTxt.match(pumpRegex);
       const match_birdEye = msgTxt.match(birdEyeRegex);
 
-      if (match_pump) {
-        ctx.session.latestCommand = "jupiter_swap";
-        let jupToken = match_pump[2];
-        ctx.session.jupSwap_token = jupToken;
-        await display_jupSwapDetails(ctx, false);
-        return;
-      } else if (match_birdEye) {
-        ctx.session.latestCommand = "jupiter_swap";
-        let jupToken = match_birdEye[2];
-        ctx.session.jupSwap_token = jupToken;
-        await display_jupSwapDetails(ctx, false);
-        return;
-      }
+      let jupToken = match_pump ? match_pump[2] : match_birdEye && match_birdEye[2];
+      ctx.session.latestCommand = "jupiter_swap";
+      ctx.session.jupSwap_token = jupToken!;
+      await display_jupSwapDetails(ctx, false);
+
+
       if (!isNaN(parseFloat(msgTxt!))) {
         if (
           (msgTxt && PublicKey.isOnCurve(msgTxt)) ||
@@ -548,7 +541,7 @@ bot.on("message", async (ctx) => {
           const isNumeric = /^[0-9]+(\.[0-9]+)?$/.test(msgTxt);
 
           if (isNumeric) {
-              const amt = Number(msgTxt);
+            const amt = Number(msgTxt);
             if (!isNaN(amt)) {
               console.log("ctx.session.pump_amountIn", ctx.session.pump_amountIn);
               ctx.session.pump_amountIn = amt;
@@ -558,11 +551,11 @@ bot.on("message", async (ctx) => {
             } else {
               return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
             }
-          }else {
+          } else {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
+        }
       }
-    }
       case "buy_X_JUP": {
         ctx.session.latestCommand = "buy_X_JUP";
         if (msgTxt) {
@@ -571,7 +564,7 @@ bot.on("message", async (ctx) => {
 
           if (isNumeric) {
             const amt = Number(msgTxt);
-    
+
             if (!isNaN(amt)) {
 
               // console.log("ctx.session.pump_amountIn", ctx.session.pump_amountIn);
@@ -582,10 +575,10 @@ bot.on("message", async (ctx) => {
             } else {
               return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
             }
-          }else {
+          } else {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
-       
+
         }
       }
       case "sell_X_PUMP": {
@@ -702,7 +695,7 @@ bot.on("message", async (ctx) => {
             } else {
               return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
             }
-          }else {
+          } else {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
         }

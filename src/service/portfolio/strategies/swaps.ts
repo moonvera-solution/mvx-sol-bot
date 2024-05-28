@@ -125,11 +125,7 @@ export async function handle_radyum_swap(
       }).then(async ({ txids }) => {
         let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing... <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>. Please wait for confirmation...`
         await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-
-        const isConfirmed = await waitForConfirmation(ctx, txids[0]);
-        let extractAmount = isConfirmed ? await getSwapAmountOut(connection, txids) : 0;
-        if (isConfirmed) { // get swap amountOut
-
+        let extractAmount = await getSwapAmountOut(connection, txids);
           let confirmedMsg, solAmount, tokenAmount, _symbol = userTokenBalanceAndDetails.userTokenSymbol;
           let solFromSell = new BigNumber(0);
 
@@ -219,13 +215,6 @@ export async function handle_radyum_swap(
             ctx.session.jupSwap_token = poolKeys.baseMint;
             await display_jupSwapDetails(ctx, false);
           }
-        } else {  // Tx not confirmed
-          ctx.api.sendMessage(ctx.chat.id,
-            `Transaction could not be confirmed. \n`
-          );
-        }
-
-        //
 
       }).catch(async (error: any) => {
         console.log('afterswap. ', error)
