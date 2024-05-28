@@ -437,11 +437,19 @@ bot.on("message", async (ctx) => {
       const match_pump = msgTxt.match(pumpRegex);
       const match_birdEye = msgTxt.match(birdEyeRegex);
 
-      let jupToken = match_pump ? match_pump[2] : match_birdEye && match_birdEye[2];
-      ctx.session.latestCommand = "jupiter_swap";
-      ctx.session.jupSwap_token = jupToken!;
-      await display_jupSwapDetails(ctx, false);
-
+      if (match_pump) {
+        ctx.session.latestCommand = "jupiter_swap";
+        let jupToken = match_pump[2];
+        ctx.session.jupSwap_token = jupToken;
+        await display_jupSwapDetails(ctx, false);
+        return;
+      } else if (match_birdEye) {
+        ctx.session.latestCommand = "jupiter_swap";
+        let jupToken = match_birdEye[2];
+        ctx.session.jupSwap_token = jupToken;
+        await display_jupSwapDetails(ctx, false);
+        return;
+      }
 
       if (!isNaN(parseFloat(msgTxt!))) {
         if (

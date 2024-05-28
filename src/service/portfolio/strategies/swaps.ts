@@ -123,7 +123,7 @@ export async function handle_radyum_swap(
         skipPreflight: true,
         maxRetries: 0,
       }).then(async ({ txids }) => {
-        let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing... <a href="https://solscan.io/tx/${txids[0]}">View on Solscan</a>. Please wait for confirmation...`
+        let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing... Please wait for confirmation.`
         await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
         let extractAmount = await getSwapAmountOut(connection, txids);
           let confirmedMsg, solAmount, tokenAmount, _symbol = userTokenBalanceAndDetails.userTokenSymbol;

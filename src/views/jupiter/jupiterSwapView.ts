@@ -321,7 +321,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         await ctx.api.sendMessage(chatId, messageText, options);
       }
     } else {
-      ctx.api.sendMessage(chatId, "Token not found. Please try again.");
+      ctx.api.sendMessage(chatId, "Token not found. ");
     }
 
   } catch (e) {
