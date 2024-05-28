@@ -19,6 +19,7 @@ import { display_token_details } from '..';
 
 
 export async function jupiterSwap(ctx:any){
+  try{
     const chatId = ctx.chat.id;
     const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
     const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
@@ -132,6 +133,11 @@ export async function jupiterSwap(ctx:any){
           await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
         }
       });
+    }catch(e){
+      console.log(e)
+      
+      
+    }
 }
 
 
