@@ -43,7 +43,7 @@ export async function swap_pump_fun(ctx: any) {
 
       let msg = `🟢 <b>Transaction ${tradeSide.toUpperCase()}:</b> Processing ... <a href="https://solscan.io/tx/${txSigs}">View on Solscan</a>. Please wait for confirmation...`
       await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-      let extractAmount = await getSwapAmountOutPump(connection, [txSigs.toString()], tradeSide);
+      let extractAmount = await getSwapAmountOutPump(connection, txSigs, tradeSide);
 
       let confirmedMsg, solAmount, tokenAmount
       let solFromSell = 0;
@@ -72,7 +72,7 @@ export async function swap_pump_fun(ctx: any) {
       }
       if (tradeSide == 'buy') {
         console.log('extractAmount', extractAmount);
-        // if (await trackUntilFinalized(ctx, txids[0])) {
+        // if (await trackUntilFinalized(ctx, txids)) {
         await saveUserPosition( // to display portfolio positions
           ctx,
           userWallet.publicKey.toString(), {

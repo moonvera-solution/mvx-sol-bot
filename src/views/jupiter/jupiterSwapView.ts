@@ -52,7 +52,7 @@ export async function jupiterSwap(ctx:any){
         (ctx.session.customPriorityFee * 1e9),
         refObject
       ).then(async(txSig:any) => {
-        console.log('txSigs:', txSig)
+        if(!txSig) return;
         const tradeType = isBuySide ? 'buy' : 'sell';
 
         if(txSig){
@@ -67,7 +67,7 @@ export async function jupiterSwap(ctx:any){
           let tokenAmount,confirmedMsg;
           let solFromSell = 0;
           const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
-          let extractAmount =  await getSwapAmountOutPump(connection, [txSig.toString()], tradeType) 
+          let extractAmount =  await getSwapAmountOutPump(connection, txSig, tradeType) 
           const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
           tradeType == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
           confirmedMsg = `✅ <b>${tradeType.toUpperCase()} tx confirmed</b> ${tradeType == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${ctx.session.jupSwap_amount} SOL</b>` : `You sold <b>${amountToSell/Math.pow(10,userTokenBalanceAndDetails.decimals)}</b> <b>${_symbol}</b> and received <b>${(solFromSell/1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txSig}">View Details</a>.`;
