@@ -48,6 +48,7 @@ export async function swap_solTracker(connection: Connection, {
     if (swapResponse.isJupiter && !swapResponse.forceLegacy) {
         console.log("== JUPINX ==");
         const transaction = VersionedTransaction.deserialize(serializedTransactionBuffer); if (!transaction) return null;
+        
         const addressLookupTableAccounts = await Promise.all(
             transaction.message.addressTableLookups.map(async (lookup) => {
                 return new AddressLookupTableAccount({
@@ -55,6 +56,7 @@ export async function swap_solTracker(connection: Connection, {
                     state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data)),
                 })
             }));
+
         var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
         message.instructions.push(...mvxInxs)
         transaction.message = message.compileToV0Message(addressLookupTableAccounts);
@@ -72,6 +74,17 @@ export async function swap_solTracker(connection: Connection, {
         txx.add(pumpInx); // add pump inx
         mvxInxs.forEach((inx: any) => txx.add(inx));  // add mvx, ref inx
         const vTxx = new VersionedTransaction(wrapLegacyTx(txx.instructions, payerKeypair, blockhash.blockhash));
+
+        const addressLookupTableAccounts = await Promise.all(
+            vTxx.message.addressTableLookups.map(async (lookup) => {
+                return new AddressLookupTableAccount({
+                    key: lookup.accountKey,
+                    state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data)),
+                })
+            }));
+
+        var message = TransactionMessage.decompile(vTxx.message, { addressLookupTableAccounts: addressLookupTableAccounts })
+        vTxx.message = message.compileToV0Message(addressLookupTableAccounts);
         vTxx.sign([payerKeypair]);
 
         return await optimizedSendAndConfirmTransaction(vTxx,connection, blockhash, TX_RETRY_INTERVAL);
