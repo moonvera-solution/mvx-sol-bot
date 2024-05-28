@@ -29,7 +29,7 @@ export async function swap_solTracker(connection: Connection, {
         from, to, fromAmount: amount.toString(),
         slippage: slippage.toString(),
         payer: payerKeypair.publicKey.toBase58(),
-        priorityFee: '0.002',
+        priorityFee: Number.parseFloat(String(priorityFee)).toString(),
         forceLegacy: forceLegacy ? "true" : "false",
     });
     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
