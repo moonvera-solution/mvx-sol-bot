@@ -34,7 +34,6 @@ import {
   display_snipe_options,
   handleCloseKeyboard,
   display_after_Snipe_Buy,
-
 } from "./views";
 import { getSolBalance, sendSol } from "./service/util";
 import {
@@ -125,7 +124,6 @@ if (isProd) {
   bot.start();
 }
 
-
 async function _validateSession(ctx: any) {
   if (JSON.parse(JSON.stringify(ctx.session)).chatId == 0) {
     const restoredSession = await UserSession.findOne({ chatId: ctx.chat.id });
@@ -168,7 +166,7 @@ bot.command("start", async (ctx: any) => {
 
     const user = await AllowedReferrals.find({ tgUserName: userName });
     // console.log("user:", user[0]);
-    if(user[0] != undefined){
+    if (user[0] != undefined) {
       ctx.session.allowedReferral = user[0].tgUserName;
       // console.log("ctx.session.allowedReferral:", ctx.session.allowedReferral);
     }
@@ -244,14 +242,17 @@ bot.command("start", async (ctx: any) => {
     }
 
     // Combine the welcome message, SOL price message, and instruction to create a wallet
-    const welcomeMessage = `✨ Welcome to <b>DRIBs bot</b>✨\n` +
-    `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
-    `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
-    // `We're always working to bring you new features - stay tuned!\n\n` +
-    `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
-    `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInSOL * details).toFixed(4)}</b> USD\n\n` +
-    `🖐🏼 For security, we recommend exporting your private key and keeping it paper.\n` +
-    `<i> Currently DRIBs bot supports Jupiter, Raydium and Pump fun.</i>\n` ;
+    const welcomeMessage =
+      `✨ Welcome to <b>DRIBs bot</b>✨\n` +
+      `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
+      `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
+      // `We're always working to bring you new features - stay tuned!\n\n` +
+      `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
+      `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(
+        balanceInSOL * details
+      ).toFixed(4)}</b> USD\n\n` +
+      `🖐🏼 For security, we recommend exporting your private key and keeping it paper.\n` +
+      `<i> Currently DRIBs bot supports Jupiter, Raydium and Pump fun.</i>\n`;
 
     // Set the options for th e inline keyboard with social links
     const options: any = {
@@ -412,21 +413,20 @@ const commandNumbers = [
   "sell_0.5_PUMP",
   "sell_1_PUMP",
   "set_customPriority",
-  'buy_X_RAY',
-  'sell_x_RAY',
-  'buy_0.5_RAY',
-  'sell_0.5_RAY',
-  'buy_1_RAY',
-  'sell_1_RAY',
-  'buy_X_SOL_IN_POSITION',
-  'rug_check',
-  
-  // 'jupiter_swap',
+  "buy_X_RAY",
+  "sell_x_RAY",
+  "buy_0.5_RAY",
+  "sell_0.5_RAY",
+  "buy_1_RAY",
+  "sell_1_RAY",
+  "buy_X_SOL_IN_POSITION",
+  "rug_check",
 
+  // 'jupiter_swap',
 ];
 
 bot.on("message", async (ctx) => {
-  console.log('latestCommand', ctx.session.latestCommand);
+  console.log("latestCommand", ctx.session.latestCommand);
   await _validateSession(ctx);
   backupSession = ctx.session;
   const chatId = ctx.chat.id;
@@ -435,9 +435,10 @@ bot.on("message", async (ctx) => {
     const latestCommand = ctx.session.latestCommand;
     const msgTxt = ctx.update.message.text;
     if (msgTxt && !commandNumbers.includes(latestCommand)) {
-      console.log('going here');
+      console.log("going here");
       const pumpRegex = /https:\/\/(www\.)?pump\.fun\/([A-Za-z0-9]+)/;
-      const birdEyeRegex = /https:\/\/(www\.)?birdeye\.so\/token\/([A-Za-z0-9]+)\?chain=solana/;
+      const birdEyeRegex =
+        /https:\/\/(www\.)?birdeye\.so\/token\/([A-Za-z0-9]+)\?chain=solana/;
       const match_pump = msgTxt.match(pumpRegex);
       const match_birdEye = msgTxt.match(birdEyeRegex);
 
@@ -453,7 +454,7 @@ bot.on("message", async (ctx) => {
         ctx.session.jupSwap_token = jupToken;
         await display_jupSwapDetails(ctx, false);
         return;
-      } 
+      }
       if (!isNaN(parseFloat(msgTxt!))) {
         if (
           (msgTxt && PublicKey.isOnCurve(msgTxt)) ||
@@ -519,7 +520,7 @@ bot.on("message", async (ctx) => {
         }
         break;
       }
-  
+
       case "jupiter_swap": {
         if (msgTxt) {
           if (
@@ -548,39 +549,50 @@ bot.on("message", async (ctx) => {
       case "buy_X_PUMP": {
         ctx.session.latestCommand = "buy_X_PUMP";
         if (msgTxt) {
-          const amt = msgTxt.includes(".")
-            ? Number.parseFloat(msgTxt)
-            : Number.parseInt(msgTxt);
 
-          if (!isNaN(amt)) {
-            console.log("ctx.session.pump_amountIn", ctx.session.pump_amountIn);
-            ctx.session.pump_amountIn = amt;
-            ctx.session.pump_side = "buy";
-            await swap_pump_fun(ctx);
-            break;
-          } else {
+          const isNumeric = /^[0-9]+(\.[0-9]+)?$/.test(msgTxt);
+
+          if (isNumeric) {
+              const amt = Number(msgTxt);
+            if (!isNaN(amt)) {
+              console.log("ctx.session.pump_amountIn", ctx.session.pump_amountIn);
+              ctx.session.pump_amountIn = amt;
+              ctx.session.pump_side = "buy";
+              await swap_pump_fun(ctx);
+              break;
+            } else {
+              return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+            }
+          }else {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
-        }
       }
+    }
       case "buy_X_JUP": {
         ctx.session.latestCommand = "buy_X_JUP";
         if (msgTxt) {
-          const amt = msgTxt.includes(".")
-            ? Number.parseFloat(msgTxt)
-            : Number.parseInt(msgTxt);
-          if (!isNaN(amt)) {
-            console.log("ctx.session.pump_amountIn", ctx.session.pump_amountIn);
-            ctx.session.jupSwap_amount = amt;
-            ctx.session.jupSwap_side = "buy";
-            await jupiterSwap(ctx);
-            break;
-          } else {
+
+          const isNumeric = /^[0-9]+(\.[0-9]+)?$/.test(msgTxt);
+
+          if (isNumeric) {
+            const amt = Number(msgTxt);
+    
+            if (!isNaN(amt)) {
+
+              // console.log("ctx.session.pump_amountIn", ctx.session.pump_amountIn);
+              ctx.session.jupSwap_amount = amt;
+              ctx.session.jupSwap_side = "buy";
+              await jupiterSwap(ctx);
+              break;
+            } else {
+              return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+            }
+          }else {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
+       
         }
       }
-
       case "sell_X_PUMP": {
         ctx.session.latestCommand = "sell_X_PUMP";
         if (msgTxt) {
@@ -625,7 +637,7 @@ bot.on("message", async (ctx) => {
       }
 
       case "buy_X_RAY":
-        console.log("buy_X_RAY here")
+        console.log("buy_X_RAY here");
         ctx.session.latestCommand = "buy_X_RAY";
         if (msgTxt) {
           const amt = msgTxt.includes(".")
@@ -647,48 +659,61 @@ bot.on("message", async (ctx) => {
       case "buy_X_SOL_IN_POSITION":
         ctx.session.latestCommand = "display_single_position";
         if (msgTxt) {
-          const amt = msgTxt.includes(".")
-            ? Number.parseFloat(msgTxt)
-            : Number.parseInt(msgTxt);
-          if (!isNaN(amt)) {
-            if(ctx.session.swaptypeDex == 'ray_swap'){
-              const  poolkey = await getRayPoolKeys(ctx, ctx.session.positionPool[ctx.session.positionIndex]);
-              ctx.session.activeTradingPool = poolkey as RAYDIUM_POOL_TYPE;
+          // Check if msgTxt is a numeric value
+          const isNumeric = /^\d+(\.\d+)?$/.test(msgTxt);
+
+          if (isNumeric) {
+            const amt = Number(msgTxt);
+            if (!isNaN(amt)) {
+              if (ctx.session.swaptypeDex == "ray_swap") {
+                const poolkey = await getRayPoolKeys(
+                  ctx,
+                  ctx.session.positionPool[ctx.session.positionIndex]
+                );
+                ctx.session.activeTradingPool = poolkey as RAYDIUM_POOL_TYPE;
                 await handle_radyum_swap(
                   ctx,
                   ctx.session.activeTradingPool.baseMint,
                   "buy",
                   Number(msgTxt)
                 );
-            }else if(ctx.session.swaptypeDex == 'jup_swap'){
-              ctx.session.jupSwap_amount = amt;
-              ctx.session.jupSwap_side = "buy";
-              await jupiterSwap(ctx);
-            } else{
-              const  poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[ctx.session.positionIndex]);
-              if(poolKeys){
-                ctx.session.activeTradingPool = poolKeys as RAYDIUM_POOL_TYPE;
-                await handle_radyum_swap(
+              } else if (ctx.session.swaptypeDex == "jup_swap") {
+                ctx.session.jupSwap_amount = amt;
+                ctx.session.jupSwap_side = "buy";
+                await jupiterSwap(ctx);
+              } else {
+                const poolKeys = await getRayPoolKeys(
                   ctx,
-                  ctx.session.activeTradingPool.baseMint,
-                  "buy",
-                  Number(msgTxt)
+                  ctx.session.positionPool[ctx.session.positionIndex]
                 );
-              }else{
-                ctx.session.pumpToken = new PublicKey(ctx.session.positionPool[ctx.session.positionIndex]);
-                ctx.session.pump_amountIn = amt;
-                ctx.session.pump_side = "buy";
-                await swap_pump_fun(ctx);
+                if (poolKeys) {
+                  ctx.session.activeTradingPool = poolKeys as RAYDIUM_POOL_TYPE;
+                  await handle_radyum_swap(
+                    ctx,
+                    ctx.session.activeTradingPool.baseMint,
+                    "buy",
+                    Number(msgTxt)
+                  );
+                } else {
+                  ctx.session.pumpToken = new PublicKey(
+                    ctx.session.positionPool[ctx.session.positionIndex]
+                  );
+                  ctx.session.pump_amountIn = amt;
+                  ctx.session.pump_side = "buy";
+                  await swap_pump_fun(ctx);
+                }
               }
+
+              break;
+            } else {
+              return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
             }
-          
-            break;
-          } else {
+          }else {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
         }
       case "sell_X_RAY":
-          ctx.session.latestCommand = "sell_X_RAY";
+        ctx.session.latestCommand = "sell_X_RAY";
 
         if (msgTxt) {
           const amt = msgTxt.includes(".")
@@ -911,7 +936,7 @@ bot.on("callback_query", async (ctx: any) => {
     ctx.session.portfolio.chatId = chatId;
     const data = ctx.callbackQuery.data;
     const positionCallSell = /^sellpos_\d+_\d+$/;
-  
+
     const positionCallBuy = /^buypos_x_\d+$/;
     const positionNavigate = /^(prev_position|next_position)_\d+$/;
     ctx.api.answerCallbackQuery(ctx.callbackQuery.id);
@@ -923,8 +948,11 @@ bot.on("callback_query", async (ctx: any) => {
       const parts = data.split("_");
       const sellPercentage = parts[1]; // '25', '50', '75', or '100'
       const positionIndex = parts[2]; // Position index
-      if(ctx.session.swaptypeDex == 'ray_swap'){
-        const  poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
+      if (ctx.session.swaptypeDex == "ray_swap") {
+        const poolKeys = await getRayPoolKeys(
+          ctx,
+          ctx.session.positionPool[positionIndex]
+        );
         ctx.session.activeTradingPool = poolKeys as RAYDIUM_POOL_TYPE;
         await handle_radyum_swap(
           ctx,
@@ -932,17 +960,20 @@ bot.on("callback_query", async (ctx: any) => {
           "sell",
           sellPercentage
         );
-      return;
-      } else if(ctx.session.swaptypeDex == 'jup_swap'){
+        return;
+      } else if (ctx.session.swaptypeDex == "jup_swap") {
         ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
         // ctx.session.latestCommand = "sell_100_JUP";
-        console.log('percentage', sellPercentage)
+        console.log("percentage", sellPercentage);
         ctx.session.jupSwap_amount = sellPercentage;
         ctx.session.jupSwap_side = "sell";
         await jupiterSwap(ctx);
-      }else {
-        const  poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
-        if(poolKeys){
+      } else {
+        const poolKeys = await getRayPoolKeys(
+          ctx,
+          ctx.session.positionPool[positionIndex]
+        );
+        if (poolKeys) {
           ctx.session.activeTradingPool = poolKeys as RAYDIUM_POOL_TYPE;
           await handle_radyum_swap(
             ctx,
@@ -950,11 +981,13 @@ bot.on("callback_query", async (ctx: any) => {
             "sell",
             sellPercentage
           );
-        }else{
-        ctx.session.pumpToken = new PublicKey(ctx.session.positionPool[positionIndex]);
-        ctx.session.pump_amountIn = sellPercentage;
-        ctx.session.pump_side = "sell";
-        await swap_pump_fun(ctx);
+        } else {
+          ctx.session.pumpToken = new PublicKey(
+            ctx.session.positionPool[positionIndex]
+          );
+          ctx.session.pump_amountIn = sellPercentage;
+          ctx.session.pump_side = "sell";
+          await swap_pump_fun(ctx);
         }
       }
       return;
@@ -1174,8 +1207,7 @@ bot.on("callback_query", async (ctx: any) => {
             chatId,
             "Please provide the token address or the jupiter swap link."
           );
-        } 
-        else {
+        } else {
           ctx.session.latestCommand = "jupiter_swap";
           await display_jupSwapDetails(ctx, false);
         }
@@ -1232,14 +1264,14 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.api.sendMessage(chatId, "Please enter SOL amount");
         break;
       }
-      case "buy_0.5_PUMP":{
+      case "buy_0.5_PUMP": {
         ctx.session.latestCommand = "buy_X_PUMP";
         ctx.session.pump_amountIn = 0.5;
         ctx.session.pump_side = "buy";
         await swap_pump_fun(ctx);
         break;
       }
-      case "buy_1_PUMP":{
+      case "buy_1_PUMP": {
         ctx.session.latestCommand = "buy_X_PUMP";
         ctx.session.pump_amountIn = 1;
         ctx.session.pump_side = "buy";
@@ -1254,14 +1286,14 @@ bot.on("callback_query", async (ctx: any) => {
         );
         break;
       }
-      case "sell_50_PUMP":{
+      case "sell_50_PUMP": {
         ctx.session.latestCommand = "sell_50_PUMP";
         ctx.session.pump_amountIn = 50;
         ctx.session.pump_side = "sell";
         await swap_pump_fun(ctx);
         break;
       }
-      case "sell_100_PUMP":{
+      case "sell_100_PUMP": {
         ctx.session.latestCommand = "sell_100_PUMP";
         ctx.session.pump_amountIn = 100;
         ctx.session.pump_side = "sell";
@@ -1280,7 +1312,7 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.jupSwap_side = "buy";
         await jupiterSwap(ctx);
         break;
-      
+
       case "buy_1_JUP":
         ctx.session.latestCommand = "buy_1_JUP";
         ctx.session.jupSwap_amount = 1;
@@ -1301,7 +1333,7 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.jupSwap_side = "sell";
         await jupiterSwap(ctx);
         break;
-        
+
       case "sell_100_JUP":
         ctx.session.latestCommand = "sell_100_JUP";
         ctx.session.jupSwap_amount = 100;
@@ -1466,7 +1498,7 @@ bot.on("callback_query", async (ctx: any) => {
           await display_snipe_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_position") {
           await display_single_position(ctx, true);
-        }  else if (ctx.session.latestCommand === "pump_fun") {
+        } else if (ctx.session.latestCommand === "pump_fun") {
           await display_pumpFun(ctx, true);
         } else if (ctx.session.latestCommand === "jupiter_swap") {
           await display_jupSwapDetails(ctx, true);
@@ -1545,14 +1577,19 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
 
-process.on('SIGINT', async () => {
+process.on("SIGINT", async () => {
   if (backupSession) {
-    await UserSession.findOneAndUpdate({ chatId: backupSession.chatId }, backupSession, { upsert: true })
-      .then(() => { console.log(":: Stored user session to DB") })
+    await UserSession.findOneAndUpdate(
+      { chatId: backupSession.chatId },
+      backupSession,
+      { upsert: true }
+    )
+      .then(() => {
+        console.log(":: Stored user session to DB");
+      })
       .catch((e: any) => {
-        console.log("error", e)
-      }
-      );
+        console.log("error", e);
+      });
   }
   process.exit();
 });

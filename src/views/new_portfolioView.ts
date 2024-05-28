@@ -267,7 +267,6 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
   const createKeyboardForPosition = (index: any) => {
     let prevIndex = index - 1 < 0 ? userPosition[0].positions.length - 1 : index - 1;
     let nextIndex = index + 1 >= userPosition[0].positions.length ? 0 : index + 1;
-
     let priority_Level = ctx.session.priorityFees;
     const priority_custom = ctx.session.ispriorityCustomFee;
     if(priority_custom === true){
