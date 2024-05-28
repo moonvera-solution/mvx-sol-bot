@@ -66,6 +66,7 @@ import {
   display_single_position,
 } from "./views/new_portfolioView";
 import { get } from "axios";
+import { hasEnoughSol } from "./service/util/validations";
 
 const express = require("express");
 const app = express();
@@ -345,7 +346,7 @@ bot.command("trade", async (ctx) => {
       );
     }
     ctx.session.latestCommand = "jupiter_swap";
-  ctx.api.sendMessage( ctx.chat.id,'Please enter the token address you would like to trade.');
+    ctx.api.sendMessage(ctx.chat.id, 'Please enter the token address you would like to trade.');
     // }
   } catch (error: any) {
     console.log("bot on sell cmd", error);
@@ -1163,6 +1164,7 @@ bot.on("callback_query", async (ctx: any) => {
       case "confirm_send_sol": {
         const recipientAddress = ctx.session.recipientAddress;
         const solAmount = ctx.session.solAmount;
+        if (!await hasEnoughSol(ctx, solAmount)) break;
         await ctx.api.sendMessage(
           chatId,
           `Sending ${solAmount} SOL to ${recipientAddress}...`

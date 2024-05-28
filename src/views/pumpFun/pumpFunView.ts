@@ -27,7 +27,8 @@ export async function swap_pump_fun(ctx: any) {
     const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
     const amountToSell = (ctx.session.pump_amountIn / 100) * userTokenBalanceAndDetails.userTokenBalance;
     const userSolBalance = await getSolBalance(userWallet.publicKey, connection);
-    if(tradeSide == 'buy' && userSolBalance < ctx.session.pump_amountIn) {
+    const amountIn = tradeSide == 'buy' ? ctx.session.pump_amountIn : amountToSell;
+    if (tradeSide == 'buy' && userSolBalance < ctx.session.pump_amountIn) {
       await ctx.api.sendMessage(chatId, `❌ Insufficient SOL balance.`);
       return;
     }
@@ -45,10 +46,10 @@ export async function swap_pump_fun(ctx: any) {
       priorityFee: ctx.session.customPriorityFee,
       forceLegacy: true
     }).then(async (txSigs) => {
-   
+
       if (!txSigs) return;
 
-     
+
       let extractAmount = await getSwapAmountOutPump(connection, txSigs, tradeSide);
 
       let confirmedMsg, solAmount, tokenAmount
@@ -70,12 +71,15 @@ export async function swap_pump_fun(ctx: any) {
       let oldPositionSol: number = 0;
       let oldPositionToken: number = 0;
       if (userPosition) {
-        const existingPositionIndex = userPosition.positions.findIndex(position => position.baseMint === tokenOut.toString());
+        const existingPositionIndex = userPosition.positions.findIndex(
+          position => position.baseMint === (tradeSide == 'buy' ? tokenOut.toString() : tokenIn.toString())
+        );
         if (userPosition.positions[existingPositionIndex]) {
           oldPositionSol = userPosition.positions[existingPositionIndex].amountIn
           oldPositionToken = userPosition.positions[existingPositionIndex].amountOut!
         }
       }
+
       if (tradeSide == 'buy') {
         console.log('extractAmount', extractAmount);
         // if (await trackUntilFinalized(ctx, txids)) {
@@ -93,12 +97,16 @@ export async function swap_pump_fun(ctx: any) {
       } else {
         let newAmountIn, newAmountOut;
 
-        if (Number(extractAmount) === oldPositionToken || oldPositionSol <= extractAmount) {
+        if (Number(amountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
           newAmountIn = 0;
           newAmountOut = 0;
+          console.log('position remove');
         } else {
           newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
-          newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(extractAmount) : oldPositionToken;
+          newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
+          console.log('position update');
+          console.log('newAmountIn', newAmountIn);
+          console.log('newAmountOut', newAmountOut);
         }
 
         if (newAmountIn <= 0 || newAmountOut <= 0) {
@@ -110,8 +118,8 @@ export async function swap_pump_fun(ctx: any) {
             name: userTokenBalanceAndDetails.userTokenName,
             symbol: _symbol,
             tradeType: `pump_swap`,
-            amountIn: oldPositionSol ? oldPositionSol - amountToSell : amountToSell,
-            amountOut: oldPositionToken ? oldPositionToken - Number(extractAmount) : Number(extractAmount),
+            amountIn: newAmountIn,
+            amountOut: newAmountOut,
           });
         }
       }

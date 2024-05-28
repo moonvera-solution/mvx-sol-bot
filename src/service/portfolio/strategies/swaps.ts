@@ -1,9 +1,9 @@
 import { Percent, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken } from '@raydium-io/raydium-sdk';
 import { PublicKey, Keypair, Connection } from '@solana/web3.js';
 import { getWalletTokenAccount, getSolBalance, waitForConfirmation, getSwapAmountOut } from '../../util';
-import { DEFAULT_TOKEN, MVXBOT_FEES  } from '../../../config';
+import { DEFAULT_TOKEN, MVXBOT_FEES } from '../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
-import { display_after_Snipe_Buy,  } from '../../../views';
+import { display_after_Snipe_Buy, } from '../../../views';
 import { ISESSION_DATA } from '../../util/types';
 import { saveUserPosition } from "../positions";
 import { raydium_amm_swap } from '../../dex';
@@ -122,100 +122,103 @@ export async function handle_radyum_swap(
         commitment: 'processed',
         skipPreflight: true,
         maxRetries: 0,
-      }).then(async (txids ) => {
-        if(!txids) return;
+      }).then(async (txids) => {
+        if (!txids) return;
         let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing... <a href="https://solscan.io/tx/${txids}">View on Solscan</a>. Please wait for confirmation...`
         await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
         let extractAmount = await getSwapAmountOut(connection, txids);
-          let confirmedMsg, solAmount, tokenAmount, _symbol = userTokenBalanceAndDetails.userTokenSymbol;
-          let solFromSell = new BigNumber(0);
+        let confirmedMsg, solAmount, tokenAmount, _symbol = userTokenBalanceAndDetails.userTokenSymbol;
+        let solFromSell = new BigNumber(0);
 
-          if (extractAmount > 0) {
-            solFromSell = new BigNumber(extractAmount);
-            solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
-            tokenAmount = swapAmountIn / Math.pow(10, userTokenBalanceAndDetails.decimals);
-            side == 'sell' ?
-              confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.` :
-              confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4)} <b>${_symbol}</b> for ${(swapAmountIn / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
+        if (extractAmount > 0) {
+          solFromSell = new BigNumber(extractAmount);
+          solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
+          tokenAmount = swapAmountIn / Math.pow(10, userTokenBalanceAndDetails.decimals);
+          side == 'sell' ?
+            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`
+            :
+            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4)} <b>${_symbol}</b> for ${(swapAmountIn / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
+        } else {
+          confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
+        }
+
+        const bot_fee = new BigNumber(solFromSell).multipliedBy(MVXBOT_FEES);
+        const referralAmmount = (bot_fee.multipliedBy(referralFee));
+        const cut_bot_fee = bot_fee.minus(referralAmmount);
+
+        if (referralRecord) {
+          let updateEarnings = actualEarnings && actualEarnings + (refferalFeePay).toNumber();
+          referralRecord.earnings = Number(updateEarnings && updateEarnings.toFixed(0));
+          await referralRecord.save();
+        }
+
+        if (side == 'buy') {
+          console.log('extractAmount', extractAmount);
+          // if (await trackUntilFinalized(ctx, txids)) {
+          await saveUserPosition( // to display portfolio positions
+            ctx,
+            userWallet.publicKey.toString(), {
+            baseMint: poolKeys.baseMint,
+            name: userTokenBalanceAndDetails.userTokenName,
+            symbol: _symbol,
+            tradeType: `ray_swap`,
+            amountIn: oldPositionSol ? oldPositionSol + swapAmountIn : swapAmountIn,
+            amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
+          });
+          // }
+
+        } else if (side == 'sell') {
+          if (referralFee > 0) {
+            mvxFee = new BigNumber(cut_bot_fee);
+            refferalFeePay = new BigNumber(referralAmmount);
           } else {
-            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
+            mvxFee = new BigNumber(bot_fee);
           }
 
-          const bot_fee = new BigNumber(solFromSell).multipliedBy(MVXBOT_FEES);
-          const referralAmmount = (bot_fee.multipliedBy(referralFee));
-          const cut_bot_fee = bot_fee.minus(referralAmmount);
-
-          if (referralRecord) {
-            let updateEarnings = actualEarnings && actualEarnings + (refferalFeePay).toNumber();
-            referralRecord.earnings = Number(updateEarnings && updateEarnings.toFixed(0));
-            await referralRecord.save();
+          let newAmountIn, newAmountOut;
+          if (Number(swapAmountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
+            newAmountIn = 0;
+            newAmountOut = 0;
+          } else {
+            newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
+            newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(swapAmountIn) : oldPositionToken;
           }
 
-          if (side == 'buy') {
-            console.log('extractAmount', extractAmount);
-            // if (await trackUntilFinalized(ctx, txids)) {
-            await saveUserPosition( // to display portfolio positions
+
+          if (
+            newAmountIn == 0
+            || newAmountOut == 0
+            || newAmountOut < 0
+            || newAmountIn < 0
+            // || userBalance.toNumber() == 0
+          ) {
+            await UserPositions.updateOne(
+              { walletId: userWallet.publicKey.toString() },
+              { $pull: { positions: { baseMint: poolKeys.baseMint } } }
+            );
+            ctx.session.positionIndex = 0;
+            console.log(chatId, 'amount == 0');
+            // await display_single_spl_positions(ctx);
+          } else {
+            await saveUserPosition(
               ctx,
               userWallet.publicKey.toString(), {
               baseMint: poolKeys.baseMint,
               name: userTokenBalanceAndDetails.userTokenName,
               symbol: _symbol,
               tradeType: `ray_swap`,
-              amountIn: oldPositionSol ? oldPositionSol + swapAmountIn : swapAmountIn,
-              amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
+              amountIn: newAmountIn,
+              amountOut: newAmountOut,
             });
-            // }
-            
-          } else if (side == 'sell') {
-            if (referralFee > 0) {
-              mvxFee = new BigNumber(cut_bot_fee);
-              refferalFeePay = new BigNumber(referralAmmount);
-            } else {
-              mvxFee = new BigNumber(bot_fee);
-            }
-
-            let newAmountIn, newAmountOut;
-            if (Number(swapAmountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
-              newAmountIn = 0;
-              newAmountOut = 0;
-            } else {
-              newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
-              newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(swapAmountIn) : oldPositionToken;
-            }
-
-
-            if (
-              newAmountIn == 0
-              || newAmountOut == 0
-              || newAmountOut < 0
-              || newAmountIn < 0
-              // || userBalance.toNumber() == 0
-            ) {
-              await UserPositions.updateOne(
-                { walletId: userWallet.publicKey.toString() },
-                { $pull: { positions: { baseMint: poolKeys.baseMint } } }
-              );
-              ctx.session.positionIndex = 0;
-              // await display_single_spl_positions(ctx);
-            } else {
-              await saveUserPosition(
-                ctx,
-                userWallet.publicKey.toString(), {
-                baseMint: poolKeys.baseMint,
-                name: userTokenBalanceAndDetails.userTokenName,
-                symbol: _symbol,
-                tradeType: `ray_swap`,
-                amountIn: newAmountIn,
-                amountOut: newAmountOut,
-              });
-            }
+            console.log(chatId, 'amount != 0');
           }
-          await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
-          if (side == 'buy') {
-            ctx.session.latestCommand = 'jupiter_swap';
-            ctx.session.jupSwap_token = poolKeys.baseMint;
-            await display_jupSwapDetails(ctx, false);
-          }
+        }
+        await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
+        if (side == 'buy') {
+          ctx.session.latestCommand = 'jupiter_swap';
+          ctx.session.jupSwap_token = poolKeys.baseMint;
+          await display_jupSwapDetails(ctx, false);
+        }
 
       }).catch(async (error: any) => {
         console.log('afterswap. ', error)
