@@ -26,7 +26,13 @@ export async function swap_pump_fun(ctx: any) {
     const userTokenBalanceAndDetails = tradeSide == 'buy' ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
     const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
     const amountToSell = (ctx.session.pump_amountIn / 100) * userTokenBalanceAndDetails.userTokenBalance;
-    
+    const userSolBalance = await getSolBalance(userWallet.publicKey, connection);
+    if(tradeSide == 'buy' && userSolBalance < ctx.session.pump_amountIn) {
+      await ctx.api.sendMessage(chatId, `❌ Insufficient SOL balance.`);
+      return;
+    }
+    let msg = `🟢 <b>Transaction ${tradeSide.toUpperCase()}:</b> Processing... Please wait for confirmation.`
+    await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
     await swap_solTracker(connection, {
       side: tradeSide,
       from: tokenIn,
@@ -39,11 +45,11 @@ export async function swap_pump_fun(ctx: any) {
       priorityFee: ctx.session.customPriorityFee,
       forceLegacy: true
     }).then(async (txSigs) => {
+   
       if (!txSigs) return;
 
-      let msg = `🟢 <b>Transaction ${tradeSide.toUpperCase()}:</b> Processing ... <a href="https://solscan.io/tx/${txSigs}">View on Solscan</a>. Please wait for confirmation...`
-      await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-      let extractAmount = await getSwapAmountOutPump(connection, [txSigs.toString()], tradeSide);
+     
+      let extractAmount = await getSwapAmountOutPump(connection, txSigs, tradeSide);
 
       let confirmedMsg, solAmount, tokenAmount
       let solFromSell = 0;
@@ -72,7 +78,7 @@ export async function swap_pump_fun(ctx: any) {
       }
       if (tradeSide == 'buy') {
         console.log('extractAmount', extractAmount);
-        // if (await trackUntilFinalized(ctx, txids[0])) {
+        // if (await trackUntilFinalized(ctx, txids)) {
         await saveUserPosition( // to display portfolio positions
           ctx,
           userWallet.publicKey.toString(), {

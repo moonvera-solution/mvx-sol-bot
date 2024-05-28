@@ -551,8 +551,9 @@ bot.on("message", async (ctx) => {
           if (isNumeric) {
             const amt = Number(msgTxt);
             if (!isNaN(amt)) {
-              console.log("ctx.session.pump_amountIn", ctx.session.pump_amountIn);
               ctx.session.pump_amountIn = amt;
+              console.log("ctx.session.pump_amountIn", ctx.session.pump_amountIn);
+
               ctx.session.pump_side = "buy";
               await swap_pump_fun(ctx);
               break;

@@ -122,8 +122,9 @@ export async function handle_radyum_swap(
         commitment: 'processed',
         skipPreflight: true,
         maxRetries: 0,
-      }).then(async ({ txids }) => {
-        let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing... Please wait for confirmation.`
+      }).then(async (txids ) => {
+        if(!txids) return;
+        let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing... <a href="https://solscan.io/tx/${txids}">View on Solscan</a>. Please wait for confirmation...`
         await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
         let extractAmount = await getSwapAmountOut(connection, txids);
           let confirmedMsg, solAmount, tokenAmount, _symbol = userTokenBalanceAndDetails.userTokenSymbol;
@@ -134,10 +135,10 @@ export async function handle_radyum_swap(
             solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
             tokenAmount = swapAmountIn / Math.pow(10, userTokenBalanceAndDetails.decimals);
             side == 'sell' ?
-              confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.` :
-              confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4)} <b>${_symbol}</b> for ${(swapAmountIn / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
+              confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.` :
+              confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4)} <b>${_symbol}</b> for ${(swapAmountIn / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
           } else {
-            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids[0]}">View Details</a>.`;
+            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
           }
 
           const bot_fee = new BigNumber(solFromSell).multipliedBy(MVXBOT_FEES);
@@ -152,7 +153,7 @@ export async function handle_radyum_swap(
 
           if (side == 'buy') {
             console.log('extractAmount', extractAmount);
-            // if (await trackUntilFinalized(ctx, txids[0])) {
+            // if (await trackUntilFinalized(ctx, txids)) {
             await saveUserPosition( // to display portfolio positions
               ctx,
               userWallet.publicKey.toString(), {

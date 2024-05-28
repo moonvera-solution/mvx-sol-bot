@@ -717,14 +717,14 @@ export function getTokenExplorerURLS(tokenAddress: string): { birdeyeURL: any; d
 
 export async function getSwapAmountOut(
     connection: Connection,
-    txids: string[],
+    txids: string,
 ) {
     let extractAmount: number = 0;
     let counter = 0;
 
     while (extractAmount == 0 && counter < 30) { // it has to find it since its a transfer tx
         counter++;
-        const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
+        const txxs = await connection.getParsedTransaction(txids, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
         let txAmount: Array<any> | undefined;
         if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions) {
             txxs.meta.innerInstructions.forEach((tx) => {
@@ -744,7 +744,7 @@ export async function getSwapAmountOut(
 
 export async function getSwapAmountOutPump(
     connection: Connection,
-    txids: string[],
+    txids: string,
     tradeSide: string
 ) {
     let extractAmount: number = 0;
@@ -752,7 +752,7 @@ export async function getSwapAmountOutPump(
 
     while (extractAmount == 0 && counter < 30) { // it has to find it since its a transfer tx
         counter++;
-        const txxs = await connection.getParsedTransaction(txids[0], { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
+        const txxs = await connection.getParsedTransaction(txids, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
         let txAmount: Array<any> | undefined;
         if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions) {
             txxs.meta.innerInstructions.forEach((tx) => {
@@ -893,6 +893,7 @@ export async function optimizedSendAndConfirmTransaction(
               });
             }
         } catch (e) {
+        
           console.error(`${new Date().toISOString()} Error: ${e}`);
           throw new Error(`Transaction failed: ${e}`)
         }
@@ -919,7 +920,7 @@ export async function catchSimulationErrors(simulationResult:any){
     const BALANCE_ERROR = /Transfer: insufficient lamports/;
     if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
         console.log(simulationResult.value.logs)
-        throw new Error(`🔴 Insufficient balance for transaction.`);
+        return (`🔴 Insufficient balance for transaction.`);
     }
     const FEES_ERROR = 'InsufficientFundsForFee';
     if (simulationResult.value.err === FEES_ERROR) {

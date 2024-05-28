@@ -17,7 +17,8 @@ import {
   Connection,
   SendOptions,
   VersionedTransaction,
-  TransactionMessage
+  TransactionMessage,
+  AddressLookupTableAccount
 } from "@solana/web3.js";
 import {
   Keypair,
@@ -56,7 +57,7 @@ export type TxInputInfo = {
   maxRetries: number;
 };
 
-export async function swapOnlyAmm(input: TxInputInfo): Promise<any | null> {
+export async function swapOnlyAmm(input: TxInputInfo): Promise<string | null> {
 
   const connection = new Connection(`${input.ctx.session.tritonRPC}${input.ctx.session.tritonToken}`);
   const targetPoolInfo = await formatAmmKeysById(input.targetPool, connection);
@@ -159,19 +160,27 @@ export async function swapOnlyAmm(input: TxInputInfo): Promise<any | null> {
     innerTransactions[0].instructions.push(mvxFeeInx);
     minSwapAmountBalance += input.mvxFee.toNumber();
   }
-  
+
   let maxPriorityFee = Math.ceil(Number.parseFloat(input.ctx.session.customPriorityFee) * 1e9);
   innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee }));
 
   const vTxx = new VersionedTransaction(wrapLegacyTx(innerTransactions[0].instructions, input.wallet, (await connection.getLatestBlockhash()).blockhash));
-  vTxx.sign([input.wallet]);
-  return {
-    txids: await optimizedSendAndConfirmTransaction(
-      vTxx,
-      connection,
-      (await connection.getLatestBlockhash()).blockhash,
-      2000 // RETRY INTERVAL
-    )
-  };
+  const addressLookupTableAccounts = await Promise.all(
+    vTxx.message.addressTableLookups.map(async (lookup) => {
+      return new AddressLookupTableAccount({
+        key: lookup.accountKey,
+        state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data)),
+      })
+    }));
 
+  var message = TransactionMessage.decompile(vTxx.message, { addressLookupTableAccounts: addressLookupTableAccounts })
+  vTxx.message = message.compileToV0Message(addressLookupTableAccounts);
+  vTxx.sign([input.wallet]);
+
+  return await optimizedSendAndConfirmTransaction(
+    vTxx,
+    connection,
+    (await connection.getLatestBlockhash()).blockhash,
+    2000 // RETRY INTERVAL
+  )
 }
