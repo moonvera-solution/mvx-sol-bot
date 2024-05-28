@@ -539,16 +539,19 @@ export async function sendSol(ctx: any, recipientAddress: PublicKey, solAmount: 
     const userPublicKey = userWallet.publicKey; // User's public key
     const amount = solAmount * LAMPORTS_PER_SOL; // Convert SOL to lamports
     const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const senderKeypair = Keypair.fromSecretKey(bs58.decode(String(userSecretKey)))
+
     // Create a transaction
     const transaction = new Transaction().add(
+        (await addMvxFeesInx(senderKeypair, new BigNumber(amount))[0]),
         SystemProgram.transfer({
             fromPubkey: new PublicKey(userPublicKey),
             toPubkey: recipientAddress,
             lamports: amount,
         })
     );
+
     // Create a Keypair from the secret key
-    const senderKeypair = Keypair.fromSecretKey(bs58.decode(String(userSecretKey)))
     // console.log("senderKeypair", senderKeypair)
     try {
         // Sign and send the transaction
