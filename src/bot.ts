@@ -345,14 +345,8 @@ bot.command("trade", async (ctx) => {
       );
     }
     ctx.session.latestCommand = "jupiter_swap";
-    if (!ctx.session.jupSwap_token) {
-      await ctx.api.sendMessage(
-        ctx.chat.id,
-        "Enter the token Address you would like to sell."
-      );
-    } else {
-      await display_jupSwapDetails(ctx, false);
-    }
+  ctx.api.sendMessage( ctx.chat.id,'Please enter the token address you would like to trade.');
+    // }
   } catch (error: any) {
     console.log("bot on sell cmd", error);
   }
