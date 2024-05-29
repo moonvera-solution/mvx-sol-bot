@@ -147,22 +147,9 @@ if (tradeDex.includes('jup_swap') || tradeDex.includes('ray_swap')) {
   && birdeyeData.walletTokenPosition.data.data.balance > 0
   && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
   ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance);
-  console.log('birdeyeData.walletTokenPosition.data.data.uiAmount', birdeyeData.walletTokenPosition.data.data.uiAmount);
-  console.log('userTokenBalance', userTokenBalance);
-console.log('tokenPriceUSD', tokenPriceUSD);
-console.log('userTokenDetails', userTokenDetails);
+
   
-  // const baseSupply = birdeyeData
-  // && birdeyeData.response
-  // && birdeyeData.response.data
-  // && birdeyeData.response.data.data
-  // && birdeyeData.response.data.data.supply != null  // This checks for both null and undefined
-  // ? birdeyeData.response.data.data.supply
-  // : Number(tokenInfo.baseTokenSupply.dividedBy(Math.pow(10, poolKeys.baseDecimals)));
-  // const mcap = baseSupply * tokenPriceUSD;  
-
-  // const formattedMarketCap = new Intl.NumberFormat('en-US', { notation: "compact" }).format(Mcap);
-
+  
   // Composing the message
   return `<b>${pos.name} (${pos.symbol})</b> | <code>${pos.baseMint}</code>\n` +
     `Mcap: ${Mcap} <b>USD</b>\n` +
