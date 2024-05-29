@@ -161,9 +161,13 @@ export async function resetWallet(ctx: any) {
   try {
     await ctx.api.sendMessage(chatId, `⚠️ IMPORTANT: This is the private key of your wallet that is being deleted: <code><b>${privatekeyString}</b></code>\n\n` +
       " It is the only way to access the funds in the deleted wallet.", { parse_mode: 'HTML' });
-
+    // Delete the wallet from the database
+    if(ctx.session.portfolio.wallets.length == 1){
+      await ctx.api.sendMessage(chatId, "You cannot delete the last wallet in your portfolio.");
+    }
     await Portfolios.updateOne({ chatId }, { $pull: { wallets: { walletId: ctx.session.portfolio.wallets[walletIndex].publicKey} } }).catch((err: any) => {  console.log("Error deleting user position choice", err.message); });;
     ctx.session.portfolio.activeWalletIndex = 0;
+
     await Portfolios.updateOne({ chatId }, { $set: { activeWalletIndex: 0 } }).catch((err: any) => {  console.log("Error deleting user position choice", err.message); });;
     // Provide options for importing or creating a new wallet
     const options = {
