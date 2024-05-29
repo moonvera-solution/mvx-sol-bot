@@ -104,7 +104,7 @@ const botToken = process.env.TELEGRAM_BOT_TOKEN!;
 const port = process.env.PORT || 80;
 let backupSession: ISESSION_DATA;
 
-if (true) {
+if (isProd) {
   const webhookUrl = "https://drib.ngrok.app";
   const url = `${webhookUrl}/${botToken}`;
   // Create the HTTP server and define request handling logic
