@@ -14,8 +14,6 @@ const COMMITMENT_LEVEL = "confirmed";
 const PRIORITY_FEE_LAMPORTS = 1;
 const TX_RETRY_INTERVAL = 5;
 
-const connection = new Connection(`${process.env.TRITON_RPC_URL!}${process.env.TRITON_RPC_TOKEN!}`);
-const wallet = Keypair.fromSecretKey(bs58.decode(process.env.TEST_WALLET_PK!));
 type REFERRAL_INFO = {
   referralWallet: string | null,
   referralCommision: number | null
