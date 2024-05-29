@@ -164,6 +164,7 @@ export async function resetWallet(ctx: any) {
 
     let updateQuery: any = {};
     updateQuery[`wallets.${walletIndex}`] = 1;
+    console.log('updateQuery', updateQuery);
     await Portfolios.updateOne({ chatId }, { $unset: updateQuery });
     await Portfolios.updateOne({ chatId }, { $pull: { wallets: null } });
 
