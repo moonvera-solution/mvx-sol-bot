@@ -1116,10 +1116,7 @@ bot.on("callback_query", async (ctx: any) => {
       case "refresh_db_wallets":
         await RefreshAllWallets(ctx);
         break;
-      case "delete_wallet": {
-        await resetWallet(ctx);
-        break;
-      }
+   
       case "refresh_wallet":
         await handleRereshWallet(ctx);
         break;
