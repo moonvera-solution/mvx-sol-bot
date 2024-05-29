@@ -1,7 +1,7 @@
 import { Percent, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken } from '@raydium-io/raydium-sdk';
 import { PublicKey, Keypair, Connection } from '@solana/web3.js';
 import {updatePositions, getSolBalance, updateReferralBalance, getSwapAmountOut } from '../../util';
-import { DEFAULT_TOKEN, MVXBOT_FEES } from '../../../config';
+import { DEFAULT_TOKEN, MVXBOT_FEES,CONNECTION } from '../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
 import { raydium_amm_swap } from '../../dex';
 import BigNumber from 'bignumber.js';
@@ -13,7 +13,7 @@ export async function handle_radyum_swap(
   side: 'buy' | 'sell', amountIn: any
 ) {
 
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
   const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
 
   try {

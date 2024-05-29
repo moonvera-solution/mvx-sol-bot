@@ -9,7 +9,7 @@ import { Connection } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import { Position, UserPosition } from '../../service/portfolio/positions';
 import { getTokenMetadata, getUserTokenBalanceAndDetails } from '../../service/feeds';
-import { SOL_ADDRESS } from '../../config';
+import { SOL_ADDRESS ,CONNECTION} from '../../config';
 import { getSwapDetails } from '../../service/dex/pumpfun';
 import { getSolanaDetails } from '../../api';
 
@@ -28,7 +28,7 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
   if (!userPosition.length || !userPosition[0].positions.length) {
     return ctx.api.sendMessage(ctx.chat.id, "No active positions.", { parse_mode: 'HTML' });
   }
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
   let positionlKeys: any[] = [];
 
   const tokenBalances = await Promise.all(userPosition[0].positions.map(pos =>
@@ -209,7 +209,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       positions: { $slice: -10 }
     }
   );
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
   if (!userPosition[0] || userPosition[0].positions.length === 0) {
     await ctx.api.sendMessage(ctx.chat.id, "No active positions.", { parse_mode: 'HTML' });
     return;
@@ -440,7 +440,7 @@ export async function handleWallets(ctx: any) {
   }else{
    selectedWalletIndex = ctx.session.portfolio.activeWalletIndex; // Index of the currently selected wallet
   }
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
 
 
   if (!wallets || wallets.length === 0) {

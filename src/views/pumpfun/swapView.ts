@@ -7,7 +7,7 @@ export const DEFAULT_PUBLIC_KEY = new PublicKey('1111111111111111111111111111111
 import { getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
 import { getSwapDetails, pump_fun_swap } from '../../service/dex/pumpfun';
 import { UserPositions } from '../../db/mongo/schema';
-import { MVXBOT_FEES, SOL_ADDRESS } from '../../config';
+import { MVXBOT_FEES, SOL_ADDRESS,CONNECTION } from '../../config';
 import bs58 from "bs58";
 import BigNumber from 'bignumber.js';
 import { saveUserPosition } from '../../service/portfolio/positions';
@@ -16,7 +16,7 @@ import { saveUserPosition } from '../../service/portfolio/positions';
 export async function swap_pump_fun(ctx: any) {
   try {
     const chatId = ctx.chat.id;
-    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const connection = CONNECTION;
     const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
     const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
     const tradeSide = ctx.session.pump_side;
@@ -153,7 +153,7 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
     }
     const publicKeyString: any = userWallet.publicKey;
     if (token) {
-      const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+      const connection = CONNECTION;
       const pumpFunLink = `https://pump.fun/${token}`;
       const [
         birdeyeData,

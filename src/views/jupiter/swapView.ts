@@ -8,7 +8,7 @@ import { runAllFees } from '../util/getPriority';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import { UserPositions } from '../../db';
 import { getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
-import { MVXBOT_FEES, SOL_ADDRESS } from "../../config";
+import { MVXBOT_FEES, SOL_ADDRESS, CONNECTION} from "../../config";
 import { jupiter_inx_swap } from '../../service/dex/jupiter/trade/swaps';
 import bs58 from 'bs58';
 import BigNumber from 'bignumber.js';
@@ -20,7 +20,7 @@ import { display_raydium_details } from '../raydium/swapAmmView';
 
 export async function jupiterSwap(ctx: any) {
   const chatId = ctx.chat.id;
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
   const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
   const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
   const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
@@ -170,7 +170,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
     const publicKeyString: any = userWallet.publicKey;
     console.log('rpcUrl:', rpcUrl)
     if (token) {
-      const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+      const connection = CONNECTION;
       const [
         birdeyeData,
         tokenMetadataResult,

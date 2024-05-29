@@ -58,6 +58,7 @@ import { setSnipe, snipperON } from "./service/portfolio/strategies/snipper";
 import { getSolBalance, getTargetDate, sendSol } from "./service/util";
 import { getRayPoolKeys } from "./service/dex/raydium/utils/formatAmmKeysById";
 import { _generateReferralLink, _getReferralData } from "../src/db/mongo/crud";
+import {CONNECTION} from "./config";
 import {
   Portfolios,
   Referrals,
@@ -141,15 +142,12 @@ async function _validateSession(ctx: any) {
 bot.command("start", async (ctx: any) => {
   await _validateSession(ctx);
   backupSession = ctx.session;
-
   try {
     const chatId = ctx.chat.id;
     ctx.session.chatId = chatId;
     const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
     let isNewUser = false;
-    const connection = new Connection(
-      `${ctx.session.tritonRPC}${ctx.session.tritonToken}`
-    );
+    const connection = CONNECTION;
     let referralCode = null;
     // Check if there's additional text with the /start command
     if (ctx.message.text.includes(" ")) {
@@ -888,7 +886,7 @@ bot.on("message", async (ctx) => {
         // TODO: add checks for the amount
         ctx.session.limitOrders.amount = Number(msgTxt!);
         const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
-        const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+        const connection = CONNECTION;
         let userSolBalance = await getSolBalance(userWallet.publicKey, connection);
         if (userSolBalance < ctx.session.limitOrders.amount && ctx.session.limitOrders.side == "buy") {
           await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
@@ -1581,9 +1579,6 @@ bot.catch((err) => {
 });
 
 async function checkAccountType(ctx: any, address: any) {
-
-  // console.log("`${ctx.session.tritonRPC}${ctx.session.tritonToken}`", `${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
-
   const connection = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
   const publicKey = new PublicKey(address);
   const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");

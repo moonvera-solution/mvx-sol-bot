@@ -3,6 +3,7 @@ import { getTokenMetadata, getUserTokenBalanceAndDetails } from '../../service/f
 import { quoteToken } from './../util/dataCalculation';
 import { formatNumberToKOrM, getSolBalance } from '../../service/util';
 import { RAYDIUM_POOL_TYPE } from '../../service/util/types';
+import {CONNECTION} from '../../config';
 import {  Connection } from '@solana/web3.js';
 import { runAllFees } from '../util/getPriority';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
@@ -19,7 +20,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
     }
     let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
     const activePool = ctx.session.activeTradingPool;
-    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const connection = CONNECTION;
     const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
     const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
     // console.log("activePool",activePool)

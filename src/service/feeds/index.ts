@@ -1,7 +1,7 @@
 import { isValidBase58 } from "../util";
 import { TOKEN_PROGRAM_ID, Token as RayddiumToken, publicKey } from '@raydium-io/raydium-sdk';
 import { PublicKey,Connection } from '@solana/web3.js';
-
+import {CONNECTION} from '../../config';
 import { Metaplex } from "@metaplex-foundation/js";
 
 export async function getTokenMetadata(ctx: any, tokenAddress: string): Promise<any> {
@@ -11,7 +11,7 @@ export async function getTokenMetadata(ctx: any, tokenAddress: string): Promise<
         ctx.api.sendMessage(chatId, "Invalid token address provided.", { parse_mode: 'HTML' });
         return;
     }
-    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const connection = CONNECTION;
     const metaplex = Metaplex.make(connection);
     const mintAddress = new PublicKey(tokenAddress);
     const tokenData = await metaplex.nfts().findByMint({ mintAddress: mintAddress });

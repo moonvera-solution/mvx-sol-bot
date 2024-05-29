@@ -160,8 +160,6 @@ const UserSessions = new Schema({
   ispriorityCustomFee: Boolean,
   customPriorityFee: Number,
   positionIndex: Number,
-  tritonRPC: String,
-  tritonToken: String,
   allowedReferral: String,
   pump_amountIn: Number,
   pump_side: String,

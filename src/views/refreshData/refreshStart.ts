@@ -1,10 +1,10 @@
 import { getSolBalance } from '../../service/util';
 import { getSolanaDetails,  } from '../../api';
-import { Connection } from '@solana/web3.js';
+import { CONNECTION } from '../../config';
 
 export async function handleRefreshStart(ctx: any) {
     const chatId = ctx.chat.id;
-    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const connection = CONNECTION;
     let solPriceMessage = '';
     let userWallet: any;
  

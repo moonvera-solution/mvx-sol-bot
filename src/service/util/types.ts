@@ -56,8 +56,6 @@ export interface ISESSION_DATA {
   ispriorityCustomFee: boolean;
   customPriorityFee: number;
   positionIndex: number;
-  tritonRPC: String,
-  tritonToken: String,
   allowedReferral:String, // tg Username
   pump_amountIn: number,
   pump_side: string,
@@ -158,8 +156,6 @@ export const DefaultSessionData: ISESSION_DATA = {
   // priorityFees: PriotitizationFeeLevels.LOW,
   positionIndex: 0,
   allowedReferral:'', // tg Username
-  tritonRPC : 'https://moonvera-ams.rpcpool.com/',
-  tritonToken : process.env.TRITON_RPC_TOKEN!,
   limitOrders:{token:'',side:'',amount:0,price:0,time:0},
   jupSwap_token: '',
   jupSwap:{token:'',side:'',amount:0},

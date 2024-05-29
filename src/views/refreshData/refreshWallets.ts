@@ -1,13 +1,13 @@
 import { getSolBalance } from '../../service/util';
 import { getSolanaDetails,  } from '../../api';
-import { Connection } from '@solana/web3.js';
+import { CONNECTION } from '../../config';
 
 export async function refreshWallets(ctx: any){
     const chatId = ctx.chat.id;
     const wallets = ctx.session.portfolio.wallets;
     const selectedWalletIndex = ctx.session.portfolio.activeWalletIndex; // Index of the currently selected wallet
 
-    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const connection = CONNECTION;
 
     if (!wallets || wallets.length === 0) {
         await ctx.api.sendMessage(chatId, "No wallets found. Please add a wallet first.");
@@ -55,7 +55,7 @@ export async function refreshWallets(ctx: any){
 export async function handleRereshWallet(ctx: any){
 
     const chatId = ctx.chat.id;
-    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const connection = CONNECTION;
     const selectedWallet = ctx.session.portfolio.activeWalletIndex;
     const userWallet = ctx.session.portfolio.wallets[selectedWallet];
 

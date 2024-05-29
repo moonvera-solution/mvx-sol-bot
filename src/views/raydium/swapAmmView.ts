@@ -1,6 +1,7 @@
 import { PublicKey } from '@metaplex-foundation/js';
 import { getTokenMetadata, getUserTokenBalanceAndDetails } from '../../service/feeds';
 import { quoteToken } from '../util/dataCalculation';
+import {CONNECTION} from '../../config';
 import { formatNumberToKOrM, getSolBalance } from '../../service/util';
 import { RAYDIUM_POOL_TYPE } from '../../service/util/types';
 import {  Connection } from '@solana/web3.js';
@@ -14,7 +15,7 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
   if(priority_custom === true){
     priority_Level = 0;
   }
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
   const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
   const baseVault = rayPoolKeys.baseVault;
   const quoteVault = rayPoolKeys.quoteVault;
