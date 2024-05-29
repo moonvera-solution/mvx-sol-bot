@@ -29,7 +29,7 @@ export async function handle_radyum_swap(
   try {
     const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
     const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection);
-    console.log("userTokenBalanceAndDetails", userTokenBalanceAndDetails)
+    // console.log("userTokenBalanceAndDetails", userTokenBalanceAndDetails)
     const poolKeys = ctx.session.activeTradingPool;
     const OUTPUT_TOKEN = new RayddiumToken(TOKEN_PROGRAM_ID, tokenOut, userTokenBalanceAndDetails.decimals);
     const walletTokenAccounts = await getWalletTokenAccount(connection, new PublicKey(userWallet.publicKey));
@@ -78,7 +78,7 @@ export async function handle_radyum_swap(
         mvxFee = new BigNumber(bot_fee).multipliedBy(1e9);
       }
       // mvxFee = new BigNumber(swapAmountIn).times(MVXBOT_FEES);
-      await ctx.api.sendMessage(chatId, `💸 Buying ${originalBuyAmt} SOL of ${userTokenBalanceAndDetails.userTokenSymbol}`);
+      // await ctx.api.sendMessage(chatId, `💸 Buying ${originalBuyAmt} SOL of ${userTokenBalanceAndDetails.userTokenSymbol}`);
     } else {
 
       if (userTokenBalance == 0) {
@@ -90,7 +90,7 @@ export async function handle_radyum_swap(
       outputToken = DEFAULT_TOKEN.WSOL;
       let sellAmountPercent = userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals);
       swapAmountIn = new BigNumber(swapAmountIn).multipliedBy(sellAmountPercent).dividedBy(100).integerValue(BigNumber.ROUND_FLOOR);
-      await ctx.api.sendMessage(chatId, `💸 Selling ${percent}% ${userTokenBalanceAndDetails.userTokenSymbol}`);
+      // await ctx.api.sendMessage(chatId, `💸 Selling ${percent}% ${userTokenBalanceAndDetails.userTokenSymbol}`);
     }
     // console.log('swapAmountIn', swapAmountIn);
     // console.log('testing')
@@ -105,6 +105,9 @@ export async function handle_radyum_swap(
 
     if (poolKeys) {
       //   console.log('poolKeys');
+      let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing... Please wait for confirmation.`
+      await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
+    
       raydium_amm_swap({
         ctx,
         side,
@@ -121,24 +124,27 @@ export async function handle_radyum_swap(
         skipPreflight: true,
         maxRetries: 0,
       }).then(async (txids) => {
+       
         if (!txids) return;
-        let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing... <a href="https://solscan.io/tx/${txids}">View on Solscan</a>. Please wait for confirmation...`
-        await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-        let extractAmount = await getSwapAmountOut(connection, txids);
+        if(txids){
+          const config = {
+            searchTransactionHistory: true
+          };
+          const sigStatus = await connection.getSignatureStatus(txids, config)
+          if (sigStatus?.value?.err) {
+            await ctx.api.sendMessage(chatId, `❌ ${side.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+            return;
+          }
+          let extractAmount = await getSwapAmountOut(connection, txids);
         let confirmedMsg, solAmount, tokenAmount, _symbol = userTokenBalanceAndDetails.userTokenSymbol;
-        let solFromSell = new BigNumber(0);
-
-        if (extractAmount > 0) {
-          solFromSell = new BigNumber(extractAmount);
-          solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
-          tokenAmount = swapAmountIn / Math.pow(10, userTokenBalanceAndDetails.decimals);
-          side == 'sell' ?
-            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`
-            :
-            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4)} <b>${_symbol}</b> for ${(swapAmountIn / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
-        } else {
-          confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
-        }
+        let solFromSell = 0;
+        const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
+        side == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
+        side == 'buy' ?
+          confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${amountFormatted} <b>${_symbol}</b> for ${(swapAmountIn / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`
+          :
+          confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${Number(Number(swapAmountIn) / Math.pow(10, Number(userTokenBalanceAndDetails.decimals))).toFixed(4)} <b>${_symbol}</b> for ${(solFromSell/ 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
+          await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
 
         const bot_fee = new BigNumber(solFromSell).multipliedBy(MVXBOT_FEES);
         const referralAmmount = (bot_fee.multipliedBy(referralFee));
@@ -151,8 +157,7 @@ export async function handle_radyum_swap(
         }
 
         if (side == 'buy') {
-          console.log('extractAmount', extractAmount);
-          // if (await trackUntilFinalized(ctx, txids)) {
+     
           await saveUserPosition( // to display portfolio positions
             ctx,
             userWallet.publicKey.toString(), {
@@ -210,18 +215,21 @@ export async function handle_radyum_swap(
             });
             console.log(chatId, 'amount != 0');
           }
+          ctx.session.latestCommand = 'jupiter_swap'
+
         }
-        await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
         if (side == 'buy') {
           ctx.session.latestCommand = 'jupiter_swap';
           ctx.session.jupSwap_token = poolKeys.baseMint;
           await display_jupSwapDetails(ctx, false);
-        }
+        } 
 
+        }
+        
       }).catch(async (error: any) => {
         console.log('afterswap. ', error)
         console.log('here... ', error.message)
-        await ctx.api.sendMessage(chatId, JSON.stringify(error.message));
+        await ctx.api.sendMessage(chatId, `🔴 ${side.toUpperCase()} Tx failed. Please try again later.`);
         return;
       });
     } else {

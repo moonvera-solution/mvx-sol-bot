@@ -5,7 +5,7 @@ import { sendTx, add_mvx_and_ref_inx_fees, addMvxFeesInx, wrapLegacyTx, optimize
 import { Keypair, Connection, Transaction, AddressLookupTableAccount, VersionedTransaction, TransactionMessage } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 
-const TX_RETRY_INTERVAL = 100;
+const TX_RETRY_INTERVAL = 50;
 
 /**
  * @notice Quotes from solTracker API then sends swap tx adding mvx&ref fees

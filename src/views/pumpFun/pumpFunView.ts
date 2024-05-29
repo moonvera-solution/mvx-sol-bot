@@ -49,21 +49,27 @@ export async function swap_pump_fun(ctx: any) {
 
       if (!txSigs) return;
 
+      if(txSigs){
+        const config = {
+          searchTransactionHistory: true
+        };
+        const sigStatus = await connection.getSignatureStatus(txSigs, config)
+        if (sigStatus?.value?.err) {
+          await ctx.api.sendMessage(chatId, `❌ ${tradeSide.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+          return;
+        }
 
-      let extractAmount = await getSwapAmountOutPump(connection, txSigs, tradeSide);
+        let confirmedMsg, tokenAmount
+        let solFromSell = 0;
 
-      let confirmedMsg, solAmount, tokenAmount
-      let solFromSell = 0;
-
-      if (extractAmount > 0) {
+        let extractAmount = await getSwapAmountOutPump(connection, txSigs, tradeSide);
         const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
         tradeSide == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
         confirmedMsg = `✅ <b>${tradeSide.toUpperCase()} tx confirmed</b> ${tradeSide == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${ctx.session.pump_amountIn} SOL</b>` : `You sold <b>${amountToSell}</b> <b>${_symbol}</b> and received <b>${(solFromSell / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txSigs}">View Details</a>.`;
         await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
-      } else {
-        confirmedMsg = `✅ <b>${tradeSide.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txSigs}">View Details</a>.`;
-        await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
-      }
+
+       
+
       // ------- check user balanace in DB --------
       const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
       // console.log("userPosition", userPosition);
@@ -81,7 +87,7 @@ export async function swap_pump_fun(ctx: any) {
       }
 
       if (tradeSide == 'buy') {
-        console.log('extractAmount', extractAmount);
+        // console.log('extractAmount', extractAmount);
         // if (await trackUntilFinalized(ctx, txids)) {
         await saveUserPosition( // to display portfolio positions
           ctx,
@@ -93,20 +99,20 @@ export async function swap_pump_fun(ctx: any) {
           amountIn: oldPositionSol ? oldPositionSol + ctx.session.pump_amountIn * 1e9 : ctx.session.pump_amountIn * 1e9,
           amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
         });
-        await display_pumpFun(ctx, false);
+     
       } else {
         let newAmountIn, newAmountOut;
 
         if (Number(amountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
           newAmountIn = 0;
           newAmountOut = 0;
-          console.log('position remove');
+          // console.log('position remove');
         } else {
           newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
           newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
-          console.log('position update');
-          console.log('newAmountIn', newAmountIn);
-          console.log('newAmountOut', newAmountOut);
+          // console.log('position update');
+          // console.log('newAmountIn', newAmountIn);
+          // console.log('newAmountOut', newAmountOut);
         }
 
         if (newAmountIn <= 0 || newAmountOut <= 0) {
@@ -122,8 +128,16 @@ export async function swap_pump_fun(ctx: any) {
             amountOut: newAmountOut,
           });
         }
+        ctx.session.latestCommand = 'jupiter_swap'
       }
-      console.log('extractAmount', extractAmount);
+      if(tradeSide == 'buy'){
+        ctx.session.latestCommand = 'jupiter_swap'
+        await display_pumpFun(ctx, false);
+      }
+    
+      }
+      
+ 
     });
   } catch (e) {
     await ctx.api.sendMessage(ctx.chat.id, `❌ Swap failed`);
@@ -234,7 +248,7 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
         // `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
         `Wallet balance: <b>${getSolBalanceData.toFixed(4)}</b> SOL | <b>${(getSolBalanceData * solPrice).toFixed(4)}</b> USD\n` +
         `Net Worth: <b>${netWorthSol.toFixed(4)}</b> SOL | <b>${netWorth.toFixed(4)}</b> USD\n`;
-
+      console.log('ctx.session.customPriorityFee', ctx.session.customPriorityFee);
 
       let options: any;
       options = {
@@ -245,7 +259,7 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
             [{ text: ' 🔂 Refresh ', callback_data: 'refresh_pump_fun' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
             [{ text: `Buy X  (SOL)`, callback_data: 'buy_X_PUMP' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_PUMP' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_PUMP' }],
             [{ text: `Sell X %`, callback_data: 'sell_X_PUMP' }, { text: 'Sell 50%  ', callback_data: 'sell_50_PUMP' }, { text: 'Sell 100%  ', callback_data: 'sell_100_PUMP' }],
-            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority`, callback_data: 'set_customPriority' }],
+            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: `set_slippage`}, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
             [{ text: 'Close', callback_data: 'closing' }]
           ]
         }

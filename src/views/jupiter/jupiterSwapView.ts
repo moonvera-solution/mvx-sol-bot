@@ -79,15 +79,15 @@ export async function jupiterSwap(ctx: any) {
         const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
         let oldPositionSol: number = 0;
         let oldPositionToken: number = 0;
-        console.log('userPosition', userPosition);
-        console.log('tokenIn', tokenIn);
+        // console.log('userPosition', userPosition);
+        // console.log('tokenIn', tokenIn);
         if (userPosition) {
 
           const existingPositionIndex = userPosition.positions.findIndex(
             position => position.baseMint === (isBuySide ? tokenOut.toString() : tokenIn.toString())
           );
 
-          console.log('existingPositionIndex', existingPositionIndex);
+          // console.log('existingPositionIndex', existingPositionIndex);
           if (userPosition.positions[existingPositionIndex]) {
             oldPositionSol = userPosition.positions[existingPositionIndex].amountIn
             oldPositionToken = userPosition.positions[existingPositionIndex].amountOut!
@@ -108,25 +108,15 @@ export async function jupiterSwap(ctx: any) {
           });
         } else {
           let newAmountIn, newAmountOut;
-          console.log('amountIn', amountIn);
-          console.log('oldPositionToken', oldPositionToken);
-          console.log('oldPositionSol', oldPositionSol);
-          console.log('extractAmount', extractAmount);
-
-          // amountIn 2597679329 == 1979179682
-          // oldPositionToken 1979179682
-          // oldPositionSol 1000000 == 1190498
-          // extractAmount 1190498
+       
           if (Number(amountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
             newAmountIn = 0;
             newAmountOut = 0;
-            console.log('position remove');
+            // console.log('position remove');
           } else {
             newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
             newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
-            console.log('position update');
-            console.log('newAmountIn', newAmountIn);
-            console.log('newAmountOut', newAmountOut);
+  
           }
 
           if (newAmountIn <= 0 || newAmountOut <= 0) {
@@ -147,6 +137,7 @@ export async function jupiterSwap(ctx: any) {
               amountOut: newAmountOut,
             });
           }
+          ctx.session.latestCommand = 'jupiter_swap'
         }
         await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
         if (tradeType == 'buy') {

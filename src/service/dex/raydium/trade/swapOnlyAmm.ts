@@ -181,6 +181,6 @@ export async function swapOnlyAmm(input: TxInputInfo): Promise<string | null> {
     vTxx,
     connection,
     (await connection.getLatestBlockhash()).blockhash,
-    2000 // RETRY INTERVAL
+    50 // RETRY INTERVAL
   )
 }
