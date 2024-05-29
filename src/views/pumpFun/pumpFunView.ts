@@ -87,8 +87,7 @@ export async function swap_pump_fun(ctx: any) {
       }
 
       if (tradeSide == 'buy') {
-        // console.log('extractAmount', extractAmount);
-        // if (await trackUntilFinalized(ctx, txids)) {
+     
         await saveUserPosition( // to display portfolio positions
           ctx,
           userWallet.publicKey.toString(), {
@@ -106,13 +105,11 @@ export async function swap_pump_fun(ctx: any) {
         if (Number(amountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
           newAmountIn = 0;
           newAmountOut = 0;
-          // console.log('position remove');
+
         } else {
           newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
           newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
-          // console.log('position update');
-          // console.log('newAmountIn', newAmountIn);
-          // console.log('newAmountOut', newAmountOut);
+      
         }
 
         if (newAmountIn <= 0 || newAmountOut <= 0) {
@@ -136,7 +133,6 @@ export async function swap_pump_fun(ctx: any) {
       }
     
       }
-      
  
     });
   } catch (e) {
