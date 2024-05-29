@@ -46,29 +46,17 @@ export async function swap_pump_fun(ctx: any) {
       priorityFee: ctx.session.customPriorityFee,
       forceLegacy: true
     }).then(async (txSigs) => {
-
       if (!txSigs) return;
 
-      if(txSigs){
-        const config = {
-          searchTransactionHistory: true
-        };
-        const sigStatus = await connection.getSignatureStatus(txSigs, config)
-        if (sigStatus?.value?.err) {
-          await ctx.api.sendMessage(chatId, `❌ ${tradeSide.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
-          return;
-        }
+      let confirmedMsg, tokenAmount
+      let solFromSell = 0;
 
-        let confirmedMsg, tokenAmount
-        let solFromSell = 0;
+      let extractAmount = await getSwapAmountOutPump(connection, txSigs, tradeSide);
+      const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
+      tradeSide == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
+      confirmedMsg = `✅ <b>${tradeSide.toUpperCase()} tx confirmed</b> ${tradeSide == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${ctx.session.pump_amountIn} SOL</b>` : `You sold <b>${amountToSell}</b> <b>${_symbol}</b> and received <b>${(solFromSell / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txSigs}">View Details</a>.`;
+      await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
 
-        let extractAmount = await getSwapAmountOutPump(connection, txSigs, tradeSide);
-        const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
-        tradeSide == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
-        confirmedMsg = `✅ <b>${tradeSide.toUpperCase()} tx confirmed</b> ${tradeSide == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${ctx.session.pump_amountIn} SOL</b>` : `You sold <b>${amountToSell}</b> <b>${_symbol}</b> and received <b>${(solFromSell / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txSigs}">View Details</a>.`;
-        await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
-
-       
 
       // ------- check user balanace in DB --------
       const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
@@ -98,7 +86,7 @@ export async function swap_pump_fun(ctx: any) {
           amountIn: oldPositionSol ? oldPositionSol + ctx.session.pump_amountIn * 1e9 : ctx.session.pump_amountIn * 1e9,
           amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
         });
-     
+
       } else {
         let newAmountIn, newAmountOut;
 
@@ -127,13 +115,10 @@ export async function swap_pump_fun(ctx: any) {
         }
         ctx.session.latestCommand = 'jupiter_swap'
       }
-      if(tradeSide == 'buy'){
+      if (tradeSide == 'buy') {
         ctx.session.latestCommand = 'jupiter_swap'
         await display_pumpFun(ctx, false);
       }
-    
-      }
- 
     });
   } catch (e) {
     await ctx.api.sendMessage(ctx.chat.id, `❌ Swap failed`);
@@ -193,13 +178,13 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
       const baseDecimals = tokenData.mint.decimals;
       const totalSupply = new BigNumber(tokenData.mint.supply.basisPoints);
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(swapRates)) * solPrice);
-      const userTokenBalance = birdeyeData 
-      && birdeyeData.walletTokenPosition
-      && birdeyeData.walletTokenPosition.data
-      && birdeyeData.walletTokenPosition.data.data
-      && birdeyeData.walletTokenPosition.data.data.balance > 0
-      && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
-      ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance);
+      const userTokenBalance = birdeyeData
+        && birdeyeData.walletTokenPosition
+        && birdeyeData.walletTokenPosition.data
+        && birdeyeData.walletTokenPosition.data.data
+        && birdeyeData.walletTokenPosition.data.data.balance > 0
+        && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
+        ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance);
       const netWorth = birdeyeData
         && birdeyeData.birdeyePosition
         && birdeyeData.birdeyePosition.data
@@ -255,7 +240,7 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
             [{ text: ' 🔂 Refresh ', callback_data: 'refresh_pump_fun' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
             [{ text: `Buy X  (SOL)`, callback_data: 'buy_X_PUMP' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_PUMP' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_PUMP' }],
             [{ text: `Sell X %`, callback_data: 'sell_X_PUMP' }, { text: 'Sell 50%  ', callback_data: 'sell_50_PUMP' }, { text: 'Sell 100%  ', callback_data: 'sell_100_PUMP' }],
-            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: `set_slippage`}, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
+            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: `set_slippage` }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
             [{ text: 'Close', callback_data: 'closing' }]
           ]
         }
