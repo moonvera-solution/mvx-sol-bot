@@ -156,7 +156,7 @@ export async function resetWallet(ctx: any) {
   const userWallet = ctx.session.portfolio.wallets[walletIndex];
   console.log('userWallet', userWallet)
   const privatekeyString: any = userWallet.secretKey;
-
+  
 
   try {
     await ctx.api.sendMessage(chatId, `⚠️ IMPORTANT: This is the private key of your wallet that is being deleted: <code><b>${privatekeyString}</b></code>\n\n` +
@@ -165,7 +165,7 @@ export async function resetWallet(ctx: any) {
     // let updateQuery: any = {};
     // updateQuery[`wallets.${walletIndex}`] = 1;
     // await Portfolios.updateOne({ chatId }, { $unset: updateQuery }).catch((err: any) => {  console.log("Error deleting wlt position", err.message); });;
-    await Portfolios.findOneAndDelete({ chatId }, { $pull: { wallets: ctx.session.portfolio.wallets[walletIndex] } }).catch((err: any) => {  console.log("Error deleting user position choice", err.message); });;
+    await Portfolios.updateOne({ chatId }, { $pull: { wallets: ctx.session.portfolio.wallets[walletIndex] } }).catch((err: any) => {  console.log("Error deleting user position choice", err.message); });;
     console.log('wallets: ctx.session.portfolio.wallets', ctx.session.portfolio.wallets)
     // await UserPositions.deleteOne({positionChatId: chatId, walletId: userWallet.publicKey }).catch((err: any) => {  console.log("Error deleting user position", err.message); });
     
