@@ -156,7 +156,8 @@ export async function resetWallet(ctx: any) {
   const userWallet = ctx.session.portfolio.wallets[walletIndex];
 
   const privatekeyString: any = userWallet.secretKey;
-  // console.log('walletPublicKey', walletIndex);
+  console.log('walletPublicKey', walletIndex);
+  console.log('privatekeyString', privatekeyString);
 
   try {
     await ctx.api.sendMessage(chatId, `⚠️ IMPORTANT: This is the private key of your wallet that is being deleted: <code><b>${privatekeyString}</b></code>\n\n` +
