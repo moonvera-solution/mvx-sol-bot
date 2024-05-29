@@ -45,7 +45,7 @@ export async function jupiterSwap(ctx: any) {
 
     }
     console.log('priorityFees:', ctx.session.priorityFees)
-    await ctx.api.sendMessage(chatId, `🟢 <b>Transaction ${ctx.session.jupSwap_side.toUpperCase()}:</b> Processing ... Please wait for confirmation...`, { parse_mode: 'HTML', disable_web_page_preview: true });
+    await ctx.api.sendMessage(chatId, `🟢 <b>Transaction ${ctx.session.jupSwap_side.toUpperCase()}:</b> Processing... \n Please wait for confirmation.`, { parse_mode: 'HTML', disable_web_page_preview: true });
     jupiterInxSwap(
       connection,
       rpcUrl,

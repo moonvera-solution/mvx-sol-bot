@@ -147,10 +147,7 @@ if (tradeDex.includes('jup_swap') || tradeDex.includes('ray_swap')) {
   && birdeyeData.walletTokenPosition.data.data.balance > 0
   && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
   ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance);
-  console.log('birdeyeData.walletTokenPosition.data.data.uiAmount', birdeyeData.walletTokenPosition.data.data.uiAmount);
-  console.log('userTokenBalance', userTokenBalance);
-console.log('tokenPriceUSD', tokenPriceUSD);
-console.log('userTokenDetails', userTokenDetails);
+
   
   // const baseSupply = birdeyeData
   // && birdeyeData.response
