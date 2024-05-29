@@ -166,7 +166,7 @@ export async function resetWallet(ctx: any) {
     // updateQuery[`wallets.${walletIndex}`] = 1;
     // await Portfolios.updateOne({ chatId }, { $unset: updateQuery }).catch((err: any) => {  console.log("Error deleting wlt position", err.message); });;
     await Portfolios.updateOne({ chatId }, { $pull: { wallets: ctx.session.portfolio.wallets[walletIndex] } }).catch((err: any) => {  console.log("Error deleting user position choice", err.message); });;
-    console.log('wallets: ctx.session.portfolio.wallets', ctx.session.portfolio.wallets)
+    console.log('wallets: ctx.session.portfolio.wallets', ctx.session.portfolio.wallets[walletIndex])
     // await UserPositions.deleteOne({positionChatId: chatId, walletId: userWallet.publicKey }).catch((err: any) => {  console.log("Error deleting user position", err.message); });
     
     // Provide options for importing or creating a new wallet
