@@ -163,7 +163,7 @@ export async function resetWallet(ctx: any) {
       " It is the only way to access the funds in the deleted wallet.", { parse_mode: 'HTML' });
 
     await Portfolios.updateOne({ chatId }, { $pull: { wallets: { walletId: ctx.session.portfolio.wallets[walletIndex].publicKey} } }).catch((err: any) => {  console.log("Error deleting user position choice", err.message); });;
-    
+    ctx.session.portfolio.activeWalletIndex = 0;
     // Provide options for importing or creating a new wallet
     const options = {
       reply_markup: JSON.stringify({
