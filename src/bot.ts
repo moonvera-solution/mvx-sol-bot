@@ -565,6 +565,7 @@ bot.on("message", async (ctx) => {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
         }
+        break;
       }
       case "buy_X_JUP": {
         ctx.session.latestCommand = "buy_X_JUP";
@@ -590,6 +591,7 @@ bot.on("message", async (ctx) => {
           }
 
         }
+        break;
       }
       case "sell_X_PUMP": {
         ctx.session.latestCommand = "sell_X_PUMP";
