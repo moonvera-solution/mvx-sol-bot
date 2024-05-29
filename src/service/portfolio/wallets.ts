@@ -110,6 +110,7 @@ export async function handleGetPrivateKey(ctx: any) {
 
   const privatekeyString: any = userWallet.secretKey; // The user's public key
   try {
+    console.log('userWallet', userWallet)
     // Fetch the user's wallet data 
     if (!userWallet || !userWallet.secretKey) {
       await ctx.api.sendMessage(chatId, "No wallet found. Please create a wallet first.");

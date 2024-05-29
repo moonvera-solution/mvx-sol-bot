@@ -65,7 +65,7 @@ import {
   display_all_positions,
   display_single_position,
 } from "./views/new_portfolioView";
-import { get } from "axios";
+
 import { hasEnoughSol } from "./service/util/validations";
 
 const express = require("express");

@@ -7,6 +7,8 @@ export async function RefreshAllWallets(ctx: any){
     const chatId = ctx.chat.id;
     const wallets = ctx.session.portfolio.wallets;
     const selectedWalletIndex = ctx.session.portfolio.activeWalletIndex; // Index of the currently selected wallet
+    console.log('selectedWalletIndex', selectedWalletIndex)
+    console.log('wallets', wallets)
     const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
 
 
