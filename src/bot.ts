@@ -1191,7 +1191,7 @@ bot.on("callback_query", async (ctx: any) => {
           ctx.session.latestCommand = "jupiter_swap";
           ctx.api.sendMessage(
             chatId,
-            "Please provide the token address or the jupiter swap link."
+            "Please provide the token address"
           );
         } else {
           ctx.session.latestCommand = "jupiter_swap";
