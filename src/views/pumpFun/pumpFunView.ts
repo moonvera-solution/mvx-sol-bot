@@ -117,7 +117,7 @@ export async function swap_pump_fun(ctx: any) {
       }
       if (tradeSide == 'buy') {
         ctx.session.latestCommand = 'jupiter_swap'
-        await display_pumpFun(ctx, false);
+        // await display_pumpFun(ctx, false);
       }
     });
   } catch (e) {
