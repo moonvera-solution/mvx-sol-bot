@@ -109,8 +109,8 @@ if (isProd) {
   const url = `${webhookUrl}/${botToken}`;
   // Create the HTTP server and define request handling logic
   app.use(express.json()); // for parsing application/json
-  app.post(`/${botToken}`, webhookCallback(bot, express, "throw", 120_000));
-  app.use(`/${botToken}`, webhookCallback(bot, express, "throw", 120_000));
+  app.post(`/${botToken}`, webhookCallback(bot, "express","throw",120_000));
+  app.use(`/${botToken}`,webhookCallback(bot, "express","throw",120_000));
   app.get("/", (req: any, res: any) => {
     res.send("Hello from ngrok server!");
   });
@@ -1425,7 +1425,7 @@ bot.on("callback_query", async (ctx: any) => {
           await display_snipe_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_position") {
           await display_single_position(ctx, true);
-
+       
         } else if (ctx.session.latestCommand === "pump_fun") {
           await display_pumpFun(ctx, true);
         } else if (ctx.session.latestCommand === "jupiter_swap") {
@@ -1442,7 +1442,7 @@ bot.on("callback_query", async (ctx: any) => {
           await display_snipe_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_position") {
           await display_single_position(ctx, true);
-
+        
         } else if (ctx.session.latestCommand === "pump_fun") {
           await display_pumpFun(ctx, true);
         } else if (ctx.session.latestCommand === "jupiter_swap") {
@@ -1460,7 +1460,7 @@ bot.on("callback_query", async (ctx: any) => {
           await display_snipe_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_position") {
           await display_single_position(ctx, true);
-
+        
         } else if (ctx.session.latestCommand === "pump_fun") {
           await display_pumpFun(ctx, true);
         } else if (ctx.session.latestCommand === "jupiter_swap") {
