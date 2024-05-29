@@ -183,13 +183,13 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
       const baseDecimals = tokenData.mint.decimals;
       const totalSupply = new BigNumber(tokenData.mint.supply.basisPoints);
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(swapRates)) * solPrice);
-      const userTokenBalance = birdeyeData
-        && birdeyeData.walletTokenPosition
-        && birdeyeData.walletTokenPosition.data
-        && birdeyeData.walletTokenPosition.data.data
-        && birdeyeData.walletTokenPosition.data.data.balance > 0
-        && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
-        ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance / Math.pow(10, userTokenDetails.decimals));
+      const userTokenBalance = birdeyeData 
+      && birdeyeData.walletTokenPosition
+      && birdeyeData.walletTokenPosition.data
+      && birdeyeData.walletTokenPosition.data.data
+      && birdeyeData.walletTokenPosition.data.data.balance > 0
+      && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
+      ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance);
       const netWorth = birdeyeData
         && birdeyeData.birdeyePosition
         && birdeyeData.birdeyePosition.data

@@ -33,7 +33,7 @@ import {
   display_token_details,
   display_snipe_options,
   handleCloseKeyboard,
-  display_after_Snipe_Buy,
+  // display_after_Snipe_Buy,
 } from "./views";
 import { getSolBalance, sendSol } from "./service/util";
 import {
@@ -412,7 +412,8 @@ const commandNumbers = [
   "sell_1_RAY",
   "buy_X_SOL_IN_POSITION",
   "rug_check",
-  'snipe_X_SOL'
+  'snipe_X_SOL',
+  'import_wallet'
 
   // 'jupiter_swap',
 ];
@@ -1411,10 +1412,7 @@ bot.on("callback_query", async (ctx: any) => {
 
         break;
       }
-      case "Refresh_display_after_Snipe_Buy": {
-        await display_after_Snipe_Buy(ctx, true);
-        break;
-      }
+
       case "display_single_position": {
         ctx.session.latestCommand = "display_single_position";
         await display_single_position(ctx, false);
@@ -1427,8 +1425,7 @@ bot.on("callback_query", async (ctx: any) => {
           await display_snipe_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_position") {
           await display_single_position(ctx, true);
-        } else if (ctx.session.latestCommand === "display_after_Snipe_Buy") {
-          await display_after_Snipe_Buy(ctx, true);
+       
         } else if (ctx.session.latestCommand === "pump_fun") {
           await display_pumpFun(ctx, true);
         } else if (ctx.session.latestCommand === "jupiter_swap") {
@@ -1445,8 +1442,7 @@ bot.on("callback_query", async (ctx: any) => {
           await display_snipe_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_position") {
           await display_single_position(ctx, true);
-        } else if (ctx.session.latestCommand === "display_after_Snipe_Buy") {
-          await display_after_Snipe_Buy(ctx, true);
+        
         } else if (ctx.session.latestCommand === "pump_fun") {
           await display_pumpFun(ctx, true);
         } else if (ctx.session.latestCommand === "jupiter_swap") {
@@ -1464,8 +1460,7 @@ bot.on("callback_query", async (ctx: any) => {
           await display_snipe_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_position") {
           await display_single_position(ctx, true);
-        } else if (ctx.session.latestCommand === "display_after_Snipe_Buy") {
-          await display_after_Snipe_Buy(ctx, true);
+        
         } else if (ctx.session.latestCommand === "pump_fun") {
           await display_pumpFun(ctx, true);
         } else if (ctx.session.latestCommand === "jupiter_swap") {

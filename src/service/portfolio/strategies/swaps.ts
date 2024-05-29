@@ -3,14 +3,12 @@ import { PublicKey, Keypair, Connection } from '@solana/web3.js';
 import { getWalletTokenAccount, getSolBalance, waitForConfirmation, getSwapAmountOut } from '../../util';
 import { DEFAULT_TOKEN, MVXBOT_FEES } from '../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
-import { display_after_Snipe_Buy, } from '../../../views';
 import { ISESSION_DATA } from '../../util/types';
 import { saveUserPosition } from "../positions";
 import { raydium_amm_swap } from '../../dex';
 import BigNumber from 'bignumber.js';
 import bs58 from 'bs58';
 import { Referrals, UserPositions } from '../../../db/mongo/schema';
-// import { display_single_spl_positions } from '../../../views/portfolioView';
 import { display_jupSwapDetails } from '../../../views/jupiter/jupiterSwapView';
 
 export async function handle_radyum_swap(

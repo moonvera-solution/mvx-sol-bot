@@ -1,6 +1,6 @@
 
 import { UserPositions } from '../db';
-import { PublicKey } from '@metaplex-foundation/js';
+import { PublicKey, token } from '@metaplex-foundation/js';
 import { TOKEN_PROGRAM_ID } from '@raydium-io/raydium-sdk';
 import { getTokenDataFromBirdEyePositions } from "../api/priceFeeds/birdEye";
 
@@ -146,8 +146,11 @@ if (tradeDex.includes('jup_swap') || tradeDex.includes('ray_swap')) {
   && birdeyeData.walletTokenPosition.data.data
   && birdeyeData.walletTokenPosition.data.data.balance > 0
   && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
-  ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance / Math.pow(10, userTokenDetails.decimals));
-
+  ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance);
+  console.log('birdeyeData.walletTokenPosition.data.data.uiAmount', birdeyeData.walletTokenPosition.data.data.uiAmount);
+  console.log('userTokenBalance', userTokenBalance);
+console.log('tokenPriceUSD', tokenPriceUSD);
+console.log('userTokenDetails', userTokenDetails);
   
   // const baseSupply = birdeyeData
   // && birdeyeData.response
@@ -388,7 +391,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
   && birdeyeData.walletTokenPosition.data.data
   && birdeyeData.walletTokenPosition.data.data.balance > 0
   && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
-  ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance / Math.pow(10, userTokenDetails.decimals));
+  ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance);
   console.log('userTokenBalance', userTokenBalance);
   const netWorth = birdeyeData
   && birdeyeData.birdeyePosition
