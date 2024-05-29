@@ -1255,14 +1255,14 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "buy_0.5_PUMP": {
-        ctx.session.latestCommand = "buy_X_PUMP";
+
         ctx.session.pump_amountIn = 0.5;
         ctx.session.pump_side = "buy";
         await swap_pump_fun(ctx);
         break;
       }
       case "buy_1_PUMP": {
-        ctx.session.latestCommand = "buy_X_PUMP";
+
         ctx.session.pump_amountIn = 1;
         ctx.session.pump_side = "buy";
         await swap_pump_fun(ctx);
@@ -1277,14 +1277,14 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "sell_50_PUMP": {
-        ctx.session.latestCommand = "sell_50_PUMP";
+  
         ctx.session.pump_amountIn = 50;
         ctx.session.pump_side = "sell";
         await swap_pump_fun(ctx);
         break;
       }
       case "sell_100_PUMP": {
-        ctx.session.latestCommand = "sell_100_PUMP";
+     
         ctx.session.pump_amountIn = 100;
         ctx.session.pump_side = "sell";
         await swap_pump_fun(ctx);

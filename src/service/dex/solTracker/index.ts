@@ -24,7 +24,7 @@ export async function swap_solTracker(connection: Connection, {
     priorityFee,
     forceLegacy,
 }: SOL_TRACKER_SWAP_PARAMS): Promise<string | null> {
-
+  
     const params = new URLSearchParams({
         from, to, fromAmount: amount.toString(),
         slippage: slippage.toString(),
@@ -32,9 +32,11 @@ export async function swap_solTracker(connection: Connection, {
         priorityFee: Number.parseFloat(String(priorityFee)).toString(),
         forceLegacy: forceLegacy ? "true" : "false",
     });
+  
     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
     const blockhash = await connection.getLatestBlockhash();
     // API CALL TO SOL TRACKER SWAP
+
     const swapInx = await axios.get(`${process.env.SOL_TRACKER_API_URL}/swap`, { params, headers });
 
     const swapResponse = swapInx.data;
@@ -44,8 +46,9 @@ export async function swap_solTracker(connection: Connection, {
     const mvxInxs = hasReferral ?
         add_mvx_and_ref_inx_fees(payerKeypair, referralWallet!, solAmount, referralCommision!) :
         addMvxFeesInx(payerKeypair, solAmount);
-
+    
     if (swapResponse.isJupiter && !swapResponse.forceLegacy) {
+        
         console.log("== JUPINX ==");
         const transaction = VersionedTransaction.deserialize(serializedTransactionBuffer); if (!transaction) return null;
         
@@ -89,6 +92,7 @@ export async function swap_solTracker(connection: Connection, {
 
         return await optimizedSendAndConfirmTransaction(vTxx,connection, blockhash, TX_RETRY_INTERVAL);
     }
+  
 }
 
 export async function getSwapDetails(
