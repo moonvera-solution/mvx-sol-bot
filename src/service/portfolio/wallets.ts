@@ -164,6 +164,7 @@ export async function resetWallet(ctx: any) {
 
     await Portfolios.updateOne({ chatId }, { $pull: { wallets: { walletId: ctx.session.portfolio.wallets[walletIndex].publicKey} } }).catch((err: any) => {  console.log("Error deleting user position choice", err.message); });;
     ctx.session.portfolio.activeWalletIndex = 0;
+    await Portfolios.updateOne({ chatId }, { $set: { activeWalletIndex: 0 } }).catch((err: any) => {  console.log("Error deleting user position choice", err.message); });;
     // Provide options for importing or creating a new wallet
     const options = {
       reply_markup: JSON.stringify({
