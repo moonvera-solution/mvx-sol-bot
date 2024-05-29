@@ -213,9 +213,9 @@ bot.command("start", async (ctx: any) => {
         userWallet;
     }
  
-    if(ctx.session.portfolio.wallets.length >= 1 && ctx.session.portfolio.activeWalletIndex == 1){
-      ctx.session.portfolio.activeWalletIndex = 0;
-    }
+    // if(ctx.session.portfolio.wallets.length == 1 && ctx.session.portfolio.activeWalletIndex == 1){
+    //   ctx.session.portfolio.activeWalletIndex = 0;
+    // }
     // console.log(ctx.session.portfolio.activeWalletIndex)
     // console.log(ctx.session.portfolio.wallets.length)
     const publicKeyString: PublicKey | String = userWallet
