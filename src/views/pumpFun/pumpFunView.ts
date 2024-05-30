@@ -57,8 +57,8 @@ export async function swap_pump_fun(ctx: any) {
       if (!txSigs) {
         console.log('NULLL txSigs', txSigs);
         return;
-      } 
-
+      } else {
+        console.log('txSigs', txSigs);
         let extractAmount: number = await getSwapAmountOutPump(connection, txSigs, tradeSide);
         const amountFormatted: string = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
 
@@ -69,7 +69,7 @@ export async function swap_pump_fun(ctx: any) {
         await ctx.api.sendMessage(chatId,
           `✅ ${settleMsg} <a href="https://solscan.io/tx/${txSigs}">View Details</a>.`,
           { parse_mode: 'HTML', disable_web_page_preview: true });
-        
+
         // NO await - avoid blocking thread while db calls are done, function will complete in the background
         updatePositions(
           chatId,
@@ -77,9 +77,10 @@ export async function swap_pump_fun(ctx: any) {
           tradeSide, tokenIn, tokenOut,
           userTokenBalanceAndDetails.userTokenName,
           userTokenBalanceAndDetails.userTokenSymbol,
-          tradeAmount, extractAmount);
+          tradeAmount, extractAmount
+        );
+      }
     });
-
   } catch (e) {
     await ctx.api.sendMessage(ctx.chat.id, `❌ Swap failed`);
     console.error(e);

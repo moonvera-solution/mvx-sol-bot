@@ -48,7 +48,6 @@ export async function swap_solTracker(connection: Connection, {
     
     if (swapResponse.isJupiter && !swapResponse.forceLegacy) {
         
-        console.log("== JUP INX ==");
         const transaction = VersionedTransaction.deserialize(serializedTransactionBuffer); if (!transaction) return null;
         
         const addressLookupTableAccounts = await Promise.all(
@@ -64,13 +63,14 @@ export async function swap_solTracker(connection: Connection, {
         transaction.message = message.compileToV0Message(addressLookupTableAccounts);
         transaction.sign([payerKeypair]);
 
-        return await optimizedSendAndConfirmTransaction(
+        const txSeig =  await optimizedSendAndConfirmTransaction(
             new VersionedTransaction(transaction.message),
             connection, blockhash, TX_RETRY_INTERVAL
         );
+        console.log("== JUP TX ==", txSeig);
+        return txSeig;
 
     } else {
-        console.log("== LEGACY JUP ==");
 
         let txx: Transaction = new Transaction({blockhash: blockhash.blockhash,lastValidBlockHeight:blockhash.lastValidBlockHeight});
         let pumpInx = Transaction.from(serializedTransactionBuffer); if (!pumpInx) return null;
@@ -90,7 +90,8 @@ export async function swap_solTracker(connection: Connection, {
         vTxx.message = message.compileToV0Message(addressLookupTableAccounts);
         vTxx.sign([payerKeypair]);
 
-        return await optimizedSendAndConfirmTransaction(vTxx,connection, blockhash, TX_RETRY_INTERVAL);
+        const txSig = await optimizedSendAndConfirmTransaction(vTxx,connection, blockhash, TX_RETRY_INTERVAL);
+        console.log("== LEGACY TX ==", txSig);
     }
 }
 

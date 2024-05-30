@@ -758,7 +758,7 @@ export async function getSwapAmountOutPump(
 
     while (extractAmount == 0 && counter < 30) { // it has to find it since its a transfer tx
         counter++;
-        const txxs = await connection.getParsedTransaction(txids, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' }).catch((e) => console.error("Error on getSwapAmountOutPump", e.message));
+        const txxs = await connection.getParsedTransaction(txids, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' }).catch((e) => console.error("Error on getSwapAmountOutPump", e.message ,txids));
         let txAmount: Array<any> | undefined;
         if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions) {
             txxs.meta.innerInstructions.forEach((tx) => {
