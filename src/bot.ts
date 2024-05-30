@@ -866,8 +866,8 @@ bot.on("message", async (ctx) => {
             recipientAddress
           );
           const [referralData, details] = await Promise.all([
-            await _getReferralData(ctx),
-            await getSolanaDetails(), // Fetch referral data
+             _getReferralData(ctx),
+           getSolanaDetails(), // Fetch referral data
           ]);
 
           const referEarningSol = (

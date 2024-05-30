@@ -725,7 +725,7 @@ export async function getSwapAmountOut(
     let extractAmount: number = 0;
     let counter = 0;
 
-    while (extractAmount == 0 && counter < 30) { // it has to find it since its a transfer tx
+    while (extractAmount == 0 && counter < 100) { // it has to find it since its a transfer tx
         counter++;
         const txxs = await connection.getParsedTransaction(txids, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
         let txAmount: Array<any> | undefined;
