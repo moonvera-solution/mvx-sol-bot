@@ -73,7 +73,7 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
       ]);
       const tradeDex = pos.tradeType
 
-      return formatPositionMessage(pos, userBalance, birdeyeData,tradeDex,jupRate,tokenMetadataResult,userTokenDetails);
+      return formatPositionMessage(ctx,userWallet,pos, userBalance, birdeyeData,tradeDex,jupRate,tokenMetadataResult,userTokenDetails);
     });
 
 
@@ -84,6 +84,8 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
 }
 
 async function formatPositionMessage(
+  ctx: any,
+  userWallet: string,
   pos: Position,
   userBalance: BigNumber,
   birdeyeData: any,
@@ -133,8 +135,14 @@ if (tradeDex.includes('jup_swap') || tradeDex.includes('ray_swap')) {
   if(pos && pos.amountOut ){
     initialInSOL = Number(pos.amountIn) / 1e9;
     initialInUSD = initialInSOL * Number(solPrice);
+
     valueInUSD = (pos.amountOut - (userTokenDetails.userTokenBalance * Math.pow(10, baseDecimals))) < 5 ? userTokenDetails.userTokenBalance * Number(tokenPriceUSD) : 'N/A';
     valueInSOL = (pos.amountOut - (userTokenDetails.userTokenBalance * Math.pow(10, baseDecimals))) < 5 ? Number(((userTokenDetails.userTokenBalance)) * Number(tokenPriceSOL)) : 'N/A';
+    if(valueInUSD < 0.1){
+      await UserPositions.updateOne({ walletId: userWallet }, { $pull: { positions: { baseMint: pos.baseMint } } })
+      .then(() => { ctx.session.positionIndex = 0; });
+  
+    }
     profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(pos.amountIn) / 1e9)) / (Number(pos.amountIn) / 1e9) * 100 : 'N/A';
     profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
     profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
