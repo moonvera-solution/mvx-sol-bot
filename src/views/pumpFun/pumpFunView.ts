@@ -1,7 +1,7 @@
-import { PublicKey } from '@metaplex-foundation/js';
+import { amount, PublicKey } from '@metaplex-foundation/js';
 import { getTokenMetadata, getUserTokenBalanceAndDetails } from '../../service/feeds';
 
-import { formatNumberToKOrM, getSolBalance, getSwapAmountOutPump, waitForConfirmationPump } from '../../service/util';
+import { formatNumberToKOrM, getSolBalance, getSwapAmountOutPump, updatePositions } from '../../service/util';
 import { Keypair, Connection } from '@solana/web3.js';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import { getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
@@ -10,35 +10,43 @@ import { UserPositions } from '../../db/mongo/schema';
 import { SOL_ADDRESS } from '../../config';
 import bs58 from "bs58";
 import BigNumber from 'bignumber.js';
-import { saveUserPosition } from '../../service/portfolio/positions';
 
 
 export async function swap_pump_fun(ctx: any) {
   try {
+    // user details
     const chatId = ctx.chat.id;
     const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
     const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
-    const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
+    const payerKeypair: Keypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
+
+    // swap params
     const tradeSide = ctx.session.pump_side;
     const tokenIn = tradeSide == 'buy' ? SOL_ADDRESS : ctx.session.pumpToken;
     const tokenOut = tradeSide == 'buy' ? ctx.session.pumpToken : SOL_ADDRESS;
-    const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
-    const userTokenBalanceAndDetails = tradeSide == 'buy' ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
-    const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
+    const userTokenBalanceAndDetails = tradeSide == 'buy' ?
+      await getUserTokenBalanceAndDetails(payerKeypair.publicKey, new PublicKey(tokenOut), connection) :
+      await getUserTokenBalanceAndDetails(new PublicKey(payerKeypair.publicKey), new PublicKey(tokenIn), connection);
+
     const amountToSell = (ctx.session.pump_amountIn / 100) * userTokenBalanceAndDetails.userTokenBalance;
-    const userSolBalance = await getSolBalance(userWallet.publicKey, connection);
-    const amountIn = tradeSide == 'buy' ? ctx.session.pump_amountIn : amountToSell;
+    const userSolBalance = await getSolBalance(payerKeypair.publicKey, connection);
+
+    // balance check
     if (tradeSide == 'buy' && userSolBalance < ctx.session.pump_amountIn) {
       await ctx.api.sendMessage(chatId, `❌ Insufficient SOL balance.`);
       return;
     }
-    let msg = `🟢 <b>Transaction ${tradeSide.toUpperCase()}:</b> Processing... Please wait for confirmation.`
+
+    // before swap feedback
+    let msg = `🟢 Sending ${tradeSide} transaction, please wait for confirmation.`;
     await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
+    const tradeAmount = tradeSide == 'buy' ? ctx.session.pump_amountIn : amountToSell;
+    // swap call
     await swap_solTracker(connection, {
       side: tradeSide,
       from: tokenIn,
       to: tokenOut,
-      amount: tradeSide == 'buy' ? ctx.session.pump_amountIn : amountToSell,
+      amount: tradeAmount,
       slippage: ctx.session.latestSlippage,
       payerKeypair: payerKeypair,
       referralWallet: new PublicKey(ctx.session.generatorWallet).toBase58(),
@@ -46,80 +54,32 @@ export async function swap_pump_fun(ctx: any) {
       priorityFee: ctx.session.customPriorityFee,
       forceLegacy: true
     }).then(async (txSigs) => {
-      if (!txSigs) return;
+      if (!txSigs) {
+        console.log('NULLL txSigs', txSigs);
+        return;
+      } 
 
-      let confirmedMsg, tokenAmount
-      let solFromSell = 0;
+        let extractAmount: number = await getSwapAmountOutPump(connection, txSigs, tradeSide);
+        const amountFormatted: string = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
 
-      let extractAmount = await getSwapAmountOutPump(connection, txSigs, tradeSide);
-      const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
-      tradeSide == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
-      confirmedMsg = `✅ <b>${tradeSide.toUpperCase()} tx confirmed</b> ${tradeSide == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${ctx.session.pump_amountIn} SOL</b>` : `You sold <b>${amountToSell}</b> <b>${_symbol}</b> and received <b>${(solFromSell / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txSigs}">View Details</a>.`;
-      await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
+        const settleMsg = tradeSide == 'buy' ?
+          `You bought <b>${amountFormatted}</b> <b>${userTokenBalanceAndDetails.userTokenSymbol}</b> for <b>${ctx.session.pump_amountIn} SOL</b>` :
+          `You sold <b>${amountToSell}</b> <b>${userTokenBalanceAndDetails.userTokenSymbol}</b> for <b>${(extractAmount / 1e9).toFixed(4)} SOL</b>`;
 
-
-      // ------- check user balanace in DB --------
-      const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
-      // console.log("userPosition", userPosition);
-
-      let oldPositionSol: number = 0;
-      let oldPositionToken: number = 0;
-      if (userPosition) {
-        const existingPositionIndex = userPosition.positions.findIndex(
-          position => position.baseMint === (tradeSide == 'buy' ? tokenOut.toString() : tokenIn.toString())
-        );
-        if (userPosition.positions[existingPositionIndex]) {
-          oldPositionSol = userPosition.positions[existingPositionIndex].amountIn
-          oldPositionToken = userPosition.positions[existingPositionIndex].amountOut!
-        }
-      }
-
-      if (tradeSide == 'buy') {
-     
-        await saveUserPosition( // to display portfolio positions
-          ctx,
-          userWallet.publicKey.toString(), {
-          baseMint: ctx.session.pumpToken,
-          name: userTokenBalanceAndDetails.userTokenName,
-          symbol: _symbol,
-          tradeType: `pump_swap`,
-          amountIn: oldPositionSol ? oldPositionSol + ctx.session.pump_amountIn * 1e9 : ctx.session.pump_amountIn * 1e9,
-          amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
-        });
-
-      } else {
-        let newAmountIn, newAmountOut;
-
-        if (Number(amountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
-          newAmountIn = 0;
-          newAmountOut = 0;
-
-        } else {
-          newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
-          newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
-      
-        }
-
-        if (newAmountIn <= 0 || newAmountOut <= 0) {
-          await UserPositions.updateOne({ walletId: userWallet.publicKey.toString() }, { $pull: { positions: { baseMint: tokenIn } } });
-        } else {
-          await saveUserPosition(ctx,
-            userWallet.publicKey.toString(), {
-            baseMint: tokenIn,
-            name: userTokenBalanceAndDetails.userTokenName,
-            symbol: _symbol,
-            tradeType: `pump_swap`,
-            amountIn: newAmountIn,
-            amountOut: newAmountOut,
-          });
-        }
-        ctx.session.latestCommand = 'jupiter_swap'
-      }
-      if (tradeSide == 'buy') {
-        ctx.session.latestCommand = 'jupiter_swap'
-        // await display_pumpFun(ctx, false);
-      }
+        await ctx.api.sendMessage(chatId,
+          `✅ ${settleMsg} <a href="https://solscan.io/tx/${txSigs}">View Details</a>.`,
+          { parse_mode: 'HTML', disable_web_page_preview: true });
+        
+        // NO await - avoid blocking thread while db calls are done, function will complete in the background
+        updatePositions(
+          chatId,
+          payerKeypair,
+          tradeSide, tokenIn, tokenOut,
+          userTokenBalanceAndDetails.userTokenName,
+          userTokenBalanceAndDetails.userTokenSymbol,
+          tradeAmount, extractAmount);
     });
+
   } catch (e) {
     await ctx.api.sendMessage(ctx.chat.id, `❌ Swap failed`);
     console.error(e);

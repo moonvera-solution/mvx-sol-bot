@@ -35,7 +35,6 @@ export async function swap_solTracker(connection: Connection, {
   
     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
     const blockhash = await connection.getLatestBlockhash();
-    // API CALL TO SOL TRACKER SWAP
 
     const swapInx = await axios.get(`${process.env.SOL_TRACKER_API_URL}/swap`, { params, headers });
 
@@ -49,7 +48,7 @@ export async function swap_solTracker(connection: Connection, {
     
     if (swapResponse.isJupiter && !swapResponse.forceLegacy) {
         
-        console.log("== JUPINX ==");
+        console.log("== JUP INX ==");
         const transaction = VersionedTransaction.deserialize(serializedTransactionBuffer); if (!transaction) return null;
         
         const addressLookupTableAccounts = await Promise.all(
@@ -71,6 +70,7 @@ export async function swap_solTracker(connection: Connection, {
         );
 
     } else {
+        console.log("== LEGACY JUP ==");
 
         let txx: Transaction = new Transaction({blockhash: blockhash.blockhash,lastValidBlockHeight:blockhash.lastValidBlockHeight});
         let pumpInx = Transaction.from(serializedTransactionBuffer); if (!pumpInx) return null;
@@ -92,7 +92,6 @@ export async function swap_solTracker(connection: Connection, {
 
         return await optimizedSendAndConfirmTransaction(vTxx,connection, blockhash, TX_RETRY_INTERVAL);
     }
-  
 }
 
 export async function getSwapDetails(

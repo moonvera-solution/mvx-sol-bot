@@ -308,10 +308,9 @@ export async function startSnippeSimulation(
                                 await referralRecord.save();
                         }
 
-                        // if (await trackUntilFinalized(ctx, txids[0])) {
                             saveUserPosition(
-                                ctx,
-                                userWallet.publicKey.toString(), {
+                                chatId,
+                                userWallet.publicKey.toBase58(), {
                                 baseMint: ctx.session.originalBaseMint,
                                 name: tokenData.name,
                                 symbol: tokenData.symbol,
@@ -319,7 +318,7 @@ export async function startSnippeSimulation(
                                 amountIn: oldPositionSol ? oldPositionSol + amountIn.toNumber() : amountIn.toNumber(),
                                 amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount)
                             });
-                        // }
+
 
                     } else {  // Tx not confirmed
                         const priorityFeeLabel = getPriorityFeeLabel(ctx.session.priorityFees);

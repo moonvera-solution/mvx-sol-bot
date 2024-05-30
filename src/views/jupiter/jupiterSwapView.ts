@@ -96,7 +96,7 @@ export async function jupiterSwap(ctx: any) {
         }
 
         if (tradeType == 'buy') {
-          await saveUserPosition(ctx,
+           saveUserPosition(chatId,
             userWallet.publicKey.toString(), {
             baseMint: tokenOut,
             name: userTokenBalanceAndDetails.userTokenName,
@@ -127,7 +127,7 @@ export async function jupiterSwap(ctx: any) {
             ctx.session.positionIndex = 0;
             // await display_single_spl_positions(ctx);
           } else {
-            await saveUserPosition(ctx,
+            saveUserPosition(chatId,
               userWallet.publicKey.toString(), {
               baseMint: tokenIn,
               name: userTokenBalanceAndDetails.userTokenName,

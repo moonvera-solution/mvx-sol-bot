@@ -7,6 +7,8 @@ import {
     LiquidityPoolKeys, Liquidity, TokenAmount, Token, Percent, publicKey
 } from '@raydium-io/raydium-sdk';
 
+import { UserPositions } from '../../db/mongo/schema';
+import { saveUserPosition } from '../../service/portfolio/positions';
 
 import {
     Connection,
@@ -22,7 +24,7 @@ import {
     TransactionInstruction,
     Commitment,
     SystemProgram,
-    MessageV0
+    MessageV0,
 } from '@solana/web3.js';
 
 import {
@@ -41,6 +43,7 @@ import fs from "fs";
 import path from "path";
 import BigNumber from 'bignumber.js';
 import { Instruction } from '@coral-xyz/anchor';
+import { Key } from 'readline';
 
 export async function sendTx(
     connection: Connection,
@@ -846,13 +849,7 @@ export async function optimizedSendAndConfirmTransaction(
     try {
         // Simulating the transaction
         const simulationResult = await connection.simulateTransaction(tx, { commitment: "processed", });
-        console.log(`${new Date().toISOString()} Transaction simulation result:`, simulationResult);
-        if (simulationResult.value.err) {
-            await catchSimulationErrors(simulationResult);
-        }
-
-        console.log(`${new Date().toISOString()} Transaction simulation successful result:`);
-        console.log(simulationResult);
+        if (simulationResult.value.err) return await catchSimulationErrors(simulationResult);
 
         const signatureRaw: any = tx.signatures[0];
         txSignature = bs58.encode(signatureRaw);
@@ -870,9 +867,13 @@ export async function optimizedSendAndConfirmTransaction(
         }, "confirmed").catch((e) => { console.error("Tx Not confirmed yet", e.message) });
 
         console.log(`${new Date().toISOString()} Sending Transaction ${txSignature}`);
-        // await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0, });
 
+        // send before starting retry while loop
+        await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0, });
         confirmedTx = null;
+        const txId = txSignature.substring(0, 6);
+
+        // retry while loop
         while (!confirmedTx) {
             confirmedTx = await Promise.race([
                 confirmTransactionPromise,
@@ -882,20 +883,15 @@ export async function optimizedSendAndConfirmTransaction(
                     }, 200)
                 ),
             ]);
-            if (confirmedTx) {
-                console.log('Tx confirmed', confirmedTx);
-                break;
-            }
+            // confirmed => break loop
+            if (confirmedTx) { console.log(`Tx ${txId} confirmed ,${txRetryInterval * txSendAttempts}`, confirmedTx); break; }
+            // retry
+            console.log(`Resending tx id ${txId} ${txRetryInterval * txSendAttempts++}ms`);
+            await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0 });
 
-            console.log(`${new Date().toISOString()} Tx not confirmed after ${txRetryInterval * txSendAttempts++}ms, resending`);
+        } // end loop
 
-            await connection.sendRawTransaction(tx.serialize(), {
-                skipPreflight: true, // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above - This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery
-                maxRetries: 0,  // Setting max retries to 0 as we are handling retries manually - Set this manually so that the default is skipped
-            });
-        }
     } catch (e) {
-
         console.error(`${new Date().toISOString()} Error: ${e}`);
         throw new Error(`Transaction failed: ${e}`)
     }
@@ -904,29 +900,89 @@ export async function optimizedSendAndConfirmTransaction(
         console.log(`${new Date().toISOString()} Transaction failed`);
         return null;
     }
+    // loop ends, no error, transaction confirmed return link
     console.log(`${new Date().toISOString()} Transaction successful`);
     console.log(`${new Date().toISOString()} Explorer URL: https://solscan.io/tx/${txSignature}`);
 
     return txSignature;
 }
 
-export async function catchSimulationErrors(simulationResult: any) {
+export async function catchSimulationErrors(simulationResult: any): Promise<string | null> {
     const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
     const SLIPPAGE_ERROR_ANCHOR = /SlippageToleranceExceeded/;
     if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg)) ||
         simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR_ANCHOR.test(logMsg))) {
-
-        console.log(simulationResult.value.logs)
-        return (`🔴 Slippage error, try increasing your slippage %.`);
+        return String(`🔴 Slippage error, try increasing your slippage %.`);
     }
     const BALANCE_ERROR = /Transfer: insufficient lamports/;
     if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
-        console.log(simulationResult.value.logs)
-        return (`🔴 Insufficient balance for transaction.`);
+        return String(`🔴 Insufficient balance for transaction.`);
     }
     const FEES_ERROR = 'InsufficientFundsForFee';
     if (simulationResult.value.err === FEES_ERROR) {
-        console.log(simulationResult.value.logs)
-        return (`🔴 Swap failed! Please try again.`);
+        return String(`🔴 Swap failed! Please try again.`);
     }
+    return null;
+}
+
+export async function updatePositions(
+    chatId: string,
+    userWallet: Keypair,
+    tradeSide: string,
+    tokenIn: string,
+    tokenOut: string,
+    tokenName: string,
+    tokenSymbol: string,
+    amountIn: number,
+    extractAmount: number,
+) {
+    let newUserPosition :any;
+    const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
+
+    let oldPositionSol: number = 0;
+    let oldPositionToken: number = 0;
+    if (userPosition) {
+        const existingPositionIndex = userPosition.positions.findIndex(
+            (position: any) => position.baseMint === (tradeSide == 'buy' ? tokenOut.toString() : tokenIn.toString())
+        );
+        if (userPosition.positions[existingPositionIndex]) {
+            oldPositionSol = userPosition.positions[existingPositionIndex].amountIn
+            oldPositionToken = userPosition.positions[existingPositionIndex].amountOut!
+        }
+    }
+
+    if (tradeSide == 'buy') {
+        newUserPosition =  {
+            baseMint: tokenOut,
+            name: tokenName,
+            symbol: tokenSymbol,
+            tradeType: 'pump_swap',
+            amountIn: oldPositionSol ? oldPositionSol + amountIn * 1e9 : amountIn * 1e9,
+            amountOut: oldPositionToken ? oldPositionToken + extractAmount : extractAmount
+          }
+    } else {
+        let newAmountIn, newAmountOut;
+        if (Number(amountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
+            newAmountIn = 0;
+            newAmountOut = 0;
+        } else {
+            newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
+            newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
+        }
+
+        if (newAmountIn <= 0 || newAmountOut <= 0) {
+            await UserPositions.updateOne({ walletId: userWallet.publicKey.toString() }, { $pull: { positions: { baseMint: tokenIn } } });
+        } else {
+            newUserPosition =  {
+                baseMint: tokenIn,
+                name: tokenName,
+                symbol: tokenSymbol,
+                tradeType: 'pump_swap',
+                amountIn: newAmountIn,
+                amountOut: newAmountOut,
+              }
+        }
+    }
+
+    await saveUserPosition(chatId,userWallet.publicKey.toBase58(), newUserPosition);
 }

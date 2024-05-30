@@ -107,7 +107,7 @@ export async function handle_radyum_swap(
       //   console.log('poolKeys');
       let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing... Please wait for confirmation.`
       await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-    
+
       raydium_amm_swap({
         ctx,
         side,
@@ -124,9 +124,9 @@ export async function handle_radyum_swap(
         skipPreflight: true,
         maxRetries: 0,
       }).then(async (txids) => {
-       
+
         if (!txids) return;
-        if(txids){
+        if (txids) {
           const config = {
             searchTransactionHistory: true
           };
@@ -136,96 +136,95 @@ export async function handle_radyum_swap(
             return;
           }
           let extractAmount = await getSwapAmountOut(connection, txids);
-        let confirmedMsg, solAmount, tokenAmount, _symbol = userTokenBalanceAndDetails.userTokenSymbol;
-        let solFromSell = 0;
-        const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
-        side == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
-        side == 'buy' ?
-          confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${amountFormatted} <b>${_symbol}</b> for ${(swapAmountIn / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`
-          :
-          confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${Number(Number(swapAmountIn) / Math.pow(10, Number(userTokenBalanceAndDetails.decimals))).toFixed(4)} <b>${_symbol}</b> for ${(solFromSell/ 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
+          let confirmedMsg, solAmount, tokenAmount, _symbol = userTokenBalanceAndDetails.userTokenSymbol;
+          let solFromSell = 0;
+          const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
+          side == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
+          side == 'buy' ?
+            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${amountFormatted} <b>${_symbol}</b> for ${(swapAmountIn / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`
+            :
+            confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${Number(Number(swapAmountIn) / Math.pow(10, Number(userTokenBalanceAndDetails.decimals))).toFixed(4)} <b>${_symbol}</b> for ${(solFromSell / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
           await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
 
-        const bot_fee = new BigNumber(solFromSell).multipliedBy(MVXBOT_FEES);
-        const referralAmmount = (bot_fee.multipliedBy(referralFee));
-        const cut_bot_fee = bot_fee.minus(referralAmmount);
+          const bot_fee = new BigNumber(solFromSell).multipliedBy(MVXBOT_FEES);
+          const referralAmmount = (bot_fee.multipliedBy(referralFee));
+          const cut_bot_fee = bot_fee.minus(referralAmmount);
 
-        if (referralRecord) {
-          let updateEarnings = actualEarnings && actualEarnings + (refferalFeePay).toNumber();
-          referralRecord.earnings = Number(updateEarnings && updateEarnings.toFixed(0));
-          await referralRecord.save();
-        }
-
-        if (side == 'buy') {
-     
-          await saveUserPosition( // to display portfolio positions
-            ctx,
-            userWallet.publicKey.toString(), {
-            baseMint: poolKeys.baseMint,
-            name: userTokenBalanceAndDetails.userTokenName,
-            symbol: _symbol,
-            tradeType: `ray_swap`,
-            amountIn: oldPositionSol ? oldPositionSol + swapAmountIn : swapAmountIn,
-            amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
-          });
-          // }
-
-        } else if (side == 'sell') {
-          if (referralFee > 0) {
-            mvxFee = new BigNumber(cut_bot_fee);
-            refferalFeePay = new BigNumber(referralAmmount);
-          } else {
-            mvxFee = new BigNumber(bot_fee);
+          if (referralRecord) {
+            let updateEarnings = actualEarnings && actualEarnings + (refferalFeePay).toNumber();
+            referralRecord.earnings = Number(updateEarnings && updateEarnings.toFixed(0));
+            await referralRecord.save();
           }
 
-          let newAmountIn, newAmountOut;
-          if (Number(swapAmountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
-            newAmountIn = 0;
-            newAmountOut = 0;
-          } else {
-            newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
-            newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(swapAmountIn) : oldPositionToken;
-          }
+          if (side == 'buy') {
 
-
-          if (
-            newAmountIn == 0
-            || newAmountOut == 0
-            || newAmountOut < 0
-            || newAmountIn < 0
-            // || userBalance.toNumber() == 0
-          ) {
-            await UserPositions.updateOne(
-              { walletId: userWallet.publicKey.toString() },
-              { $pull: { positions: { baseMint: poolKeys.baseMint } } }
-            );
-            ctx.session.positionIndex = 0;
-            console.log(chatId, 'amount == 0');
-            // await display_single_spl_positions(ctx);
-          } else {
-            await saveUserPosition(
-              ctx,
+            saveUserPosition( // to display portfolio positions
+              chatId,
               userWallet.publicKey.toString(), {
               baseMint: poolKeys.baseMint,
               name: userTokenBalanceAndDetails.userTokenName,
               symbol: _symbol,
               tradeType: `ray_swap`,
-              amountIn: newAmountIn,
-              amountOut: newAmountOut,
+              amountIn: oldPositionSol ? oldPositionSol + swapAmountIn : swapAmountIn,
+              amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
             });
-            console.log(chatId, 'amount != 0');
+            // }
+
+          } else if (side == 'sell') {
+            if (referralFee > 0) {
+              mvxFee = new BigNumber(cut_bot_fee);
+              refferalFeePay = new BigNumber(referralAmmount);
+            } else {
+              mvxFee = new BigNumber(bot_fee);
+            }
+
+            let newAmountIn, newAmountOut;
+            if (Number(swapAmountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
+              newAmountIn = 0;
+              newAmountOut = 0;
+            } else {
+              newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
+              newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(swapAmountIn) : oldPositionToken;
+            }
+
+
+            if (
+              newAmountIn == 0
+              || newAmountOut == 0
+              || newAmountOut < 0
+              || newAmountIn < 0
+              // || userBalance.toNumber() == 0
+            ) {
+              await UserPositions.updateOne(
+                { walletId: userWallet.publicKey.toString() },
+                { $pull: { positions: { baseMint: poolKeys.baseMint } } }
+              );
+              ctx.session.positionIndex = 0;
+              console.log(chatId, 'amount == 0');
+              // await display_single_spl_positions(ctx);
+            } else {
+              saveUserPosition(
+                chatId,
+                userWallet.publicKey.toString(), {
+                baseMint: poolKeys.baseMint,
+                name: userTokenBalanceAndDetails.userTokenName,
+                symbol: _symbol,
+                tradeType: `ray_swap`,
+                amountIn: newAmountIn,
+                amountOut: newAmountOut,
+              }).then(r => console.log(chatId, 'amount != 0'));
+            }
+            ctx.session.latestCommand = 'jupiter_swap'
+
           }
-          ctx.session.latestCommand = 'jupiter_swap'
+          if (side == 'buy') {
+            ctx.session.latestCommand = 'jupiter_swap';
+            ctx.session.jupSwap_token = poolKeys.baseMint;
+            await display_jupSwapDetails(ctx, false);
+          }
 
         }
-        if (side == 'buy') {
-          ctx.session.latestCommand = 'jupiter_swap';
-          ctx.session.jupSwap_token = poolKeys.baseMint;
-          await display_jupSwapDetails(ctx, false);
-        } 
 
-        }
-        
       }).catch(async (error: any) => {
         console.log('afterswap. ', error)
         console.log('here... ', error.message)
