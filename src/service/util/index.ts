@@ -758,7 +758,7 @@ export async function getSwapAmountOutPump(
 
     while (extractAmount == 0 && counter < 30) { // it has to find it since its a transfer tx
         counter++;
-        const txxs = await connection.getParsedTransaction(txids, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' }).catch((e) => console.error("Error on getSwapAmountOutPump", e.message ,txids));
+        const txxs = await connection.getParsedTransaction(txids, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' }).catch((e) => console.error("Error on getSwapAmountOutPump", e.message, txids));
         let txAmount: Array<any> | undefined;
         if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions) {
             txxs.meta.innerInstructions.forEach((tx) => {
@@ -849,7 +849,7 @@ export async function optimizedSendAndConfirmTransaction(
     try {
         // Simulating the transaction
         const simulationResult = await connection.simulateTransaction(tx, { commitment: "processed", });
-        if (simulationResult.value.err) return await catchSimulationErrors(simulationResult);
+        if (simulationResult.value.err) await catchSimulationErrors(simulationResult);
 
         const signatureRaw: any = tx.signatures[0];
         txSignature = bs58.encode(signatureRaw);
@@ -864,7 +864,7 @@ export async function optimizedSendAndConfirmTransaction(
             signature: txSignature,
             blockhash: blockhash.blockhash,
             lastValidBlockHeight: blockhash.lastValidBlockHeight,
-        }, "confirmed").catch((e) => { console.error("Tx Not confirmed yet", e.message) });
+        }, "confirmed");
 
         console.log(`${new Date().toISOString()} Sending Transaction ${txSignature}`);
 
@@ -883,6 +883,9 @@ export async function optimizedSendAndConfirmTransaction(
                     }, 200)
                 ),
             ]);
+
+            console.log("confirmedTx:", confirmedTx);
+
             // confirmed => break loop
             if (confirmedTx) { console.log(`Tx ${txId} confirmed ,${txRetryInterval * txSendAttempts}`, confirmedTx); break; }
             // retry
@@ -907,22 +910,21 @@ export async function optimizedSendAndConfirmTransaction(
     return txSignature;
 }
 
-export async function catchSimulationErrors(simulationResult: any): Promise<string | null> {
+export async function catchSimulationErrors(simulationResult: any) {
     const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
     const SLIPPAGE_ERROR_ANCHOR = /SlippageToleranceExceeded/;
     if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg)) ||
         simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR_ANCHOR.test(logMsg))) {
-        return String(`🔴 Slippage error, try increasing your slippage %.`);
+        throw new Error(`🔴 Slippage error, try increasing your slippage %.`);
     }
     const BALANCE_ERROR = /Transfer: insufficient lamports/;
     if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
-        return String(`🔴 Insufficient balance for transaction.`);
+        throw new Error(`🔴 Insufficient balance for transaction.`);
     }
     const FEES_ERROR = 'InsufficientFundsForFee';
     if (simulationResult.value.err === FEES_ERROR) {
-        return String(`🔴 Swap failed! Please try again.`);
+        throw new Error(`🔴 Swap failed! Please try again.`);
     }
-    return null;
 }
 
 export async function updatePositions(
@@ -936,7 +938,18 @@ export async function updatePositions(
     amountIn: number,
     extractAmount: number,
 ) {
-    let newUserPosition :any;
+    console.log(
+        "chatId,", chatId, "\n",
+        "userWallet,", userWallet, "\n",
+        "tradeSide,", tradeSide, "\n",
+        "tokenIn,", tokenIn, "\n",
+        "tokenOut,", tokenOut, "\n",
+        "tokenName,", tokenName, "\n",
+        "tokenSymbol,", tokenSymbol, "\n",
+        "amountIn,", amountIn, "\n",
+        "extractAmount,", extractAmount, "\n",
+    );
+    let newUserPosition: any;
     const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
 
     let oldPositionSol: number = 0;
@@ -952,14 +965,14 @@ export async function updatePositions(
     }
 
     if (tradeSide == 'buy') {
-        newUserPosition =  {
+        newUserPosition = {
             baseMint: tokenOut,
             name: tokenName,
             symbol: tokenSymbol,
             tradeType: 'pump_swap',
             amountIn: oldPositionSol ? oldPositionSol + amountIn * 1e9 : amountIn * 1e9,
             amountOut: oldPositionToken ? oldPositionToken + extractAmount : extractAmount
-          }
+        }
     } else {
         let newAmountIn, newAmountOut;
         if (Number(amountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
@@ -973,16 +986,16 @@ export async function updatePositions(
         if (newAmountIn <= 0 || newAmountOut <= 0) {
             await UserPositions.updateOne({ walletId: userWallet.publicKey.toString() }, { $pull: { positions: { baseMint: tokenIn } } });
         } else {
-            newUserPosition =  {
+            newUserPosition = {
                 baseMint: tokenIn,
                 name: tokenName,
                 symbol: tokenSymbol,
                 tradeType: 'pump_swap',
                 amountIn: newAmountIn,
                 amountOut: newAmountOut,
-              }
+            }
         }
     }
-
-    await saveUserPosition(chatId,userWallet.publicKey.toBase58(), newUserPosition);
+    console.log("save new position", newUserPosition);
+    await saveUserPosition(chatId, userWallet.publicKey.toBase58(), newUserPosition);
 }
