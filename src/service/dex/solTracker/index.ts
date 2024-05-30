@@ -122,7 +122,6 @@ export async function getSwapDetails(
     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
     try {
         const response = await fetch(`${process.env.SOL_TRACKER_API_URL}/rate?from=${params.from}&to=${params.to}&amount=1&slippage=${params.slippage}`, {  headers }).then((response) => response.json());
-        // console.log("rate response:", response.currentPrice);
         return response.currentPrice;
     } catch (error: any) {
         throw new Error(error);

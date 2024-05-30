@@ -49,27 +49,21 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
   const [
     birdeyeData,
     tokenMetadataResult,
-    // solPrice,
     tokenInfo,
     balanceInSOL,
     userPosition,
     userTokenDetails,
-    // AllpriorityFees,
 
   ] = await Promise.all([
     getTokenDataFromBirdEyePositions(tokenAddress.toString(),userPublicKey),
     getTokenMetadata(ctx, tokenAddress.toBase58()),
-    // getSolanaDetails(),
     quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
     getSolBalance(userPublicKey, connection),
     UserPositions.find({ positionChatId: chatId, walletId: userPublicKey }, { positions: { $slice: -7 } }),
     getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
-    // runAllFees(ctx, raydiumId),
+
   ]);
-  // const lowpriorityFees = (AllpriorityFees.result);
-  // const mediumpriorityFees = (AllpriorityFees.result2);
-  // const highpriorityFees = (AllpriorityFees.result3);
-  // const maxpriorityFees = (AllpriorityFees.result4);
+
   const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
 
   const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
@@ -77,7 +71,7 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
 
     && birdeyeData.response
     && birdeyeData.response.data
-    // && birdeyeData.response.data.data
+ 
     && birdeyeData.response.data.price != null  // This checks for both null and undefined
     ? birdeyeData.response.data.price
     : tokenInfo.price.times(solPrice).toNumber();
@@ -113,7 +107,6 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
   const baseSupply = birdeyeData
   && birdeyeData.response
   && birdeyeData.response.data
-  // && birdeyeData.response.data.data
   && birdeyeData.response.data.supply != null  // This checks for both null and undefined
   ? birdeyeData.response.data.supply
   : Number(tokenInfo.baseTokenSupply.dividedBy(Math.pow(10, baseDecimals)));
@@ -121,7 +114,6 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
   const netWorth = birdeyeData
   && birdeyeData.birdeyePosition
   && birdeyeData.birdeyePosition.data
-  // && birdeyeData.birdeyePosition.data.data
   && birdeyeData.birdeyePosition.data.totalUsd
   ? birdeyeData.birdeyePosition.data.totalUsd : NaN;
 
@@ -131,14 +123,12 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
     const formattedmac = await formatNumberToKOrM(mcap) ?? "NA";
 
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
-    // const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
     // Construct the message
     let options: any;
     let messageText: any;
 
 
-      // ctx.session.currentMode = 'buy';
       messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
         `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
         `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
@@ -182,7 +172,6 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
   } catch (error: any) {
     console.error('Error in display_token_details:', error);
     console.error('Error in getTokenMetadata:', error.message);
-    // ctx.api.sendMessage(chatId, "Error getting token data, verify the address..", { parse_mode: 'HTML' });
   }
 }
 

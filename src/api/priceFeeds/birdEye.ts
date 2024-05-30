@@ -25,10 +25,7 @@ export async function getTokenDataFromBirdEye(tokenAddress: String, userWallet: 
             fetch(solanDetails, options).then(res => res.json()),
             fetch(walletTokenBalance, options).then(res => res.json())
         ]);  
-        console.log("response",response)
-        console.log("response2",response2)
-        console.log("solanaPrice",solanaPrice)
-        console.log("walletTokenPosition",walletTokenPosition)
+
 
         return {response,response2,solanaPrice,walletTokenPosition}; // Adjust this based on the actual response structure
     } catch (error:any) {

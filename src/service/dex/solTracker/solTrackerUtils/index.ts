@@ -99,7 +99,7 @@ class SolanaTracker {
       }).then((response) => response.json());
   
       if (!response.ok) {
-        throw new Error(`Error fetching swap instructions: ${response.statusText}`);
+        console.error(`Error fetching swap instructions: ${response.statusText}`);
       }
       response.forceLegacy = forceLegacy;
       return response as SwapResponse;
