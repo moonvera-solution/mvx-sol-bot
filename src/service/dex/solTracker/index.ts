@@ -45,7 +45,7 @@ export async function swap_solTracker(connection: Connection, {
     const mvxInxs = hasReferral ?
         add_mvx_and_ref_inx_fees(payerKeypair, referralWallet!, solAmount, referralCommision!) :
         addMvxFeesInx(payerKeypair, solAmount);
-    
+    let txSig = null;
     if (swapResponse.isJupiter && !swapResponse.forceLegacy) {
         
         const transaction = VersionedTransaction.deserialize(serializedTransactionBuffer); if (!transaction) return null;
@@ -63,12 +63,12 @@ export async function swap_solTracker(connection: Connection, {
         transaction.message = message.compileToV0Message(addressLookupTableAccounts);
         transaction.sign([payerKeypair]);
 
-        const txSeig =  await optimizedSendAndConfirmTransaction(
+        txSig =  await optimizedSendAndConfirmTransaction(
             new VersionedTransaction(transaction.message),
             connection, blockhash, TX_RETRY_INTERVAL
         );
-        console.log("== JUP TX ==", txSeig);
-        return txSeig;
+        console.log("== JUP TX ==", txSig);
+        return txSig;
 
     } else {
 
@@ -90,9 +90,10 @@ export async function swap_solTracker(connection: Connection, {
         vTxx.message = message.compileToV0Message(addressLookupTableAccounts);
         vTxx.sign([payerKeypair]);
 
-        const txSig = await optimizedSendAndConfirmTransaction(vTxx,connection, blockhash, TX_RETRY_INTERVAL);
+        txSig = await optimizedSendAndConfirmTransaction(vTxx,connection, blockhash, TX_RETRY_INTERVAL);
         console.log("== LEGACY TX ==", txSig);
     }
+    return txSig;
 }
 
 export async function getSwapDetails(
