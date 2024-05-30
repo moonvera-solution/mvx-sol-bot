@@ -86,7 +86,8 @@ export async function swap_pump_fun(ctx: any) {
           amountIn: oldPositionSol ? oldPositionSol + ctx.session.pump_amountIn * 1e9 : ctx.session.pump_amountIn * 1e9,
           amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
         });
-
+        ctx.session.latestCommand = 'jupiter_swap'
+       await display_pumpFun(ctx, false);
       } else {
         let newAmountIn, newAmountOut;
 
@@ -174,23 +175,23 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
         tokenData,
       } = tokenMetadataResult;
 
-      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
       const baseDecimals = tokenData.mint.decimals;
       const totalSupply = new BigNumber(tokenData.mint.supply.basisPoints);
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(swapRates)) * solPrice);
       const userTokenBalance = birdeyeData
         && birdeyeData.walletTokenPosition
         && birdeyeData.walletTokenPosition.data
-        && birdeyeData.walletTokenPosition.data.data
-        && birdeyeData.walletTokenPosition.data.data.balance > 0
-        && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
-        ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance);
+        // && birdeyeData.walletTokenPosition.data.data
+        && birdeyeData.walletTokenPosition.data.balance > 0
+        && birdeyeData.walletTokenPosition.data.valueUsd > 0
+        ? birdeyeData.walletTokenPosition.data.uiAmount : (userTokenDetails.userTokenBalance);
       const netWorth = birdeyeData
         && birdeyeData.birdeyePosition
         && birdeyeData.birdeyePosition.data
-        && birdeyeData.birdeyePosition.data.data
-        && birdeyeData.birdeyePosition.data.data.totalUsd
-        ? birdeyeData.birdeyePosition.data.data.totalUsd : NaN;
+        // && birdeyeData.birdeyePosition.data.data
+        && birdeyeData.birdeyePosition.data.totalUsd
+        ? birdeyeData.birdeyePosition.data.totalUsd : NaN;
 
       const netWorthSol = netWorth / solPrice;
       let specificPosition;

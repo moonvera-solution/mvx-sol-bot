@@ -19,10 +19,17 @@ export async function getTokenDataFromBirdEye(tokenAddress: String, userWallet: 
                 'X-API-KEY': `${process.env.BIRD_EYE_API_KEY}`
             }
         };
-        const [response, response2,solanaPrice, walletTokenPosition] = await Promise.all([axios.get(url, options), axios.get(url2, options), axios.get(solanDetails, options), axios.get(walletTokenBalance, options)]); // [response1, response2
-        // const response = await axios.get(url, options);
-        // const response2 = await axios.get(url2, options);
-        // console.log("response",response.data.data.realMc)
+        const [response, response2, solanaPrice, walletTokenPosition] = await Promise.all([
+            fetch(url, options).then(res => res.json()),
+            fetch(url2, options).then(res => res.json()),
+            fetch(solanDetails, options).then(res => res.json()),
+            fetch(walletTokenBalance, options).then(res => res.json())
+        ]);  
+        console.log("response",response)
+        console.log("response2",response2)
+        console.log("solanaPrice",solanaPrice)
+        console.log("walletTokenPosition",walletTokenPosition)
+
         return {response,response2,solanaPrice,walletTokenPosition}; // Adjust this based on the actual response structure
     } catch (error:any) {
         console.error(
@@ -31,76 +38,36 @@ export async function getTokenDataFromBirdEye(tokenAddress: String, userWallet: 
         return null;
     }
 }
-export async function getTokenDataFromBirdEyePositions(tokenAddress: String, userWallet: String) {
+export async function getTokenDataFromBirdEyePositions(tokenAddress: string, userWallet: string) {
     try {
         const url = `https://public-api.birdeye.so/defi/token_overview?address=${tokenAddress}`;
         const url2 = `https://public-api.birdeye.so/defi/token_security?address=${tokenAddress}`;
         const solanDetails = 'https://public-api.birdeye.so/defi/price?address=So11111111111111111111111111111111111111112';
         const walletTokenBalance = `https://public-api.birdeye.so/v1/wallet/token_balance?wallet=BufhUw6vTmPB5ytaAWfHb6xUCUdVqHGZn9eQenSJmgmP&token_address=${tokenAddress}`;
-        const birdeyeTokenPosition = `https://public-api.birdeye.so/v1/wallet/token_list?wallet=${userWallet}`
+        const birdeyeTokenPosition = `https://public-api.birdeye.so/v1/wallet/token_list?wallet=${userWallet}`;
 
         const options = {
             method: 'GET',
             headers: {
-               
                 "x-chain": "solana",
                 'X-API-KEY': `${process.env.BIRD_EYE_API_KEY}`
             }
         };
-        const [response, response2,solanaPrice, walletTokenPosition,birdeyePosition] = await Promise.all([axios.get(url, options), axios.get(url2, options), axios.get(solanDetails, options), axios.get(walletTokenBalance, options), axios.get(birdeyeTokenPosition, options)]); // [response1, response2
-  
-        return {response,response2,solanaPrice,walletTokenPosition,birdeyePosition}; // Adjust this based on the actual response structure
-    } catch (error:any) {
-        console.error(
-            error.message
-        );
+
+        const [response, response2, solanaPrice, walletTokenPosition, birdeyePosition] = await Promise.all([
+            fetch(url, options).then(res => res.json()),
+            fetch(url2, options).then(res => res.json()),
+            fetch(solanDetails, options).then(res => res.json()),
+            fetch(walletTokenBalance, options).then(res => res.json()),
+            fetch(birdeyeTokenPosition, options).then(res => res.json())
+        ]);
+
+        return { response, response2, solanaPrice, walletTokenPosition, birdeyePosition };
+    } catch (error: any) {
+        console.error(error.message);
         return null;
     }
 }
-
-// export async function getTokenOwnerPercentageFromBirdEye() {
-//     try {
-//         const url = 'https://public-api.birdeye.so/v1/wallet/tx_list?wallet=C44ibjuJo38XsYC16CNkq3z1rnyo5mYNf5SLxa8J3koA&limit=30';
-//         const options = {
-//             method: 'GET',
-//             headers: {
-//                 "x-chain": "solana",
-//                 'X-API-KEY': `${process.env.BIRD_EYE_API_KEY}`
-//             }
-//         };
-        
-//         const response = await axios.get(url, options);
-//         console.log("response",response.data.data.solana)
-//         return await response.data.data.solana; // Adjust this based on the actual response structure
-//     } catch (error:any) {
-//         console.error(
-//             error.message
-//         );
-//         return null;
-//     }
-// }
-// export async function getTokenOwnerFromBirdEye(tokenAddress: String) {
-//     try {
-//         const url = `https://public-api.birdeye.so/defi/token_creation_info?address=${tokenAddress}`;
-//         const options = {
-//             method: 'GET',
-//             headers: {
-//                 "accept": " application/json",
-//                 "x-chain": "solana",
-//                 'X-API-KEY': `${process.env.BIRD_EYE_API_KEY}`
-//             }
-//         };
-
-//         const response = await axios.get(url, options);
-//         // console.log("response",response.data)
-//         return await response.data; // Adjust this based on the actual response structure
-//     } catch (error:any) {
-//         console.error(
-//             error.message
-//         );
-//         return null;
-//     }
-// }
 
 
 export async function getSolanaDetails() {
@@ -119,11 +86,4 @@ export async function getSolanaDetails() {
     }
 }
 
-// get the portfolio of a user and filter 0 value tokens (true)
-// token amount and tokne value and address 
 
-// wallet addres and token address to query the tx
-
-// query the tx of the user portfolio tokens
-// get the amount in
-// do the pnl calculation

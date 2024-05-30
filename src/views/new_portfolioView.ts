@@ -103,14 +103,14 @@ if(jupTokenValue[0] && jupTokenValue[0].price ){
   jupTokenPrice = jupTokenValue[0].price;
 
 }
-const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
 if (tradeDex.includes('jup_swap') || tradeDex.includes('ray_swap')) {
   tokenPriceUSD = birdeyeData
   && birdeyeData.response
   && birdeyeData.response.data
-  && birdeyeData.response.data.data
-  && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
-  ? birdeyeData.response.data.data.price
+  // && birdeyeData.response.data.data
+  && birdeyeData.response.data.price != null  // This checks for both null and undefined
+  ? birdeyeData.response.data.price
   : jupTokenPrice;
 }else {
  const tokenRatePuMP =  await getSwapDetails(pos.baseMint,SOL_ADDRESS, 1, 0 )
@@ -151,10 +151,10 @@ if (tradeDex.includes('jup_swap') || tradeDex.includes('ray_swap')) {
   const userTokenBalance = birdeyeData 
   && birdeyeData.walletTokenPosition
   && birdeyeData.walletTokenPosition.data
-  && birdeyeData.walletTokenPosition.data.data
-  && birdeyeData.walletTokenPosition.data.data.balance > 0
-  && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
-  ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance);
+  // && birdeyeData.walletTokenPosition.data.data
+  && birdeyeData.walletTokenPosition.data.balance > 0
+  && birdeyeData.walletTokenPosition.data.valueUsd > 0
+  ? birdeyeData.walletTokenPosition.data.uiAmount : (userTokenDetails.userTokenBalance);
 
   
   
@@ -328,7 +328,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
         ).then((response) => response.json()),
 
       ]);
-      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
       console.log('solPrice', solPrice);
       let tokenPriceUSD = 0;
 
@@ -341,16 +341,15 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
         tokenPriceUSD = birdeyeData
         && birdeyeData.response
         && birdeyeData.response.data
-        && birdeyeData.response.data.data
-        && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
-        ? birdeyeData.response.data.data.price
+        // && birdeyeData.response.data.data
+        && birdeyeData.response.data.price != null  // This checks for both null and undefined
+        ? birdeyeData.response.data.price
         : jupTokenPrice;
       }else {
         const tokenRatePuMP =  await getSwapDetails(pos.baseMint,SOL_ADDRESS, 1, 0 )
          tokenPriceUSD = tokenRatePuMP * solPrice;
          console.log('tokenPricePUMP', tokenPriceUSD);
        }
-      console.log('birdeyeData.response.data.data.price', birdeyeData?.response.data.data.price);
      
      
       const {
@@ -358,11 +357,10 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       } = tokenMetadataResult;
       const baseDecimals = tokenData.mint.decimals;
       const totalSupply = new BigNumber(tokenData.mint.supply.basisPoints);
-      console.log('totalSupply', Number(totalSupply));
-      console.log('tokeprice', tokenPriceUSD);
+
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(tokenPriceUSD)));
       const tokenPriceSOL = Number(tokenPriceUSD) / Number(solPrice);
-      console.log('tokenPriceSOL', tokenPriceSOL);
+  
       let initialInUSD = 0;
       let initialInSOL = 0;
       let valueInUSD: any;
@@ -383,17 +381,17 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
   const userTokenBalance = birdeyeData 
   && birdeyeData.walletTokenPosition
   && birdeyeData.walletTokenPosition.data
-  && birdeyeData.walletTokenPosition.data.data
-  && birdeyeData.walletTokenPosition.data.data.balance > 0
-  && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
-  ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance);
+  // && birdeyeData.walletTokenPosition.data.data
+  && birdeyeData.walletTokenPosition.data.balance > 0
+  && birdeyeData.walletTokenPosition.data.valueUsd > 0
+  ? birdeyeData.walletTokenPosition.data.uiAmount : (userTokenDetails.userTokenBalance);
   console.log('userTokenBalance', userTokenBalance);
   const netWorth = birdeyeData
   && birdeyeData.birdeyePosition
   && birdeyeData.birdeyePosition.data
-  && birdeyeData.birdeyePosition.data.data
-  && birdeyeData.birdeyePosition.data.data.totalUsd
-  ? birdeyeData.birdeyePosition.data.data.totalUsd : NaN;
+  // && birdeyeData.birdeyePosition.data.data
+  && birdeyeData.birdeyePosition.data.totalUsd
+  ? birdeyeData.birdeyePosition.data.totalUsd : NaN;
 
     const netWorthSol = netWorth / solPrice;
   console.log('balnceInSOL', userTokenBalance * Number(tokenPriceSOL));

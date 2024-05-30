@@ -93,9 +93,16 @@ class SolanaTracker {
     }
     const url = `${this.baseUrl}/swap?${params}`;
     try {
-      const response = await axios.get(url, { headers: this.authHeaders });
-      response.data.forceLegacy = forceLegacy;
-      return response.data as SwapResponse;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.authHeaders
+      }).then((response) => response.json());
+  
+      if (!response.ok) {
+        throw new Error(`Error fetching swap instructions: ${response.statusText}`);
+      }
+      response.forceLegacy = forceLegacy;
+      return response as SwapResponse;
     } catch (error: any) {
       console.error("Error fetching swap instructions:", error.message, error);
       throw error;
