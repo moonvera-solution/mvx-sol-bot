@@ -54,7 +54,7 @@ export async function jupiterSwap(ctx: any) {
       tokenOut,
       amountIn,
       (ctx.session.latestSlippage * 100),
-      (ctx.session.customPriorityFee * 1e9),
+      (ctx.session.customPriorityFee * 1e9), // here is it for jupiter its allways the default set by users
       refObject
     ).then(async (txSig: any) => {
       if (!txSig) return;

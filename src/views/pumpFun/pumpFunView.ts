@@ -10,6 +10,7 @@ import { UserPositions } from '../../db/mongo/schema';
 import { SOL_ADDRESS } from '../../config';
 import bs58 from "bs58";
 import BigNumber from 'bignumber.js';
+import { MVXBOT_FEES } from 'config';
 
 
 export async function swap_pump_fun(ctx: any) {
@@ -32,7 +33,10 @@ export async function swap_pump_fun(ctx: any) {
     const userSolBalance = await getSolBalance(payerKeypair.publicKey, connection);
 
     // balance check
-    if (tradeSide == 'buy' && userSolBalance < ctx.session.pump_amountIn) {
+    // look here is a validation but does not account for fees        // Ill do a branch for you and you give it a test
+    // this could work, but we need to test, this could work // yes bro
+    const mxvFees = MVXBOT_FEES.times(ctx.session.pump_amountIn).toNumber(); // mvx fee is always a % of the amountIn
+    if (tradeSide == 'buy' && userSolBalance < (ctx.session.pump_amountIn + ctx.session.customPriorityFee + mxvFees)) {
       await ctx.api.sendMessage(chatId, `❌ Insufficient SOL balance.`);
       return;
     }
@@ -51,7 +55,7 @@ export async function swap_pump_fun(ctx: any) {
       payerKeypair: payerKeypair,
       referralWallet: new PublicKey(ctx.session.generatorWallet).toBase58(),
       referralCommision: ctx.session.referralCommision,
-      priorityFee: ctx.session.customPriorityFee,
+      priorityFee: ctx.session.customPriorityFee, // here for pumpfun, only raydium is the complex one, ya
       forceLegacy: true
     }).then(async (txSigs) => {
       if (!txSigs) {

@@ -832,9 +832,6 @@ export function wrapLegacyTx(txInxs: TransactionInstruction[], payerKeypair: Key
     }).compileToV0Message(lookupTable);
 }
 
-
-
-
 export async function optimizedSendAndConfirmTransaction(
     tx: VersionedTransaction,
     connection: Connection,
