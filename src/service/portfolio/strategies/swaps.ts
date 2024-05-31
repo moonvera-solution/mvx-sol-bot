@@ -228,7 +228,7 @@ export async function handle_radyum_swap(
       }).catch(async (error: any) => {
         console.log('afterswap. ', error)
         console.log('here... ', error.message)
-        await ctx.api.sendMessage(chatId, `🔴 ${side.toUpperCase()} Tx failed. Please try again later.`);
+        await ctx.api.sendMessage(chatId, `🔴 ${side.toUpperCase()} ${ error.message}.`);
         return;
       });
     } else {
