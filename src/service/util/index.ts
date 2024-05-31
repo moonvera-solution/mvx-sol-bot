@@ -728,7 +728,7 @@ export async function getSwapAmountOut(
     let extractAmount: number = 0;
     let counter = 0;
 
-    while (extractAmount == 0 && counter < 30) { // it has to find it since its a transfer tx
+    while (extractAmount == 0 && counter < 100) { // it has to find it since its a transfer tx
         counter++;
         const txxs = await connection.getParsedTransaction(txids, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
         let txAmount: Array<any> | undefined;
@@ -938,17 +938,7 @@ export async function updatePositions(
     amountIn: number,
     extractAmount: number,
 ) {
-    console.log(
-        "chatId,", chatId, "\n",
-        "userWallet,", userWallet, "\n",
-        "tradeSide,", tradeSide, "\n",
-        "tokenIn,", tokenIn, "\n",
-        "tokenOut,", tokenOut, "\n",
-        "tokenName,", tokenName, "\n",
-        "tokenSymbol,", tokenSymbol, "\n",
-        "amountIn,", amountIn, "\n",
-        "extractAmount,", extractAmount, "\n",
-    );
+
     let newUserPosition: any;
     const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
 

@@ -49,37 +49,31 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
   const [
     birdeyeData,
     tokenMetadataResult,
-    // solPrice,
     tokenInfo,
     balanceInSOL,
     userPosition,
     userTokenDetails,
-    // AllpriorityFees,
 
   ] = await Promise.all([
     getTokenDataFromBirdEyePositions(tokenAddress.toString(),userPublicKey),
     getTokenMetadata(ctx, tokenAddress.toBase58()),
-    // getSolanaDetails(),
     quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
     getSolBalance(userPublicKey, connection),
     UserPositions.find({ positionChatId: chatId, walletId: userPublicKey }, { positions: { $slice: -7 } }),
     getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
-    // runAllFees(ctx, raydiumId),
+
   ]);
-  // const lowpriorityFees = (AllpriorityFees.result);
-  // const mediumpriorityFees = (AllpriorityFees.result2);
-  // const highpriorityFees = (AllpriorityFees.result3);
-  // const maxpriorityFees = (AllpriorityFees.result4);
-  const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+
+  const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
 
   const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
   const tokenPriceUSD = birdeyeData
 
     && birdeyeData.response
     && birdeyeData.response.data
-    && birdeyeData.response.data.data
-    && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
-    ? birdeyeData.response.data.data.price
+ 
+    && birdeyeData.response.data.price != null  // This checks for both null and undefined
+    ? birdeyeData.response.data.price
     : tokenInfo.price.times(solPrice).toNumber();
   const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solPrice) : tokenInfo.price.toNumber();
   let specificPosition;
@@ -113,17 +107,15 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
   const baseSupply = birdeyeData
   && birdeyeData.response
   && birdeyeData.response.data
-  && birdeyeData.response.data.data
-  && birdeyeData.response.data.data.supply != null  // This checks for both null and undefined
-  ? birdeyeData.response.data.data.supply
+  && birdeyeData.response.data.supply != null  // This checks for both null and undefined
+  ? birdeyeData.response.data.supply
   : Number(tokenInfo.baseTokenSupply.dividedBy(Math.pow(10, baseDecimals)));
   const mcap = baseSupply * tokenPriceUSD;  
   const netWorth = birdeyeData
   && birdeyeData.birdeyePosition
   && birdeyeData.birdeyePosition.data
-  && birdeyeData.birdeyePosition.data.data
-  && birdeyeData.birdeyePosition.data.data.totalUsd
-  ? birdeyeData.birdeyePosition.data.data.totalUsd : NaN;
+  && birdeyeData.birdeyePosition.data.totalUsd
+  ? birdeyeData.birdeyePosition.data.totalUsd : NaN;
 
   const netWorthSol = netWorth / solPrice;
   try {
@@ -131,14 +123,12 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
     const formattedmac = await formatNumberToKOrM(mcap) ?? "NA";
 
     const priceImpact = tokenInfo.priceImpact.toFixed(2);
-    // const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
     const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
     // Construct the message
     let options: any;
     let messageText: any;
 
 
-      // ctx.session.currentMode = 'buy';
       messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
         `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
         `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
@@ -182,7 +172,6 @@ export async function display_token_details(ctx: any, isRefresh: boolean) {
   } catch (error: any) {
     console.error('Error in display_token_details:', error);
     console.error('Error in getTokenMetadata:', error.message);
-    // ctx.api.sendMessage(chatId, "Error getting token data, verify the address..", { parse_mode: 'HTML' });
   }
 }
 
@@ -236,7 +225,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
       // const mediumpriorityFees = (AllpriorityFees.result2);
       // const highpriorityFees = (AllpriorityFees.result3);
       // const maxpriorityFees = (AllpriorityFees.result4);
-      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
 
 
       const {
@@ -250,17 +239,17 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
       const tokenPriceUSD = birdeyeData
       && birdeyeData.response
       && birdeyeData.response.data
-      && birdeyeData.response.data.data
-      && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
-      ? birdeyeData.response.data.data.price
+      // && birdeyeData.response.data.data
+      && birdeyeData.response.data.price != null  // This checks for both null and undefined
+      ? birdeyeData.response.data.price
       : tokenInfo.price.times(solPrice).toNumber();
 
       const baseSupply = birdeyeData
   && birdeyeData.response
   && birdeyeData.response.data
-  && birdeyeData.response.data.data
-  && birdeyeData.response.data.data.supply != null  // This checks for both null and undefined
-  ? birdeyeData.response.data.data.supply
+  // && birdeyeData.response.data.data
+  && birdeyeData.response.data.supply != null  // This checks for both null and undefined
+  ? birdeyeData.response.data.supply
   : Number(tokenInfo.baseTokenSupply.dividedBy(Math.pow(10, baseDecimals)));
   const mcap = baseSupply * tokenPriceUSD;  
   const formattedmac = await formatNumberToKOrM(mcap) ?? "NA";
@@ -343,157 +332,4 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
   }
 }
 
-// export async function display_after_Snipe_Buy(ctx: any, isRefresh: boolean) {
-//   let priority_Level = ctx.session.priorityFees;
-//   const priority_custom = ctx.session.ispriorityCustomFee;
-//   if(priority_custom === true){
-//     priority_Level = 0;
-//   }
-//   const chatId = ctx.chat.id;
-//   const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
-//   const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
-//   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
-//   let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
-//   const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
-
-//   if (!rayPoolKeys) {
-//     // Handle the case where the pool information is not available
-//     await ctx.reply("Pool information not available.");
-//     return;
-//   }
-//   const baseVault = rayPoolKeys.baseVault;
-//   const quoteVault = rayPoolKeys.quoteVault;
-//   const baseDecimals = rayPoolKeys.baseDecimals;
-//   const quoteDecimals = rayPoolKeys.quoteDecimals;
-//   const baseMint = rayPoolKeys.baseMint;
-//   // console.log("rayPoolKeys",rayPoolKeys)
-//   const tokenAddress = new PublicKey(baseMint);
-
-//   const [
-//     birdeyeData,
-//     tokenMetadataResult,
-//     // solPrice,
-//     tokenInfo,
-//     balanceInSOL,
-//     userPosition,
-//     userTokenDetails,
-//     AllpriorityFees,
-//   ] = await Promise.all([
-//     getTokenDataFromBirdEye(tokenAddress.toString(),userPublicKey),
-//     getTokenMetadata(ctx, tokenAddress.toBase58()),
-//     quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
-//     getSolBalance(userPublicKey, connection),
-//     UserPositions.find({ positionChatId: chatId, walletId: userPublicKey }, { positions: { $slice: -7 } }),
-//     getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
-//     runAllFees(ctx, raydiumId),
-
-//   ]);
-//   const mediumpriorityFees = (AllpriorityFees.result2);
-//   const highpriorityFees = (AllpriorityFees.result3);
-//   const maxpriorityFees = (AllpriorityFees.result4);
-//   const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
-
-//   const {
-//     birdeyeURL,
-//     dextoolsURL,
-//     dexscreenerURL,
-//   } = tokenMetadataResult;
-
-//   try {
-  
-
-//     const tokenPriceUSD = birdeyeData
-//       && birdeyeData.response
-//       && birdeyeData.response.data
-//       && birdeyeData.response.data.data
-//       && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
-//       ? birdeyeData.response.data.data.price
-//       : tokenInfo.price.times(solPrice).toNumber();
-//     const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solPrice) : tokenInfo.price.toNumber();
-
-//     const baseSupply = birdeyeData
-//       && birdeyeData.response
-//       && birdeyeData.response.data
-//       && birdeyeData.response.data.data
-//       && birdeyeData.response.data.data.supply != null  // This checks for both null and undefined
-//       ? birdeyeData.response.data.data.supply
-//       : Number(tokenInfo.baseTokenSupply.dividedBy(Math.pow(10, baseDecimals)));
-//       const priceImpact = tokenInfo.priceImpact.toFixed(2);
-//     // const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
-//     const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
-//     const specificPosition = userPosition[0].positions.find((pos: any) => new PublicKey(pos.baseMint).equals(tokenAddress));
-//     let initialInUSD = 0;
-//     let initialInSOL = 0;
-//     let valueInUSD: any;
-//     let valueInSOL: any;
-//     let profitPercentage;
-//     let profitInUSD;
-//     let profitInSol;
-
-
-//     if (specificPosition && specificPosition.amountOut) {
-
-//       valueInUSD = (specificPosition.amountOut - (userTokenDetails.userTokenBalance * Math.pow(10, baseDecimals))) < 5 ? userTokenDetails.userTokenBalance * Number(tokenPriceUSD) : 'N/A';
-
-//       valueInSOL = (specificPosition.amountOut - (userTokenDetails.userTokenBalance * Math.pow(10, baseDecimals))) < 5 ? Number(((userTokenDetails.userTokenBalance)) * Number(tokenPriceSOL)) : 'N/A';
-//       initialInSOL = Number(specificPosition.amountIn) / 1e9;
-//       initialInUSD = initialInSOL * Number(solPrice);
-//       profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(specificPosition.amountIn) / 1e9)) / (Number(specificPosition.amountIn) / 1e9) * 100 : 'N/A';
-//       profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
-//       profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL) : 'N/A';
-
-//     }
-//     const mcap = baseSupply * tokenPriceUSD;
-//     const formattedmac = await formatNumberToKOrM(mcap) ?? "NA";
-//     // Construct the message
-//     let options: any;
-//     let messageText: any;
-
-
-//     messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
-//       `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
-//       `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
-//       `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
-//       `Market Cap: <b>${formattedmac} USD</b>\n` +
-//       `Token Price: <b> ${tokenPriceUSD.toFixed(4)} USD</b> | <b> ${tokenPriceSOL.toFixed(4)} SOL</b> \n\n` +
-//       // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
-//       `Price Impact (5.0 SOL) : <b>${priceImpact}%</b> \n\n` +
-//       `---<code>Trade Position</code>---\n` +
-//       `Initial : <b>${(initialInSOL).toFixed(3)} SOL</b> | <b>${(initialInUSD.toFixed(3))} USD</b>\n` +
-//       `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n` +
-//       `Token Balance: <b>${userTokenDetails.userTokenBalance.toFixed(3)} $${userTokenDetails.userTokenSymbol} </b> | <b>${(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n\n` +
-//       `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
-//       `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `;
-
-//     // Define buy mode inline keyboard
-//     options = {
-//       parse_mode: 'HTML',
-//       disable_web_page_preview: true,
-//       reply_markup: {
-//         inline_keyboard: [
-//           [{ text: ' 🔂 Refresh ', callback_data: 'Refresh_display_after_Snipe_Buy' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
-//           [{ text: 'Buy (X SOL)', callback_data: 'buy_X_SOL' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_SOL' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_SOL' }],
-//           [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }],
-//           [{ text: '  Sell 25%  ', callback_data: 'sell_25_TOKEN' }, { text: '  Sell 50%  ', callback_data: 'sell_50_TOKEN' }, { text: 'Sell 75%', callback_data: '  sell_75_TOKEN  ' },],
-//           [{ text: '  Sell 100%  ', callback_data: 'sell_100_TOKEN' }, { text: '  Sell X Amount  ', callback_data: 'sell_X_TOKEN' }],
-//           [{ text: '📈 Priority fees', callback_data: '_' }],
-//           [
-//             { text: `Low ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_low' },
-//             { text: `Medium ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_medium' }, { text: `High ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_high' },{ text: `Custom ${priority_custom === true ? '✅' : ''}`, callback_data: 'priority_custom' }],
-//           [{ text: 'Close', callback_data: 'closing' }]]
-//       },
-//     };
-
-//     // Send or edit the message
-//     if (isRefresh) {
-//       await ctx.editMessageText(messageText, options);
-//     } else {
-//       await ctx.api.sendMessage(chatId, messageText, options);
-
-//     }
-//   } catch (error: any) {
-//     console.error('Error in getTokenMetadata:', error.message);
-//     // ctx.api.sendMessage(chatId, "Error getting token data, verify the address..", { parse_mode: 'HTML' });
-//   }
-// }
 

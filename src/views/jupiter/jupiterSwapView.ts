@@ -233,19 +233,14 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const {
         tokenData,
       } = tokenMetadataResult;
-      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
       const ammAddress = jupPriceImpact_5.routePlan[jupPriceImpact_5?.routePlan?.length - 1].swapInfo.ammKey;
-      // const AllpriorityFees = await runAllFees(ctx, ammAddress);
-
-      // const mediumpriorityFees = (AllpriorityFees.result2);
-      // const highpriorityFees = (AllpriorityFees.result3);
-      // const maxpriorityFees = (AllpriorityFees.result4);
       const tokenPriceUSD = birdeyeData
         && birdeyeData.response
         && birdeyeData.response.data
-        && birdeyeData.response.data.data
-        && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
-        ? birdeyeData.response.data.data.price
+        // && birdeyeData.response.data.data
+        && birdeyeData.response.data.price != null  // This checks for both null and undefined
+        ? birdeyeData.response.data.price
         : Number(jupTokenPrice) * Number(solPrice);
 
       const tokenPriceSOL = tokenPriceUSD / solPrice;
@@ -255,17 +250,17 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const userTokenBalance = birdeyeData 
       && birdeyeData.walletTokenPosition
       && birdeyeData.walletTokenPosition.data
-      && birdeyeData.walletTokenPosition.data.data
-      && birdeyeData.walletTokenPosition.data.data.balance > 0
-      && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
-      ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance);
+      // && birdeyeData.walletTokenPosition.data.data
+      && birdeyeData.walletTokenPosition.data.balance > 0
+      && birdeyeData.walletTokenPosition.data.valueUsd > 0
+      ? birdeyeData.walletTokenPosition.data.uiAmount : (userTokenDetails.userTokenBalance);
 
       const netWorth = birdeyeData
         && birdeyeData.birdeyePosition
         && birdeyeData.birdeyePosition.data
-        && birdeyeData.birdeyePosition.data.data
-        && birdeyeData.birdeyePosition.data.data.totalUsd
-        ? birdeyeData.birdeyePosition.data.data.totalUsd : NaN;
+        // && birdeyeData.birdeyePosition.data.data
+        && birdeyeData.birdeyePosition.data.totalUsd
+        ? birdeyeData.birdeyePosition.data.totalUsd : NaN;
 
       const netWorthSol = netWorth / solPrice;
 

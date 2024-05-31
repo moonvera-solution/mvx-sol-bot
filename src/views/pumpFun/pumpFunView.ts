@@ -81,6 +81,7 @@ export async function swap_pump_fun(ctx: any) {
         );
       }
     });
+
   } catch (e) {
     await ctx.api.sendMessage(ctx.chat.id, `❌ Swap failed`);
     console.error(e);
@@ -135,23 +136,23 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
         tokenData,
       } = tokenMetadataResult;
 
-      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
       const baseDecimals = tokenData.mint.decimals;
       const totalSupply = new BigNumber(tokenData.mint.supply.basisPoints);
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(swapRates)) * solPrice);
       const userTokenBalance = birdeyeData
         && birdeyeData.walletTokenPosition
         && birdeyeData.walletTokenPosition.data
-        && birdeyeData.walletTokenPosition.data.data
-        && birdeyeData.walletTokenPosition.data.data.balance > 0
-        && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
-        ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance);
+        // && birdeyeData.walletTokenPosition.data.data
+        && birdeyeData.walletTokenPosition.data.balance > 0
+        && birdeyeData.walletTokenPosition.data.valueUsd > 0
+        ? birdeyeData.walletTokenPosition.data.uiAmount : (userTokenDetails.userTokenBalance);
       const netWorth = birdeyeData
         && birdeyeData.birdeyePosition
         && birdeyeData.birdeyePosition.data
-        && birdeyeData.birdeyePosition.data.data
-        && birdeyeData.birdeyePosition.data.data.totalUsd
-        ? birdeyeData.birdeyePosition.data.data.totalUsd : NaN;
+        // && birdeyeData.birdeyePosition.data.data
+        && birdeyeData.birdeyePosition.data.totalUsd
+        ? birdeyeData.birdeyePosition.data.totalUsd : NaN;
 
       const netWorthSol = netWorth / solPrice;
       let specificPosition;
@@ -199,9 +200,9 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
         reply_markup: {
           inline_keyboard: [
             [{ text: ' 🔂 Refresh ', callback_data: 'refresh_pump_fun' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
-            [{ text: `Buy X  (SOL)`, callback_data: 'buy_X_PUMP' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_PUMP' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_PUMP' }],
-            [{ text: `Sell X %`, callback_data: 'sell_X_PUMP' }, { text: 'Sell 50%  ', callback_data: 'sell_50_PUMP' }, { text: 'Sell 100%  ', callback_data: 'sell_100_PUMP' }],
-            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: `set_slippage` }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
+            // [{ text: `Buy X  (SOL)`, callback_data: 'buy_X_PUMP' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_PUMP' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_PUMP' }],
+            // [{ text: `Sell X %`, callback_data: 'sell_X_PUMP' }, { text: 'Sell 50%  ', callback_data: 'sell_50_PUMP' }, { text: 'Sell 100%  ', callback_data: 'sell_100_PUMP' }],
+            // [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: `set_slippage` }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
             [{ text: 'Close', callback_data: 'closing' }]
           ]
         }

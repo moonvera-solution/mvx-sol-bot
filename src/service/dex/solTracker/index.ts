@@ -4,6 +4,7 @@ import SolanaTracker from "./solTrackerUtils";
 import { sendTx, add_mvx_and_ref_inx_fees, addMvxFeesInx, wrapLegacyTx, optimizedSendAndConfirmTransaction } from '../../../../src/service/util';
 import { Keypair, Connection, Transaction, AddressLookupTableAccount, VersionedTransaction, TransactionMessage } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
+import { SOL_ADDRESS } from '../../../config';
 
 const TX_RETRY_INTERVAL = 50;
 
@@ -96,6 +97,22 @@ export async function swap_solTracker(connection: Connection, {
     return txSig;
 }
 
+// export async function getSwapDetails(
+//     from: String,
+//     to: String,
+//     amount: Number,
+//     slippage: Number,
+// ) {
+//     const params = { from, to, amount, slippage };
+//     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
+//     try {
+//         const response = await axios.get(`${process.env.SOL_TRACKER_API_URL}/rate?`, { params, headers });
+//         console.log("rate response:", response.data);
+//         return response.data.currentPrice;
+//     } catch (error: any) {
+//         throw new Error(error);
+//     }
+// }
 export async function getSwapDetails(
     from: String,
     to: String,
@@ -105,13 +122,13 @@ export async function getSwapDetails(
     const params = { from, to, amount, slippage };
     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
     try {
-        const response = await axios.get(`${process.env.SOL_TRACKER_API_URL}/rate?`, { params, headers });
-        // console.log("rate response:", response.data);
-        return response.data.currentPrice;
+        const response = await fetch(`${process.env.SOL_TRACKER_API_URL}/rate?from=${params.from}&to=${params.to}&amount=1&slippage=${params.slippage}`, {  headers }).then((response) => response.json());
+        return response.currentPrice;
     } catch (error: any) {
         throw new Error(error);
     }
 }
+
 
 /**
  * DONOT USE THIS FUNCTION AS IT IS

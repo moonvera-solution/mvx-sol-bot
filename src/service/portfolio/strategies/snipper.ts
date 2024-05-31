@@ -331,7 +331,7 @@ export async function startSnippeSimulation(
                     ctx.session.jupSwap_token= ctx.session.originalBaseMint;
                     await display_jupSwapDetails(ctx, false);
                 }).catch(async (error: any) => {
-                    let msg = `🔴 Snipe fail, busy Network, try again.`;
+                    let msg = `🔴 Snipe failed.`;
                     await ctx.api.sendMessage(chatId, msg); console.info('error', error);
                     return error;
                 });
