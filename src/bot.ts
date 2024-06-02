@@ -67,6 +67,7 @@ import {
 } from "./views/new_portfolioView";
 
 import { hasEnoughSol } from "./service/util/validations";
+import { MVXBOT_FEES } from "./config";
 
 const express = require("express");
 const app = express();
@@ -110,7 +111,7 @@ if (isProd) {
   // Create the HTTP server and define request handling logic
   app.use(express.json()); // for parsing application/json
   app.post(`/${botToken}`, webhookCallback(bot, "express"));
-  app.use(`/${botToken}`,webhookCallback(bot, "express"));
+  app.use(`/${botToken}`, webhookCallback(bot, "express"));
   app.get("/", (req: any, res: any) => {
     res.send("Hello from ngrok server!");
   });
@@ -212,7 +213,7 @@ bot.command("start", async (ctx: any) => {
       ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex] =
         userWallet;
     }
- 
+
     // if(ctx.session.portfolio.wallets.length == 1 && ctx.session.portfolio.activeWalletIndex == 1){
     //   ctx.session.portfolio.activeWalletIndex = 0;
     // }
@@ -866,8 +867,8 @@ bot.on("message", async (ctx) => {
             recipientAddress
           );
           const [referralData, details] = await Promise.all([
-             _getReferralData(ctx),
-           getSolanaDetails(), // Fetch referral data
+            _getReferralData(ctx),
+            getSolanaDetails(), // Fetch referral data
           ]);
 
           const referEarningSol = (
@@ -1118,7 +1119,7 @@ bot.on("callback_query", async (ctx: any) => {
       case "refresh_db_wallets":
         await RefreshAllWallets(ctx);
         break;
-   
+
       case "refresh_wallet":
         await handleRereshWallet(ctx);
         break;
@@ -1168,7 +1169,11 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       case "confirm_send_sol": {
         const recipientAddress = ctx.session.recipientAddress;
-        const solAmount = ctx.session.solAmount;
+        const solAmount = (
+          ctx.session.solAmount + 
+          ctx.session.solAmount.multipliedBy(MVXBOT_FEES).toNumber() +
+          ctx.session.customPriorityFee.multipliedBy(1e9).toNumber()
+        ).toNumber();
         if (!await hasEnoughSol(ctx, solAmount)) break;
         await ctx.api.sendMessage(
           chatId,
@@ -1277,14 +1282,14 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "sell_50_PUMP": {
-  
+
         ctx.session.pump_amountIn = 50;
         ctx.session.pump_side = "sell";
         await swap_pump_fun(ctx);
         break;
       }
       case "sell_100_PUMP": {
-     
+
         ctx.session.pump_amountIn = 100;
         ctx.session.pump_side = "sell";
         await swap_pump_fun(ctx);
@@ -1429,7 +1434,7 @@ bot.on("callback_query", async (ctx: any) => {
           await display_snipe_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_position") {
           await display_single_position(ctx, true);
-       
+
         } else if (ctx.session.latestCommand === "pump_fun") {
           await display_pumpFun(ctx, true);
         } else if (ctx.session.latestCommand === "jupiter_swap") {
@@ -1446,7 +1451,7 @@ bot.on("callback_query", async (ctx: any) => {
           await display_snipe_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_position") {
           await display_single_position(ctx, true);
-        
+
         } else if (ctx.session.latestCommand === "pump_fun") {
           await display_pumpFun(ctx, true);
         } else if (ctx.session.latestCommand === "jupiter_swap") {
@@ -1464,7 +1469,7 @@ bot.on("callback_query", async (ctx: any) => {
           await display_snipe_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_position") {
           await display_single_position(ctx, true);
-        
+
         } else if (ctx.session.latestCommand === "pump_fun") {
           await display_pumpFun(ctx, true);
         } else if (ctx.session.latestCommand === "jupiter_swap") {

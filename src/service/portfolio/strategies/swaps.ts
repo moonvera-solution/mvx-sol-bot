@@ -58,10 +58,6 @@ export async function handle_radyum_swap(
     if (side == 'buy') {
       let originalBuyAmt = swapAmountIn;
       let amountUse = new BigNumber(originalBuyAmt);
-      if (userSolBalance < swapAmountIn) {
-        await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
-        return;
-      }
       tokenIn = DEFAULT_TOKEN.WSOL;
       outputToken = OUTPUT_TOKEN;
       swapAmountIn = swapAmountIn * Math.pow(10, 9);
@@ -77,6 +73,19 @@ export async function handle_radyum_swap(
       } else {
         mvxFee = new BigNumber(bot_fee).multipliedBy(1e9);
       }
+      const slippage = swapAmountIn * ctx.session.latestSlippage / 100;
+      const buyAmount = (swapAmountIn.multipliedBy(1e9).toNumber() + bot_fee.multipliedBy(1e9).toNumber() + (ctx.session.customPriorityFee.multipliedBy(1e9).toNumber()) + slippage);
+      if (userSolBalance < buyAmount) {
+        await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
+        return;
+      }
+      console.log('raydium_swap -->');
+      console.log('userSolBalance: ', userSolBalance);
+      console.log('buyAmount: ', buyAmount);
+      console.log('bot_fee-1e9: ', bot_fee.multipliedBy(1e9).toNumber());
+      console.log('customPriorityFee-1e9: ', ctx.session.customPriorityFee.multipliedBy(1e9).toNumber());
+      console.log('swapAmountIn-1e9: ', swapAmountIn.multipliedBy(1e9).toNumber());
+
       // mvxFee = new BigNumber(swapAmountIn).times(MVXBOT_FEES);
       // await ctx.api.sendMessage(chatId, `💸 Buying ${originalBuyAmt} SOL of ${userTokenBalanceAndDetails.userTokenSymbol}`);
     } else {
@@ -228,7 +237,7 @@ export async function handle_radyum_swap(
       }).catch(async (error: any) => {
         console.log('afterswap. ', error)
         console.log('here... ', error.message)
-        await ctx.api.sendMessage(chatId, `🔴 ${side.toUpperCase()} ${ error.message}.`);
+        await ctx.api.sendMessage(chatId, `🔴 ${side.toUpperCase()} ${error.message}.`);
         return;
       });
     } else {

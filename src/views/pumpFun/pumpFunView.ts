@@ -7,10 +7,9 @@ export const DEFAULT_PUBLIC_KEY = new PublicKey('1111111111111111111111111111111
 import { getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
 import { getSwapDetails, swap_solTracker } from '../../service/dex/solTracker';
 import { UserPositions } from '../../db/mongo/schema';
-import { SOL_ADDRESS } from '../../config';
+import { MVXBOT_FEES, SOL_ADDRESS } from '../../config';
 import bs58 from "bs58";
 import BigNumber from 'bignumber.js';
-import { MVXBOT_FEES } from 'config';
 
 
 export async function swap_pump_fun(ctx: any) {
@@ -35,12 +34,19 @@ export async function swap_pump_fun(ctx: any) {
     // balance check
     // look here is a validation but does not account for fees        // Ill do a branch for you and you give it a test
     // this could work, but we need to test, this could work // yes bro
-    const mxvFees = MVXBOT_FEES.times(ctx.session.pump_amountIn).toNumber(); // mvx fee is always a % of the amountIn
-    if (tradeSide == 'buy' && userSolBalance < (ctx.session.pump_amountIn + ctx.session.customPriorityFee + mxvFees)) {
+    const mvxFees = ctx.session.pump_amountIn.multipliedBy(MVXBOT_FEES).toNumber(); // mvx fee is always a % of the amountIn
+    const slippage = ctx.session.pump_amountIn * ctx.session.latestSlippage / 100; // mvx fee is always a % of the amountIn
+    const buyAmount = (ctx.session.pump_amountIn + ctx.session.customPriorityFee + mvxFees + slippage);
+    if (tradeSide == 'buy' && userSolBalance < buyAmount) {
       await ctx.api.sendMessage(chatId, `❌ Insufficient SOL balance.`);
       return;
     }
-
+    console.log('pumpfun_swap -->');
+    console.log('userSolBalance: ', userSolBalance);
+    console.log('buyAmount: ', buyAmount);
+    console.log('bot_fee-1e9: ', mvxFees);
+    console.log('customPriorityFee-1e9: ', ctx.session.customPriorityFee);
+    console.log('swapAmountIn-1e9: ', ctx.session.pump_amountIn);
     // before swap feedback
     let msg = `🟢 Sending ${tradeSide} transaction, please wait for confirmation.`;
     await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
