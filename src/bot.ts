@@ -651,6 +651,9 @@ bot.on("message", async (ctx) => {
           } else if (ctx.session.swaptypeDex == "jup_swap") {
             ctx.session.jupSwap_amount = amount;
             ctx.session.jupSwap_side = "buy";
+            ctx.session.jupSwap_token = String(ctx.session.positionPool[ctx.session.positionIndex]);
+            // console.log('ctx.session.positionPool[ctx.session.positionIndex]', ctx.session.positionPool[ctx.session.positionIndex]);
+
             await jupiterSwap(ctx);
           } else {
             const poolKeys = await getRayPoolKeys(
@@ -1361,7 +1364,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "snipe_1_SOL": {
         if (!await hasEnoughSol(ctx, 1)) break;
-        
+
         ctx.session.snipeStatus = true;
         if (ctx.session.snipperLookup) {
           await snipperON(ctx, 1);

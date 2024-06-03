@@ -75,10 +75,9 @@ export async function hasEnoughSol(ctx: any, amount: number) {
 }
 
 export async function hasEnoughToken(ctx: any, token: any, amount: number) {
-  const userTokenBalance = token.userTokenBalance;
   const userTokenSymbol = token.userTokenSymbol;
   const tokenDecimals = ctx.session.swaptypeDex == 'pump_swap' ? 1 : token.decimals;
-  const amountOut = amount * Math.pow(10, tokenDecimals);
+  const userTokenBalance = token.userTokenBalance * Math.pow(10, tokenDecimals);
 
   if (userTokenBalance <= 0) {
     await ctx.api.sendMessage(
@@ -91,10 +90,10 @@ export async function hasEnoughToken(ctx: any, token: any, amount: number) {
 
   if (!await isNumber(ctx, amount)) return false;
 
-  // console.log('userTokenBalance: ', userTokenBalance);
-  // console.log('amountOut: ', amountOut);
+  console.log('userTokenBalance: ', userTokenBalance);
+  console.log('amount: ', amount);
 
-  if (userTokenBalance < amountOut) {
+  if (userTokenBalance < amount) {
     await ctx.api.sendMessage(
       ctx.chat.id,
       `🔴 Insufficient balance. Your balance is <b>${userTokenBalance} ${userTokenSymbol}</b>`,
