@@ -1,7 +1,7 @@
 import { Percent, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken } from '@raydium-io/raydium-sdk';
 import { PublicKey, Keypair, Connection } from '@solana/web3.js';
 import { getWalletTokenAccount, getSolBalance, waitForConfirmation, getSwapAmountOut } from '../../util';
-import { DEFAULT_TOKEN, MVXBOT_FEES } from '../../../config';
+import { DEFAULT_TOKEN, MVXBOT_FEES } from '../../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
 import { ISESSION_DATA } from '../../util/types';
 import { saveUserPosition } from "../positions";
@@ -10,6 +10,7 @@ import BigNumber from 'bignumber.js';
 import bs58 from 'bs58';
 import { Referrals, UserPositions } from '../../../db/mongo/schema';
 import { display_jupSwapDetails } from '../../../views/jupiter/jupiterSwapView';
+import { hasEnoughToken } from '../../../service/util/validations';
 
 export async function handle_radyum_swap(
   ctx: any,
@@ -60,7 +61,7 @@ export async function handle_radyum_swap(
       let amountUse = new BigNumber(originalBuyAmt);
       tokenIn = DEFAULT_TOKEN.WSOL;
       outputToken = OUTPUT_TOKEN;
-      swapAmountIn = swapAmountIn * Math.pow(10, 9);
+      swapAmountIn = Number(swapAmountIn) * 1e9;
 
       // ------------ MVXBOT_FEES  and referral ------------
 
@@ -73,32 +74,32 @@ export async function handle_radyum_swap(
       } else {
         mvxFee = new BigNumber(bot_fee).multipliedBy(1e9);
       }
-      const slippage = swapAmountIn * ctx.session.latestSlippage / 100;
-      const buyAmount = (swapAmountIn.multipliedBy(1e9).toNumber() + bot_fee.multipliedBy(1e9).toNumber() + (ctx.session.customPriorityFee.multipliedBy(1e9).toNumber()) + slippage);
-      if (userSolBalance < buyAmount) {
-        await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
-        return;
-      }
-      console.log('raydium_swap -->');
-      console.log('userSolBalance: ', userSolBalance);
-      console.log('buyAmount: ', buyAmount);
-      console.log('bot_fee-1e9: ', bot_fee.multipliedBy(1e9).toNumber());
-      console.log('customPriorityFee-1e9: ', ctx.session.customPriorityFee.multipliedBy(1e9).toNumber());
-      console.log('swapAmountIn-1e9: ', swapAmountIn.multipliedBy(1e9).toNumber());
+      // const slippage = swapAmountIn * ctx.session.latestSlippage / 100;
+      // const buyAmount = (swapAmountIn.multipliedBy(1e9).toNumber() + bot_fee.multipliedBy(1e9).toNumber() + (ctx.session.customPriorityFee.multipliedBy(1e9).toNumber()) + slippage);
+      // if ((userSolBalance * 1e9) < buyAmount) {
+      //   await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
+      //   return;
+      // }
+      // console.log('raydium_swap -->');
+      // console.log('userSolBalance: ', userSolBalance);
+      // console.log('buyAmount: ', buyAmount);
+      // console.log('bot_fee-1e9: ', bot_fee.multipliedBy(1e9).toNumber());
+      // console.log('customPriorityFee-1e9: ', ctx.session.customPriorityFee.multipliedBy(1e9).toNumber());
+      // console.log('swapAmountIn-1e9: ', swapAmountIn.multipliedBy(1e9).toNumber());
 
       // mvxFee = new BigNumber(swapAmountIn).times(MVXBOT_FEES);
       // await ctx.api.sendMessage(chatId, `💸 Buying ${originalBuyAmt} SOL of ${userTokenBalanceAndDetails.userTokenSymbol}`);
     } else {
 
-      if (userTokenBalance == 0) {
-        await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userTokenBalance} ${userTokenBalanceAndDetails.userTokenSymbol}`);
-        return;
-      }
       let percent = swapAmountIn;
       tokenIn = OUTPUT_TOKEN;
       outputToken = DEFAULT_TOKEN.WSOL;
       let sellAmountPercent = userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals);
       swapAmountIn = new BigNumber(swapAmountIn).multipliedBy(sellAmountPercent).dividedBy(100).integerValue(BigNumber.ROUND_FLOOR);
+
+      // validate if user has enough token balance and send message if not
+      if (!await hasEnoughToken(ctx, userTokenBalanceAndDetails, swapAmountIn.toNumber())) return;
+
       // await ctx.api.sendMessage(chatId, `💸 Selling ${percent}% ${userTokenBalanceAndDetails.userTokenSymbol}`);
     }
     // console.log('swapAmountIn', swapAmountIn);

@@ -8,7 +8,7 @@ import { runAllFees } from '../util/getPriority';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import { UserPositions } from '../../db';
 import { getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
-import { MVXBOT_FEES, SOL_ADDRESS } from "../../config";
+import { MVXBOT_FEES, SOL_ADDRESS } from "../../../config";
 import { jupiterInxSwap } from '../../service/dex/jupiter/trade/swaps';
 import bs58 from 'bs58';
 import BigNumber from 'bignumber.js';
@@ -16,6 +16,7 @@ import { saveUserPosition } from "../../service/portfolio/positions";
 import { display_pumpFun } from '../pumpFun/pumpFunView';
 import { getRayPoolKeys } from '../../service/dex/raydium/raydium-utils/formatAmmKeysById';
 import { display_token_details } from '..';
+import { hasEnoughToken } from '../../service/util/validations';
 
 
 export async function jupiterSwap(ctx: any) {
@@ -34,24 +35,30 @@ export async function jupiterSwap(ctx: any) {
     const amountToSell = Math.floor((ctx.session.jupSwap_amount / 100) * userTokenBalanceAndDetails.userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals));
     const amountIn = isBuySide ? ctx.session.jupSwap_amount * 1e9 : amountToSell;
     const refObject = { referralWallet: ctx.session.referralWallet, referralCommision: ctx.referralCommision };
-    const userSolBalance = (await getSolBalance(userWallet.publicKey, connection) * 1e9);
-    const slippage = amountIn * ctx.session.latestSlippage / 100;
-    const buyAmount = (amountIn + (amountIn * MVXBOT_FEES.toNumber()) + (ctx.session.customPriorityFee * 1e9) + slippage);
-    console.log('jupiter_swap -->');
-    console.log('userSolBalance: ', userSolBalance);
-    console.log('buyAmount: ', buyAmount);
-    console.log('bot_fee-1e9: ', (amountIn * MVXBOT_FEES.toNumber()));
-    console.log('customPriorityFee-1e9: ', (ctx.session.customPriorityFee * 1e9));
-    console.log('swapAmountIn-1e9: ', amountIn);
-    if (isBuySide && buyAmount > userSolBalance) {
-      await ctx.api.sendMessage(chatId, `❌ You do not have enough SOL to buy ${userTokenBalanceAndDetails.userTokenSymbol}.`, { parse_mode: 'HTML', disable_web_page_preview: true });
-      return;
-    }
-    if (!isBuySide && amountToSell <= 0) {
-      await ctx.api.sendMessage(chatId, `❌ You do not have enough ${userTokenBalanceAndDetails.userTokenSymbol} to sell.`, { parse_mode: 'HTML', disable_web_page_preview: true });
-      return;
+    // const userSolBalance = (await getSolBalance(userWallet.publicKey, connection) * 1e9);
+    // const slippage = amountIn * ctx.session.latestSlippage / 100;
+    // const buyAmount = (amountIn + (amountIn * MVXBOT_FEES.toNumber()) + (ctx.session.customPriorityFee * 1e9) + slippage);
+    // console.log('jupiter_swap -->');
+    // console.log('userSolBalance: ', userSolBalance);
+    // console.log('buyAmount: ', buyAmount);
+    // console.log('bot_fee-1e9: ', (amountIn * MVXBOT_FEES.toNumber()));
+    // console.log('customPriorityFee-1e9: ', (ctx.session.customPriorityFee * 1e9));
+    // console.log('swapAmountIn-1e9: ', amountIn);
+    // if (isBuySide && buyAmount > userSolBalance) {
+    //   await ctx.api.sendMessage(chatId, `❌ You do not have enough SOL to buy ${userTokenBalanceAndDetails.userTokenSymbol}.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+    //   return;
+    // }
 
+    // validate if user has enough token balance and send message if not
+    if (!isBuySide) {
+      if (!await hasEnoughToken(ctx, userTokenBalanceAndDetails, amountToSell)) return;
     }
+
+    // if (!isBuySide && amountToSell <= 0) {
+    //   await ctx.api.sendMessage(chatId, `❌ You do not have enough ${userTokenBalanceAndDetails.userTokenSymbol} to sell.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+    //   return;
+    // }
+
     console.log('priorityFees:', ctx.session.priorityFees)
     await ctx.api.sendMessage(chatId, `🟢 <b>Transaction ${ctx.session.jupSwap_side.toUpperCase()}:</b> Processing ... Please wait for confirmation...`, { parse_mode: 'HTML', disable_web_page_preview: true });
 
@@ -327,7 +334,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
             // [
             //   { text: `Low ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_low' },
             //   { text: `Medium ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_medium' }, { text: `High ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_high' },{ text: `Custom ${priority_custom === true ? '✅' : ''}`, callback_data: 'priority_custom' }],
-            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage ' }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
+            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
             [{ text: 'Close', callback_data: 'closing' }]
 
           ]

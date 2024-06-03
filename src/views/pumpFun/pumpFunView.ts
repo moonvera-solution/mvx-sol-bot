@@ -7,9 +7,10 @@ export const DEFAULT_PUBLIC_KEY = new PublicKey('1111111111111111111111111111111
 import { getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
 import { getSwapDetails, swap_solTracker } from '../../service/dex/solTracker';
 import { UserPositions } from '../../db/mongo/schema';
-import { MVXBOT_FEES, SOL_ADDRESS } from '../../config';
+import { MVXBOT_FEES, SOL_ADDRESS } from '../../../config';
 import bs58 from "bs58";
 import BigNumber from 'bignumber.js';
+import { hasEnoughToken } from '../../service/util/validations';
 
 
 export async function swap_pump_fun(ctx: any) {
@@ -29,24 +30,30 @@ export async function swap_pump_fun(ctx: any) {
       await getUserTokenBalanceAndDetails(new PublicKey(payerKeypair.publicKey), new PublicKey(tokenIn), connection);
 
     const amountToSell = (ctx.session.pump_amountIn / 100) * userTokenBalanceAndDetails.userTokenBalance;
-    const userSolBalance = await getSolBalance(payerKeypair.publicKey, connection);
+    // const userSolBalance = await getSolBalance(payerKeypair.publicKey, connection);
 
     // balance check
     // look here is a validation but does not account for fees        // Ill do a branch for you and you give it a test
     // this could work, but we need to test, this could work // yes bro
-    const mvxFees = ctx.session.pump_amountIn.multipliedBy(MVXBOT_FEES).toNumber(); // mvx fee is always a % of the amountIn
-    const slippage = ctx.session.pump_amountIn * ctx.session.latestSlippage / 100; // mvx fee is always a % of the amountIn
-    const buyAmount = (ctx.session.pump_amountIn + ctx.session.customPriorityFee + mvxFees + slippage);
-    if (tradeSide == 'buy' && userSolBalance < buyAmount) {
-      await ctx.api.sendMessage(chatId, `❌ Insufficient SOL balance.`);
-      return;
-    }
-    console.log('pumpfun_swap -->');
-    console.log('userSolBalance: ', userSolBalance);
-    console.log('buyAmount: ', buyAmount);
-    console.log('bot_fee-1e9: ', mvxFees);
-    console.log('customPriorityFee-1e9: ', ctx.session.customPriorityFee);
-    console.log('swapAmountIn-1e9: ', ctx.session.pump_amountIn);
+    // const mvxFees = ctx.session.pump_amountIn.multipliedBy(MVXBOT_FEES).toNumber(); // mvx fee is always a % of the amountIn
+    // const slippage = ctx.session.pump_amountIn * ctx.session.latestSlippage / 100; // mvx fee is always a % of the amountIn
+    // const buyAmount = (ctx.session.pump_amountIn + ctx.session.customPriorityFee + mvxFees + slippage);
+    // if (tradeSide == 'buy' && userSolBalance < buyAmount) {
+    //   await ctx.api.sendMessage(chatId, `❌ Insufficient SOL balance.`);
+    //   return;
+    // }
+    // console.log('pumpfun_swap -->');
+    // console.log('userSolBalance: ', userSolBalance);
+    // console.log('buyAmount: ', buyAmount);
+    // console.log('bot_fee-1e9: ', mvxFees);
+    // console.log('customPriorityFee-1e9: ', ctx.session.customPriorityFee);
+    // console.log('swapAmountIn-1e9: ', ctx.session.pump_amountIn);
+
+    // validate if user has enough token balance and send message if not
+    if (tradeSide == 'sell'){
+      if(!await hasEnoughToken(ctx, userTokenBalanceAndDetails, amountToSell)) return;
+    } 
+
     // before swap feedback
     let msg = `🟢 Sending ${tradeSide} transaction, please wait for confirmation.`;
     await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
@@ -201,7 +208,7 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
         // `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
         `Wallet balance: <b>${getSolBalanceData.toFixed(4)}</b> SOL | <b>${(getSolBalanceData * solPrice).toFixed(4)}</b> USD\n` +
         `Net Worth: <b>${netWorthSol.toFixed(4)}</b> SOL | <b>${netWorth.toFixed(4)}</b> USD\n`;
-      console.log('ctx.session.customPriorityFee', ctx.session.customPriorityFee);
+      // console.log('ctx.session.customPriorityFee', ctx.session.customPriorityFee);
 
       let options: any;
       options = {
