@@ -407,19 +407,19 @@ export async function catchSimulationErrors(ctx: any, simulationResult: any) {
   const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
   if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg))) {
     console.log(simulationResult.value.logs)
-    throw new Error(`🔴 Slippage error, try increasing your slippage %.`);
+    // throw new Error(`🔴 Slippage error, try increasing your slippage %.`);
     return await ctx.api.sendMessage(`🔴 Slippage error, try increasing your slippage %.`);
   }
   const BALANCE_ERROR = /Transfer: insufficient lamports/;
   if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
     console.log(simulationResult.value.logs)
-    throw new Error(`🔴 Insufficient balance for transaction.`);
+    // throw new Error(`🔴 Insufficient balance for transaction.`);
     return await ctx.api.sendMessage(`🔴 Insufficient balance for transaction.`);
   }
   const FEES_ERROR = 'InsufficientFundsForFee';
   if (simulationResult.value.err === FEES_ERROR) {
     console.log(simulationResult.value.logs)
-    throw new Error(`🔴 Swap failed! Please try again.`);
+    // throw new Error(`🔴 Swap failed! Please try again.`);
     return await ctx.api.sendMessage(`🔴 Not enough balance fro transaction fees! Please try again.`);
   }
 }
