@@ -8,7 +8,7 @@ import { runAllFees } from '../util/getPriority';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import { UserPositions } from '../../db';
 import { getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
-import { SOL_ADDRESS } from "../../config";
+import { MVXBOT_FEES, SOL_ADDRESS } from "../../config";
 import { jupiterInxSwap } from '../../service/dex/jupiter/trade/swaps';
 import bs58 from 'bs58';
 import BigNumber from 'bignumber.js';
@@ -34,18 +34,22 @@ export async function jupiterSwap(ctx: any) {
     const amountToSell = Math.floor((ctx.session.jupSwap_amount / 100) * userTokenBalanceAndDetails.userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals));
     const amountIn = isBuySide ? ctx.session.jupSwap_amount * 1e9 : amountToSell;
     const refObject = { referralWallet: ctx.session.referralWallet, referralCommision: ctx.referralCommision };
-    const userSolBalance = await getSolBalance(userWallet.publicKey, connection);
-    if (isBuySide && ctx.session.jupSwap_amount > userSolBalance) {
+    const userSolBalance = (await getSolBalance(userWallet.publicKey, connection) * 1e9);
+    const slippage = amountIn * ctx.session.latestSlippage / 100;
+    
+    const minBalance = (amountIn + (amountIn * MVXBOT_FEES.toNumber()) + (ctx.session.customPriorityFee * 1e9));
+    if (isBuySide && minBalance > userSolBalance) {
       await ctx.api.sendMessage(chatId, `❌ You do not have enough SOL to buy ${userTokenBalanceAndDetails.userTokenSymbol}.`, { parse_mode: 'HTML', disable_web_page_preview: true });
       return;
     }
+
     if (!isBuySide && amountToSell <= 0) {
       await ctx.api.sendMessage(chatId, `❌ You do not have enough ${userTokenBalanceAndDetails.userTokenSymbol} to sell.`, { parse_mode: 'HTML', disable_web_page_preview: true });
       return;
-
     }
-    console.log('priorityFees:', ctx.session.priorityFees)
+
     await ctx.api.sendMessage(chatId, `🟢 <b>Transaction ${ctx.session.jupSwap_side.toUpperCase()}:</b> Processing... \n Please wait for confirmation.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+    
     jupiterInxSwap(
       connection,
       rpcUrl,
@@ -54,7 +58,7 @@ export async function jupiterSwap(ctx: any) {
       tokenOut,
       amountIn,
       (ctx.session.latestSlippage * 100),
-      (ctx.session.customPriorityFee * 1e9),
+      (ctx.session.customPriorityFee * 1e9), // here is it for jupiter its allways the default set by users
       refObject
     ).then(async (txSig: any) => {
       if (!txSig) return;
@@ -79,15 +83,15 @@ export async function jupiterSwap(ctx: any) {
         const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
         let oldPositionSol: number = 0;
         let oldPositionToken: number = 0;
-        console.log('userPosition', userPosition);
-        console.log('tokenIn', tokenIn);
+        // console.log('userPosition', userPosition);
+        // console.log('tokenIn', tokenIn);
         if (userPosition) {
 
           const existingPositionIndex = userPosition.positions.findIndex(
             position => position.baseMint === (isBuySide ? tokenOut.toString() : tokenIn.toString())
           );
 
-          console.log('existingPositionIndex', existingPositionIndex);
+          // console.log('existingPositionIndex', existingPositionIndex);
           if (userPosition.positions[existingPositionIndex]) {
             oldPositionSol = userPosition.positions[existingPositionIndex].amountIn
             oldPositionToken = userPosition.positions[existingPositionIndex].amountOut!
@@ -96,7 +100,7 @@ export async function jupiterSwap(ctx: any) {
         }
 
         if (tradeType == 'buy') {
-          await saveUserPosition(ctx,
+          saveUserPosition(chatId,
             userWallet.publicKey.toString(), {
             baseMint: tokenOut,
             name: userTokenBalanceAndDetails.userTokenName,
@@ -106,38 +110,23 @@ export async function jupiterSwap(ctx: any) {
             amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
 
           });
-        } else {
+        } else if (tradeType == 'sell'){
           let newAmountIn, newAmountOut;
-          console.log('amountIn', amountIn);
-          console.log('oldPositionToken', oldPositionToken);
-          console.log('oldPositionSol', oldPositionSol);
-          console.log('extractAmount', extractAmount);
 
-          // amountIn 2597679329 == 1979179682
-          // oldPositionToken 1979179682
-          // oldPositionSol 1000000 == 1190498
-          // extractAmount 1190498
           if (Number(amountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
             newAmountIn = 0;
             newAmountOut = 0;
-            console.log('position remove');
           } else {
             newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
             newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
-            console.log('position update');
-            console.log('newAmountIn', newAmountIn);
-            console.log('newAmountOut', newAmountOut);
           }
 
           if (newAmountIn <= 0 || newAmountOut <= 0) {
-            await UserPositions.updateOne(
-              { walletId: userWallet.publicKey.toString() },
-              { $pull: { positions: { baseMint: tokenIn } } }
-            );
+            await UserPositions.updateOne({ walletId: userWallet.publicKey.toString() },{ $pull: { positions: { baseMint: tokenIn } } });
             ctx.session.positionIndex = 0;
-            // await display_single_spl_positions(ctx);
+
           } else {
-            await saveUserPosition(ctx,
+            saveUserPosition(chatId,
               userWallet.publicKey.toString(), {
               baseMint: tokenIn,
               name: userTokenBalanceAndDetails.userTokenName,
@@ -147,6 +136,7 @@ export async function jupiterSwap(ctx: any) {
               amountOut: newAmountOut,
             });
           }
+          ctx.session.latestCommand = 'jupiter_swap'
         }
         await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
         if (tradeType == 'buy') {
@@ -242,39 +232,34 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const {
         tokenData,
       } = tokenMetadataResult;
-      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
       const ammAddress = jupPriceImpact_5.routePlan[jupPriceImpact_5?.routePlan?.length - 1].swapInfo.ammKey;
-      // const AllpriorityFees = await runAllFees(ctx, ammAddress);
-
-      // const mediumpriorityFees = (AllpriorityFees.result2);
-      // const highpriorityFees = (AllpriorityFees.result3);
-      // const maxpriorityFees = (AllpriorityFees.result4);
       const tokenPriceUSD = birdeyeData
         && birdeyeData.response
         && birdeyeData.response.data
-        && birdeyeData.response.data.data
-        && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
-        ? birdeyeData.response.data.data.price
+        // && birdeyeData.response.data.data
+        && birdeyeData.response.data.price != null  // This checks for both null and undefined
+        ? birdeyeData.response.data.price
         : Number(jupTokenPrice) * Number(solPrice);
 
       const tokenPriceSOL = tokenPriceUSD / solPrice;
       const baseDecimals = tokenData.mint.decimals;
       const totalSupply = new BigNumber(tokenData.mint.supply.basisPoints);
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(tokenPriceUSD)));
-      const userTokenBalance = birdeyeData 
-      && birdeyeData.walletTokenPosition
-      && birdeyeData.walletTokenPosition.data
-      && birdeyeData.walletTokenPosition.data.data
-      && birdeyeData.walletTokenPosition.data.data.balance > 0
-      && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
-      ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance);
+      const userTokenBalance = birdeyeData
+        && birdeyeData.walletTokenPosition
+        && birdeyeData.walletTokenPosition.data
+        // && birdeyeData.walletTokenPosition.data.data
+        && birdeyeData.walletTokenPosition.data.balance > 0
+        && birdeyeData.walletTokenPosition.data.valueUsd > 0
+        ? birdeyeData.walletTokenPosition.data.uiAmount : (userTokenDetails.userTokenBalance);
 
       const netWorth = birdeyeData
         && birdeyeData.birdeyePosition
         && birdeyeData.birdeyePosition.data
-        && birdeyeData.birdeyePosition.data.data
-        && birdeyeData.birdeyePosition.data.data.totalUsd
-        ? birdeyeData.birdeyePosition.data.data.totalUsd : NaN;
+        // && birdeyeData.birdeyePosition.data.data
+        && birdeyeData.birdeyePosition.data.totalUsd
+        ? birdeyeData.birdeyePosition.data.totalUsd : NaN;
 
       const netWorthSol = netWorth / solPrice;
 

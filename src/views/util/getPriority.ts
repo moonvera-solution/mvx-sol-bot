@@ -115,19 +115,12 @@ export async function runAllFees(ctx: any, amm: any) {
 
 
 export async function setCustomPriority(ctx: any) {
-
   const FeeInMicroLamports = (ctx.session.customPriorityFee * 1e9);
-  console.log('customPriorityFee', ctx.session.customPriorityFee);
-  console.log('userFees', FeeInMicroLamports);
   ctx.session.txPriorityFee = FeeInMicroLamports;
   ctx.session.priorityFees = FeeInMicroLamports;
-  console.log('txPriorityFee', ctx.session.txPriorityFee);
   await ctx.api.sendMessage(ctx.chat.id, `Priority Fee set to ${ctx.session.customPriorityFee} SOL`);
   await ctx.api.sendMessage(ctx.chat.id, `To continue trading please enter a token address`);
   ctx.session.latestCommand = 'jupiter_swap';
 
   return ctx.session.txPriorityFee;
-
-
-
 }

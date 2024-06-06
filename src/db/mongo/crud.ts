@@ -138,7 +138,7 @@ export async function _generateReferralLink(ctx: any, walletAddress: PublicKey) 
         referralCode: referralCode,
         earnings: 0,
         numberOfReferrals: 0,
-        commissionPercentage: 35,
+        commissionPercentage: 0,
         referredUsers: [],
       });
       await newReferral.save();

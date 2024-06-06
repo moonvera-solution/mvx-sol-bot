@@ -73,7 +73,7 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
       ]);
       const tradeDex = pos.tradeType
 
-      return formatPositionMessage(pos, userBalance, birdeyeData,tradeDex,jupRate,tokenMetadataResult,userTokenDetails);
+      return formatPositionMessage(ctx,userWallet,pos, userBalance, birdeyeData,tradeDex,jupRate,tokenMetadataResult,userTokenDetails);
     });
 
 
@@ -84,6 +84,8 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
 }
 
 async function formatPositionMessage(
+  ctx: any,
+  userWallet: string,
   pos: Position,
   userBalance: BigNumber,
   birdeyeData: any,
@@ -101,14 +103,14 @@ if(jupTokenValue[0] && jupTokenValue[0].price ){
   jupTokenPrice = jupTokenValue[0].price;
 
 }
-const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
 if (tradeDex.includes('jup_swap') || tradeDex.includes('ray_swap')) {
   tokenPriceUSD = birdeyeData
   && birdeyeData.response
   && birdeyeData.response.data
-  && birdeyeData.response.data.data
-  && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
-  ? birdeyeData.response.data.data.price
+  // && birdeyeData.response.data.data
+  && birdeyeData.response.data.price != null  // This checks for both null and undefined
+  ? birdeyeData.response.data.price
   : jupTokenPrice;
 }else {
  const tokenRatePuMP =  await getSwapDetails(pos.baseMint,SOL_ADDRESS, 1, 0 )
@@ -133,8 +135,14 @@ if (tradeDex.includes('jup_swap') || tradeDex.includes('ray_swap')) {
   if(pos && pos.amountOut ){
     initialInSOL = Number(pos.amountIn) / 1e9;
     initialInUSD = initialInSOL * Number(solPrice);
+
     valueInUSD = (pos.amountOut - (userTokenDetails.userTokenBalance * Math.pow(10, baseDecimals))) < 5 ? userTokenDetails.userTokenBalance * Number(tokenPriceUSD) : 'N/A';
     valueInSOL = (pos.amountOut - (userTokenDetails.userTokenBalance * Math.pow(10, baseDecimals))) < 5 ? Number(((userTokenDetails.userTokenBalance)) * Number(tokenPriceSOL)) : 'N/A';
+    if(valueInUSD < 0.1){
+      await UserPositions.updateOne({ walletId: userWallet }, { $pull: { positions: { baseMint: pos.baseMint } } })
+      .then(() => { ctx.session.positionIndex = 0; });
+  
+    }
     profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(pos.amountIn) / 1e9)) / (Number(pos.amountIn) / 1e9) * 100 : 'N/A';
     profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
     profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
@@ -149,17 +157,6 @@ if (tradeDex.includes('jup_swap') || tradeDex.includes('ray_swap')) {
   ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance);
 
   
-  // const baseSupply = birdeyeData
-  // && birdeyeData.response
-  // && birdeyeData.response.data
-  // && birdeyeData.response.data.data
-  // && birdeyeData.response.data.data.supply != null  // This checks for both null and undefined
-  // ? birdeyeData.response.data.data.supply
-  // : Number(tokenInfo.baseTokenSupply.dividedBy(Math.pow(10, poolKeys.baseDecimals)));
-  // const mcap = baseSupply * tokenPriceUSD;  
-
-  // const formattedMarketCap = new Intl.NumberFormat('en-US', { notation: "compact" }).format(Mcap);
-
   // Composing the message
   return `<b>${pos.name} (${pos.symbol})</b> | <code>${pos.baseMint}</code>\n` +
     `Mcap: ${Mcap} <b>USD</b>\n` +
@@ -330,7 +327,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
         ).then((response) => response.json()),
 
       ]);
-      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
+      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
       console.log('solPrice', solPrice);
       let tokenPriceUSD = 0;
 
@@ -343,16 +340,15 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
         tokenPriceUSD = birdeyeData
         && birdeyeData.response
         && birdeyeData.response.data
-        && birdeyeData.response.data.data
-        && birdeyeData.response.data.data.price != null  // This checks for both null and undefined
-        ? birdeyeData.response.data.data.price
+        // && birdeyeData.response.data.data
+        && birdeyeData.response.data.price != null  // This checks for both null and undefined
+        ? birdeyeData.response.data.price
         : jupTokenPrice;
       }else {
         const tokenRatePuMP =  await getSwapDetails(pos.baseMint,SOL_ADDRESS, 1, 0 )
          tokenPriceUSD = tokenRatePuMP * solPrice;
          console.log('tokenPricePUMP', tokenPriceUSD);
        }
-      console.log('birdeyeData.response.data.data.price', birdeyeData?.response.data.data.price);
      
      
       const {
@@ -360,11 +356,10 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       } = tokenMetadataResult;
       const baseDecimals = tokenData.mint.decimals;
       const totalSupply = new BigNumber(tokenData.mint.supply.basisPoints);
-      console.log('totalSupply', Number(totalSupply));
-      console.log('tokeprice', tokenPriceUSD);
+
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(tokenPriceUSD)));
       const tokenPriceSOL = Number(tokenPriceUSD) / Number(solPrice);
-      console.log('tokenPriceSOL', tokenPriceSOL);
+  
       let initialInUSD = 0;
       let initialInSOL = 0;
       let valueInUSD: any;
@@ -385,17 +380,17 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
   const userTokenBalance = birdeyeData 
   && birdeyeData.walletTokenPosition
   && birdeyeData.walletTokenPosition.data
-  && birdeyeData.walletTokenPosition.data.data
-  && birdeyeData.walletTokenPosition.data.data.balance > 0
-  && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
-  ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance);
+  // && birdeyeData.walletTokenPosition.data.data
+  && birdeyeData.walletTokenPosition.data.balance > 0
+  && birdeyeData.walletTokenPosition.data.valueUsd > 0
+  ? birdeyeData.walletTokenPosition.data.uiAmount : (userTokenDetails.userTokenBalance);
   console.log('userTokenBalance', userTokenBalance);
   const netWorth = birdeyeData
   && birdeyeData.birdeyePosition
   && birdeyeData.birdeyePosition.data
-  && birdeyeData.birdeyePosition.data.data
-  && birdeyeData.birdeyePosition.data.data.totalUsd
-  ? birdeyeData.birdeyePosition.data.data.totalUsd : NaN;
+  // && birdeyeData.birdeyePosition.data.data
+  && birdeyeData.birdeyePosition.data.totalUsd
+  ? birdeyeData.birdeyePosition.data.totalUsd : NaN;
 
     const netWorthSol = netWorth / solPrice;
   console.log('balnceInSOL', userTokenBalance * Number(tokenPriceSOL));

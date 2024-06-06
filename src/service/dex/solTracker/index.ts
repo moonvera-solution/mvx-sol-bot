@@ -4,8 +4,9 @@ import SolanaTracker from "./solTrackerUtils";
 import { sendTx, add_mvx_and_ref_inx_fees, addMvxFeesInx, wrapLegacyTx, optimizedSendAndConfirmTransaction } from '../../../../src/service/util';
 import { Keypair, Connection, Transaction, AddressLookupTableAccount, VersionedTransaction, TransactionMessage } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
+import { SOL_ADDRESS } from '../../../config';
 
-const TX_RETRY_INTERVAL = 100;
+const TX_RETRY_INTERVAL = 50;
 
 /**
  * @notice Quotes from solTracker API then sends swap tx adding mvx&ref fees
@@ -24,7 +25,7 @@ export async function swap_solTracker(connection: Connection, {
     priorityFee,
     forceLegacy,
 }: SOL_TRACKER_SWAP_PARAMS): Promise<string | null> {
-
+  
     const params = new URLSearchParams({
         from, to, fromAmount: amount.toString(),
         slippage: slippage.toString(),
@@ -32,9 +33,10 @@ export async function swap_solTracker(connection: Connection, {
         priorityFee: Number.parseFloat(String(priorityFee)).toString(),
         forceLegacy: forceLegacy ? "true" : "false",
     });
+  
     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
     const blockhash = await connection.getLatestBlockhash();
-    // API CALL TO SOL TRACKER SWAP
+
     const swapInx = await axios.get(`${process.env.SOL_TRACKER_API_URL}/swap`, { params, headers });
 
     const swapResponse = swapInx.data;
@@ -44,9 +46,9 @@ export async function swap_solTracker(connection: Connection, {
     const mvxInxs = hasReferral ?
         add_mvx_and_ref_inx_fees(payerKeypair, referralWallet!, solAmount, referralCommision!) :
         addMvxFeesInx(payerKeypair, solAmount);
-
+    let txSig = null;
     if (swapResponse.isJupiter && !swapResponse.forceLegacy) {
-        console.log("== JUPINX ==");
+        
         const transaction = VersionedTransaction.deserialize(serializedTransactionBuffer); if (!transaction) return null;
         
         const addressLookupTableAccounts = await Promise.all(
@@ -62,10 +64,12 @@ export async function swap_solTracker(connection: Connection, {
         transaction.message = message.compileToV0Message(addressLookupTableAccounts);
         transaction.sign([payerKeypair]);
 
-        return await optimizedSendAndConfirmTransaction(
+        txSig =  await optimizedSendAndConfirmTransaction(
             new VersionedTransaction(transaction.message),
             connection, blockhash, TX_RETRY_INTERVAL
         );
+        console.log("== JUP TX ==", txSig);
+        return txSig;
 
     } else {
 
@@ -87,10 +91,28 @@ export async function swap_solTracker(connection: Connection, {
         vTxx.message = message.compileToV0Message(addressLookupTableAccounts);
         vTxx.sign([payerKeypair]);
 
-        return await optimizedSendAndConfirmTransaction(vTxx,connection, blockhash, TX_RETRY_INTERVAL);
+        txSig = await optimizedSendAndConfirmTransaction(vTxx,connection, blockhash, TX_RETRY_INTERVAL);
+        console.log("== LEGACY TX ==", txSig);
     }
+    return txSig;
 }
 
+// export async function getSwapDetails(
+//     from: String,
+//     to: String,
+//     amount: Number,
+//     slippage: Number,
+// ) {
+//     const params = { from, to, amount, slippage };
+//     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
+//     try {
+//         const response = await axios.get(`${process.env.SOL_TRACKER_API_URL}/rate?`, { params, headers });
+//         console.log("rate response:", response.data);
+//         return response.data.currentPrice;
+//     } catch (error: any) {
+//         throw new Error(error);
+//     }
+// }
 export async function getSwapDetails(
     from: String,
     to: String,
@@ -100,13 +122,13 @@ export async function getSwapDetails(
     const params = { from, to, amount, slippage };
     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
     try {
-        const response = await axios.get(`${process.env.SOL_TRACKER_API_URL}/rate?`, { params, headers });
-        // console.log("rate response:", response.data);
-        return response.data.currentPrice;
+        const response = await fetch(`${process.env.SOL_TRACKER_API_URL}/rate?from=${params.from}&to=${params.to}&amount=1&slippage=${params.slippage}`, {  headers }).then((response) => response.json());
+        return response.currentPrice;
     } catch (error: any) {
         throw new Error(error);
     }
 }
+
 
 /**
  * DONOT USE THIS FUNCTION AS IT IS

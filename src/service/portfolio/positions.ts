@@ -1,7 +1,5 @@
 
-import { PublicKey } from '@metaplex-foundation/js';
 import { UserPositions } from '../../db';
-import { quoteToken } from "../../views/util/dataCalculation";
 import BigNumber from 'bignumber.js';
 type Commitment = 'processed' | 'confirmed' | 'finalized' | 'recent' | 'single' | 'singleGossip' | 'root' | 'max';
 
@@ -18,18 +16,11 @@ export interface UserPosition {
   pos: Position;
   userBalance: BigNumber;
 }
-
-export async function saveUserPosition(ctx:any, walletId:String, newPosition:Position) {
-     const chatId = ctx.chat.id;
-     const selectedWallet = ctx.session.portfolio.activeWalletIndex;
-     let userWallet = ctx.session.portfolio.wallets[selectedWallet];
-     userWallet = userWallet.walletId instanceof PublicKey ? userWallet.walletId.toBase58() : userWallet.walletId;
-
+// NEVER PASS CTX TO BACKEND FUNCTIONS
+export async function saveUserPosition(chatId:string, walletId:string, newPosition:Position) {
     try {
-        const userPosition = await UserPositions.findOne({positionChatId: chatId, walletId: userWallet });
-
+        const userPosition = await UserPositions.findOne({positionChatId: chatId, walletId:walletId });
         if (userPosition) {
-
             const existingPositionIndex = userPosition.positions.findIndex(
                 position => position.baseMint === newPosition.baseMint.toString()
             );
@@ -37,23 +28,19 @@ export async function saveUserPosition(ctx:any, walletId:String, newPosition:Pos
                 console.log("NEW Position: ",newPosition);
                 userPosition.positions.push(newPosition);
                 await userPosition.save();
-                console.log('adding new position', )
-                
               } else {
-                console.log("UPDATED Position: ",newPosition);
                 userPosition.positions[existingPositionIndex] = newPosition;
                 console.log('update existing position', )
                 await userPosition.save();
             }
         } else {
-            console.log("SAVE NEW User and Position",newPosition);
             const savePosition = new UserPositions({
                 positionChatId: chatId,
                 walletId: walletId ,
                 positions: newPosition,
                });
                await savePosition.save();
-               console.log('saved new position', )
+               console.log('Saved new user & position', )
         }
     } catch (err) {
         console.error(err);

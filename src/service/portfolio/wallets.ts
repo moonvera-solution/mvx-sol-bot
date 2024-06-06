@@ -110,6 +110,7 @@ export async function handleGetPrivateKey(ctx: any) {
 
   const privatekeyString: any = userWallet.secretKey; // The user's public key
   try {
+    console.log('userWallet', userWallet)
     // Fetch the user's wallet data 
     if (!userWallet || !userWallet.secretKey) {
       await ctx.api.sendMessage(chatId, "No wallet found. Please create a wallet first.");
@@ -138,6 +139,10 @@ export async function handleGetPrivateKey(ctx: any) {
 // Not suporting resets yet 1eb2024
 export async function confirmResetWalletAgain(ctx: any) {
   const chatId = ctx.chat.id;
+  if(ctx.session.portfolio.wallets.length == 1){
+    await ctx.api.sendMessage(chatId, "You cannot delete the last wallet in your portfolio.");
+    return;
+  }
   const options: any = {
     reply_markup: JSON.stringify({
       inline_keyboard: [
@@ -153,21 +158,19 @@ export async function resetWallet(ctx: any) {
   const chatId = ctx.chat.id;
   const walletIndex = ctx.session.portfolio.activeWalletIndex;
   const userWallet = ctx.session.portfolio.wallets[walletIndex];
-
+  console.log('userWallet', userWallet)
   const privatekeyString: any = userWallet.secretKey;
-  // console.log('walletPublicKey', walletIndex);
+  
 
   try {
     await ctx.api.sendMessage(chatId, `⚠️ IMPORTANT: This is the private key of your wallet that is being deleted: <code><b>${privatekeyString}</b></code>\n\n` +
       " It is the only way to access the funds in the deleted wallet.", { parse_mode: 'HTML' });
+    // Delete the wallet from the database
+  
+    await Portfolios.updateOne({ chatId }, { $pull: { wallets: { walletId: ctx.session.portfolio.wallets[walletIndex].publicKey} } }).catch((err: any) => {  console.log("Error deleting user position choice", err.message); });;
+    ctx.session.portfolio.activeWalletIndex = 0;
 
-    let updateQuery: any = {};
-    updateQuery[`wallets.${walletIndex}`] = 1;
-    await Portfolios.updateOne({ chatId }, { $unset: updateQuery });
-    await Portfolios.updateOne({ chatId }, { $pull: { wallets: null } });
-
-    await UserPositions.deleteOne({positionChatId: chatId, walletId: userWallet.publicKey }).catch((err: any) => {  console.log("Error deleting user position", err.message); });
-    
+    await Portfolios.updateOne({ chatId }, { $set: { activeWalletIndex: 0 } }).catch((err: any) => {  console.log("Error deleting user position choice", err.message); });;
     // Provide options for importing or creating a new wallet
     const options = {
       reply_markup: JSON.stringify({

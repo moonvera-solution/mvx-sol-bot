@@ -35,41 +35,35 @@ import {
   buildAndSendTx,
   getWalletTokenAccount,
   optimizedSendAndConfirmTransaction,
-  wrapLegacyTx
+  wrapLegacyTx,
+  add_mvx_and_ref_inx_fees,
+  addMvxFeesInx
 } from "../../../util";
 
 type WalletTokenAccounts = Awaited<ReturnType<typeof getWalletTokenAccount>>;
+type refObject = { referralWallet: string, referralCommision: number };
 
 export type TxInputInfo = {
-  ctx: any;
-  refferalFeePay: BigNumber;
-  referralWallet: PublicKey;
+  connection: Connection;
   side: "buy" | "sell";
-  mvxFee: BigNumber;
+  refObject: refObject;
   outputToken: Token;
   targetPool: string;
   inputTokenAmount: TokenAmount;
   slippage: Percent;
-  walletTokenAccounts: WalletTokenAccounts;
+  customPriorityFee: number;
   wallet: Keypair;
-  commitment: any;
-  skipPreflight: boolean;
-  maxRetries: number;
 };
 
 export async function swapOnlyAmm(input: TxInputInfo): Promise<string | null> {
-
-  const connection = new Connection(`${input.ctx.session.tritonRPC}${input.ctx.session.tritonToken}`);
+  const connection = input.connection;
   const targetPoolInfo = await formatAmmKeysById(input.targetPool, connection);
   assert(targetPoolInfo, "cannot find the target pool");
   const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys;
-
   let minSwapAmountBalance: number = 0;
-
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                       QUOTE SWAP                           */
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
-
   const { amountOut, minAmountOut } = Liquidity.computeAmountOut({
     poolKeys: poolKeys,
     poolInfo: await Liquidity.fetchInfo({ connection, poolKeys }),
@@ -85,83 +79,38 @@ export async function swapOnlyAmm(input: TxInputInfo): Promise<string | null> {
     connection,
     poolKeys,
     userKeys: {
-      tokenAccounts: input.walletTokenAccounts,
+      tokenAccounts: (await getWalletTokenAccount(connection, new PublicKey(input.wallet.publicKey))),
       owner: input.wallet.publicKey,
     },
     amountIn: input.inputTokenAmount,
     amountOut: minAmountOut,
     fixedSide: "in",
-    makeTxVersion,
-    // computeBudgetConfig: {
-    //   units: 500_000,
-    //   microLamports: 200000,
-    // }, //            
+    makeTxVersion
   });
-
-
-  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
-  /*                      TIP VALIDATOR                         */
-  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
-
-  // const validatorLead = await connection.getSlotLeader();
-
-  // const transferIx = SystemProgram.transfer({
-  //     fromPubkey: input.wallet.publicKey,
-  //     toPubkey: new PublicKey(validatorLead),
-  //     lamports: TIP_VALIDATOR, // 5_000 || 6_000
-  // });
-
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                      REFERRAL AMOUNT                      */
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
   // In case of having a referral
-  if (input.refferalFeePay.gt(0) || input.ctx.session.referralCommision > 0) {
-    if (input.side === "sell") {
+  const referralFee = input.refObject.referralCommision / 100;
 
-      const referralFee = input.ctx.session.referralCommision / 100;
-
-      const bot_fee = new BigNumber(amountOut.raw.toString()).multipliedBy(MVXBOT_FEES);
-      const referralAmmount = bot_fee.multipliedBy(referralFee);
-      const cut_bot_fee = bot_fee.minus(referralAmmount);
-
-      input.mvxFee = new BigNumber(Math.ceil(Number(cut_bot_fee)));
-      input.refferalFeePay = new BigNumber(Math.ceil(Number(referralAmmount)));
-    }
-
-    const mvxFeeInx = SystemProgram.transfer({
-      fromPubkey: input.wallet.publicKey,
-      toPubkey: new PublicKey(WALLET_MVX),
-      lamports: input.mvxFee.toNumber(), // 5_000 || 6_000
-    });
-
-    const referralInx = SystemProgram.transfer({
-      fromPubkey: input.wallet.publicKey,
-      toPubkey: new PublicKey(input.referralWallet),
-      lamports: input.refferalFeePay.toNumber(), // 5_000 || 6_000
-    });
-
-    innerTransactions[0].instructions.push(mvxFeeInx);
-    innerTransactions[0].instructions.push(referralInx);
-
-    minSwapAmountBalance += input.refferalFeePay.toNumber();
-    minSwapAmountBalance += input.mvxFee.toNumber();
+  if (referralFee > 0) {
+    innerTransactions[0].instructions.push(
+      ...add_mvx_and_ref_inx_fees(
+        input.wallet,
+        input.refObject.referralWallet,
+        input.side === "sell" ? new BigNumber(amountOut.raw ): new BigNumber(input.inputTokenAmount.raw),
+        input.refObject.referralCommision
+      ));
   } else {
-    if (input.side === "sell") {
-      const bot_fee = new BigNumber(amountOut.raw.toString()).multipliedBy(MVXBOT_FEES);
-      input.mvxFee = new BigNumber(Math.ceil(Number(bot_fee)));
-    }
-    // buy without referral
-    const mvxFeeInx = SystemProgram.transfer({
-      fromPubkey: input.wallet.publicKey,
-      toPubkey: new PublicKey(WALLET_MVX),
-      lamports: input.mvxFee.toNumber(), // 5_000 || 6_000
-    });
-
-    innerTransactions[0].instructions.push(mvxFeeInx);
-    minSwapAmountBalance += input.mvxFee.toNumber();
+    innerTransactions[0].instructions.push(
+      ...addMvxFeesInx(
+        input.wallet,
+        input.side === "sell" ? new BigNumber(amountOut.raw) : new BigNumber(input.inputTokenAmount.raw)
+      )
+    );
   }
 
-  let maxPriorityFee = Math.ceil(Number.parseFloat(input.ctx.session.customPriorityFee) * 1e9);
+  let maxPriorityFee = Math.ceil(Number.parseFloat(String(input.customPriorityFee)) * 1e9);
   innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee }));
 
   const vTxx = new VersionedTransaction(wrapLegacyTx(innerTransactions[0].instructions, input.wallet, (await connection.getLatestBlockhash()).blockhash));
@@ -181,6 +130,6 @@ export async function swapOnlyAmm(input: TxInputInfo): Promise<string | null> {
     vTxx,
     connection,
     (await connection.getLatestBlockhash()).blockhash,
-    2000 // RETRY INTERVAL
+    50 // RETRY INTERVAL
   )
 }

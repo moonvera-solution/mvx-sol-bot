@@ -53,9 +53,9 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
       const {
         tokenData,
       } = tokenMetadataResult;
-      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.data.value : 0;
-      const tokenPriceSOL = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price).div(solPrice) : new BigNumber(tokenInfo.price);
-      const tokenPriceUSD = birdeyeData ? new BigNumber(birdeyeData.response.data.data.price) : new BigNumber(tokenInfo.price.times(solPrice));
+      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
+      const tokenPriceSOL = birdeyeData ? new BigNumber(birdeyeData.response.data.price).div(solPrice) : new BigNumber(tokenInfo.price);
+      const tokenPriceUSD = birdeyeData ? new BigNumber(birdeyeData.response.data.price) : new BigNumber(tokenInfo.price.times(solPrice));
       // const marketCap = birdeyeData?.response.data.data.mc ? birdeyeData.response.data.data.mc : new BigNumber(tokenInfo.marketCap).times(new BigNumber(solPrice));
       const processData = (...dataArgs: any[]) => {
         return dataArgs.map(data => {
@@ -67,7 +67,7 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
       };
       
       const [getPooledSol, getBaseSupply, circulatingSupply, aMM] = processData(quoteVaultInfo, baseMintInfo, baseVaultInfo, lpMintInfo);
-      const creatorAddress = birdeyeData && birdeyeData.response2.data.data.creatorAddress!= null ? birdeyeData.response2.data.data.creatorAddress : tokenData.updateAuthorityAddress.toBase58();
+      const creatorAddress = birdeyeData && birdeyeData.response2.data.creatorAddress!= null ? birdeyeData.response2.data.creatorAddress : tokenData.updateAuthorityAddress.toBase58();
     //   console.log("creatorAddress", creatorAddress);
       const circulatedSupply = Number(((Number(circulatingSupply.tokenAmount.amount)) / Math.pow(10, baseDecimals)));
       const baseTokenSupply = Number(((Number(getBaseSupply.supply)) / Math.pow(10, baseDecimals)));
@@ -81,9 +81,9 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
         formatNumberToKOrM((tokenInfo.liquidity * solPrice) / 0.5),
         formatNumberToKOrM(mcap)
       ]);
-      const MutableInfo = birdeyeData?.response2.data.data.mutableMetadata ? '⚠️ Mutable' : '✅ Immutable';
+      const MutableInfo = birdeyeData?.response2.data.mutableMetadata ? '⚠️ Mutable' : '✅ Immutable';
       const renounced = tokenData.mint.mintAuthorityAddress?.toString() !== tokenData.updateAuthorityAddress.toString() ? "✅" : "❌ No";
-      const top10 = Number(birdeyeData?.response2.data.data.top10HolderPercent) * 100;
+      const top10 = Number(birdeyeData?.response2.data.top10HolderPercent) * 100;
 
       formattedmac = formattedmac ? formattedmac : "NA";
       formattedLiquidity = formattedLiquidity ? formattedLiquidity : "N/A";
@@ -95,7 +95,7 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
       const creatorPercentage = (Number(getCreatorPercentage.userTokenBalance) / Number(baseTokenSupply) * 100);
       let liquidityWarning = (tokenInfo.liquidity * solPrice) / 0.5 < 300 ? "🟥 Be careful: This has low liquidity on Raydium." : "";
 
-      let messageText = `<b>------ ${birdeyeData?.response.data.data.name} (${birdeyeData?.response.data.data.symbol}) ------</b>\n` +
+      let messageText = `<b>------ ${birdeyeData?.response.data.name} (${birdeyeData?.response.data.symbol}) ------</b>\n` +
         `Contract: <code>${token}</code>\n\n` +
         `<b>Links:</b>\n` +
         `👁️ <a href="${birdeyeURL}">Birdeye View</a> | ` +
@@ -107,7 +107,7 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
         `Renounced: ${renounced}\n\n` +
         `<code>------Holders info------</code>\n` +
         `Creator's percentage: <b>${creatorPercentage}%</b>\n` +
-        `Holders: <b>${birdeyeData?.response.data.data.holder}</b>\n` +
+        `Holders: <b>${birdeyeData?.response.data.holder}</b>\n` +
         `Top 10 Holders percentage: <b>${top10.toFixed(2)}%</b>\n\n` +
         `<code>------Financials------</code>\n` +
         `Total Supply: <b>${formattedSupply}</b> ${tokenData.symbol}\n` +
