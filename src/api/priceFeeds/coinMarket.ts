@@ -1,6 +1,6 @@
 // import { Connection } from '@solana/web3.js';
 
-// const connection = new Connection('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41');
+// const connection = new Connection('https://moonvera.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41');
 // async function getSignatureSta(signature: string) {
 //     try {
 //         const config = {

@@ -683,7 +683,7 @@ export function getPriorityFeeLabel(fee: number): string {
 
 // export async function getTransactionStatus(txid: string) {
 //     const method = 'getSignatureStatuses';
-//     const solanaRpcUrl = 'https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'; // Replace with your RPC URL
+//     const solanaRpcUrl = 'https://moonvera.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'; // Replace with your RPC URL
 //     const body = {
 //         "jsonrpc": "2.0",
 //         "id": 1,
@@ -964,6 +964,7 @@ export async function updatePositions(
 
         let newAmountIn, newAmountOut;
         if (Number(amountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
+
             newAmountIn = 0;
             newAmountOut = 0;
         } else {
@@ -972,8 +973,10 @@ export async function updatePositions(
         }
 
         if (newAmountIn <= 0 || newAmountOut <= 0) {
+            console.log("updating existing position");
             await UserPositions.updateOne({ walletId: userWallet.publicKey.toString() }, { $pull: { positions: { baseMint: tokenIn } } });
         } else {
+            console.log("save new position", newUserPosition);
             newUserPosition = {
                 baseMint: tokenIn,
                 name: tokenName,
@@ -984,8 +987,7 @@ export async function updatePositions(
             }
         }
     }
-    console.log("save new position", newUserPosition);
-    await saveUserPosition(chatId, new PublicKey(userWallet.publicKey).toBase58(), newUserPosition);
+    newUserPosition && await saveUserPosition(chatId, new PublicKey(userWallet.publicKey).toBase58(), newUserPosition);
 }
 
 export async function updateReferralBalance(chatId: string,amountUse:BigNumber,referralCommision: number) {

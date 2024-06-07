@@ -53,6 +53,7 @@ export async function handle_radyum_swap(
 
       // amountIn is in percentage to sell = 50%, 30% etc 
       const amountToSell = new BigNumber(userBalanceInLamports).multipliedBy(amountIn).dividedBy(100).integerValue(BigNumber.ROUND_FLOOR);
+      console.log("amountToSell:: ",amountToSell.toNumber());
 
       if (userTokenBalance == 0 || userBalanceInLamports < amountToSell.toNumber()) {
         await ctx.api.sendMessage(ctx.session.chatId, `🔴 Insufficient balance. Your balance is ${userTokenBalance} ${userTokenBalanceAndDetails.userTokenSymbol}.`);
@@ -61,6 +62,7 @@ export async function handle_radyum_swap(
 
       tokenIn = MEME_COIN;
       outputToken = DEFAULT_TOKEN.WSOL;
+      amountIn = amountToSell.toNumber();
     }
     /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
     /*                         SWAP                               */
@@ -70,6 +72,10 @@ export async function handle_radyum_swap(
     const slippage = new Percent(Math.ceil(ctx.session.latestSlippage * 100), 10_000);
     const refObject = { referralWallet: ctx.session.generatorWallet, referralCommision: ctx.session.referralCommision };
     const customPriorityFee = ctx.session.customPriorityFee;
+
+    let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing...\n Please wait for confirmation.`
+    await ctx.api.sendMessage(ctx.session.chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
+  
     raydium_amm_swap({
       connection,
       side,
@@ -83,8 +89,6 @@ export async function handle_radyum_swap(
     }).then(async (txids) => {
       if (!txids) return;
 
-      let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing...\n Please wait for confirmation.`
-      await ctx.api.sendMessage(ctx.session.chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
       let extractAmount = await getSwapAmountOut(connection, txids);
       let confirmedMsg, solAmount, tokenAmount, _symbol = userTokenBalanceAndDetails.userTokenSymbol;
       let solFromSell = new BigNumber(0);
@@ -103,10 +107,11 @@ export async function handle_radyum_swap(
       // update referral DB record
       const amountToUse = side == 'buy' ? amountIn : solFromSell;
       updateReferralBalance(ctx.session.chaidId, new BigNumber(amountToUse), ctx.session.referralCommision);
-
+      
       updatePositions(
         ctx.session.chatId,
-        userWallet, side,
+        userWallet,
+        side,
         'ray_swap', // tradeType
         poolKeys.baseMint,
         outputToken.mint,

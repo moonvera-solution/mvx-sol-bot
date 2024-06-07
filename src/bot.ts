@@ -131,7 +131,7 @@ async function _validateSession(ctx: any) {
     const restoredSession = await UserSession.findOne({ chatId: ctx.chat.id });
     if (restoredSession) {
       // NOTE: update db manually, if schema changes! avoid stopping the bot
-      ctx.session = JSON.parse(JSON.stringify(restoredSession));
+      // ctx.session = JSON.parse(JSON.stringify(restoredSession));
       console.log("Session restored.");
     }
   }
@@ -453,13 +453,15 @@ bot.on("message", async (ctx) => {
         return;
       }
 
+      const SOLANA_ADDRESS_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+
       if (isNaN(parseFloat(msgTxt!))) {
         if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {
-          const isTOken = await checkAccountType(ctx, msgTxt);
-          if (!isTOken) {
-            ctx.api.sendMessage(chatId, "Invalid address");
-            return;
-          }
+          // const isTOken = await checkAccountType(ctx, msgTxt);
+          // if (!isTOken) {
+          //   ctx.api.sendMessage(chatId, "Invalid address");
+          //   return;
+          // }
           ctx.session.latestCommand = "jupiter_swap";
           ctx.session.jupSwap_token = msgTxt;
           // await display_jupSwapDetails(ctx, false);
@@ -1510,6 +1512,9 @@ bot.catch((err) => {
 });
 
 async function checkAccountType(ctx: any, address: any) {
+  
+  console.log("`${ctx.session.tritonRPC}${ctx.session.tritonToken}`", `${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  
   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
   const publicKey = new PublicKey(address);
   const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");

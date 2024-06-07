@@ -252,7 +252,7 @@ async function getTokenRefFeeAccount(token:string) : Promise<PublicKey | null> {
 
 // jupiterSimpleSwap(
 //   connection,
-//   'https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41',
+//   'https://moonvera.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41',
 //   wallet,
 //   false,
 //   SOL_ADDRESS,
@@ -488,7 +488,7 @@ async function getTokenRefFeeAccount(token:string) : Promise<PublicKey | null> {
 /*
 jupiterSimpleSwap(
   connection,
-  'https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41',
+  'https://moonvera.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41',
   wallet,
   false,
   SOL_ADDRESS,

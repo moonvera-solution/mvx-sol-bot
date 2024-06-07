@@ -127,7 +127,6 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
         userTokenDetails,
         userPosition,
         // AllpriorityFees
-
       ] = await Promise.all([
         getTokenDataFromBirdEyePositions(token, publicKeyString),
         getTokenMetadata(ctx, token),

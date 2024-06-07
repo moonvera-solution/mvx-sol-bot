@@ -63,14 +63,15 @@ export async function swapOnlyAmm(input: TxInputInfo): Promise<string | null> {
   let minSwapAmountBalance: number = 0;
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                       QUOTE SWAP                           */
-  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
-  const { amountOut, minAmountOut } = Liquidity.computeAmountOut({
-    poolKeys: poolKeys,
-    poolInfo: await Liquidity.fetchInfo({ connection, poolKeys }),
-    amountIn: input.inputTokenAmount,
-    currencyOut: input.outputToken,
-    slippage: input.slippage,
-  });
+  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-xwxwwx»-»-»-»-»*/
+
+    const { amountOut, minAmountOut } = Liquidity.computeAmountOut({
+      poolKeys: poolKeys,
+      poolInfo: await Liquidity.fetchInfo({ connection, poolKeys }),
+      amountIn: input.inputTokenAmount,
+      currencyOut: input.outputToken,
+      slippage: input.slippage,
+    });
 
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                      MAKE RAYIDUM INX                      */
@@ -132,4 +133,5 @@ export async function swapOnlyAmm(input: TxInputInfo): Promise<string | null> {
     (await connection.getLatestBlockhash()).blockhash,
     50 // RETRY INTERVAL
   )
+  return null;
 }

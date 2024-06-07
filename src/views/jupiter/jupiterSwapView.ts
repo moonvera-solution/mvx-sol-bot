@@ -149,8 +149,6 @@ export async function jupiterSwap(ctx: any) {
     });
   } catch (e) {
     console.log(e)
-
-
   }
 }
 
@@ -216,7 +214,6 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined) {
         // ctx.session.latestCommand = 'raydium_swap';
         ctx.session.activeTradingPool = await getRayPoolKeys(ctx, token);
-        console.log('activeTradingPool:', ctx.session.activeTradingPool)
         if (ctx.session.activeTradingPool) {
           await display_token_details(ctx, false);
           return;

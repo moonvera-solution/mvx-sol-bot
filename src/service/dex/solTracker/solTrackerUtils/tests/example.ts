@@ -13,7 +13,7 @@ async function swap() {
 
     const solanaTracker = new SolanaTracker(
     keypair,
-    "https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41",
+    "https://moonvera.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41",
     url,headers
   );
 

@@ -61,7 +61,6 @@ export async function snipperON(ctx: any, amount: string) {
                 clearInterval(interval_2);
                 console.log('poolKeys:::::', poolKeys.id);
                 ctx.session.activeTradingPool = poolKeys;
-                console.log('activeTradingPool::::::', ctx.session.activeTradingPool);
                 setSnipe(ctx, amount);
             }
             if(!ctx.session.snipeStatus) {
