@@ -1,6 +1,8 @@
-import { ApiV3PoolInfoStandardItemCpmm,CurveCalculator,CREATE_CPMM_POOL_PROGRAM,DEV_CREATE_CPMM_POOL_PROGRAM  } from '@raydium-io/raydium-sdk-v2';
+import { LIQUIDITY_VERSION_TO_STATE_LAYOUT, ApiV3PoolInfoStandardItemCpmm, CurveCalculator, CREATE_CPMM_POOL_PROGRAM, DEV_CREATE_CPMM_POOL_PROGRAM, CpmmPoolInfoLayout } from '@raydium-io/raydium-sdk-v2';
+import { ApiPoolInfoV4, LIQUIDITY_STATE_LAYOUT_V4, Liquidity, LiquidityPoolKeys, MARKET_STATE_LAYOUT_V3, Market, SPL_MINT_LAYOUT, jsonInfo2PoolKeys } from '@raydium-io/raydium-sdk';
+
 import { Raydium, TxVersion, parseTokenAccountResp } from '@raydium-io/raydium-sdk-v2'
-import { Connection, Keypair,PublicKey } from '@solana/web3.js'
+import { Connection, Keypair, PublicKey } from '@solana/web3.js'
 import dotenv from 'dotenv'; dotenv.config();
 import bs58 from 'bs58'
 import BN from 'bn.js'
@@ -27,6 +29,9 @@ export const initSdk = async (params?: { loadToken?: boolean }) => {
     disableLoadToken: !params?.loadToken
   });
 
+
+  const tokens = await raydium.token.tokenList;
+  console.log('tokens:', tokens)
   /**
    * By default: sdk will automatically fetch token account data when need it or any sol balace changed.
    * if you want to handle token account by yourself, set token account data after init sdk
@@ -34,12 +39,10 @@ export const initSdk = async (params?: { loadToken?: boolean }) => {
    * note: after call raydium.account.updateTokenAccount, raydium will not automatically fetch token account
    */
 
-  /*  
-    raydium.account.updateTokenAccount(await fetchTokenAccountData())
-    connection.onAccountChange(owner.publicKey, async () => {
-        raydium!.account.updateTokenAccount(await fetchTokenAccountData())
-    })
-  */
+  // raydium.account.updateTokenAccount(await fetchTokenAccountData())
+  // connection.onAccountChange(owner.publicKey, async () => {
+  //     raydium!.account.updateTokenAccount(await fetchTokenAccountData())
+  // })
 
   return raydium
 }
@@ -59,28 +62,24 @@ export const fetchTokenAccountData = async () => {
   return tokenAccountData
 }
 
-export const fetchRpcPoolInfo = async () => {
-    const raydium = await initSdk()
-    // SOL-RAY
-    const pool1 = '4y81XN75NGct6iUYkBp2ixQKtXdrQxxMVgFbFF9w5n4u'
-  
-    const res = await raydium.cpmm.getRpcPoolInfos([pool1])
-  
-    const pool1Info = res[pool1]
-  
-    console.log('SOL-RAY pool price:', pool1Info.poolPrice)
-    console.log('cpmm pool infos:', res)
+export const fetchRpcPoolInfo = async (poolId: PublicKey) => {
+  const raydium = await initSdk()
+  const res = await raydium.cpmm.getRpcPoolInfo(poolId.toBase58())
+
+  const pool1Info = res;
+
+  console.log('SOL-RAY pool price:', pool1Info.poolPrice)
+  console.log('cpmm pool infos:', res)
 }
 
-export const swap = async () => {
+export const swap = async (poolId:string) => {
   const raydium = await initSdk()
+  const data = await raydium.api.fetchPoolById({ ids: poolId })
+  const poolInfo = data[0] as ApiV3PoolInfoStandardItemCpmm;
 
-  // SOL - USDC pool
-  // note: api doesn't support get devnet pool info
-  const data = await raydium.api.fetchPoolById({ ids: '8THC7UQN8zPXRL61o75fP4gcwRyB5W3o74yHyqarkqZ9' })
-  const poolInfo = data[0] as ApiV3PoolInfoStandardItemCpmm
   if (!isValidCpmm(poolInfo.programId)) throw new Error('target pool is not CPMM pool');
-  const rpcData = await raydium.cpmm.getRpcPoolInfo(poolInfo.id, true);
+  console.log('poolInfo:', poolInfo)  
+  const rpcData = await raydium.cpmm.getRpcPoolInfo(poolId, true);
 
   const inputAmount = new BN(100);
 
@@ -91,7 +90,6 @@ export const swap = async () => {
     rpcData.quoteReserve,
     rpcData.configInfo!.tradeFeeRate
   )
-
   /**
    * swapResult.sourceAmountSwapped -> input amount
    * swapResult.destinationAmountSwapped -> output amount
@@ -103,11 +101,55 @@ export const swap = async () => {
     swapResult,
     slippage: 0.1, // range: 1 ~ 0.0001, means 100% ~ 0.01%
     baseIn: true,
-  })
+  });
+  const { txId } = await execute();
+  console.log(`swapped: ${poolInfo.mintA.symbol} to ${poolInfo.mintB.symbol}:`, { txId });
+}
 
-  const { txId } = await execute()
-  console.log(`swapped: ${poolInfo.mintA.symbol} to ${poolInfo.mintB.symbol}:`, { txId })
+async function getRayCpmmPoolKeys({ t1, t2, connection }: { t1: string, t2: string, connection: Connection })
+: Promise<PublicKey | undefined>{
+  const commitment = "processed";
+  const RAYDIUM_CPMM = new PublicKey('CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C');
+
+  const baseMint = new PublicKey(t1);
+  const quoteMint = new PublicKey(t2);
+
+  const accounts = await connection.getProgramAccounts(
+    RAYDIUM_CPMM,
+    {
+      commitment,
+      filters: [
+        { dataSize: CpmmPoolInfoLayout.span },
+        {
+          memcmp: {
+            offset: CpmmPoolInfoLayout.offsetOf("mintB"),
+            bytes: baseMint.toBase58(),
+          },
+        },
+        {
+          memcmp: {
+            offset: CpmmPoolInfoLayout.offsetOf("mintA"),
+            bytes: quoteMint.toBase58(),
+          },
+        },
+      ],
+    }
+  );
+
+  let poolId = accounts && accounts[0] && accounts[0].pubkey;
+  console.log("CPMM poolId: ", poolId?.toBase58());
+  return poolId;
+}
+
+// asert pool id = 69KBRQa5zfCMed1Z3spGkUcaX1UXS8nkWhvjruqHUJ4N
+async function test() {
+  const poolId = await getRayCpmmPoolKeys({
+    t1: '5X1F16T5MRiAu4qPaFAaNA1oPx9VQzkpV5SzQcHsNUS9',
+    t2: 'So11111111111111111111111111111111111111112',
+    connection
+  });
+  await swap(poolId!.toBase58());
 }
 
 /** uncomment code below to execute */
-// swap()
+// test().then(res => console.log("done...")).catch(err => console.error(err));
