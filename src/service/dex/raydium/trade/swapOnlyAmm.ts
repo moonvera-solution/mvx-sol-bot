@@ -73,6 +73,7 @@ export async function swapOnlyAmm(input: TxInputInfo): Promise<string | null> {
       slippage: input.slippage,
     });
 
+
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                      MAKE RAYIDUM INX                      */
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
@@ -99,14 +100,14 @@ export async function swapOnlyAmm(input: TxInputInfo): Promise<string | null> {
       ...add_mvx_and_ref_inx_fees(
         input.wallet,
         input.refObject.referralWallet,
-        input.side === "sell" ? new BigNumber(amountOut.raw ): new BigNumber(input.inputTokenAmount.raw),
+        input.side === "sell" ? new BigNumber(amountOut.raw.toNumber() ): new BigNumber(input.inputTokenAmount.raw.toNumber()),
         input.refObject.referralCommision
       ));
   } else {
     innerTransactions[0].instructions.push(
       ...addMvxFeesInx(
         input.wallet,
-        input.side === "sell" ? new BigNumber(amountOut.raw) : new BigNumber(input.inputTokenAmount.raw)
+        input.side === "sell" ? new BigNumber(amountOut.raw.toNumber()) : new BigNumber(input.inputTokenAmount.raw.toNumber())
       )
     );
   }
