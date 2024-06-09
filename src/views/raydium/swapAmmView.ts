@@ -32,6 +32,7 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
     balanceInSOL,
     userPosition,
     userTokenDetails,
+    jupSolPrice
 
   ] = await Promise.all([
     getTokenDataFromBirdEyePositions(tokenAddress.toString(),userPublicKey),
@@ -40,10 +41,12 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
     getSolBalance(userPublicKey, connection),
     UserPositions.find({ positionChatId: chatId, walletId: userPublicKey }, { positions: { $slice: -7 } }),
     getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
-
+    fetch(
+      `https://price.jup.ag/v6/price?ids=SOL`
+    ).then((response) => response.json()),
   ]);
 
-  const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
+  const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value :  Number(jupSolPrice.data.SOL.price);
 
   const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
   const tokenPriceUSD = birdeyeData

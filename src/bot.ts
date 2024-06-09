@@ -208,20 +208,18 @@ bot.command("start", async (ctx: any) => {
         userWallet;
     }
 
-    // if(ctx.session.portfolio.wallets.length == 1 && ctx.session.portfolio.activeWalletIndex == 1){
-    //   ctx.session.portfolio.activeWalletIndex = 0;
-    // }
-    // console.log(ctx.session.portfolio.activeWalletIndex)
-    // console.log(ctx.session.portfolio.wallets.length)
     const publicKeyString: PublicKey | String = userWallet
       ? userWallet.publicKey
       : ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].publicKey;
 
     // Retrieve the current SOL details
-    let solPriceMessage = "";
-    const [balanceInSOL, details] = await Promise.all([
+    const [balanceInSOL, details, jupSolPrice] = await Promise.all([
       getSolBalance(publicKeyString, connection),
       getSolanaDetails(),
+      fetch(
+        `https://price.jup.ag/v6/price?ids=SOL`
+      ).then((response) => response.json()),
+
     ]);
 
     // Fetch SOL balance
@@ -229,14 +227,7 @@ bot.command("start", async (ctx: any) => {
       await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
       return;
     }
-
-    // solana price
-    if (details) {
-      const solData = details;
-      solPriceMessage = `\n\SOL Price: <b>${solData}</b> USD`;
-    } else {
-      solPriceMessage = "\nError fetching current SOL price.";
-    }
+    const balanceInUSD = details ? balanceInSOL * details: balanceInSOL * Number(jupSolPrice.data.SOL.price);
 
     // Combine the welcome message, SOL price message, and instruction to create a wallet
     const welcomeMessage =
@@ -245,9 +236,7 @@ bot.command("start", async (ctx: any) => {
       `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
       // `We're always working to bring you new features - stay tuned!\n\n` +
       `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
-      `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(
-        balanceInSOL * details
-      ).toFixed(4)}</b> USD\n\n` +
+      `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInUSD.toFixed(4))}</b> USD\n\n` +
       `🖐🏼 For security, we recommend exporting your private key and keeping it paper.\n` +
       `<i> Currently DRIBs bot supports Jupiter, Raydium and Pump fun.</i>\n`;
 

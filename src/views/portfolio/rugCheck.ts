@@ -30,10 +30,9 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
       const [
         birdeyeData,
         tokenMetadataResult,
-    
         tokenInfo,
-  
-        parsedAccounts
+        parsedAccounts,
+        jupSolPrice
       ] = await Promise.all([
         getTokenDataFromBirdEye(token, ''),
         getTokenMetadata(ctx, token),
@@ -43,7 +42,10 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
           new PublicKey(baseMint),
           new PublicKey(baseVault),
           new PublicKey(lpMint)
-        ], { commitment: 'processed' })
+        ], { commitment: 'processed' }),
+        fetch(
+          `https://price.jup.ag/v6/price?ids=SOL`
+        ).then((response) => response.json()),
       ]);
       const quoteVaultInfo = parsedAccounts.value[0];
       const baseMintInfo = parsedAccounts.value[1];
@@ -53,10 +55,9 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
       const {
         tokenData,
       } = tokenMetadataResult;
-      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
+      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : Number(jupSolPrice.data.SOL.price);
       const tokenPriceSOL = birdeyeData ? new BigNumber(birdeyeData.response.data.price).div(solPrice) : new BigNumber(tokenInfo.price);
       const tokenPriceUSD = birdeyeData ? new BigNumber(birdeyeData.response.data.price) : new BigNumber(tokenInfo.price.times(solPrice));
-      // const marketCap = birdeyeData?.response.data.data.mc ? birdeyeData.response.data.data.mc : new BigNumber(tokenInfo.marketCap).times(new BigNumber(solPrice));
       const processData = (...dataArgs: any[]) => {
         return dataArgs.map(data => {
           if (data?.data instanceof Buffer) {
@@ -68,7 +69,6 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
       
       const [getPooledSol, getBaseSupply, circulatingSupply, aMM] = processData(quoteVaultInfo, baseMintInfo, baseVaultInfo, lpMintInfo);
       const creatorAddress = birdeyeData && birdeyeData.response2.data.creatorAddress!= null ? birdeyeData.response2.data.creatorAddress : tokenData.updateAuthorityAddress.toBase58();
-    //   console.log("creatorAddress", creatorAddress);
       const circulatedSupply = Number(((Number(circulatingSupply.tokenAmount.amount)) / Math.pow(10, baseDecimals)));
       const baseTokenSupply = Number(((Number(getBaseSupply.supply)) / Math.pow(10, baseDecimals)));
       const mcap = baseTokenSupply * tokenPriceUSD.toNumber();
@@ -84,7 +84,7 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
       const MutableInfo = birdeyeData?.response2.data.mutableMetadata ? '⚠️ Mutable' : '✅ Immutable';
       const renounced = tokenData.mint.mintAuthorityAddress?.toString() !== tokenData.updateAuthorityAddress.toString() ? "✅" : "❌ No";
       const top10 = Number(birdeyeData?.response2.data.top10HolderPercent) * 100;
-
+      const freezable = birdeyeData?.response2.data.freezeable ? "⚠️ Be careful: This token is freezable." : "✅ Not freezable.";
       formattedmac = formattedmac ? formattedmac : "NA";
       formattedLiquidity = formattedLiquidity ? formattedLiquidity : "N/A";
       const circulatingPercentage = (Number(circulatedSupply) / Number(baseTokenSupply) * 100);
@@ -104,7 +104,8 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
         `<b>------ Details ------</b>\n` +
         `Creator: <code>${creatorAddress}</code>\n` +
         `Mutable Info: ${MutableInfo}\n` +
-        `Renounced: ${renounced}\n\n` +
+        `Renounced: ${renounced}\n` +
+        `Freezable: ${freezable}\n\n` +
         `<code>------Holders info------</code>\n` +
         `Creator's percentage: <b>${creatorPercentage}%</b>\n` +
         `Holders: <b>${birdeyeData?.response.data.holder}</b>\n` +

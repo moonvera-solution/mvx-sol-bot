@@ -62,18 +62,21 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
 
       if (!positionlKeys.some(pk => pk.baseMint === pos.baseMint)) positionlKeys.push(pos.baseMint);
       const mint = pos.baseMint.toString();
-      const [birdeyeData, jupRate,tokenMetadataResult,userTokenDetails] = await Promise.all([
+      const [birdeyeData, jupRate,tokenMetadataResult,userTokenDetails,jupSolPrice] = await Promise.all([
         getTokenDataFromBirdEyePositions(mint,userWallet),
         fetch(
           `https://price.jup.ag/v6/price?ids=${mint}&vsToken=So11111111111111111111111111111111111111112`
         ).then((response) => response.json()),
         getTokenMetadata(ctx, mint),
         getUserTokenBalanceAndDetails(new PublicKey(userWallet), new PublicKey(mint), connection),
+        fetch(
+          `https://price.jup.ag/v6/price?ids=SOL`
+        ).then((response) => response.json()),
 
       ]);
       const tradeDex = pos.tradeType
 
-      return formatPositionMessage(ctx,userWallet,pos, userBalance, birdeyeData,tradeDex,jupRate,tokenMetadataResult,userTokenDetails);
+      return formatPositionMessage(ctx,userWallet,pos, userBalance, birdeyeData,tradeDex,jupRate,tokenMetadataResult,userTokenDetails,jupSolPrice);
     });
 
 
@@ -92,7 +95,8 @@ async function formatPositionMessage(
   tradeDex: string,
   jupRate: any,
   tokenMetadataResult: any,
-  userTokenDetails: any
+  userTokenDetails: any,
+  jupSolPrice: any
 ): Promise<string> {
 
 let tokenPriceUSD = 0;
@@ -103,12 +107,11 @@ if(jupTokenValue[0] && jupTokenValue[0].price ){
   jupTokenPrice = jupTokenValue[0].price;
 
 }
-const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
+const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value :  Number(jupSolPrice.data.SOL.price);
 if (tradeDex.includes('jup_swap') || tradeDex.includes('ray_swap')) {
   tokenPriceUSD = birdeyeData
   && birdeyeData.response
   && birdeyeData.response.data
-  // && birdeyeData.response.data.data
   && birdeyeData.response.data.price != null  // This checks for both null and undefined
   ? birdeyeData.response.data.price
   : jupTokenPrice;
@@ -141,13 +144,12 @@ if (tradeDex.includes('jup_swap') || tradeDex.includes('ray_swap')) {
     if(valueInUSD < 0.1){
       await UserPositions.updateOne({ walletId: userWallet }, { $pull: { positions: { baseMint: pos.baseMint } } })
       .then(() => { ctx.session.positionIndex = 0; });
-  
     }
     profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(pos.amountIn) / 1e9)) / (Number(pos.amountIn) / 1e9) * 100 : 'N/A';
     profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
     profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
-
   }
+  
   const userTokenBalance = birdeyeData 
   && birdeyeData.walletTokenPosition
   && birdeyeData.walletTokenPosition.data

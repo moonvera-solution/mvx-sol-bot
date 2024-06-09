@@ -40,26 +40,22 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
       const [
         birdeyeData,
         tokenMetadataResult,
-        // solPrice,
         tokenInfo,
         balanceInSOL,
         userTokenDetails,
-        // AllpriorityFees,
-
+        jupSolPrice
       ] = await Promise.all([
         getTokenDataFromBirdEye(tokenAddress.toString(),userPublicKey),
         getTokenMetadata(ctx, tokenAddress.toBase58()),
-        // getSolanaDetails(),
         quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
         getSolBalance(userPublicKey, connection),
         getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
-        // runAllFees(ctx, raydiumId),
-
+        fetch(
+          `https://price.jup.ag/v6/price?ids=SOL`
+        ).then((response) => response.json()),
       ]);
-      // const mediumpriorityFees = (AllpriorityFees.result2);
-      // const highpriorityFees = (AllpriorityFees.result3);
-      // const maxpriorityFees = (AllpriorityFees.result4);
-      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
+
+      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value :  Number(jupSolPrice.data.SOL.price);
 
 
       const {

@@ -179,6 +179,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         userTokenDetails,
         userPosition,
         jupPriceImpact_5,
+        jupSolPrice
 
       ] = await Promise.all([
         getTokenDataFromBirdEyePositions(token, publicKeyString),
@@ -192,7 +193,9 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         fetch(
           `${rpcUrl}/jupiter/quote?inputMint=${SOL_ADDRESS}&outputMint=${token}&amount=${'5000000000'}&slippageBps=${1}`
         ).then((response) => response.json()),
-
+        fetch(
+          `https://price.jup.ag/v6/price?ids=SOL`
+        ).then((response) => response.json()),
 
       ]);
       // console.log('responsiveness:', responsiveness)
@@ -226,7 +229,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const {
         tokenData,
       } = tokenMetadataResult;
-      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
+      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value :  Number(jupSolPrice.data.SOL.price);
       const ammAddress = jupPriceImpact_5.routePlan[jupPriceImpact_5?.routePlan?.length - 1].swapInfo.ammKey;
       const tokenPriceUSD = birdeyeData
         && birdeyeData.response

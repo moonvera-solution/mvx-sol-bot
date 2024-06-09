@@ -118,7 +118,7 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
         getSolBalanceData,
         userTokenDetails,
         userPosition,
-        // AllpriorityFees
+        jupSolPrice
       ] = await Promise.all([
         getTokenDataFromBirdEyePositions(token, publicKeyString),
         getTokenMetadata(ctx, token),
@@ -126,8 +126,9 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
         getSolBalance(publicKeyString, connection),
         getUserTokenBalanceAndDetails(new PublicKey(publicKeyString), token, connection),
         UserPositions.find({ positionChatId: chatId, walletId: publicKeyString }, { positions: { $slice: -7 } }),
-        // runAllFees(ctx, token)
-      ]);
+        fetch(
+          `https://price.jup.ag/v6/price?ids=SOL`
+        ).then((response) => response.json()),      ]);
 
       // const mediumpriorityFees = (AllpriorityFees.result2);
       // const highpriorityFees = (AllpriorityFees.result3);
@@ -137,7 +138,7 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
         tokenData,
       } = tokenMetadataResult;
 
-      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
+      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value :  Number(jupSolPrice.data.SOL.price);
       const baseDecimals = tokenData.mint.decimals;
       const totalSupply = new BigNumber(tokenData.mint.supply.basisPoints);
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(swapRates)) * solPrice);

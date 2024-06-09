@@ -13,8 +13,6 @@ import {setCustomPriority,runAllFees} from './util/getPriority';
 import {handleRefreshStart} from './refreshData/refreshStart';
 
 export {
-
-    // display flow
     sendHelpMessage,
     handleCloseKeyboard,
     quoteToken,
@@ -22,23 +20,17 @@ export {
     setCustomPriority,
     runAllFees,
     handleRefreshStart,
-
-    // portfolio
     display_all_positions,
     display_single_position,
     display_rugCheck,
     refreshWallets,
     handleRereshWallet,
     handleWallets,
-
-    // display swaps
     display_jupSwapDetails,
     display_raydium_details,
     display_cpmm_raydium_details,
     display_snipe_options,
     display_pumpFun,
-
-    // swap functions
     swap_pump_fun,
     jupiterSwap
 };
