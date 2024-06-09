@@ -655,63 +655,7 @@ export function getPriorityFeeLabel(fee: number): string {
     return String(priorityFeeLabel);
 }
 // export async function trackUntilFinalized(ctx: any, txid: string): Promise<boolean> {
-//     let isFinalized = false;
-//     const maxAttempts = 150;
-//     let attempts = 0;
 
-//     while (!isFinalized && attempts < maxAttempts) {
-//         attempts++;
-
-//         const status = await getTransactionStatus(txid);
-//         console.log('Transaction status:', status);
-
-//         if (status === 'finalized') {
-//             isFinalized = true;
-//         } else {
-//             console.log('Waiting for finalization...');
-//             await new Promise(resolve => setTimeout(resolve, 500));
-//         }
-//     }
-
-//     if (!isFinalized && attempts >= maxAttempts) {
-//         ctx.api.sendMessage(ctx.chat.id, 'Transaction could not be finalized within the maximum attempts.');
-//         console.error('Transaction could not be finalized within the max attempts.');
-//     }
-//     console.log('Transaction is finalized:', isFinalized);
-//     return isFinalized;
-// }
-
-// export async function getTransactionStatus(txid: string) {
-//     const method = 'getSignatureStatuses';
-//     const solanaRpcUrl = 'https://moonvera.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'; // Replace with your RPC URL
-//     const body = {
-//         "jsonrpc": "2.0",
-//         "id": 1,
-//         "method": method,
-//         "params": [
-//             [txid],
-//             { "searchTransactionHistory": true }
-//         ]
-//     };
-
-//     try {
-//         const response = await axios.post(solanaRpcUrl, body, {
-//             headers: { 'Content-Type': 'application/json' },
-//         });
-
-//         const data = response.data;
-//         // console.log('Transaction status data:', data);
-//         // Check if the transaction is confirmed
-//         if (data.result && data.result.value && data.result.value[0]) {
-//             return data.result.value[0].confirmationStatus;
-//         } else {
-//             return 'unconfirmed'; // or some other default status
-//         }
-//     } catch (error) {
-//         console.error("Error fetching transaction status:", error);
-//         return false;
-//     }
-// }
 
 export function getTokenExplorerURLS(tokenAddress: string): { birdeyeURL: any; dextoolsURL: string; dexscreenerURL: string; } {
     return {
@@ -837,6 +781,7 @@ export async function optimizedSendAndConfirmTransaction(
     blockhash: any,
     txRetryInterval: number
 ): Promise<string | null> {
+    console.log(`optimizedSendAndConfirmTransaction...`);
 
     let txSignature;
     let confirmTransactionPromise = null;
@@ -890,14 +835,14 @@ export async function optimizedSendAndConfirmTransaction(
 
         } // end loop
 
-    } catch (e) {
-        console.error(`${new Date().toISOString()} Error: ${e}`);
-        throw new Error(`Transaction failed: ${e}`)
+    } catch (error:any) {
+        console.error(`${new Date().toISOString()} Error: ${error.message}`);
+        throw new Error(`Transaction failed: ${error.message}`)
     }
 
     if (!confirmedTx) {
         console.log(`${new Date().toISOString()} Transaction failed`);
-        return null;
+        throw new Error(`Transaction not confirmed,busy network, try again.`)
     }
     // loop ends, no error, transaction confirmed return link
     console.log(`${new Date().toISOString()} Transaction successful`);

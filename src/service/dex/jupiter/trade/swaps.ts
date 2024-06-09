@@ -25,7 +25,7 @@ type REFERRAL_INFO = {
 
 type refObject = { referralWallet: string, referralCommision: number };
 
-export async function jupiterInxSwap(
+export async function jupiter_inx_swap(
   connection:Connection,
   rpcUrl:string,
   wallet:Keypair,
@@ -112,7 +112,10 @@ export async function jupiterInxSwap(
   );
 
   const blockhash = (await connection.getLatestBlockhash()).blockhash;
-  const hasReferral = refObject.referralWallet && refObject.referralCommision;
+  const hasReferral = refObject.referralWallet && refObject.referralCommision > 0;
+
+  console.log("hasReferral:: jup ",hasReferral);
+  
   const txInxs = hasReferral ?
     add_mvx_and_ref_inx_fees(wallet, refObject.referralWallet!, solAmount, refObject.referralCommision!) :
     addMvxFeesInx(wallet, solAmount);

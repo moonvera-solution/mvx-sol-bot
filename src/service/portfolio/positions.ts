@@ -26,13 +26,15 @@ export async function saveUserPosition(chatId:string, walletId:string, newPositi
                 position => position.baseMint === newPosition.baseMint.toString()
             );
             if (existingPositionIndex === -1) {
-                console.log("NEW Position: ",newPosition);
                 userPosition.positions.push(newPosition);
-                await userPosition.save();
+                userPosition.save().then(() =>{
+                    console.log("Saved new position:",newPosition);
+                });
               } else {
                 userPosition.positions[existingPositionIndex] = newPosition;
-                console.log('update existing position', )
-                await userPosition.save();
+                userPosition.save().then(() =>{
+                    console.log("Updated existing position on db: ",newPosition);
+                });
             }
         } else {
             const savePosition = new UserPositions({
@@ -40,8 +42,9 @@ export async function saveUserPosition(chatId:string, walletId:string, newPositi
                 walletId: walletId ,
                 positions: newPosition,
                });
-               await savePosition.save();
-               console.log('Saved new user & position', )
+               savePosition.save().then(() =>{
+                console.log('Saved new user & position', newPosition)
+            });
         }
     } catch (err) {
         console.error(err);

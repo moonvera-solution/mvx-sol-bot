@@ -1,6 +1,6 @@
 import {ApiPoolInfoV4,LIQUIDITY_STATE_LAYOUT_V4,Liquidity,LiquidityPoolKeys,MARKET_STATE_LAYOUT_V3,Market,SPL_MINT_LAYOUT,jsonInfo2PoolKeys} from '@raydium-io/raydium-sdk';
 import { PublicKey, Connection } from '@solana/web3.js';
-import { RAYDIUM_POOL_TYPE } from '../../../../service/util/types';
+import { RAYDIUM_POOL_TYPE } from '../../../util/types';
 import { connect } from 'node:http2';
 
 export async function fetchPoolSchedule(keys: any, connection: Connection) {

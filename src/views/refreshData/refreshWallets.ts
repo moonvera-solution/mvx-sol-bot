@@ -1,0 +1,113 @@
+import { getSolBalance } from '../../service/util';
+import { getSolanaDetails,  } from '../../api';
+import { Connection } from '@solana/web3.js';
+
+export async function refreshWallets(ctx: any){
+    const chatId = ctx.chat.id;
+    const wallets = ctx.session.portfolio.wallets;
+    const selectedWalletIndex = ctx.session.portfolio.activeWalletIndex; // Index of the currently selected wallet
+
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+
+    if (!wallets || wallets.length === 0) {
+        await ctx.api.sendMessage(chatId, "No wallets found. Please add a wallet first.");
+        return;
+    }
+    const solanaDetails = await getSolanaDetails();
+    let inlineKeyboardRows = [];
+
+    for (const [index, wallet] of wallets.entries()) {
+        const balanceInSOL = await getSolBalance(wallet.publicKey,connection);
+        const balanceInUSD = balanceInSOL * solanaDetails;
+
+        let walletIdentifier = wallet.publicKey;
+        let isSelected = index === selectedWalletIndex; // Check if this wallet is selected
+
+        let walletRow = [
+            { 
+                text: `${isSelected ? '✅ ' : ''}${index + 1}. ${walletIdentifier}`, 
+                callback_data: `select_wallet_${index}`
+            },
+            { 
+                text: `${balanceInSOL.toFixed(4)} SOL`, 
+                callback_data: `wallet_balance_${index}`
+            },
+            { 
+                text: `${balanceInUSD.toFixed(2)} USD`, 
+                callback_data: `wallet_usd_${index}`
+            }
+        ];
+        inlineKeyboardRows.push(walletRow);
+    }
+
+    inlineKeyboardRows.push([{ text: '🔄 Refresh', callback_data: 'refresh_db_wallets' }]);
+    inlineKeyboardRows.push([{ text: 'Close', callback_data: 'closing' }]);
+
+    const options = {
+        reply_markup: {
+            inline_keyboard: inlineKeyboardRows
+        },
+        parse_mode: 'HTML'
+    };
+    await ctx.editMessageText("Please select a wallet to configure slippage & sending SOL:", options);
+}
+
+export async function handleRereshWallet(ctx: any){
+
+    const chatId = ctx.chat.id;
+    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const selectedWallet = ctx.session.portfolio.activeWalletIndex;
+    const userWallet = ctx.session.portfolio.wallets[selectedWallet];
+
+    const publicKeyString: any = userWallet.publicKey; // The user's public key
+    const [balanceInSOL, solanaDetails] = await Promise.all([
+        getSolBalance(publicKeyString, connection),
+        getSolanaDetails()
+    ]);
+    
+
+    // Fetch SOL balance
+    try {
+    if (balanceInSOL === null) {
+        await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
+        return;
+    }
+
+    const balanceInUSD = (balanceInSOL * (solanaDetails));
+
+
+    // Fetch the user's wallet data from the JSON file
+    if (!userWallet || !userWallet.publicKey) {
+        await ctx.api.sendMessage(chatId, "No wallet found. Please create a wallet first.");
+        return;
+    }
+
+    // Create a message with the wallet information
+    const updatedWelcomeMessage = `Your Wallet:  ` +
+        `<code>${publicKeyString}</code>\n` +
+        `Balance: ` +
+        `<b>${balanceInSOL.toFixed(3)}</b> SOL | <b>${balanceInUSD.toFixed(2)}</b> USD\n`;
+
+    // Inline keyboard options
+    const options: any = {
+        reply_markup: JSON.stringify({
+            inline_keyboard: [
+                [{ text: 'Get Private Key', callback_data: 'get_private_key' }],
+                [{ text: `✏ Slippage (${ctx.session.latestSlippage}%)`, callback_data: 'set_slippage' },{ text: `✏ Priority Fee (${ctx.session.customPriorityFee} SOL)`, callback_data: 'set_customPriority' } ],
+                [{ text: '🔂 Refresh', callback_data: 'refresh_wallet' }, { text: 'Reset Wallet', callback_data: 'confirm_reset_wallet' }],
+                [{ text: '↗️ Send SOL', callback_data: 'send_sol' }],
+                [{ text: 'Close', callback_data: 'closing' }]
+            ]
+        }),
+        parse_mode: 'HTML'
+    };
+
+ // Edit the existing message with the updated information and the inline keyboard
+
+    await ctx.editMessageText(updatedWelcomeMessage, options);
+    ctx.session.latestCommand = "optional";
+    } catch (error) {
+    console.error("Error updating message: ", error);
+    }
+
+}

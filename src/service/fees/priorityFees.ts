@@ -239,7 +239,7 @@ export async function getSimulationUnits(
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
 // Throws an error if sim fails
-export async function simulateTx(
+export async function simulateTx( 
   connection: Connection,
   instructions: TransactionInstruction[],
   payer: PublicKey

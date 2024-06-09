@@ -1,11 +1,12 @@
-import { LIQUIDITY_VERSION_TO_STATE_LAYOUT, ApiV3PoolInfoStandardItemCpmm, CurveCalculator, CREATE_CPMM_POOL_PROGRAM, DEV_CREATE_CPMM_POOL_PROGRAM, CpmmPoolInfoLayout } from '@raydium-io/raydium-sdk-v2';
-import { ApiPoolInfoV4, LIQUIDITY_STATE_LAYOUT_V4, Liquidity, LiquidityPoolKeys, MARKET_STATE_LAYOUT_V3, Market, SPL_MINT_LAYOUT, jsonInfo2PoolKeys } from '@raydium-io/raydium-sdk';
-
+import { ApiV3PoolInfoStandardItemCpmm, CurveCalculator, CREATE_CPMM_POOL_PROGRAM, DEV_CREATE_CPMM_POOL_PROGRAM, CpmmPoolInfoLayout } from '@raydium-io/raydium-sdk-v2';
 import { Raydium, TxVersion, parseTokenAccountResp } from '@raydium-io/raydium-sdk-v2'
-import { Connection, Keypair, PublicKey } from '@solana/web3.js'
+import { optimizedSendAndConfirmTransaction, wrapLegacyTx, add_mvx_and_ref_inx_fees, addMvxFeesInx } from '../../../util';
+import { Connection, Keypair, PublicKey, VersionedTransaction, Transaction } from '@solana/web3.js'
+import BigNumber from 'bignumber.js';
 import dotenv from 'dotenv'; dotenv.config();
 import bs58 from 'bs58'
 import BN from 'bn.js'
+
 
 export const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
 export const TOKEN_2022_PROGRAM_ID = new PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb');
@@ -13,101 +14,77 @@ export const TOKEN_2022_PROGRAM_ID = new PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC
 const VALID_PROGRAM_ID = new Set([CREATE_CPMM_POOL_PROGRAM.toBase58(), DEV_CREATE_CPMM_POOL_PROGRAM.toBase58()])
 export const isValidCpmm = (id: string) => VALID_PROGRAM_ID.has(id)
 
-export const owner: Keypair = Keypair.fromSecretKey(bs58.decode(process.env.TEST_WALLET_PK as string))
-const connection = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
 export const txVersion = TxVersion.V0;
 
 let raydium: Raydium | undefined;
 
-export const initSdk = async (params?: { loadToken?: boolean }) => {
+async function initSdk(wallet: Keypair, connection: Connection) {
   if (raydium) return raydium
   raydium = await Raydium.load({
-    owner,
+    owner: wallet,
     connection,
     cluster: 'mainnet',
     disableFeatureCheck: true,
-    disableLoadToken: !params?.loadToken
+    disableLoadToken: false
   });
-
-
-  const tokens = await raydium.token.tokenList;
-  console.log('tokens:', tokens)
-  /**
-   * By default: sdk will automatically fetch token account data when need it or any sol balace changed.
-   * if you want to handle token account by yourself, set token account data after init sdk
-   * code below shows how to do it.
-   * note: after call raydium.account.updateTokenAccount, raydium will not automatically fetch token account
-   */
-
-  // raydium.account.updateTokenAccount(await fetchTokenAccountData())
-  // connection.onAccountChange(owner.publicKey, async () => {
-  //     raydium!.account.updateTokenAccount(await fetchTokenAccountData())
-  // })
-
   return raydium
 }
 
-export const fetchTokenAccountData = async () => {
-  const solAccountResp = await connection.getAccountInfo(owner.publicKey)
-  const tokenAccountResp = await connection.getTokenAccountsByOwner(owner.publicKey, { programId: TOKEN_PROGRAM_ID })
-  const token2022Req = await connection.getTokenAccountsByOwner(owner.publicKey, { programId: TOKEN_2022_PROGRAM_ID })
-  const tokenAccountData = parseTokenAccountResp({
-    owner: owner.publicKey,
-    solAccountResp,
-    tokenAccountResp: {
-      context: tokenAccountResp.context,
-      value: [...tokenAccountResp.value, ...token2022Req.value],
-    },
-  })
-  return tokenAccountData
-}
+export async function raydium_cpmm_swap(
+  connection: Connection,
+  wallet: Keypair,
+  tradeSide: 'buy' | 'sell',
+  poolId: string,
+  inputAmount: number,
+  slippage: number,
+  refObj: { refWallet: string, referral: boolean, refCommission: number },
+): Promise<string | null> {
 
-export const fetchRpcPoolInfo = async (poolId: PublicKey) => {
-  const raydium = await initSdk()
-  const res = await raydium.cpmm.getRpcPoolInfo(poolId.toBase58())
-
-  const pool1Info = res;
-
-  console.log('SOL-RAY pool price:', pool1Info.poolPrice)
-  console.log('cpmm pool infos:', res)
-}
-
-export const swap = async (poolId:string) => {
-  const raydium = await initSdk()
+  const raydium = await initSdk(wallet, connection);
   const data = await raydium.api.fetchPoolById({ ids: poolId })
   const poolInfo = data[0] as ApiV3PoolInfoStandardItemCpmm;
 
   if (!isValidCpmm(poolInfo.programId)) throw new Error('target pool is not CPMM pool');
-  console.log('poolInfo:', poolInfo)  
   const rpcData = await raydium.cpmm.getRpcPoolInfo(poolId, true);
 
-  const inputAmount = new BN(100);
-
   // swap pool mintA for mintB
-  const swapResult = CurveCalculator.swap(
-    inputAmount,
-    rpcData.baseReserve,
-    rpcData.quoteReserve,
-    rpcData.configInfo!.tradeFeeRate
-  )
-  /**
-   * swapResult.sourceAmountSwapped -> input amount
-   * swapResult.destinationAmountSwapped -> output amount
-   * swapResult.tradeFee -> this swap fee, charge input mint
-   */
+  const swapResult = CurveCalculator.swap(new BN(inputAmount), rpcData.baseReserve, rpcData.quoteReserve, rpcData.configInfo!.tradeFeeRate);
 
-  const { execute } = await raydium.cpmm.swap({
-    poolInfo,
-    swapResult,
-    slippage: 0.1, // range: 1 ~ 0.0001, means 100% ~ 0.01%
+  // range: 1 ~ 0.0001, means 100% ~ 0.01%e
+  let { transaction } = await raydium.cpmm.swap({
+    poolInfo, swapResult,
+    slippage: slippage,
     baseIn: true,
   });
-  const { txId } = await execute();
-  console.log(`swapped: ${poolInfo.mintA.symbol} to ${poolInfo.mintB.symbol}:`, { txId });
+
+  const isBuy = tradeSide === 'buy';
+  const solAmount = isBuy ? new BigNumber(swapResult.sourceAmountSwapped.toNumber()) : new BigNumber(swapResult.destinationAmountSwapped.toNumber());
+
+  console.log("solAmount", solAmount.toNumber());
+
+  if (refObj.refWallet && refObj.refCommission) {
+    add_mvx_and_ref_inx_fees(wallet, refObj.refWallet, solAmount, refObj.refCommission);
+  } else {
+    addMvxFeesInx(wallet, solAmount);
+  }
+
+  let txSig: any = '';
+  if (transaction instanceof Transaction) {
+    const tx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, wallet, (await connection.getLatestBlockhash()).blockhash));
+    tx.sign([wallet]);
+    txSig = await optimizedSendAndConfirmTransaction(
+      tx, connection, (await connection.getLatestBlockhash()).blockhash, 2000
+    );
+  } else if (transaction instanceof VersionedTransaction) {
+    txSig = await optimizedSendAndConfirmTransaction(
+      transaction, connection, (await connection.getLatestBlockhash()).blockhash, 2000
+    );
+  }
+  return txSig;
 }
 
 async function getRayCpmmPoolKeys({ t1, t2, connection }: { t1: string, t2: string, connection: Connection })
-: Promise<PublicKey | undefined>{
+  : Promise<PublicKey | undefined> {
   const commitment = "processed";
   const RAYDIUM_CPMM = new PublicKey('CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C');
 
@@ -141,15 +118,30 @@ async function getRayCpmmPoolKeys({ t1, t2, connection }: { t1: string, t2: stri
   return poolId;
 }
 
-// asert pool id = 69KBRQa5zfCMed1Z3spGkUcaX1UXS8nkWhvjruqHUJ4N
-async function test() {
-  const poolId = await getRayCpmmPoolKeys({
-    t1: '5X1F16T5MRiAu4qPaFAaNA1oPx9VQzkpV5SzQcHsNUS9',
-    t2: 'So11111111111111111111111111111111111111112',
-    connection
-  });
-  await swap(poolId!.toBase58());
+export const fetchTokenAccountData = async (wallet:Keypair,connection:Connection) => {
+  const solAccountResp = await connection.getAccountInfo(wallet.publicKey)
+  const tokenAccountResp = await connection.getTokenAccountsByOwner(wallet.publicKey, { programId: TOKEN_PROGRAM_ID })
+  const token2022Req = await connection.getTokenAccountsByOwner(wallet.publicKey, { programId: TOKEN_2022_PROGRAM_ID })
+  const tokenAccountData = parseTokenAccountResp({
+    owner: wallet.publicKey,
+    solAccountResp,
+    tokenAccountResp: {
+      context: tokenAccountResp.context,
+      value: [...tokenAccountResp.value, ...token2022Req.value],
+    },
+  })
+  return tokenAccountData
 }
 
-/** uncomment code below to execute */
-// test().then(res => console.log("done...")).catch(err => console.error(err));
+
+/**
+ * By default: sdk will automatically fetch token account data when need it or any sol balace changed.
+ * if you want to handle token account by yourself, set token account data after init sdk
+ * code below shows how to do it.
+ * note: after call raydium.account.updateTokenAccount, raydium will not automatically fetch token account
+ */
+
+// raydium.account.updateTokenAccount(await fetchTokenAccountData())
+// connection.onAccountChange(wallet.publicKey, async () => {
+//     raydium!.account.updateTokenAccount(await fetchTokenAccountData())
+// })

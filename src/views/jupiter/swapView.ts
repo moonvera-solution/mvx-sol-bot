@@ -9,148 +9,145 @@ export const DEFAULT_PUBLIC_KEY = new PublicKey('1111111111111111111111111111111
 import { UserPositions } from '../../db';
 import { getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
 import { MVXBOT_FEES, SOL_ADDRESS } from "../../config";
-import { jupiterInxSwap } from '../../service/dex/jupiter/trade/swaps';
+import { jupiter_inx_swap } from '../../service/dex/jupiter/trade/swaps';
 import bs58 from 'bs58';
 import BigNumber from 'bignumber.js';
 import { saveUserPosition } from "../../service/portfolio/positions";
-import { display_pumpFun } from '../pumpFun/pumpFunView';
-import { getRayPoolKeys } from '../../service/dex/raydium/raydium-utils/formatAmmKeysById';
-import { display_token_details } from '..';
+import { display_pumpFun } from '../pumpfun/swapView';
+import { getRayPoolKeys } from '../../service/dex/raydium/utils/formatAmmKeysById';
+import { display_raydium_details } from '../raydium/swapAmmView';
 
 
 export async function jupiterSwap(ctx: any) {
-  try {
-    const chatId = ctx.chat.id;
-    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
-    const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
-    const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
-    const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
-    const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
-    const isBuySide = ctx.session.jupSwap_side == "buy";
-    const tokenIn = isBuySide ? SOL_ADDRESS : ctx.session.jupSwap_token;
-    const tokenOut = isBuySide ? ctx.session.jupSwap_token : SOL_ADDRESS;
-    const userTokenBalanceAndDetails = isBuySide ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
+  const chatId = ctx.chat.id;
+  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
+  const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
+  const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
+  const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+  const isBuySide = ctx.session.jupSwap_side == "buy";
+  const tokenIn = isBuySide ? SOL_ADDRESS : ctx.session.jupSwap_token;
+  const tokenOut = isBuySide ? ctx.session.jupSwap_token : SOL_ADDRESS;
+  const userTokenBalanceAndDetails = isBuySide ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
 
-    const amountToSell = Math.floor((ctx.session.jupSwap_amount / 100) * userTokenBalanceAndDetails.userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals));
-    const amountIn = isBuySide ? ctx.session.jupSwap_amount * 1e9 : amountToSell;
-    const refObject = { referralWallet: ctx.session.referralWallet, referralCommision: ctx.referralCommision };
-    const userSolBalance = (await getSolBalance(userWallet.publicKey, connection) * 1e9);
-    const slippage = amountIn * ctx.session.latestSlippage / 100;
-    
-    const minBalance = (amountIn + (amountIn * MVXBOT_FEES.toNumber()) + (ctx.session.customPriorityFee * 1e9));
-    if (isBuySide && minBalance > userSolBalance) {
-      await ctx.api.sendMessage(chatId, `❌ You do not have enough SOL to buy ${userTokenBalanceAndDetails.userTokenSymbol}.`, { parse_mode: 'HTML', disable_web_page_preview: true });
-      return;
-    }
+  const amountToSell = Math.floor((ctx.session.jupSwap_amount / 100) * userTokenBalanceAndDetails.userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals));
+  const amountIn = isBuySide ? ctx.session.jupSwap_amount * 1e9 : amountToSell;
+  const refObject = { referralWallet: ctx.session.referralWallet, referralCommision: ctx.session.referralCommision };
+  const userSolBalance = (await getSolBalance(userWallet.publicKey, connection) * 1e9);
+  
+  const minBalance = (amountIn + (amountIn * MVXBOT_FEES.toNumber()) + (ctx.session.customPriorityFee * 1e9));
+  if (isBuySide && minBalance > userSolBalance) {
+    await ctx.api.sendMessage(chatId, `❌ You do not have enough SOL to buy ${userTokenBalanceAndDetails.userTokenSymbol}.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+    return;
+  }
 
-    if (!isBuySide && amountToSell <= 0) {
-      await ctx.api.sendMessage(chatId, `❌ You do not have enough ${userTokenBalanceAndDetails.userTokenSymbol} to sell.`, { parse_mode: 'HTML', disable_web_page_preview: true });
-      return;
-    }
+  if (!isBuySide && amountToSell <= 0) {
+    await ctx.api.sendMessage(chatId, `❌ You do not have enough ${userTokenBalanceAndDetails.userTokenSymbol} to sell.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+    return;
+  }
 
-    await ctx.api.sendMessage(chatId, `🟢 <b>Transaction ${ctx.session.jupSwap_side.toUpperCase()}:</b> Processing... \n Please wait for confirmation.`, { parse_mode: 'HTML', disable_web_page_preview: true });
-    
-    jupiterInxSwap(
-      connection,
-      rpcUrl,
-      payerKeypair,
-      tokenIn,
-      tokenOut,
-      amountIn,
-      (ctx.session.latestSlippage * 100),
-      (ctx.session.customPriorityFee * 1e9), // here is it for jupiter its allways the default set by users
-      refObject
-    ).then(async (txSig: any) => {
-      if (!txSig) return;
-      const tradeType = isBuySide ? 'buy' : 'sell';
+  await ctx.api.sendMessage(chatId, `🟢 <b>Transaction ${ctx.session.jupSwap_side.toUpperCase()}:</b> Processing... \n Please wait for confirmation.`, { parse_mode: 'HTML', disable_web_page_preview: true });
 
-      if (txSig) {
-        const config = {
-          searchTransactionHistory: true
-        };
-        const sigStatus = await connection.getSignatureStatus(txSig, config)
-        if (sigStatus?.value?.err) {
-          await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
-          return;
+  jupiter_inx_swap(
+    connection,
+    rpcUrl,
+    payerKeypair,
+    tokenIn,
+    tokenOut,
+    amountIn,
+    (ctx.session.latestSlippage * 100),
+    (ctx.session.customPriorityFee * 1e9), // here is it for jupiter its allways the default set by users
+    refObject
+  ).then(async (txSig: any) => {
+    if (!txSig) return;
+    const tradeType = isBuySide ? 'buy' : 'sell';
+
+    if (txSig) {
+      const config = {
+        searchTransactionHistory: true
+      };
+      const sigStatus = await connection.getSignatureStatus(txSig, config)
+      if (sigStatus?.value?.err) {
+        await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+        return;
+      }
+      let tokenAmount, confirmedMsg;
+      let solFromSell = 0;
+      const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
+      let extractAmount = await getSwapAmountOutPump(connection, txSig, tradeType)
+      const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
+      tradeType == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
+      confirmedMsg = `✅ <b>${tradeType.toUpperCase()} tx confirmed</b> ${tradeType == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${ctx.session.jupSwap_amount} SOL</b>` : `You sold <b>${amountToSell / Math.pow(10, userTokenBalanceAndDetails.decimals)}</b> <b>${_symbol}</b> and received <b>${(solFromSell / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txSig}">View Details</a>.`;
+      const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
+      let oldPositionSol: number = 0;
+      let oldPositionToken: number = 0;
+      // console.log('userPosition', userPosition);
+      // console.log('tokenIn', tokenIn);
+      if (userPosition) {
+
+        const existingPositionIndex = userPosition.positions.findIndex(
+          position => position.baseMint === (isBuySide ? tokenOut.toString() : tokenIn.toString())
+        );
+
+        // console.log('existingPositionIndex', existingPositionIndex);
+        if (userPosition.positions[existingPositionIndex]) {
+          oldPositionSol = userPosition.positions[existingPositionIndex].amountIn
+          oldPositionToken = userPosition.positions[existingPositionIndex].amountOut!
+
         }
-        let tokenAmount, confirmedMsg;
-        let solFromSell = 0;
-        const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
-        let extractAmount = await getSwapAmountOutPump(connection, txSig, tradeType)
-        const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
-        tradeType == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
-        confirmedMsg = `✅ <b>${tradeType.toUpperCase()} tx confirmed</b> ${tradeType == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${ctx.session.jupSwap_amount} SOL</b>` : `You sold <b>${amountToSell / Math.pow(10, userTokenBalanceAndDetails.decimals)}</b> <b>${_symbol}</b> and received <b>${(solFromSell / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txSig}">View Details</a>.`;
-        const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
-        let oldPositionSol: number = 0;
-        let oldPositionToken: number = 0;
-        // console.log('userPosition', userPosition);
-        // console.log('tokenIn', tokenIn);
-        if (userPosition) {
+      }
 
-          const existingPositionIndex = userPosition.positions.findIndex(
-            position => position.baseMint === (isBuySide ? tokenOut.toString() : tokenIn.toString())
-          );
+      if (tradeType == 'buy') {
+        saveUserPosition(chatId,
+          userWallet.publicKey.toString(), {
+          baseMint: tokenOut,
+          name: userTokenBalanceAndDetails.userTokenName,
+          symbol: _symbol,
+          tradeType: `jup_swap`,
+          amountIn: oldPositionSol ? oldPositionSol + (ctx.session.jupSwap_amount * 1e9) : (ctx.session.jupSwap_amount * 1e9),
+          amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
 
-          // console.log('existingPositionIndex', existingPositionIndex);
-          if (userPosition.positions[existingPositionIndex]) {
-            oldPositionSol = userPosition.positions[existingPositionIndex].amountIn
-            oldPositionToken = userPosition.positions[existingPositionIndex].amountOut!
+        });
+      } else if (tradeType == 'sell') {
+        let newAmountIn, newAmountOut;
 
-          }
+        if (Number(amountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
+          newAmountIn = 0;
+          newAmountOut = 0;
+        } else {
+          newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
+          newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
         }
 
-        if (tradeType == 'buy') {
+        if (newAmountIn <= 0 || newAmountOut <= 0) {
+          await UserPositions.updateOne({ walletId: userWallet.publicKey.toString() }, { $pull: { positions: { baseMint: tokenIn } } });
+          ctx.session.positionIndex = 0;
+
+        } else {
           saveUserPosition(chatId,
             userWallet.publicKey.toString(), {
-            baseMint: tokenOut,
+            baseMint: tokenIn,
             name: userTokenBalanceAndDetails.userTokenName,
             symbol: _symbol,
             tradeType: `jup_swap`,
-            amountIn: oldPositionSol ? oldPositionSol + (ctx.session.jupSwap_amount * 1e9) : (ctx.session.jupSwap_amount * 1e9),
-            amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
-
+            amountIn: newAmountIn,
+            amountOut: newAmountOut,
           });
-        } else if (tradeType == 'sell'){
-          let newAmountIn, newAmountOut;
-
-          if (Number(amountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
-            newAmountIn = 0;
-            newAmountOut = 0;
-          } else {
-            newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
-            newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
-          }
-
-          if (newAmountIn <= 0 || newAmountOut <= 0) {
-            await UserPositions.updateOne({ walletId: userWallet.publicKey.toString() },{ $pull: { positions: { baseMint: tokenIn } } });
-            ctx.session.positionIndex = 0;
-
-          } else {
-            saveUserPosition(chatId,
-              userWallet.publicKey.toString(), {
-              baseMint: tokenIn,
-              name: userTokenBalanceAndDetails.userTokenName,
-              symbol: _symbol,
-              tradeType: `jup_swap`,
-              amountIn: newAmountIn,
-              amountOut: newAmountOut,
-            });
-          }
-          ctx.session.latestCommand = 'jupiter_swap'
         }
-        await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
-        if (tradeType == 'buy') {
-          ctx.session.latestCommand = 'jupiter_swap';
-          await display_jupSwapDetails(ctx, false);
-        }
-      } else {
-        await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+        ctx.session.latestCommand = 'jupiter_swap'
       }
-    });
-  } catch (e) {
-    console.log(e)
-  }
-}
+      await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
+      if (tradeType == 'buy') {
+        ctx.session.latestCommand = 'jupiter_swap';
+        await display_jupSwapDetails(ctx, false);
+      }
+    } else {
+      await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+    }
+  }).catch(async (error: any) => {
+    await ctx.api.sendMessage(chatId, error.message, { parse_mode: 'HTML', disable_web_page_preview: true });
+  });
+};
 
 
 export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
@@ -215,7 +212,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         // ctx.session.latestCommand = 'raydium_swap';
         ctx.session.activeTradingPool = await getRayPoolKeys(ctx, token);
         if (ctx.session.activeTradingPool) {
-          await display_token_details(ctx, false);
+          await display_raydium_details(ctx, false);
           return;
         } else {
           // ctx.session.latestCommand = 'pump_fun';

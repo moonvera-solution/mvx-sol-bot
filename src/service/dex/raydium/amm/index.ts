@@ -29,7 +29,7 @@ import {
   MVXBOT_FEES,
   WALLET_MVX
 } from "../../../../config";
-import { formatAmmKeysById } from "../raydium-utils/formatAmmKeysById";
+import { formatAmmKeysById } from "../utils/formatAmmKeysById";
 import { simulateTx, getMaxPrioritizationFeeByPercentile, PriotitizationFeeLevels } from "../../../fees/priorityFees";
 import {
   buildAndSendTx,
@@ -40,7 +40,6 @@ import {
   addMvxFeesInx
 } from "../../../util";
 
-type WalletTokenAccounts = Awaited<ReturnType<typeof getWalletTokenAccount>>;
 type refObject = { referralWallet: string, referralCommision: number };
 
 export type TxInputInfo = {
@@ -55,7 +54,7 @@ export type TxInputInfo = {
   wallet: Keypair;
 };
 
-export async function swapOnlyAmm(input: TxInputInfo): Promise<string | null> {
+export async function raydium_amm_swap(input: TxInputInfo): Promise<string | null> {
   const connection = input.connection;
   const targetPoolInfo = await formatAmmKeysById(input.targetPool, connection);
   assert(targetPoolInfo, "cannot find the target pool");

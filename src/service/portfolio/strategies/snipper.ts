@@ -9,13 +9,13 @@ import { buildAndSendTx, getPriorityFeeLabel, getSwapAmountOut, optimizedSendAnd
 import { saveUserPosition } from '../positions';
 const log = (k: any, v: any) => console.log(k, v);
 import base58 from 'bs58';
-import { getRayPoolKeys, formatAmmKeysById } from "../../dex/raydium/raydium-utils/formatAmmKeysById";
+import { getRayPoolKeys, formatAmmKeysById } from "../../dex/raydium/utils/formatAmmKeysById";
 import { getTokenMetadata } from "../../feeds";
 import { waitForConfirmation, getSolBalance } from '../../util';
 import { Referrals, UserPositions } from "../../../db/mongo/schema";
 import { getMaxPrioritizationFeeByPercentile } from "../../../service/fees/priorityFees";
 
-import { display_jupSwapDetails } from '../../../views/jupiter/jupiterSwapView';
+import { display_jupSwapDetails } from '../../../views/jupiter/swapView';
 
 export async function snipperON(ctx: any, amount: string) {
     try {
@@ -146,11 +146,6 @@ export async function startSnippeSimulation(
     const inputTokenAmount = new TokenAmount(_tokenIn, amountIn.toFixed(0), true);
     const minOutTokenAmount = new TokenAmount(_tokenOut, amountOut_with_slippage.toFixed(0), true);
 
-    console.log("ctx.session.priorityFees :: :: > ", ctx.session.customPreorityFee);
-
-    // const computeBudgetUnits = ctx.session.priorityFees.units;
-    // const computeBudgetMicroLamports = ctx.session.priorityFees.microLamports;
-    // const totalComputeBudget = computeBudgetMicroLamports * (computeBudgetUnits / 1e6);
 
     // ------- check user balanace in DB --------
     const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
@@ -244,6 +239,7 @@ export async function startSnippeSimulation(
     }).compileToV0Message();
 
     let txV = new VersionedTransaction(tx);
+    txV.sign([userWallet]);
     let simulationResult: any;
     let count = 0;
     let sim: boolean = true;

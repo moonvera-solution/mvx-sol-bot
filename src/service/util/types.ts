@@ -157,7 +157,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   // priorityFees: PriotitizationFeeLevels.LOW,
   positionIndex: 0,
   allowedReferral:'', // tg Username
-  tritonRPC : 'https://moonvera,rpcpool.com/',
+  tritonRPC : 'https://moonvera-ams.rpcpool.com/',
   tritonToken : process.env.TRITON_RPC_TOKEN!,
   jupSwap_token: '',
   jupSwap:{token:'',side:'',amount:0},

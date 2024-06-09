@@ -1,17 +1,17 @@
 
-import { UserPositions } from '../db';
+import { UserPositions } from '../../db';
 import { PublicKey, token } from '@metaplex-foundation/js';
 import { TOKEN_PROGRAM_ID } from '@raydium-io/raydium-sdk';
-import { getTokenDataFromBirdEyePositions } from "../api/priceFeeds/birdEye";
-
-import { formatNumberToKOrM, getSolBalance } from '../service/util';
+import { getTokenDataFromBirdEyePositions } from "../../api/priceFeeds/birdEye";
+import { Portfolios } from '../../db';
+import { formatNumberToKOrM, getSolBalance } from '../../service/util';
 import { Connection } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
-import { Position, UserPosition } from '../service/portfolio/positions';
-import { getTokenMetadata, getUserTokenBalanceAndDetails } from '../service/feeds';
-import { SOL_ADDRESS } from '../config';
-import { getSwapDetails } from '../service/dex/solTracker';
-
+import { Position, UserPosition } from '../../service/portfolio/positions';
+import { getTokenMetadata, getUserTokenBalanceAndDetails } from '../../service/feeds';
+import { SOL_ADDRESS } from '../../config';
+import { getSwapDetails } from '../../service/dex/pumpfun';
+import { getSolanaDetails } from '../../api';
 
 export async function display_all_positions(ctx: any, isRefresh: boolean) {
   const { publicKey: userWallet } = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex] || {};
@@ -427,3 +427,61 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
   }
 }
 
+
+export async function handleWallets(ctx: any) {
+  const chatId = ctx.chat.id;
+  const wallets = ctx.session.portfolio.wallets;
+  const portfolioIndexWallet = await Portfolios.findOne({ chatId: chatId });
+  let selectedWalletIndex: number;
+  if(portfolioIndexWallet ){
+   selectedWalletIndex = portfolioIndexWallet.activeWalletIndex; // Index of the currently selected wallet
+  }else{
+   selectedWalletIndex = ctx.session.portfolio.activeWalletIndex; // Index of the currently selected wallet
+  }
+  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+
+
+  if (!wallets || wallets.length === 0) {
+      await ctx.api.sendMessage(chatId, "No wallets found. Please add a wallet first.");
+      return;
+  }
+  const solanaDetails = await getSolanaDetails();
+  let inlineKeyboardRows = [];
+
+  for (const [index, wallet] of wallets.entries()) {
+      const balanceInSOL = await getSolBalance(wallet.publicKey,connection);
+      const balanceInUSD = balanceInSOL * solanaDetails;
+
+      let walletIdentifier = wallet.publicKey;
+      let isSelected = index === selectedWalletIndex; // Check if this wallet is selected
+
+      let walletRow = [
+          { 
+              text: `${isSelected ? '✅ ' : ''}${index + 1}. ${walletIdentifier}`, 
+              callback_data: `select_wallet_${index}`
+          },
+          { 
+              text: `${balanceInSOL.toFixed(4)} SOL`, 
+              callback_data: `wallet_balance_${index}`
+          },
+          { 
+              text: `${balanceInUSD.toFixed(2)} USD`, 
+              callback_data: `wallet_usd_${index}`
+          }
+      ];
+      inlineKeyboardRows.push(walletRow);
+  }
+
+  inlineKeyboardRows.push([{ text: '🔄 Refresh', callback_data: 'refresh_db_wallets' }]);
+  inlineKeyboardRows.push([{ text: 'Close', callback_data: 'closing' }]);
+
+  const options = {
+      reply_markup: {
+          inline_keyboard: inlineKeyboardRows
+      },
+      parse_mode: 'HTML'
+  };
+
+  await ctx.api.sendMessage(chatId,"Please select a wallet to configure slippage & sending SOL:", options);
+
+}

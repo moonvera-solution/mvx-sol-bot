@@ -1,12 +1,10 @@
-+import { LimitOrderProvider, ownerFilter, OrderHistoryItem, TradeHistoryItem } from "@jup-ag/limit-order-sdk";
+import { LimitOrderProvider, ownerFilter, OrderHistoryItem, TradeHistoryItem } from "@jup-ag/limit-order-sdk";
 import { Keypair, Connection, PublicKey, VersionedTransaction, TransactionSignature, TransactionMessage } from "@solana/web3.js";
-import { addMvxFeesInx, add_mvx_and_ref_inx_fees, sendTx, sendSignedTx, wrapLegacyTx } from '../../../../service/util';
+import { addMvxFeesInx, add_mvx_and_ref_inx_fees, sendTx, wrapLegacyTx, optimizedSendAndConfirmTransaction } from '../../../util';
 import { BN } from "@coral-xyz/anchor";
-import { SOL_ADDRESS,MVX_JUP_REFERRAL } from '../../../../../config';
-import { getTokenDataFromBirdEye } from "../../../../api/priceFeeds/birdEye";
+import { SOL_ADDRESS, MVX_JUP_REFERRAL } from '../../../../config';
 import dotenv from "dotenv"; dotenv.config();
 import BigNumber from 'bignumber.js';
-import { getSolanaDetails, getTokenPriceFromJupiter } from '../../../../api';
 import bs58 from 'bs58';
 
 type LIMIT_ORDER_PARAMS = {
@@ -30,7 +28,7 @@ type REFERRAL_INFO = {
  * Ref: https://station.jup.ag/docs/limit-order/limit-order-with-sdk
  */
 
-export async function setLimitJupiterOrder(
+export async function jupiter_limit_order(
   connection: Connection, referralInfo: REFERRAL_INFO, isBuySide: boolean, {
     userWallet,
     inputToken,
@@ -38,7 +36,7 @@ export async function setLimitJupiterOrder(
     outputToken,
     targetPrice,
     expiredAt,
-  }: LIMIT_ORDER_PARAMS): Promise<TransactionSignature> {
+  }: LIMIT_ORDER_PARAMS): Promise<TransactionSignature | null> {
   try {
     const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
     const base = Keypair.generate(); // random unique order id
@@ -58,24 +56,20 @@ export async function setLimitJupiterOrder(
 
     tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
     tx.sign(userWallet, base);
+
     const blockhash = (await connection.getLatestBlockhash()).blockhash;
     let solAmount: BigNumber = isBuySide ? new BigNumber(inAmount) : new BigNumber(outAmount);
 
-    const versionnedBundle: VersionedTransaction[] = [];
-    const pumpTx = new VersionedTransaction(wrapLegacyTx(tx.instructions, userWallet, blockhash));
-    pumpTx.sign([userWallet, base]);
-    versionnedBundle.push(pumpTx);
-
     const txInxs = hasReferral ?
       add_mvx_and_ref_inx_fees(userWallet, referralInfo.referralWallet!, solAmount, referralInfo.referralCommision!) :
-      addMvxFeesInx(userWallet, solAmount)
+      addMvxFeesInx(userWallet, solAmount);
 
-    const mvxTx = new VersionedTransaction(wrapLegacyTx(txInxs, userWallet, blockhash));
-    mvxTx.sign([userWallet]);
-    versionnedBundle.push(mvxTx);
+    txInxs.forEach((inx) => { tx.add(inx) });
 
-    // sign each bundle tx's(Inx) independently before sending
-    return (await sendSignedTx(connection, versionnedBundle, { preflightCommitment: "processed", }))[0];
+    return await optimizedSendAndConfirmTransaction(
+      new VersionedTransaction(wrapLegacyTx(tx.instructions, userWallet, blockhash)), connection, blockhash, 2000
+    );
+
   } catch (e: any) {
     console.log(e);
     throw new Error(e.message);
@@ -112,13 +106,13 @@ export async function getOrderHistoryCount(connection: Connection, owner: Keypai
 
 export async function getTradeHistory(connection: Connection, owner: Keypair): Promise<TradeHistoryItem[]> {
   const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
-  const history =  await limitOrder.getTradeHistory({
+  const history = await limitOrder.getTradeHistory({
     wallet: owner.publicKey.toBase58(),
     take: 20, // optional, default is 20, maximum is 100
     // lastCursor: order.id // optional, for pagination
   });
   console.log(history);
-  return history; 
+  return history;
 }
 
 export async function getTradeHistoryCount(connection: Connection, owner: Keypair): Promise<number> {
@@ -130,7 +124,7 @@ export async function getTradeHistoryCount(connection: Connection, owner: Keypai
 
 export async function cancelOrder(connection: Connection, owner: Keypair, order: PublicKey): Promise<string> {
   const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
-  const tx = await limitOrder.cancelOrder({owner: owner.publicKey,orderPubKey: order});
+  const tx = await limitOrder.cancelOrder({ owner: owner.publicKey, orderPubKey: order });
   tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
   tx.sign(owner);
   return await connection.sendRawTransaction(tx.serialize(), { preflightCommitment: "processed" });
@@ -138,7 +132,7 @@ export async function cancelOrder(connection: Connection, owner: Keypair, order:
 
 export async function cancelBatchOrder(connection: Connection, owner: Keypair, batchOrdersPubKey: PublicKey[]): Promise<string> {
   const limitOrder = new LimitOrderProvider(connection, new PublicKey(MVX_JUP_REFERRAL));
-  const tx = await limitOrder.batchCancelOrder({owner: owner.publicKey, ordersPubKey: batchOrdersPubKey});
+  const tx = await limitOrder.batchCancelOrder({ owner: owner.publicKey, ordersPubKey: batchOrdersPubKey });
   tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
   tx.sign(owner);
   return await connection.sendRawTransaction(tx.serialize(), { preflightCommitment: "processed" });

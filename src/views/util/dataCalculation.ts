@@ -2,9 +2,29 @@ import { PublicKey, Connection } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 
 
-
-
 export async function getPoolToken_details(tokenBaseVault: PublicKey, tokenQuoteVault: PublicKey, baseMint: PublicKey, connection: Connection): 
+Promise<{ baseTokenVaultSupply: BigNumber, quoteTokenVaultSupply: BigNumber, baseTokenSupply: BigNumber }> {
+    const publicKeys = [
+        new PublicKey(tokenBaseVault),
+        new PublicKey(tokenQuoteVault),
+        new PublicKey(baseMint)
+    ];
+    const parsedAccountsInfo = await connection.getMultipleParsedAccounts(publicKeys, { commitment: 'processed' });
+    // Type checking and extracting data
+    const baseTokenVaultSupply = parsedAccountsInfo.value[0]?.data instanceof Buffer ? new BigNumber(0) : new BigNumber(parsedAccountsInfo.value[0]?.data.parsed.info.tokenAmount.amount);
+    const quoteTokenVaultSupply = parsedAccountsInfo.value[1]?.data instanceof Buffer ? new BigNumber(0) : new BigNumber(parsedAccountsInfo.value[1]?.data.parsed.info.tokenAmount.amount);
+    const baseTokenSupply = parsedAccountsInfo.value[2]?.data instanceof Buffer ? new BigNumber(0) : new BigNumber(parsedAccountsInfo.value[2]?.data.parsed.info.supply);
+
+    return {
+        baseTokenVaultSupply,
+        quoteTokenVaultSupply,
+        baseTokenSupply,
+    }
+}
+
+
+
+export async function quoteTokenquoteToken(tokenBaseVault: PublicKey, tokenQuoteVault: PublicKey, baseMint: PublicKey, connection: Connection): 
 Promise<{ baseTokenVaultSupply: BigNumber, quoteTokenVaultSupply: BigNumber, baseTokenSupply: BigNumber }> {
     const publicKeys = [
         new PublicKey(tokenBaseVault),

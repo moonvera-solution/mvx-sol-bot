@@ -6,6 +6,28 @@ import {
   confirmResetWalletAgain,
   resetWallet,
 } from "./service/portfolio/wallets";
+import {
+  sendHelpMessage,
+  handleCloseKeyboard,
+  handleRefreshStart,
+  quoteToken,
+  quoteTokenquoteToken,
+  setCustomPriority,
+  display_all_positions,
+  display_single_position,
+  display_rugCheck,
+  refreshWallets,
+  handleRereshWallet,
+  handleWallets,
+  display_jupSwapDetails,
+  display_pumpFun,
+  display_raydium_details,
+  display_cpmm_raydium_details,
+  display_snipe_options,
+  swap_pump_fun,
+  jupiterSwap,
+} from "./views";
+
 import { handle_radyum_swap } from "./service/portfolio/strategies/swaps";
 import {
   Bot,
@@ -29,22 +51,8 @@ import { _initDbConnection } from "./db/mongo/crud";
 import { handleSettings } from "./service/settings";
 import { getSolanaDetails } from "./api";
 import { setSnipe, snipperON } from "./service/portfolio/strategies/snipper";
-import {
-  display_token_details,
-  display_snipe_options,
-  handleCloseKeyboard,
-  // display_after_Snipe_Buy,
-} from "./views";
 import { getSolBalance, sendSol } from "./service/util";
-import {
-  handleRefreshStart,
-  handleRereshWallet,
-} from "./views/refreshData/refreshStart";
-import { handleWallets } from "./views/util/dbWallet";
-import { RefreshAllWallets } from "./views/refreshData/RefresHandleWallets";
-import { getRayPoolKeys } from "./service/dex/raydium/raydium-utils/formatAmmKeysById";
-import { sendHelpMessage } from "./views/util/helpMessage";
-import { display_rugCheck } from "./views/rugCheck";
+import { getRayPoolKeys } from "./service/dex/raydium/utils/formatAmmKeysById";
 import { _generateReferralLink, _getReferralData } from "../src/db/mongo/crud";
 import {
   Portfolios,
@@ -52,23 +60,9 @@ import {
   AllowedReferrals,
   UserSession,
 } from "./db/mongo/schema";
-
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
-import { display_pumpFun } from "./views/pumpFun/pumpFunView";
-import { swap_pump_fun } from "./views/pumpFun/pumpFunView";
-import { setCustomPriority } from "./views/util/getPriority";
-import {
-  display_jupSwapDetails,
-  jupiterSwap,
-} from "./views/jupiter/jupiterSwapView";
-import {
-  display_all_positions,
-  display_single_position,
-} from "./views/new_portfolioView";
-
 import { hasEnoughSol } from "./service/util/validations";
-import { MVXBOT_FEES } from "./config";
-
+import * as config from "./views";
 const express = require("express");
 const app = express();
 
@@ -131,7 +125,7 @@ async function _validateSession(ctx: any) {
     const restoredSession = await UserSession.findOne({ chatId: ctx.chat.id });
     if (restoredSession) {
       // NOTE: update db manually, if schema changes! avoid stopping the bot
-      // ctx.session = JSON.parse(JSON.stringify(restoredSession));
+      ctx.session = JSON.parse(JSON.stringify(restoredSession));
       console.log("Session restored.");
     }
   }
@@ -473,7 +467,7 @@ bot.on("message", async (ctx) => {
     switch (latestCommand) {
       case "set_slippage": {
         ctx.session.latestSlippage = Number(msgTxt);
-        await display_token_details(ctx, false);
+        await display_raydium_details(ctx, false);
         break;
       }
       case "set_snipe_slippage": {
@@ -1075,7 +1069,7 @@ bot.on("callback_query", async (ctx: any) => {
           ctx.session.portfolio.activeWalletIndex = portfolio.activeWalletIndex;
           await portfolio.save(); // Save the updated document to MongoDB
           await handleSettings(ctx);
-          await RefreshAllWallets(ctx);
+          await refreshWallets(ctx);
         } else {
           await ctx.api.sendMessage(chatId, "Error: Portfolio not found.");
         }
@@ -1091,7 +1085,7 @@ bot.on("callback_query", async (ctx: any) => {
 
           await portfolio1.save(); // Save the updated document to MongoDB
           await handleSettings(ctx);
-          await RefreshAllWallets(ctx);
+          await refreshWallets(ctx);
         } else {
           await ctx.api.sendMessage(chatId, "Error: Portfolio not found.");
         }
@@ -1103,14 +1097,14 @@ bot.on("callback_query", async (ctx: any) => {
         await handleWallets(ctx);
         break;
       case "refresh_db_wallets":
-        await RefreshAllWallets(ctx);
+        await refreshWallets(ctx);
         break;
 
       case "refresh_wallet":
         await handleRereshWallet(ctx);
         break;
       case "refresh_trade":
-        await display_token_details(ctx, true);
+        await display_raydium_details(ctx, true);
         break;
       case "delete_wallet":
         await resetWallet(ctx);
@@ -1417,7 +1411,7 @@ bot.on("callback_query", async (ctx: any) => {
         } else if (ctx.session.latestCommand === "jupiter_swap") {
           await display_jupSwapDetails(ctx, true);
         } else {
-          await display_token_details(ctx, true);
+          await display_raydium_details(ctx, true);
         }
         break;
       }
@@ -1434,7 +1428,7 @@ bot.on("callback_query", async (ctx: any) => {
         } else if (ctx.session.latestCommand === "jupiter_swap") {
           await display_jupSwapDetails(ctx, true);
         } else {
-          await display_token_details(ctx, true);
+          await display_raydium_details(ctx, true);
         }
         break;
       }
@@ -1452,7 +1446,7 @@ bot.on("callback_query", async (ctx: any) => {
         } else if (ctx.session.latestCommand === "jupiter_swap") {
           await display_jupSwapDetails(ctx, true);
         } else {
-          await display_token_details(ctx, true);
+          await display_raydium_details(ctx, true);
         }
         break;
       }
@@ -1467,7 +1461,7 @@ bot.on("callback_query", async (ctx: any) => {
         } else if (ctx.session.latestCommand === "jupiter_swap") {
           await display_jupSwapDetails(ctx, true);
         } else {
-          await display_token_details(ctx, true);
+          await display_raydium_details(ctx, true);
         }
         break;
       }

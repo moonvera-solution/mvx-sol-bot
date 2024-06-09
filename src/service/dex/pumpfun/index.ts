@@ -13,7 +13,7 @@ const TX_RETRY_INTERVAL = 50;
  * @param passing connection b4 SOL_TRACKER_SWAP_PARAMS 
  * @returns Arrays of tx ids, false if fails
  */
-export async function swap_solTracker(connection: Connection, {
+export async function pump_fun_swap(connection: Connection, {
     side,
     from,
     to,
@@ -37,12 +37,13 @@ export async function swap_solTracker(connection: Connection, {
     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
     const blockhash = await connection.getLatestBlockhash();
 
+    console.log(" ${process.env.SOL_TRACKER_API_URL}/swap:: ",`${process.env.SOL_TRACKER_API_URL}/swap`);
     const swapInx = await axios.get(`${process.env.SOL_TRACKER_API_URL}/swap`, { params, headers });
 
     const swapResponse = swapInx.data;
     const serializedTransactionBuffer = Buffer.from(swapResponse.txn, "base64");
     let solAmount: BigNumber = side == 'buy' ? new BigNumber(swapResponse.rate.amountIn) : new BigNumber(swapResponse.rate.amountOut);
-    let hasReferral = referralWallet && referralCommision;
+    let hasReferral = referralWallet && referralCommision! > 0;
     const mvxInxs = hasReferral ?
         add_mvx_and_ref_inx_fees(payerKeypair, referralWallet!, solAmount, referralCommision!) :
         addMvxFeesInx(payerKeypair, solAmount);

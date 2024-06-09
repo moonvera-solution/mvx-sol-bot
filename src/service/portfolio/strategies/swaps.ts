@@ -1,15 +1,12 @@
 import { Percent, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken } from '@raydium-io/raydium-sdk';
 import { PublicKey, Keypair, Connection } from '@solana/web3.js';
-import { getWalletTokenAccount, updatePositions, getSolBalance, updateReferralBalance, getSwapAmountOut } from '../../util';
+import {updatePositions, getSolBalance, updateReferralBalance, getSwapAmountOut } from '../../util';
 import { DEFAULT_TOKEN, MVXBOT_FEES } from '../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
-import { ISESSION_DATA } from '../../util/types';
-import { saveUserPosition } from "../positions";
 import { raydium_amm_swap } from '../../dex';
 import BigNumber from 'bignumber.js';
 import bs58 from 'bs58';
-import { Referrals, UserPositions } from '../../../db/mongo/schema';
-import { display_jupSwapDetails } from '../../../views/jupiter/jupiterSwapView';
+import { display_jupSwapDetails } from '../../../views/jupiter/swapView';
 
 export async function handle_radyum_swap(
   ctx: any, tokenOut: PublicKey,

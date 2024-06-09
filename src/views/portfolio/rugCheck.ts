@@ -1,9 +1,9 @@
 import { PublicKey } from '@metaplex-foundation/js';
-import { getLiquityFromOwner, getTokenMetadata } from '../service/feeds';
-import { quoteToken } from './util/dataCalculation';
-import { formatNumberToKOrM } from '../service/util';
+import { getLiquityFromOwner, getTokenMetadata } from '../../service/feeds';
+import { quoteToken } from '../util/dataCalculation';
+import { formatNumberToKOrM } from '../../service/util';
 import { Connection } from '@solana/web3.js';
-import { getTokenDataFromBirdEye } from '../api/priceFeeds/birdEye';
+import { getTokenDataFromBirdEye } from '../../api/priceFeeds/birdEye';
 import BigNumber from 'bignumber.js';
 
 
