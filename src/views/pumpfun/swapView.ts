@@ -182,7 +182,6 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
 
 
       let messageText = `<b>------ ${tokenData.name}(${tokenData.symbol}) ------</b>\n` +
-        `💊 <a href="${pumpFunLink}">Pump fun</a>\n` +
         `Contract: <code>${token}</code>\n` +
         `Market Cap: <b>${Mcap}</b> USD\n` +
         `Price:  <b>${new BigNumber(swapRates).toFixed(9)} SOL</b> | <b>${new BigNumber(swapRates * solPrice).toFixed(9)} USD</b>\n\n` +
