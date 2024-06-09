@@ -34,7 +34,7 @@ export async function jupiterSwap(ctx: any) {
   const amountIn = isBuySide ? ctx.session.jupSwap_amount * 1e9 : amountToSell;
   const refObject = { referralWallet: ctx.session.referralWallet, referralCommision: ctx.session.referralCommision };
   const userSolBalance = (await getSolBalance(userWallet.publicKey, connection) * 1e9);
-  
+
   const minBalance = (amountIn + (amountIn * MVXBOT_FEES.toNumber()) + (ctx.session.customPriorityFee * 1e9));
   if (isBuySide && minBalance > userSolBalance) {
     await ctx.api.sendMessage(chatId, `❌ You do not have enough SOL to buy ${userTokenBalanceAndDetails.userTokenSymbol}.`, { parse_mode: 'HTML', disable_web_page_preview: true });
