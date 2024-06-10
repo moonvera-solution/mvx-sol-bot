@@ -8,7 +8,7 @@ import {
   getMinPrioritizationFeeByPercentile,
   getRecentPrioritizationFeesByPercentile,
 } from "../src/service/fees/priorityFees";
-const connection = new Connection('https://moonvera-pit.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41');
+const connection = new Connection('https://moonvera-ams.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41');
 
 interface GetRecentPrioritizationFeesByPercentileConfig
   extends GetRecentPrioritizationFeesConfig {
