@@ -32,6 +32,7 @@
     ".local/GeyserSnipper.ts",
     "./spl-swap.ts",
     "src/service/**/*.ts",
+    "src/service/**/**/*.ts",
     "src/service/*.ts",
     "src/db/*.ts",
     "test/"
