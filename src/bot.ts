@@ -1496,9 +1496,9 @@ bot.catch((err) => {
 
 async function checkAccountType(ctx: any, address: any) {
   
-  console.log("`${ctx.session.tritonRPC}${ctx.session.tritonToken}`", `${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  // console.log("`${ctx.session.tritonRPC}${ctx.session.tritonToken}`", `${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
   
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
   const publicKey = new PublicKey(address);
   const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 

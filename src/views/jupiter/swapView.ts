@@ -222,7 +222,6 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
           ctx.session.pumpToken = new PublicKey(token);
           await display_pumpFun(ctx, false);
           return;
-
         }
 
       }
