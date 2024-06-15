@@ -758,7 +758,10 @@ export function add_mvx_and_ref_inx_fees(
  */
 export function addMvxFeesInx(payerKeypair: Keypair, solAmount: BigNumber): TransactionInstruction[] {
     let mvxFee: any = solAmount.multipliedBy(MVXBOT_FEES);
-    mvxFee = new BigNumber(Math.ceil(Number.parseFloat(String(mvxFee.toNumber())))).toNumber();
+    console.log("mvxFee-- addMvxFeesInx", new BigNumber(solAmount).toNumber());
+    console.log("mvxFee-- addMvxFeesInx", mvxFee.toNumber());
+    // mvxFee = new BigNumber(Math.ceil(Number.parseFloat(String(mvxFee.toNumber())))).toNumber();
+    console.log("mvxFee----", new BigNumber(mvxFee).toNumber());
     return [SystemProgram.transfer({
         fromPubkey: payerKeypair.publicKey,
         toPubkey: new PublicKey(WALLET_MVX),

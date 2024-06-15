@@ -28,17 +28,25 @@ export async function swap_pump_fun(ctx: any) {
     const amountToSell = (ctx.session.pump_amountIn / 100) * userTokenBalanceAndDetails.userTokenBalance;
     const userSolBalance = await getSolBalance(userWallet.publicKey, connection);
     const amountIn = tradeSide == 'buy' ? ctx.session.pump_amountIn : amountToSell;
+
+    console.log('amountIn:', amountIn);
+    console.log('tx.session.pump_amountIn:', ctx.session.pump_amountIn);
     if (tradeSide == 'buy' && userSolBalance < ctx.session.pump_amountIn) {
       await ctx.api.sendMessage(chatId, `❌ Insufficient SOL balance.`);
       return;
     }
+    const finalAmountIn = tradeSide == 'buy' ? ctx.session.pump_amountIn : amountToSell;
+    if(Number(finalAmountIn) <= 0) throw new Error('Not enough token balance');
+
     let msg = `🟢 <b>Transaction ${tradeSide.toUpperCase()}:</b> Processing... Please wait for confirmation.`
     await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
+    
+  
     await pump_fun_swap(connection, {
       side: tradeSide,
       from: tokenIn,
       to: tokenOut,
-      amount: tradeSide == 'buy' ? ctx.session.pump_amountIn : amountToSell,
+      amount: finalAmountIn,
       slippage: ctx.session.latestSlippage,
       payerKeypair: payerKeypair,
       referralWallet: new PublicKey(ctx.session.generatorWallet).toBase58(),
@@ -75,9 +83,8 @@ export async function swap_pump_fun(ctx: any) {
       }
 
       if (tradeSide == 'buy') {
-     
          saveUserPosition( // to display portfolio positions
-          ctx,
+          ctx.session.chatId,
           userWallet.publicKey.toString(), {
           baseMint: ctx.session.pumpToken,
           name: userTokenBalanceAndDetails.userTokenName,
@@ -121,8 +128,8 @@ export async function swap_pump_fun(ctx: any) {
         // await display_pumpFun(ctx, false);
       }
     });
-  } catch (e) {
-    await ctx.api.sendMessage(ctx.chat.id, `❌ Swap failed`);
+  } catch (e:any) {
+    await ctx.api.sendMessage(ctx.chat.id, `❌ Error: ${e.message}`);
     console.error(e);
   }
 }
