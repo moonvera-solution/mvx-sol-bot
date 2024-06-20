@@ -185,18 +185,11 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         getTokenDataFromBirdEyePositions(token, publicKeyString),
         getTokenMetadata(ctx, token),
         getSolBalance(publicKeyString, connection),
-        fetch(
-          `https://price.jup.ag/v6/price?ids=${token}&vsToken=So11111111111111111111111111111111111111112`
-        ).then((response) => response.json()),
+        fetch(`https://price.jup.ag/v6/price?ids=${token}&vsToken=So11111111111111111111111111111111111111112`).then((response) => response.json()),
         getUserTokenBalanceAndDetails(new PublicKey(publicKeyString), token, connection),
         UserPositions.find({ positionChatId: chatId, walletId: publicKeyString }, { positions: { $slice: -7 } }),
-        fetch(
-          `${rpcUrl}/jupiter/quote?inputMint=${SOL_ADDRESS}&outputMint=${token}&amount=${'5000000000'}&slippageBps=${1}`
-        ).then((response) => response.json()),
-        fetch(
-          `https://price.jup.ag/v6/price?ids=SOL`
-        ).then((response) => response.json()),
-
+        fetch(`${rpcUrl}/jupiter/quote?inputMint=${SOL_ADDRESS}&outputMint=${token}&amount=${'5000000000'}&slippageBps=${1}`).then((response) => response.json()),
+        fetch(`https://price.jup.ag/v6/price?ids=SOL`).then((response) => response.json()),
       ]);
       // console.log('responsiveness:', responsiveness)
       const {

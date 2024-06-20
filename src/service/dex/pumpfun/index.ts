@@ -4,7 +4,6 @@ import SolanaTracker from "./solTrackerUtils";
 import { sendTx, add_mvx_and_ref_inx_fees, addMvxFeesInx, wrapLegacyTx, optimizedSendAndConfirmTransaction } from '../../../../src/service/util';
 import { Keypair, Connection, Transaction, AddressLookupTableAccount, VersionedTransaction, TransactionMessage } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
-import { SOL_ADDRESS } from '../../../config';
 
 const TX_RETRY_INTERVAL = 50;
 
