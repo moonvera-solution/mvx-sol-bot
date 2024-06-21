@@ -103,10 +103,12 @@ export async function raydium_amm_swap(input: TxInputInfo): Promise<string | nul
         input.refObject.referralCommision
       ));
   } else {
+    let feeAmt = Number.isInteger(amountOut.raw.toNumber()) ? amountOut.raw.toNumber() : Math.ceil(Number.parseFloat(amountOut.raw.toNumber().toFixed(2)));
+    console.log("feeAmt:: ", feeAmt);
     innerTransactions[0].instructions.push(
       ...addMvxFeesInx(
         input.wallet,
-        input.side === "sell" ? new BigNumber(amountOut.raw.toNumber()) : new BigNumber(input.inputTokenAmount.raw.toNumber())
+        input.side === "sell" ? new BigNumber(feeAmt) : new BigNumber(input.inputTokenAmount.raw.toNumber())
       )
     );
   }

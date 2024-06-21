@@ -68,7 +68,7 @@ export async function jupiter_limit_order(
     tx.sign(userWallet,base);
 
     const versionTx : VersionedTransaction =  new VersionedTransaction(wrapLegacyTx(tx.instructions, userWallet, blockhash));
-    versionTx.signatures = [userWallet.secretKey, base.secretKey];
+    versionTx.sign([userWallet, base]);
     return await optimizedSendAndConfirmTransaction( versionTx,connection, blockhash, 20000);
 
   } catch (e: any) {
