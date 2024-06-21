@@ -29,6 +29,8 @@ export const DefaultPortfolioData: PORTFOLIO_TYPE = {
 }
 
 export interface ISESSION_DATA {
+  cpmmPoolId: string;
+  cpmmPoolInfo: any;
   chatId: number;
   portfolio: PORTFOLIO_TYPE,
   activeTradingPool: RAYDIUM_POOL_TYPE;
@@ -123,6 +125,8 @@ export const DefaultSessionData: ISESSION_DATA = {
     positions: [],
     activeWalletIndex: 0
   },
+  cpmmPoolId: '',
+  cpmmPoolInfo: {},
   swaptypeDex: '',
   ammAddress: '',
   pump_side: '',

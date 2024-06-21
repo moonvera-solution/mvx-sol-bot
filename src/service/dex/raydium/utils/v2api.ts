@@ -33,4 +33,4 @@ async function getTvl(poolId: string) {
 
 }
 
-getTvl('FvVDc6gZmYho6DLLuJ3ptHS6rxb797Cxf1insiUnu2BL').then(console.log).catch(console.error)
+getTvl('69KBRQa5zfCMed1Z3spGkUcaX1UXS8nkWhvjruqHUJ4N').then(console.log).catch(console.error)
