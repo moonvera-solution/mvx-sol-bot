@@ -6,6 +6,7 @@ import { SOL_ADDRESS, MVX_JUP_REFERRAL } from '../../../../config';
 import dotenv from "dotenv"; dotenv.config();
 import BigNumber from 'bignumber.js';
 import bs58 from 'bs58';
+import { version } from "node:os";
 
 type LIMIT_ORDER_PARAMS = {
   userWallet: Keypair;
@@ -55,20 +56,20 @@ export async function jupiter_limit_order(
     });
 
     tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-    tx.sign(userWallet, base);
 
     const blockhash = (await connection.getLatestBlockhash()).blockhash;
     let solAmount: BigNumber = isBuySide ? new BigNumber(inAmount) : new BigNumber(outAmount);
 
     const txInxs = hasReferral ?
       add_mvx_and_ref_inx_fees(userWallet, referralInfo.referralWallet!, solAmount, referralInfo.referralCommision!) :
-      addMvxFeesInx(userWallet, solAmount);
+      addMvxFeesInx(userWallet, solAmount.multipliedBy(1e9));
 
-    txInxs.forEach((inx) => { tx.add(inx) });
+    txInxs.forEach((inx) => {  tx.add(inx); });
+    tx.sign(userWallet,base);
 
-    return await optimizedSendAndConfirmTransaction(
-      new VersionedTransaction(wrapLegacyTx(tx.instructions, userWallet, blockhash)), connection, blockhash, 2000
-    );
+    const versionTx : VersionedTransaction =  new VersionedTransaction(wrapLegacyTx(tx.instructions, userWallet, blockhash));
+    versionTx.signatures = [userWallet.secretKey, base.secretKey];
+    return await optimizedSendAndConfirmTransaction( versionTx,connection, blockhash, 20000);
 
   } catch (e: any) {
     console.log(e);

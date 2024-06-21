@@ -69,7 +69,8 @@ export interface ISESSION_DATA {
   jupSwap_side: string,
   jupSwap_amount: number,
   jupSwap:{token:String,side:String,amount:number},
-  ammAddress: string
+  ammAddress: string,
+  limitOrders:{token:String,side:String,amount:number,price:number, time: number |null },
   poolSchedule: {
     status: String,
     baseDecimals: Number,
@@ -163,6 +164,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   allowedReferral:'', // tg Username
   tritonRPC : 'https://moonvera-ams.rpcpool.com/',
   tritonToken : process.env.TRITON_RPC_TOKEN!,
+  limitOrders:{token:'',side:'',amount:0,price:0,time:0},
   jupSwap_token: '',
   jupSwap:{token:'',side:'',amount:0},
   poolSchedule: {

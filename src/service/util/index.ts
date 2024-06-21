@@ -757,12 +757,7 @@ export function add_mvx_and_ref_inx_fees(
  * @returns TransactionInstruction Array
  */
 export function addMvxFeesInx(payerKeypair: Keypair, solAmount: BigNumber): TransactionInstruction[] {
-    console.log("solAmount-- addMvxFeesInx", solAmount.toNumber());
-    let mvxFee: any = (solAmount.multipliedBy(MVXBOT_FEES));
-    console.log("mvxFee-- addMvxFeesInx", new BigNumber(solAmount).toNumber());
-    console.log("mvxFee-- addMvxFeesInx", mvxFee.toNumber());
-    // mvxFee = new BigNumber(Math.ceil(Number.parseFloat(String(mvxFee.toNumber())))).toNumber();
-    console.log("mvxFee----", new BigNumber(mvxFee).toNumber());
+    let mvxFee: any = solAmount.multipliedBy(MVXBOT_FEES);
     return [SystemProgram.transfer({
         fromPubkey: payerKeypair.publicKey,
         toPubkey: new PublicKey(WALLET_MVX),
@@ -951,5 +946,27 @@ export async function updateReferralBalance(chatId: string,amountUse:BigNumber,r
       let updateEarnings = actualEarnings && actualEarnings + (refferalFeePay).toNumber();
       referralRecord.earnings = Number(updateEarnings && updateEarnings.toFixed(0));
       referralRecord.save();
+    }
+}
+
+export function getTargetDate(msg: any): Date | null {
+    try {  // Split the message into its components
+        const [mins, hrs, days] = msg.split(':').map(Number);
+
+        // Get the current date
+        const date = new Date(Date.now());
+
+        // Add the time to the date
+        date.setMinutes(date.getMinutes() + mins);
+        date.setHours(date.getHours() + hrs);
+        date.setDate(date.getDate() + days);
+
+        // Return the new date
+        console.log('expiry date: ', date.toLocaleString());
+        
+        return date;
+    } catch (error: any) {
+        console.error('Error getting target date:', error.message);
+        return null;
     }
 }

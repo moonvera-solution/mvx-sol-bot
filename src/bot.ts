@@ -6,6 +6,7 @@ import {
   confirmResetWalletAgain,
   resetWallet,
 } from "./service/portfolio/wallets";
+import { cancelOrder, getOpenOrders } from "./service/dex/jupiter/trade/limitOrder";
 import {
   sendHelpMessage,
   handleCloseKeyboard,
@@ -26,8 +27,11 @@ import {
   display_snipe_options,
   swap_pump_fun,
   jupiterSwap,
+  display_limitOrder_token_details,
+  submit_limitOrder, review_limitOrder_details, display_open_orders,
+  display_single_order,
+  cancel_all_orders, cancel_orders
 } from "./views";
-
 import { handle_radyum_swap } from "./service/portfolio/strategies/swaps";
 import {
   Bot,
@@ -51,7 +55,7 @@ import { _initDbConnection } from "./db/mongo/crud";
 import { handleSettings } from "./service/settings";
 import { getSolanaDetails } from "./api";
 import { setSnipe, snipperON } from "./service/portfolio/strategies/snipper";
-import { getSolBalance, sendSol } from "./service/util";
+import { getSolBalance, getTargetDate, sendSol } from "./service/util";
 import { getRayPoolKeys } from "./service/dex/raydium/utils/formatAmmKeysById";
 import { _generateReferralLink, _getReferralData } from "../src/db/mongo/crud";
 import {
@@ -62,7 +66,7 @@ import {
 } from "./db/mongo/schema";
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { hasEnoughSol } from "./service/util/validations";
-import * as config from "./views";
+import bs58 from "bs58";
 const express = require("express");
 const app = express();
 
@@ -204,8 +208,7 @@ bot.command("start", async (ctx: any) => {
       // at this point wallet from session is not avialable yet
       // hence we do ctx.session.portfolio = await getPortfolio(chatId); at the end of the "start" function.
       userWallet = await createUserPortfolio(ctx); // => { publicKey, secretKey }
-      ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex] =
-        userWallet;
+      ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex] = userWallet;
     }
 
     const publicKeyString: PublicKey | String = userWallet
@@ -215,11 +218,7 @@ bot.command("start", async (ctx: any) => {
     // Retrieve the current SOL details
     const [balanceInSOL, details, jupSolPrice] = await Promise.all([
       getSolBalance(publicKeyString, connection),
-      getSolanaDetails(),
-      fetch(
-        `https://price.jup.ag/v6/price?ids=SOL`
-      ).then((response) => response.json()),
-
+      getSolanaDetails(), fetch(`https://price.jup.ag/v6/price?ids=SOL`).then((response) => response.json()),
     ]);
 
     // Fetch SOL balance
@@ -227,18 +226,21 @@ bot.command("start", async (ctx: any) => {
       await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
       return;
     }
-    const balanceInUSD = details ? balanceInSOL * details: balanceInSOL * Number(jupSolPrice.data.SOL.price);
+    const balanceInUSD = details ? balanceInSOL * details : balanceInSOL * Number(jupSolPrice.data.SOL.price);
 
     // Combine the welcome message, SOL price message, and instruction to create a wallet
     const welcomeMessage =
-      `✨ Welcome to <b>DRIBs bot</b>✨\n` +
-      `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
-      `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
+      `<b>✨ DRIBs.io ✨</b>\n\n` +
+      // `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
+      `Start by choosing a wallet or import one using the "Import Wallet" button.\n` +
       // `We're always working to bring you new features - stay tuned!\n\n` +
       `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
       `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInUSD.toFixed(4))}</b> USD\n\n` +
-      `🖐🏼 For security, we recommend exporting your private key and keeping it paper.\n` +
-      `<i> Currently DRIBs bot supports Jupiter, Raydium and Pump fun.</i>\n`;
+      // `⚠️ We recommend exporting your private key and keeping it on paper. ⚠️ \n` +
+      `<b> Markets </b>\n`+
+      `<i>  - Jupiter </i>\n`+
+      `<i>  - Raydium AMM/CPMM </i>\n`+
+      `<i>  - Pump fun </i>\n`;
 
     // Set the options for th e inline keyboard with social links
     const options: any = {
@@ -258,7 +260,8 @@ bot.command("start", async (ctx: any) => {
             { text: "💱 Trade", callback_data: "jupiter_swap" },
             { text: "🎯 Turbo Snipe", callback_data: "snipe" },
           ],
-
+          [{ text: "⏳ Limit Orders", callback_data: "limitOrders" },
+          { text: "⏳ Open Orders", callback_data: "display_open_orders" }],
           [
             { text: "ℹ️ Help", callback_data: "help" },
             { text: "Refer Friends", callback_data: "refer_friends" },
@@ -273,20 +276,17 @@ bot.command("start", async (ctx: any) => {
     ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
     ctx.session.portfolio = await getPortfolio(chatId);
     ctx.session.latestCommand = "jupiter_swap";
-  } catch (error: any) {
-    console.log("bot on start cmd", error);
 
-    if (
-      error instanceof GrammyError ||
-      error instanceof HttpError ||
-      error instanceof Error ||
-      error instanceof TypeError ||
-      error instanceof RangeError
-    ) {
-      console.error(
-        "Callback query failed due to timeout or invalid ID.",
-        error
-      );
+    /*
+        const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
+        console.log('wallet:', wallet.publicKey);
+        ctx.session.orders = await getOpenOrders(connection, wallet);
+        ctx.session.isOrdersLoaded = true;
+        console.log('ctx.session.orders', ctx.session.orders);
+    */
+  } catch (error: any) {
+    if (error instanceof GrammyError || error instanceof HttpError || error instanceof Error || error instanceof TypeError || error instanceof RangeError) {
+      console.error("Callback query failed due to timeout or invalid ID.", error);
     } else {
       console.error(error.message);
     }
@@ -437,17 +437,11 @@ bot.on("message", async (ctx) => {
       }
 
       const SOLANA_ADDRESS_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-
-      if (isNaN(parseFloat(msgTxt!))) {
-        if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {
-          // const isTOken = await checkAccountType(ctx, msgTxt);
-          // if (!isTOken) {
-          //   ctx.api.sendMessage(chatId, "Invalid address");
-          //   return;
-          // }
+      if (isNaN(parseFloat(msgTxt!)) && (msgTxt.match(SOLANA_ADDRESS_REGEX) && PublicKey.isOnCurve(msgTxt))) {
+        if (await checkAccountType(ctx, msgTxt)) {
           ctx.session.latestCommand = "jupiter_swap";
           ctx.session.jupSwap_token = msgTxt;
-          // await display_jupSwapDetails(ctx, false);
+          await display_jupSwapDetails(ctx, false);
         } else {
           ctx.api.sendMessage(chatId, "Invalid address");
         }
@@ -749,10 +743,7 @@ bot.on("message", async (ctx) => {
                 "Enter the amount of SOL to send."
               );
             } catch (error) {
-              await ctx.api.sendMessage(
-                chatId,
-                "Invalid recipient address. Please enter a valid Solana address."
-              );
+              await ctx.api.sendMessage(chatId, "Invalid recipient address. Please enter a valid Solana address.");
               return;
             }
           }
@@ -882,6 +873,59 @@ bot.on("message", async (ctx) => {
         }
         break;
       }
+      case "limitOrders": {
+        try {
+          if (!msgTxt || !PublicKey.isOnCurve(msgTxt) || !await checkAccountType(ctx, msgTxt)) throw new Error("Invalid token address");
+          ctx.session.limitOrders.token = ctx.message.text!;
+          ctx.session.latestCommand = "limitOrders";
+          await display_limitOrder_token_details(ctx, false);
+          break;
+        } catch (error: any) {
+          console.error("ERROR on bot.on txt msg", error, error.message);
+        }
+      }
+      case "set_limit_order_amount": {
+        // TODO: add checks for the amount
+        ctx.session.limitOrders.amount = Number(msgTxt!);
+        const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+        const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+        let userSolBalance = await getSolBalance(userWallet.publicKey, connection);
+        if (userSolBalance < ctx.session.limitOrders.amount && ctx.session.limitOrders.side == "buy") {
+          await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
+          break;
+        }
+        await ctx.api.sendMessage(chatId, "Enter the token target price (in SOL)");
+        ctx.session.latestCommand = "set_limit_order_price";
+        break;
+      }
+      case "set_limit_order_price": {
+        // TODO: add checks for the price
+        ctx.session.limitOrders.price = Number(msgTxt!);
+        await ctx.api.sendMessage(chatId, "Enter expiry time from now - MIN:HR:DAYS - ie: 10:23:01 \n");
+        await ctx.api.sendMessage(chatId, "Or enter NO EXPIRY (keep order open to hit target price)");
+        ctx.session.latestCommand = "set_limit_order_time";
+        break;
+      }
+      case "set_limit_order_time": {
+        // TODO: parse NO EXPIRY msgTxt and set ctx.session.limitOrders.time = null
+        const time = getTargetDate(msgTxt!);
+
+        if (msgTxt?.includes("NO")) {
+          ctx.session.limitOrders.time = null;
+          await review_limitOrder_details(ctx, false);
+          break;
+
+        } else if (time) {
+          ctx.session.limitOrders.time = Number(time);
+          await review_limitOrder_details(ctx, false);
+          break;
+
+        } else {
+          await ctx.api.sendMessage(chatId, "Invalid time format");
+          return;
+        }
+      }
+
     }
   } catch (error: any) {
     await ctx.api.sendMessage(chatId, `${error.message})`);
@@ -901,30 +945,26 @@ bot.on("callback_query", async (ctx: any) => {
     ctx.session.portfolio.chatId = chatId;
     const data = ctx.callbackQuery.data;
     const positionCallSell = /^sellpos_\d+_\d+$/;
-
     const positionCallBuy = /^buypos_x_\d+$/;
     const positionNavigate = /^(prev_position|next_position)_\d+$/;
+    const orderNavigate = /^(prev_order|next_order)_\d+$/;
+    const cancelSingleOrder = /^cancel_limit_orders_\S+$/;
+
     ctx.api.answerCallbackQuery(ctx.callbackQuery.id);
     const matchSell = data.match(positionCallSell);
     const matchBuy = data.match(positionCallBuy);
     const matchNavigate = data.match(positionNavigate);
+    const matchOrderNavigate = data.match(orderNavigate);
+    const matchCancelOrder = data.match(cancelSingleOrder);
 
     if (matchSell) {
       const parts = data.split("_");
       const sellPercentage = parts[1]; // '25', '50', '75', or '100'
       const positionIndex = parts[2]; // Position index
       if (ctx.session.swaptypeDex == "ray_swap") {
-        const poolKeys = await getRayPoolKeys(
-          ctx,
-          ctx.session.positionPool[positionIndex]
-        );
+        const poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
         ctx.session.activeTradingPool = poolKeys as RAYDIUM_POOL_TYPE;
-        await handle_radyum_swap(
-          ctx,
-          ctx.session.activeTradingPool.baseMint,
-          "sell",
-          sellPercentage
-        );
+        await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", sellPercentage);
         return;
       } else if (ctx.session.swaptypeDex == "jup_swap") {
         ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
@@ -933,22 +973,12 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.jupSwap_side = "sell";
         await jupiterSwap(ctx);
       } else {
-        const poolKeys = await getRayPoolKeys(
-          ctx,
-          ctx.session.positionPool[positionIndex]
-        );
+        const poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
         if (poolKeys) {
           ctx.session.activeTradingPool = poolKeys as RAYDIUM_POOL_TYPE;
-          await handle_radyum_swap(
-            ctx,
-            ctx.session.activeTradingPool.baseMint,
-            "sell",
-            sellPercentage
-          );
+          await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", sellPercentage);
         } else {
-          ctx.session.pumpToken = new PublicKey(
-            ctx.session.positionPool[positionIndex]
-          );
+          ctx.session.pumpToken = new PublicKey(ctx.session.positionPool[positionIndex]);
           ctx.session.pump_amountIn = sellPercentage;
           ctx.session.pump_side = "sell";
           await swap_pump_fun(ctx);
@@ -961,7 +991,6 @@ bot.on("callback_query", async (ctx: any) => {
       ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
       ctx.api.sendMessage(chatId, "Please enter SOL amount");
       ctx.session.latestCommand = "buy_X_SOL_IN_POSITION";
-
       return;
     } else if (matchNavigate) {
       const parts = data.split("_");
@@ -970,7 +999,20 @@ bot.on("callback_query", async (ctx: any) => {
       ctx.session.jupSwap_token =
         ctx.session.positionPool[ctx.session.positionIndex].baseMint;
       await display_single_position(ctx, true);
+
+    } else if (matchOrderNavigate) {
+      const parts = data.split("_");
+      const newOrderIndex = parseInt(parts[2]); // New order index
+      ctx.session.orderIndex = newOrderIndex;
+      console.log('orderIndex', ctx.session.orderIndex)
+      await display_single_order(ctx, true);
+
+    } else if (matchCancelOrder) {
+      const parts = data.split("_");
+      const tokenKey = parts[3]; // Token Public Key
+      await cancel_orders(ctx, tokenKey);
     }
+
 
     switch (data) {
       case "refer_friends": {
@@ -1088,9 +1130,19 @@ bot.on("callback_query", async (ctx: any) => {
       case "refresh_db_wallets":
         await refreshWallets(ctx);
         break;
-
-      case "refresh_wallet":
-        await handleRereshWallet(ctx);
+      case "refresh_limit_order":
+        await display_limitOrder_token_details(ctx, true);
+        break;
+      case "display_open_orders":
+        await display_open_orders(ctx);
+        break;
+      case "manage_limit_orders":
+        ctx.session.latestCommand = "manage_limit_orders";
+        await display_single_order(ctx, false);
+        break;
+      case "refresh_single_orders":
+        ctx.session.latestCommand = "refresh_single_orders";
+        await display_single_order(ctx, true);
         break;
       case "refresh_trade":
         await display_raydium_details(ctx, true);
@@ -1145,7 +1197,7 @@ bot.on("callback_query", async (ctx: any) => {
         //   ctx.session.customPriorityFee.multipliedBy(1e9).toNumber()
         // ).toNumber();
         if (!await hasEnoughSol(ctx, solAmount)) break;
-        await ctx.api.sendMessage( chatId, `Sending ${solAmount} SOL to ${recipientAddress}...`);
+        await ctx.api.sendMessage(chatId, `Sending ${solAmount} SOL to ${recipientAddress}...`);
         await sendSol(ctx, recipientAddress, solAmount);
         break;
       }
@@ -1191,7 +1243,7 @@ bot.on("callback_query", async (ctx: any) => {
           await display_snipe_options(ctx, false, ctx.session.rugCheckToken);
         } else {
           ctx.session.latestCommand = "snipe";
-          await ctx.api.sendMessage(ctx.chat.id,"Enter the token Address you would like to snipe.");
+          await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to snipe.");
         }
         break;
       }
@@ -1212,7 +1264,7 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "send_sol": {
         ctx.session.latestCommand = "send_sol";
-        ctx.api.sendMessage(chatId,"Please paste the recipient's wallet address.");
+        ctx.api.sendMessage(chatId, "Please paste the recipient's wallet address.");
         break;
       }
       case "buy_X_PUMP": {
@@ -1254,7 +1306,7 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.api.sendMessage(chatId, "Please enter SOL amount");
         break;
       }
-      case "buy_0.5_JUP":{
+      case "buy_0.5_JUP": {
         ctx.session.latestCommand = "buy_0.5_JUP";
         ctx.session.jupSwap_amount = 0.5;
         ctx.session.jupSwap_side = "buy";
@@ -1262,7 +1314,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
 
-      case "buy_1_JUP":{
+      case "buy_1_JUP": {
         ctx.session.latestCommand = "buy_1_JUP";
         ctx.session.jupSwap_amount = 1;
         ctx.session.jupSwap_side = "buy";
@@ -1277,7 +1329,7 @@ bot.on("callback_query", async (ctx: any) => {
         );
         break;
       }
-      case "sell_50_JUP":{
+      case "sell_50_JUP": {
         ctx.session.latestCommand = "sell_50_JUP";
         ctx.session.jupSwap_amount = 50;
         ctx.session.jupSwap_side = "sell";
@@ -1285,7 +1337,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
 
-      case "sell_100_JUP":{
+      case "sell_100_JUP": {
         ctx.session.latestCommand = "sell_100_JUP";
         ctx.session.jupSwap_amount = 100;
         ctx.session.jupSwap_side = "sell";
@@ -1293,7 +1345,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
 
-      case "buy_0.5_RAY":{
+      case "buy_0.5_RAY": {
         ctx.session.latestCommand = "buy_0.5_RAY";
         await handle_radyum_swap(
           ctx,
@@ -1303,7 +1355,7 @@ bot.on("callback_query", async (ctx: any) => {
         );
         break;
       }
-      case "buy_1_RAY":{
+      case "buy_1_RAY": {
         ctx.session.latestCommand = "buy_1_RAY";
         await handle_radyum_swap(
           ctx,
@@ -1319,7 +1371,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
 
-      case "sell_50_RAY":{
+      case "sell_50_RAY": {
         ctx.session.latestCommand = "sell_50_RAY";
         await handle_radyum_swap(
           ctx,
@@ -1330,7 +1382,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
 
-      case "sell_100_RAY":{
+      case "sell_100_RAY": {
         ctx.session.latestCommand = "sell_100_RAY";
         await handle_radyum_swap(
           ctx,
@@ -1459,6 +1511,40 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.api.sendMessage(chatId, "Please enter custom priority fee in SOL");
         break;
       }
+      // /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+      // /*                -- Limit Orders                             */
+      // /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
+      case "limitOrders": {
+        ctx.session.latestCommand = "limitOrders";
+        await ctx.api.sendMessage(chatId, "Enter token address to set limit order.");
+        break;
+      }
+      case "set_limit_order_buy": {
+        ctx.session.latestCommand = "set_limit_order_amount";
+        ctx.session.limitOrders.side = "buy";
+        await ctx.api.sendMessage(chatId, "Enter amount of Buy order (in SOL).");
+        break;
+      }
+      case "set_limit_order_sell": {
+        ctx.session.latestCommand = "set_limit_order_amount";
+        ctx.session.limitOrders.side = "sell";
+        await ctx.api.sendMessage(chatId, "Enter amount of Sell order (in SOL).");
+        break;
+      }
+      case "submit_limit_order": {
+        await ctx.api.sendMessage(chatId, "Submitting limit order...");
+        await submit_limitOrder(ctx);
+        break;
+      }
+      case "display_open_orders": {
+        await display_open_orders(ctx);
+        break;
+      }
+      case "cancel_all_orders": {
+        await cancel_all_orders(ctx);
+        break;
+      }
     }
   } catch (e: any) {
     console.log("callback_query", e);
@@ -1495,9 +1581,9 @@ bot.catch((err) => {
 });
 
 async function checkAccountType(ctx: any, address: any) {
-  
+
   // console.log("`${ctx.session.tritonRPC}${ctx.session.tritonToken}`", `${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
-  
+
   const connection = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
   const publicKey = new PublicKey(address);
   const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");

@@ -1,7 +1,6 @@
 import { PublicKey, Connection } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 
-
 export async function getPoolToken_details(tokenBaseVault: PublicKey, tokenQuoteVault: PublicKey, baseMint: PublicKey, connection: Connection): 
 Promise<{ baseTokenVaultSupply: BigNumber, quoteTokenVaultSupply: BigNumber, baseTokenSupply: BigNumber }> {
     const publicKeys = [
@@ -21,8 +20,6 @@ Promise<{ baseTokenVaultSupply: BigNumber, quoteTokenVaultSupply: BigNumber, bas
         baseTokenSupply,
     }
 }
-
-
 
 export async function quoteTokenquoteToken(tokenBaseVault: PublicKey, tokenQuoteVault: PublicKey, baseMint: PublicKey, connection: Connection): 
 Promise<{ baseTokenVaultSupply: BigNumber, quoteTokenVaultSupply: BigNumber, baseTokenSupply: BigNumber }> {
