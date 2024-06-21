@@ -130,7 +130,7 @@ async function _validateSession(ctx: any) {
     const restoredSession = await UserSession.findOne({ chatId: ctx.chat.id });
     if (restoredSession) {
       // NOTE: update db manually, if schema changes! avoid stopping the bot
-      // ctx.session = JSON.parse(JSON.stringify(restoredSession));
+      ctx.session = JSON.parse(JSON.stringify(restoredSession));
       console.log("Session restored.");
     }
   }
@@ -244,11 +244,11 @@ bot.command("start", async (ctx: any) => {
     const options: any = {
       reply_markup: JSON.stringify({
         inline_keyboard: [
-          // [
-          //     { text: '🌎 Website', url: 'https://dribs.io/' },
-          //     { text: '𝚇', url: 'https://twitter.com/dribs_sol' }
+          [
+              { text: '🌎 Website', url: 'https://dribs.io/' },
+              { text: '𝚇', url: 'https://twitter.com/dribs_sol' }
 
-          // ],
+          ],
           [
             { text: "⬇️ Import Wallet", callback_data: "import_wallet" },
             { text: "💼 Wallets & Settings⚙️", callback_data: "show_wallets" },
