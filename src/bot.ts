@@ -260,8 +260,8 @@ bot.command("start", async (ctx: any) => {
             { text: "💱 Trade", callback_data: "jupiter_swap" },
             { text: "🎯 Turbo Snipe", callback_data: "snipe" },
           ],
-          [{ text: "⏳ Limit Orders", callback_data: "limitOrders" },
-          { text: "⏳ Open Orders", callback_data: "display_open_orders" }],
+          // [{ text: "⏳ Limit Orders", callback_data: "limitOrders" },
+          // { text: "⏳ Open Orders", callback_data: "display_open_orders" }],
           [
             { text: "ℹ️ Help", callback_data: "help" },
             { text: "Refer Friends", callback_data: "refer_friends" },
