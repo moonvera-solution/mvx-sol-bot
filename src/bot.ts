@@ -227,8 +227,10 @@ bot.command("start", async (ctx: any) => {
     const balanceInUSD = details ? balanceInSOL * details : balanceInSOL * Number(jupSolPrice.data.SOL.price);
 
     // Combine the welcome message, SOL price message, and instruction to create a wallet
+
     const welcomeMessage =
-      `<b>✨ DRIBs.io ✨</b>\n\n` +
+      `<b>✨ DRIBs ✨</b>\n` +
+      `| <a href="https://www.dribs.io">Website</a> | <a href="https://x.com/dribs_sol"> X </a> |\n\n` +
       // `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
       `Start by choosing a wallet or import one using the "Import Wallet" button.\n` +
       // `We're always working to bring you new features - stay tuned!\n\n` +
@@ -240,14 +242,13 @@ bot.command("start", async (ctx: any) => {
       `<i>  - Raydium AMM/CPMM </i>\n`+
       `<i>  - Pump fun </i>\n`;
 
+
     // Set the options for th e inline keyboard with social links
     const options: any = {
       reply_markup: JSON.stringify({
         inline_keyboard: [
           [
-              { text: '🌎 Website', url: 'https://dribs.io/' },
-              { text: '𝚇', url: 'https://twitter.com/dribs_sol' }
-
+              { text: 'Tg official channel', url: 'https://t.me/DRIBs_official' },
           ],
           [
             { text: "⬇️ Import Wallet", callback_data: "import_wallet" },
@@ -440,6 +441,7 @@ bot.on("message", async (ctx) => {
           ctx.session.latestCommand = "jupiter_swap";
           ctx.session.jupSwap_token = msgTxt;
           await display_jupSwapDetails(ctx, false);
+          return;
         } else {
           ctx.api.sendMessage(chatId, "Invalid address");
         }
