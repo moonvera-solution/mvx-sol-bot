@@ -129,7 +129,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   pump_amountOut: 0,
   jupSwap_amount: 0,
   jupSwap_side: '',
-  referralCommision: 0,
+  referralCommision: 3500,
   txPriorityFee: 100000,
   customPriorityFee: 0.0001,
   ispriorityCustomFee: false,
