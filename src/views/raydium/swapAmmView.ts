@@ -50,10 +50,8 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
 
   const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
   const tokenPriceUSD = birdeyeData
-
     && birdeyeData.response
     && birdeyeData.response.data
- 
     && birdeyeData.response.data.price != null  // This checks for both null and undefined
     ? birdeyeData.response.data.price
     : tokenInfo.price.times(solPrice).toNumber();

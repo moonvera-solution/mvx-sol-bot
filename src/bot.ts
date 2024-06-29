@@ -6,7 +6,7 @@ import {
   confirmResetWalletAgain,
   resetWallet,
 } from "./service/portfolio/wallets";
-import { cancelOrder, getOpenOrders } from "./service/dex/jupiter/trade/limitOrder";
+// import { cancelOrder, getOpenOrders } from "./service/dex/jupiter/trade/limitOrder";
 import {
   sendHelpMessage,
   handleCloseKeyboard,
@@ -231,6 +231,9 @@ bot.command("start", async (ctx: any) => {
     // Combine the welcome message, SOL price message, and instruction to create a wallet
     const welcomeMessage =
       `<b>✨ DRIBs.io ✨</b>\n\n` +
+      `<a href="https://www.dribs.io">Website</a> | ` +
+      `<a href="https://x.com/dribs_sol"> X</a> | ` +
+      `<a href="https://t.me/DRIBs_official">Tg channel</a>\n\n` +
       // `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
       `Start by choosing a wallet or import one using the "Import Wallet" button.\n` +
       // `We're always working to bring you new features - stay tuned!\n\n` +
@@ -442,6 +445,7 @@ bot.on("message", async (ctx) => {
           ctx.session.latestCommand = "jupiter_swap";
           ctx.session.jupSwap_token = msgTxt;
           await display_jupSwapDetails(ctx, false);
+          return;
         } else {
           ctx.api.sendMessage(chatId, "Invalid address");
         }

@@ -16,6 +16,8 @@ import { saveUserPosition } from "../../service/portfolio/positions";
 import { display_pumpFun } from '../pumpfun/swapView';
 import { getRayPoolKeys } from '../../service/dex/raydium/utils/formatAmmKeysById';
 import { display_raydium_details } from '../raydium/swapAmmView';
+import { getRayCpmmPoolKeys } from '../../service/dex/raydium/cpmm';
+import { display_cpmm_raydium_details } from '../raydium/swapCpmmView';
 
 
 export async function jupiterSwap(ctx: any) {
@@ -201,21 +203,44 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const jupTokenValue: any = Object.values(jupTokenRate.data);
       let jupTokenPrice = 0;
 
-      if (jupTokenValue[0] && jupTokenValue[0].price) {
-        jupTokenPrice = jupTokenValue[0].price;
-        console.log('jupToken')
-      } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined) {
-        // ctx.session.latestCommand = 'raydium_swap';
         ctx.session.activeTradingPool = await getRayPoolKeys(ctx, token);
         if (ctx.session.activeTradingPool) {
           await display_raydium_details(ctx, false);
           return;
-        } else {
-          // ctx.session.latestCommand = 'pump_fun';
+        } else if(!ctx.session.activeTradingPool){
+          ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`) });
+          await display_cpmm_raydium_details(ctx, false);
+          return;
+        } else if (jupTokenValue[0] && jupTokenValue[0].price) {
+          jupTokenPrice = jupTokenValue[0].price;
+          // return;
+          console.log('jupToken')
+        } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined) {
           ctx.session.pumpToken = new PublicKey(token);
           await display_pumpFun(ctx, false);
           return;
-        }
+      //   } else{
+          
+      //   }
+      // if (jupTokenValue[0] && jupTokenValue[0].price) {
+      //   jupTokenPrice = jupTokenValue[0].price;
+      //   // return;
+      //   console.log('jupToken')
+      // } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined) {
+      //   // ctx.session.latestCommand = 'raydium_swap';
+      //   if (ctx.session.activeTradingPool) {
+      //     await display_raydium_details(ctx, false);
+      //     return;
+      //   } else if(!ctx.session.activeTradingPool){
+      //     ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`) });
+      //     await display_cpmm_raydium_details(ctx, false);
+      //     return;
+      //   } else {
+      //     // ctx.session.latestCommand = 'pump_fun';
+      //     ctx.session.pumpToken = new PublicKey(token);
+      //     await display_pumpFun(ctx, false);
+      //     return;
+      //   }
 
       }
       const {

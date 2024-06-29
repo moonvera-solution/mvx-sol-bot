@@ -35,6 +35,9 @@ export async function handleRefreshStart(ctx: any) {
 
     // Update the welcome message with the new SOL price
     const welcomeMessage = `✨ Welcome to <b>DRIBs bot</b>✨\n` +
+    `<a href="https://www.dribs.io">Website</a> | ` +
+    `<a href="https://x.com/dribs_sol"> X</a> | ` +
+    `<a href="https://t.me/DRIBs_official">Tg channel</a>\n\n` +
     `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
     `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
     // `We're always working to bring you new features - stay tuned!\n\n` +

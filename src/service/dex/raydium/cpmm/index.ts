@@ -20,7 +20,7 @@ export const txVersion = TxVersion.V0;
 
 let raydium: Raydium | undefined;
 
-async function initSdk(wallet: Keypair, connection: Connection) {
+export async function initSdk(wallet: Keypair, connection: Connection) {
   if (raydium) return raydium
   raydium = await Raydium.load({
     owner: wallet,
@@ -85,7 +85,7 @@ export async function raydium_cpmm_swap(
   return txSig;
 }
 
-async function getRayCpmmPoolKeys({ t1, t2, connection }: { t1: string, t2: string, connection: Connection }): Promise<PublicKey | undefined> {
+export async function getRayCpmmPoolKeys({ t1, t2, connection }: { t1: string, t2: string, connection: Connection }): Promise<PublicKey | undefined> {
   
   const commitment = "processed";
   const RAYDIUM_CPMM = new PublicKey('CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C');
@@ -114,11 +114,11 @@ async function getRayCpmmPoolKeys({ t1, t2, connection }: { t1: string, t2: stri
       ],
     }
   );
-  console.log('A: ', CpmmPoolInfoLayout.offsetOf("mintA"));
-  console.log('B: ', CpmmPoolInfoLayout.offsetOf("mintB"));
-  console.log('span: ', CpmmPoolInfoLayout.span);
+  // console.log('A: ', CpmmPoolInfoLayout.offsetOf("mintA"));
+  // console.log('B: ', CpmmPoolInfoLayout.offsetOf("mintB"));
+  // console.log('span: ', CpmmPoolInfoLayout.span);
   let poolId = accounts && accounts[0] && accounts[0].pubkey;
-  console.log("CPMM poolId: ", poolId?.toBase58());
+  // console.log("CPMM poolId: ", poolId?.toBase58());
   return poolId;
 }
 
@@ -139,21 +139,21 @@ export const fetchTokenAccountData = async (wallet:Keypair,connection:Connection
 //  getRayCpmmPoolKeys({t1:'5X1F16T5MRiAu4qPaFAaNA1oPx9VQzkpV5SzQcHsNUS9', t2:'So11111111111111111111111111111111111111112', connection:new Connection('https://moonvera-ams.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41')})
 
 
-export async function getpoolDataCpmm() : Promise<any | null>
+export async function getpoolDataCpmm(poolID: any, connection: any) : Promise<any | null>
 {
-  const poolID = await getRayCpmmPoolKeys({t1:'5X1F16T5MRiAu4qPaFAaNA1oPx9VQzkpV5SzQcHsNUS9', t2:'So11111111111111111111111111111111111111112', connection:new Connection('https://moonvera-ams.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41')})
+  // const poolID = await getRayCpmmPoolKeys({t1:'5X1F16T5MRiAu4qPaFAaNA1oPx9VQzkpV5SzQcHsNUS9', t2:'So11111111111111111111111111111111111111112', connection:new Connection('https://moonvera-ams.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41')})
   const keypair = Keypair.fromSecretKey(bs58.decode(process.env.TEST_WALLET_PK!));
-   const raydium = await initSdk(keypair, new Connection('https://moonvera-ams.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'));
+  const raydium = await initSdk(keypair,connection);
   if(!poolID) {
     console.error('Pool Cpmm not found')
     return null;
   }
-
-  const data =  await raydium.api.fetchPoolById({ ids: String(poolID?.toBase58()) })
+  const data =  await raydium.api.fetchPoolById({ ids: String(poolID) })
   const poolInfo = data[0] as ApiV3PoolInfoStandardItemCpmm;
-  console.log('poolInfo', poolInfo);
+  // console.log('poolInfo', poolInfo);
+  return poolInfo;
 }
-getpoolDataCpmm()
+// getpoolDataCpmm()
 /**
  * By default: sdk will automatically fetch token account data when need it or any sol balace changed.
  * if you want to handle token account by yourself, set token account data after init sdk
