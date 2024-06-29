@@ -49,7 +49,7 @@ export async function submit_limitOrder(ctx: any) {
 
     const isConfirmed = await waitForConfirmation(ctx, txSig);
     isConfirmed
-      ? await ctx.api.sendMessage(chatId, `🟢 <b>Submit ${isBuySide ? "Buy" : "Sell"} Limit Order:</b> Order has been successfully submitted.\n` + `Order will ${isBuySide ? "Buy" : "Sell"} when price reaches ${ctx.session.limitOrders.price}`, { parse_mode: "HTML" })
+      ? await ctx.api.sendMessage(chatId, `🟢 <b>Submit ${isBuySide ? "Buy" : "Sell"} Limit Order:</b> Order has been successfully submitted.\n\n` + `Order will ${isBuySide ? "Buy" : "Sell"} when price reaches  <b>${ctx.session.limitOrders.price} </b> SOL`, { parse_mode: "HTML" })
       : await ctx.api.sendMessage(chatId, `🔴 <b>${isBuySide ? "Buy" : "Sell"} Limit Order:</b> Order has been failed.`, { parse_mode: "HTML" });
 
     if (isConfirmed) {

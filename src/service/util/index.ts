@@ -757,11 +757,11 @@ export function add_mvx_and_ref_inx_fees(
  * @returns TransactionInstruction Array
  */
 export function addMvxFeesInx(payerKeypair: Keypair, solAmount: BigNumber): TransactionInstruction[] {
-    let mvxFee: any = solAmount.multipliedBy(MVXBOT_FEES);
+    let mvxFee: BigNumber = solAmount.multipliedBy(MVXBOT_FEES);
     return [SystemProgram.transfer({
         fromPubkey: payerKeypair.publicKey,
         toPubkey: new PublicKey(WALLET_MVX),
-        lamports: (mvxFee)
+        lamports: Math.ceil(mvxFee.toNumber()),
     })];
 }
 
