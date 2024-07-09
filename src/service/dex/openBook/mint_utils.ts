@@ -1,4 +1,4 @@
-import * as splToken from "@solana/spl-token";
+const splToken = require("@solana/spl-token");
 import { PublicKey, Connection, Keypair } from "@solana/web3.js";
 
 export interface TokenData {
