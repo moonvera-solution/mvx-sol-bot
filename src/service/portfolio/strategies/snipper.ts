@@ -4,7 +4,7 @@ import {
     TOKEN_PROGRAM_ID, TokenAccount, TxVersion, jsonInfo2PoolKeys
 } from "@raydium-io/raydium-sdk";
 import { Connection, PublicKey, Keypair, SystemProgram, VersionedTransaction, TransactionMessage, ComputeBudgetProgram } from "@solana/web3.js";
-import { MVXBOT_FEES, WALLET_MVX, SNIPE_SIMULATION_COUNT_LIMIT, RAYDIUM_AUTHORITY } from "../../../config";
+import { MVXBOT_FEES, WALLET_MVX, SNIPE_SIMULATION_COUNT_LIMIT, CONNECTION,RAYDIUM_AUTHORITY } from "../../../config";
 import { buildAndSendTx, getPriorityFeeLabel, getSwapAmountOut, optimizedSendAndConfirmTransaction, wrapLegacyTx } from '../../util';
 import { saveUserPosition } from '../positions';
 const log = (k: any, v: any) => console.log(k, v);
@@ -19,7 +19,7 @@ import { display_jupSwapDetails } from '../../../views/jupiter/swapView';
 
 export async function snipperON(ctx: any, amount: string) {
     try {
-        const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+        const connection = CONNECTION;
         let snipeToken = ctx.session.snipeToken instanceof PublicKey ? ctx.session.snipeToken.toBase58() : ctx.session.snipeToken;
 
         const currentWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
@@ -91,7 +91,7 @@ export async function snipperON(ctx: any, amount: string) {
 export async function setSnipe(ctx: any, amountIn: any) {
     // Returns either the time to wait or indicates pool is already open
     console.log('Snipe set ...');
-    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const connection = CONNECTION;
     const snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
 
     const amountInLamports = new BigNumber(Number.parseFloat(amountIn)).times(1e9);
@@ -134,7 +134,7 @@ export async function startSnippeSimulation(
     tokenData: any
 ) {
     const chatId = ctx.chat.id;
-    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const connection = CONNECTION;
     const walletTokenAccounts = await _getWalletTokenAccount(connection, userWallet.publicKey);
     const poolKeys = ctx.session.activeTradingPool;
     const _tokenIn: Token = new Token(TOKEN_PROGRAM_ID, new PublicKey(poolKeys.quoteMint), poolKeys.quoteDecimals, '', '');

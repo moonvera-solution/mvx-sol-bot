@@ -1,6 +1,7 @@
 import { PublicKey } from '@metaplex-foundation/js';
 import { getTokenMetadata, getUserTokenBalanceAndDetails } from '../../service/feeds';
 import { quoteToken } from '../util/dataCalculation';
+import {CONNECTION} from '../../config';
 import { formatNumberToKOrM, getSolBalance } from '../../service/util';
 import { RAYDIUM_POOL_TYPE } from '../../service/util/types';
 import {  Connection } from '@solana/web3.js';
@@ -14,7 +15,7 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
   if(priority_custom === true){
     priority_Level = 0;
   }
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
   const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
   const baseVault = rayPoolKeys.baseVault;
   const quoteVault = rayPoolKeys.quoteVault;
@@ -124,9 +125,6 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
         `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n `+
         `Net Worth: <b>${netWorthSol.toFixed(4)}</b> SOL | <b>${netWorth.toFixed(4)}</b> USD\n` ;
 
-
-
-
       // Define buy mode inline keyboard
       options = {
         parse_mode: 'HTML',
@@ -136,7 +134,6 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
             [{ text: ' 🔂 Refresh ', callback_data: 'refresh_trade' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
             [{ text: 'Buy (X SOL)', callback_data: 'buy_X_RAY' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_RAY' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_RAY' }],
             [{ text: `Sell X %`, callback_data: 'sell_X_RAY' },{ text: 'Sell 50%  ', callback_data: 'sell_50_RAY' },{ text: 'Sell 100%  ', callback_data: 'sell_100_RAY' }],
-      
             [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
             [{ text: 'Cancel', callback_data: 'closing' }]
           ]

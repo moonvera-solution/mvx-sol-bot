@@ -29,6 +29,8 @@ export const DefaultPortfolioData: PORTFOLIO_TYPE = {
 }
 
 export interface ISESSION_DATA {
+  cpmm_amountIn: number;
+  cpmm_side: string;
   cpmmPoolId: string;
   cpmmPoolInfo: any;
   chatId: number;
@@ -58,8 +60,6 @@ export interface ISESSION_DATA {
   ispriorityCustomFee: boolean;
   customPriorityFee: number;
   positionIndex: number;
-  tritonRPC: String,
-  tritonToken: String,
   allowedReferral:String, // tg Username
   pump_amountIn: number,
   pump_side: string,
@@ -126,6 +126,8 @@ export const DefaultSessionData: ISESSION_DATA = {
     positions: [],
     activeWalletIndex: 0
   },
+  cpmm_amountIn: 0,
+  cpmm_side: '',
   cpmmPoolId: '',
   cpmmPoolInfo: {},
   swaptypeDex: '',
@@ -135,7 +137,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   pump_amountOut: 0,
   jupSwap_amount: 0,
   jupSwap_side: '',
-  referralCommision: 0,
+  referralCommision: 3500,
   txPriorityFee: 100000,
   customPriorityFee: 0.0001,
   ispriorityCustomFee: false,
@@ -162,8 +164,6 @@ export const DefaultSessionData: ISESSION_DATA = {
   // priorityFees: PriotitizationFeeLevels.LOW,
   positionIndex: 0,
   allowedReferral:'', // tg Username
-  tritonRPC : 'https://moonvera-ams.rpcpool.com/',
-  tritonToken : process.env.TRITON_RPC_TOKEN!,
   limitOrders:{token:'',side:'',amount:0,price:0,time:0},
   jupSwap_token: '',
   jupSwap:{token:'',side:'',amount:0},

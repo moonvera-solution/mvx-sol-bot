@@ -6,7 +6,7 @@ import {
     TokenAccount,
     LiquidityPoolKeys, Liquidity, TokenAmount, Token, Percent, publicKey
 } from '@raydium-io/raydium-sdk';
-
+import {CONNECTION} from '../../config';
 import { UserPositions,Referrals } from '../../db/mongo/schema';
 import { saveUserPosition } from '../../service/portfolio/positions';
 
@@ -541,7 +541,7 @@ export async function sendSol(ctx: any, recipientAddress: PublicKey, solAmount: 
     const userSecretKey = userWallet.secretKey; // User's secret key
     const userPublicKey = userWallet.publicKey; // User's public key
     const amount = solAmount * LAMPORTS_PER_SOL; // Convert SOL to lamports
-    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const connection = CONNECTION;
     const senderKeypair = Keypair.fromSecretKey(bs58.decode(String(userSecretKey)))
 
     // Create a transaction
@@ -586,7 +586,7 @@ export async function waitForConfirmation(ctx: any, txid: string): Promise<boole
     try {
         while (!isConfirmed && attempts < maxAttempts) {
             attempts++;
-            const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+            const connection = CONNECTION;
             console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
             const config = {
                 searchTransactionHistory: true
@@ -613,7 +613,7 @@ export async function waitForConfirmationPump(ctx: any, txid: string): Promise<b
     try {
         while (!isConfirmed && attempts < maxAttempts) {
             attempts++;
-            const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+            const connection = CONNECTION;
             console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
             const config = {
                 searchTransactionHistory: true

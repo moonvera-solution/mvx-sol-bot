@@ -203,31 +203,18 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const jupTokenValue: any = Object.values(jupTokenRate.data);
       let jupTokenPrice = 0;
 
-        ctx.session.activeTradingPool = await getRayPoolKeys(ctx, token);
-        if (ctx.session.activeTradingPool) {
-          await display_raydium_details(ctx, false);
-          return;
-        } else if(!ctx.session.activeTradingPool){
-          ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`) });
-          await display_cpmm_raydium_details(ctx, false);
-          return;
-        } else if (jupTokenValue[0] && jupTokenValue[0].price) {
-          jupTokenPrice = jupTokenValue[0].price;
-          // return;
-          console.log('jupToken')
-        } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined) {
-          ctx.session.pumpToken = new PublicKey(token);
-          await display_pumpFun(ctx, false);
-          return;
-      //   } else{
-          
-      //   }
+      ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`) });
+        if(ctx.session.cpmmPoolId){
+      await display_cpmm_raydium_details(ctx, false) ;
+      return;
+    }
       // if (jupTokenValue[0] && jupTokenValue[0].price) {
       //   jupTokenPrice = jupTokenValue[0].price;
       //   // return;
       //   console.log('jupToken')
       // } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined) {
       //   // ctx.session.latestCommand = 'raydium_swap';
+      //   ctx.session.activeTradingPool = await getRayPoolKeys(ctx, token);
       //   if (ctx.session.activeTradingPool) {
       //     await display_raydium_details(ctx, false);
       //     return;
@@ -242,12 +229,12 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       //     return;
       //   }
 
-      }
+      // }
       const {
         tokenData,
       } = tokenMetadataResult;
       const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value :  Number(jupSolPrice.data.SOL.price);
-      const ammAddress = jupPriceImpact_5.routePlan[jupPriceImpact_5?.routePlan?.length - 1].swapInfo.ammKey;
+      // const ammAddress = jupPriceImpact_5.routePlan[jupPriceImpact_5?.routePlan?.length - 1].swapInfo.ammKey;
       const tokenPriceUSD = birdeyeData
         && birdeyeData.response
         && birdeyeData.response.data
@@ -309,7 +296,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
         `Market Cap: <b>${Mcap}</b> USD\n` +
         `Price:  <b>${tokenPriceSOL.toFixed(9)} SOL</b> | <b>${(tokenPriceUSD).toFixed(9)} USD</b> | <b>${tokenPriceSOL.toFixed(4)}</b> SOL\n\n` +
-        `Price impact (5 SOL): <b>${priceImpact_5.toFixed(2)}%</b>\n\n` +
+        // `Price impact (5 SOL): <b>${priceImpact_5.toFixed(2)}%</b>\n\n` +
         `---<code>Trade Position</code>---\n` +
         `Initial : <b>${(initialInSOL).toFixed(4)} SOL</b> | <b>${(initialInUSD.toFixed(4))} USD</b>\n` +
         `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n` +

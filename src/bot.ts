@@ -58,6 +58,7 @@ import { setSnipe, snipperON } from "./service/portfolio/strategies/snipper";
 import { getSolBalance, getTargetDate, sendSol } from "./service/util";
 import { getRayPoolKeys } from "./service/dex/raydium/utils/formatAmmKeysById";
 import { _generateReferralLink, _getReferralData } from "../src/db/mongo/crud";
+import {CONNECTION} from "./config";
 import {
   Portfolios,
   Referrals,
@@ -66,7 +67,8 @@ import {
 } from "./db/mongo/schema";
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { hasEnoughSol } from "./service/util/validations";
-import bs58 from "bs58";
+import { ray_cpmm_swap } from "./views/raydium/swapCpmmView";
+// import { br } from "@raydium-io/raydium-sdk-v2/lib/type-9fe71e3c";
 const express = require("express");
 const app = express();
 
@@ -129,7 +131,7 @@ async function _validateSession(ctx: any) {
     const restoredSession = await UserSession.findOne({ chatId: ctx.chat.id });
     if (restoredSession) {
       // NOTE: update db manually, if schema changes! avoid stopping the bot
-      // ctx.session = JSON.parse(JSON.stringify(restoredSession));
+      ctx.session = JSON.parse(JSON.stringify(restoredSession));
       console.log("Session restored.");
     }
   }
@@ -141,15 +143,12 @@ async function _validateSession(ctx: any) {
 bot.command("start", async (ctx: any) => {
   await _validateSession(ctx);
   backupSession = ctx.session;
-
   try {
     const chatId = ctx.chat.id;
     ctx.session.chatId = chatId;
     const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
     let isNewUser = false;
-    const connection = new Connection(
-      `${ctx.session.tritonRPC}${ctx.session.tritonToken}`
-    );
+    const connection = CONNECTION;
     let referralCode = null;
     // Check if there's additional text with the /start command
     if (ctx.message.text.includes(" ")) {
@@ -229,11 +228,10 @@ bot.command("start", async (ctx: any) => {
     const balanceInUSD = details ? balanceInSOL * details : balanceInSOL * Number(jupSolPrice.data.SOL.price);
 
     // Combine the welcome message, SOL price message, and instruction to create a wallet
+
     const welcomeMessage =
-      `<b>✨ DRIBs.io ✨</b>\n\n` +
-      `<a href="https://www.dribs.io">Website</a> | ` +
-      `<a href="https://x.com/dribs_sol"> X</a> | ` +
-      `<a href="https://t.me/DRIBs_official">Tg channel</a>\n\n` +
+      `<b>✨ DRIBs ✨</b>\n` +
+      `| <a href="https://www.dribs.io">Website</a> | <a href="https://x.com/dribs_sol"> X </a> |\n\n` +
       // `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
       `Start by choosing a wallet or import one using the "Import Wallet" button.\n` +
       // `We're always working to bring you new features - stay tuned!\n\n` +
@@ -245,15 +243,14 @@ bot.command("start", async (ctx: any) => {
       `<i>  - Raydium AMM/CPMM </i>\n`+
       `<i>  - Pump fun </i>\n`;
 
+
     // Set the options for th e inline keyboard with social links
     const options: any = {
       reply_markup: JSON.stringify({
         inline_keyboard: [
-          // [
-          //     { text: '🌎 Website', url: 'https://dribs.io/' },
-          //     { text: '𝚇', url: 'https://twitter.com/dribs_sol' }
-
-          // ],
+          [
+              { text: 'Tg official channel', url: 'https://t.me/DRIBs_official' },
+          ],
           [
             { text: "⬇️ Import Wallet", callback_data: "import_wallet" },
             { text: "💼 Wallets & Settings⚙️", callback_data: "show_wallets" },
@@ -620,8 +617,88 @@ bot.on("message", async (ctx) => {
             break;
           } else {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+            
           }
-        }
+        
+      }   break;
+
+      case "buy_X_CPMM":
+          console.log("buy_X_CPMM here");
+          ctx.session.latestCommand = "buy_X_CPMM";
+          if (msgTxt) {
+            const amt = msgTxt.includes(".")
+              ? Number.parseFloat(msgTxt)
+              : Number.parseInt(msgTxt);
+            if (!isNaN(amt)) {
+              ctx.session.cpmm_amountIn = amt;
+              ctx.session.cpmm_side = "buy";
+              await ray_cpmm_swap(
+                ctx
+              );
+              break;
+            } else {
+              return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+            }
+          }
+          case "sell_X_CPMM": {
+            console.log("sell_X_CPMM here");
+
+            ctx.session.latestCommand = "sell_X_CPMM";
+            if (msgTxt) {
+              const amt = msgTxt.includes(".")
+                ? Number.parseFloat(msgTxt)
+                : Number.parseInt(msgTxt);
+              if (!isNaN(amt) && amt >= 0 && amt <= 100) {
+                ctx.session.cpmm_amountIn = amt;
+                ctx.session.cpmm_side = "sell";
+                await ray_cpmm_swap(ctx);
+                break;
+              } else {
+                return await ctx.api.sendMessage(
+                  chatId,
+                  "🔴 Invalid amount. Please enter a number between 0 and 100 to represent the percentage."
+                );
+              }
+            }
+            break;
+          }
+         
+        case "buy_0.5_CPMM":
+            console.log("buy_0.5_CPMM here");
+            ctx.session.latestCommand = "buy_X_CPMM";
+            if (msgTxt) {
+              const amt = msgTxt.includes(".")
+                ? Number.parseFloat(msgTxt)
+                : Number.parseInt(msgTxt);
+              if (!isNaN(amt)) {
+                ctx.session.cpmm_amountIn = 0.5;
+                ctx.session.cpmm_side = "buy";
+                await ray_cpmm_swap(
+                  ctx
+                );
+                break;
+              } else {
+                return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+              }
+          }
+          case "buy_1_CPMM":
+            console.log("buy_1_CPMM here");
+            ctx.session.latestCommand = "buy_1_CPMM";
+            if (msgTxt) {
+              const amt = msgTxt.includes(".")
+                ? Number.parseFloat(msgTxt)
+                : Number.parseInt(msgTxt);
+              if (!isNaN(amt)) {
+                ctx.session.cpmm_amountIn = 1;
+                ctx.session.cpmm_side = "buy";
+                await ray_cpmm_swap(
+                  ctx
+                );
+                break;
+              } else {
+                return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+              }
+          }
       // just to solve the position refresh problem temporarly
       case "buy_X_SOL_IN_POSITION":
         ctx.session.latestCommand = "display_single_position";
@@ -892,7 +969,7 @@ bot.on("message", async (ctx) => {
         // TODO: add checks for the amount
         ctx.session.limitOrders.amount = Number(msgTxt!);
         const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
-        const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+        const connection = CONNECTION;
         let userSolBalance = await getSolBalance(userWallet.publicKey, connection);
         if (userSolBalance < ctx.session.limitOrders.amount && ctx.session.limitOrders.side == "buy") {
           await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
@@ -1341,6 +1418,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
 
+
       case "sell_100_JUP": {
         ctx.session.latestCommand = "sell_100_JUP";
         ctx.session.jupSwap_amount = 100;
@@ -1349,6 +1427,20 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
 
+      case 'sell_100_CPMM':{
+        ctx.session.latestCommand = "sell_100_CPMM";
+        ctx.session.cpmm_amountIn = 100;
+        ctx.session.cpmm_side = "sell";
+        await ray_cpmm_swap(ctx);
+        break;
+      }
+      case 'sell_50_CPMM':{
+        ctx.session.latestCommand = "sell_50_CPMM";
+        ctx.session.cpmm_amountIn = 50;
+        ctx.session.cpmm_side = "sell";
+        await ray_cpmm_swap(ctx);
+        break;
+      }
       case "buy_0.5_RAY": {
         ctx.session.latestCommand = "buy_0.5_RAY";
         await handle_radyum_swap(
@@ -1371,6 +1463,11 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "buy_X_RAY": {
         ctx.session.latestCommand = "buy_X_RAY";
+        ctx.api.sendMessage(chatId, "Please enter SOL amount");
+        break;
+      }
+      case "buy_X_CPMM": {
+        ctx.session.latestCommand = "buy_X_CPMM";
         ctx.api.sendMessage(chatId, "Please enter SOL amount");
         break;
       }
@@ -1399,6 +1496,15 @@ bot.on("callback_query", async (ctx: any) => {
       case "sell_X_RAY": {
         ctx.session.latestCommand = "sell_X_RAY";
         ctx.api.sendMessage(chatId, "Please enter amount to sell.");
+        break;
+      }
+
+      case "sell_X_CPMM": {
+        ctx.session.latestCommand = "sell_X_CPMM";
+        ctx.api.sendMessage(
+          chatId,
+          "Please enter x percentage to sell (eg. 25 for 25%)"
+        );
         break;
       }
 
@@ -1585,9 +1691,6 @@ bot.catch((err) => {
 });
 
 async function checkAccountType(ctx: any, address: any) {
-
-  // console.log("`${ctx.session.tritonRPC}${ctx.session.tritonToken}`", `${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
-
   const connection = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
   const publicKey = new PublicKey(address);
   const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");

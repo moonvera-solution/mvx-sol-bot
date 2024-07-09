@@ -1,5 +1,6 @@
 import { Connection, GetRecentPrioritizationFeesConfig } from "@solana/web3.js";
 import { PublicKey } from "@solana/web3.js";
+import {CONNECTION} from '../../config';
 import { PriotitizationFeeLevels, getRecentPrioritizationFeesByPercentile } from "../../service/fees/priorityFees";
 
 interface GetRecentPrioritizationFeesByPercentileConfig
@@ -52,7 +53,7 @@ const getMeanPrioritizationFeeByPercentile = async (
 
 
 export async function runAllFees(ctx: any, amm: any) {
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
   const priorityCalculation = amm ? amm : ctx.session.pumpToken;
 
   const [result2, result3, result4] = await Promise.all([
@@ -83,7 +84,7 @@ export async function runAllFees(ctx: any, amm: any) {
 }
 
 // export  async function runPriorityLevels(ctx: any, ammKey: any) {
-//   const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+//   const connection =CONNECTION;
 //  const priorityCalculation = ammKey? ammKey : ctx.session.jupSwap_token;
 
 //   const [result2,result3,result4] = await Promise.all([

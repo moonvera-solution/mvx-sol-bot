@@ -3,6 +3,7 @@ import {
   getTokenMetadata,
   getUserTokenBalanceAndDetails,
 } from "../../service/feeds";
+import {CONNECTION} from "../../config";
 import { quoteToken } from "../util/dataCalculation";
 import { getSolanaDetails } from "../../api";
 import { formatNumberToKOrM, getSolBalance, optimizedSendAndConfirmTransaction } from "../../service/util";
@@ -28,9 +29,8 @@ export async function submit_limitOrder(ctx: any) {
   const isBuySide = ctx.session.limitOrders.side == "buy";
   const tokenIn = isBuySide ? SOL_ADDRESS : ctx.session.limitOrders.token;
   const tokenOut = isBuySide ? ctx.session.limitOrders.token : SOL_ADDRESS;
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
   
-  console.log("connection ",`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
 
   const referralInfo = { referralWallet: ctx.session.referralWallet, referralCommision: ctx.referralCommision, priorityFee: ctx.session.priorityFees };
   const targetPrice = ctx.session.limitOrders.price;
@@ -99,7 +99,7 @@ export async function review_limitOrder_details(ctx: any, isRefresh: boolean) {
 }
 
 export async function display_limitOrder_token_details(ctx: any, isRefresh: boolean) {
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
   const tokenAddress: PublicKey = new PublicKey(ctx.session.limitOrders.token);
   const chatId = ctx.chat.id;
   const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
@@ -191,7 +191,7 @@ export async function display_limitOrder_token_details(ctx: any, isRefresh: bool
 
 export async function display_open_orders(ctx: any) {
   const wallet: Keypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
   console.log('wallet:', wallet.publicKey);
   const orders: OrderHistoryItem[] = ctx.session.isOrdersLoaded && ctx.session.orders !== null ?
     ctx.session.orders.filter((order: any) => {
@@ -253,7 +253,7 @@ export async function display_open_orders(ctx: any) {
 
 export async function display_single_order(ctx: any, isRefresh: boolean) {
   const wallet: Keypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
   console.log('wallet:', wallet.publicKey);
   const orders: OrderHistoryItem[] = ctx.session.isOrdersLoaded && ctx.session.orders !== null ?
     ctx.session.orders.filter((order: any) => {
@@ -329,7 +329,7 @@ export async function cancel_orders(ctx: any, tokenKey: string) {
   const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
   console.log('limOrder tokenKey', tokenKey);
 
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
   const txSig = await cancelOrder(connection, wallet, new PublicKey(tokenKey));
 
   console.log('txSig', txSig);
@@ -349,7 +349,7 @@ export async function cancel_orders(ctx: any, tokenKey: string) {
 
 export async function cancel_all_orders(ctx: any) {
   const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
   console.log('wallet:', wallet.publicKey);
   const orders: OrderHistoryItem[] = await getOpenOrders(connection, wallet);
 

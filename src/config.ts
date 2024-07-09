@@ -33,6 +33,8 @@ export const JUP_REF_PROGRAM = "45ruCyfdRkWpRNGEqWzjCiXRHkZs8WXCLQ67Pnpye7Hp";
 export const JUP_AGGREGATOR_V6 = "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4";
 export const WALLET_MVX = 'MvXfSe3TeEwsEi731Udae7ecReLQPgrNuKWZzX6RB41';
 
+export const CONNECTION = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
+
 
 export const DEFAULT_TOKEN = {
   // 'SOL': new Currency(9, 'USDC', 'USDC'),

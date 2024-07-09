@@ -5,6 +5,7 @@ import { formatNumberToKOrM } from '../../service/util';
 import { Connection } from '@solana/web3.js';
 import { getTokenDataFromBirdEye } from '../../api/priceFeeds/birdEye';
 import BigNumber from 'bignumber.js';
+import {CONNECTION} from '../../config';
 
 
 export async function display_rugCheck(ctx: any, isRefresh: boolean) {
@@ -22,7 +23,7 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
       ctx.session.snipeToken = baseMint;
       ctx.session.buyToken = baseMint;
       const lpMint = rugPool.lpMint;
-      const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+      const connection = CONNECTION;
       const birdeyeURL = `https://birdeye.so/token/${token}?chain=solana`;
       const dextoolsURL = `https://www.dextools.io/app/solana/pair-explorer/${token}`;
       const dexscreenerURL = `https://dexscreener.com/solana/${token}`;

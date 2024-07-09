@@ -1,10 +1,10 @@
 import { getSolBalance } from '../../service/util';
 import { getSolanaDetails,  } from '../../api';
-import { Connection } from '@solana/web3.js';
+import { CONNECTION } from '../../config';
 
 export async function handleRefreshStart(ctx: any) {
     const chatId = ctx.chat.id;
-    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const connection = CONNECTION;
     let solPriceMessage = '';
     let userWallet: any;
  
@@ -34,27 +34,24 @@ export async function handleRefreshStart(ctx: any) {
      const balanceInUSD = solanaDetails ? balanceInSOL * solanaDetails: balanceInSOL * Number(jupSolPrice.data.SOL.price);
 
     // Update the welcome message with the new SOL price
-    const welcomeMessage = `✨ Welcome to <b>DRIBs bot</b>✨\n` +
-    `<a href="https://www.dribs.io">Website</a> | ` +
-    `<a href="https://x.com/dribs_sol"> X</a> | ` +
-    `<a href="https://t.me/DRIBs_official">Tg channel</a>\n\n` +
-    `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
-    `Choose from two wallets: start with the default one or import yours using the "Import Wallet" button.\n` +
-    // `We're always working to bring you new features - stay tuned!\n\n` +
-    `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
-    `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInUSD).toFixed(4)}</b> USD\n\n` +
-    `🖐🏼 For security, we recommend exporting your private key and keeping it paper.\n` +
-    `<i> Currently DRIBs bot supports Jupiter, Raydium and Pump fun.</i>\n` ;
+    const welcomeMessage =
+      `<b>✨ DRIBs✨</b>\n` +
+      `| <a href="https://www.dribs.io">Website</a> | <a href="https://x.com/dribs_sol"> X </a> | \n\n` +
+      `Start by choosing a wallet or import one using the "Import Wallet" button.\n` +
+      `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
+      `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInUSD.toFixed(4))}</b> USD\n\n` +
+      `<b> Markets </b>\n`+
+      `<i>  - Jupiter </i>\n`+
+      `<i>  - Raydium AMM/CPMM </i>\n`+
+      `<i>  - Pump fun </i>\n`;
 
  // Define the inline keyboard options
  const options: any = {
     reply_markup: JSON.stringify({
         inline_keyboard: [
-            // [
-            //     { text: '🌎 Website', url: 'https://moonvera.io/' },
-            //     { text: '𝚇', url: 'https://twitter.com/moonvera_' }
-
-            // ],
+            [
+                { text: 'Tg official channel', url: 'https://t.me/DRIBs_official' },
+            ],
             [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
             [{ text: "☑️ Rug Check", callback_data: "rug_check" }],
             [{ text: "💱 Trade", callback_data: "jupiter_swap" },{ text: "🎯 Turbo Snipe", callback_data: "snipe" }],

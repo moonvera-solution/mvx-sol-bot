@@ -1,13 +1,11 @@
 import { ApiV3PoolInfoStandardItemCpmm, CurveCalculator, CREATE_CPMM_POOL_PROGRAM, DEV_CREATE_CPMM_POOL_PROGRAM, CpmmPoolInfoLayout, CpmmConfigInfoInterface } from '@raydium-io/raydium-sdk-v2';
-import { Raydium, TxVersion, parseTokenAccountResp } from '@raydium-io/raydium-sdk-v2'
+import { Raydium, TxVersion, parseTokenAccountResp,  CpmmKeys } from '@raydium-io/raydium-sdk-v2'
 import { optimizedSendAndConfirmTransaction, wrapLegacyTx, add_mvx_and_ref_inx_fees, addMvxFeesInx } from '../../../util';
 import { Connection, Keypair, PublicKey, VersionedTransaction, Transaction } from '@solana/web3.js'
 import BigNumber from 'bignumber.js';
-import Decimal from 'decimal.js'; // Add this line to import the 'Decimal' type
 import dotenv from 'dotenv'; dotenv.config();
 import bs58 from 'bs58'
 import BN from 'bn.js'
-import { cp } from 'fs';
 
 
 export const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
@@ -41,30 +39,40 @@ export async function raydium_cpmm_swap(
   slippage: number,
   refObj: { refWallet: string, referral: boolean, refCommission: number },
 ): Promise<string | null> {
-
+  let poolKeys: CpmmKeys | undefined
   const raydium = await initSdk(wallet, connection);
   const data = await raydium.api.fetchPoolById({ ids: poolId })
   const poolInfo = data[0] as ApiV3PoolInfoStandardItemCpmm;
-
+  const inputMint = tradeSide == 'buy'? poolInfo.mintA.address : poolInfo.mintB.address;
+  const baseIn = inputMint === poolInfo.mintA.address
   if (!isValidCpmm(poolInfo.programId)) throw new Error('target pool is not CPMM pool');
   const rpcData = await raydium.cpmm.getRpcPoolInfo(poolId, true);
-
+  console.log('inputAmount', inputAmount);
   // swap pool mintA for mintB
-  const swapResult = CurveCalculator.swap(new BN(inputAmount), rpcData.baseReserve, rpcData.quoteReserve, rpcData.configInfo!.tradeFeeRate);
-
+  const swapResult = CurveCalculator.swap(
+    new BN(inputAmount),
+    baseIn ? rpcData.baseReserve : rpcData.quoteReserve,
+    baseIn ? rpcData.quoteReserve : rpcData.baseReserve,
+    rpcData.configInfo!.tradeFeeRate
+  )  
+  console.log('swapResult_1', swapResult.sourceAmountSwapped.toNumber());
+  console.log('swapResult_2', swapResult.destinationAmountSwapped.toNumber());
+  console.log('slippage', slippage);
   // range: 1 ~ 0.0001, means 100% ~ 0.01%e
-  let { transaction } = await raydium.cpmm.swap({
-    poolInfo, swapResult,
-    slippage: slippage,
-    baseIn: true,
+  let { transaction } =  await raydium.cpmm.swap({
+    poolInfo, 
+    poolKeys,
+    swapResult,
+    slippage: 10,
+    baseIn,
   });
-
-  const isBuy = tradeSide === 'buy';
-  const solAmount = isBuy ? new BigNumber(swapResult.sourceAmountSwapped.toNumber()) : new BigNumber(swapResult.destinationAmountSwapped.toNumber());
+  console.log('tradeSide', tradeSide);  
+  // const isBuy = tradeSide == 'buy';
+  const solAmount = tradeSide == 'buy' ? new BigNumber(swapResult.sourceAmountSwapped.toNumber()) : new BigNumber(swapResult.destinationAmountSwapped.toNumber());
 
   console.log("solAmount", solAmount.toNumber());
 
-  if (refObj.refWallet && refObj.refCommission) {
+  if (refObj.refWallet && refObj.refCommission > 0) {
     add_mvx_and_ref_inx_fees(wallet, refObj.refWallet, solAmount, refObj.refCommission);
   } else {
     addMvxFeesInx(wallet, solAmount);

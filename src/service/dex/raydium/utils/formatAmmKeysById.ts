@@ -1,7 +1,6 @@
 import {ApiPoolInfoV4,LIQUIDITY_STATE_LAYOUT_V4,Liquidity,LiquidityPoolKeys,MARKET_STATE_LAYOUT_V3,Market,SPL_MINT_LAYOUT,jsonInfo2PoolKeys} from '@raydium-io/raydium-sdk';
 import { PublicKey, Connection } from '@solana/web3.js';
-import { RAYDIUM_POOL_TYPE } from '../../../util/types';
-import { connect } from 'node:http2';
+import {CONNECTION} from '../../../../config';
 
 export async function fetchPoolSchedule(keys: any, connection: Connection) {
   let poolKeys = jsonInfo2PoolKeys(keys) as LiquidityPoolKeys;
@@ -9,7 +8,7 @@ export async function fetchPoolSchedule(keys: any, connection: Connection) {
 }
 
 export async function getRayPoolKeys(ctx: any, shitcoin: string) {
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
   const quoteMint = 'So11111111111111111111111111111111111111112';
   let keys = undefined;
   try {

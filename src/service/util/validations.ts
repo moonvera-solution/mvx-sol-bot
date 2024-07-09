@@ -1,4 +1,5 @@
 import { Connection } from "@solana/web3.js";
+import { CONNECTION } from "../../config";
 import { getSolBalance } from ".";
 import { getUserTokenBalanceAndDetails } from "../feeds";
 import { PublicKey } from "@metaplex-foundation/js";
@@ -19,7 +20,7 @@ export async function isNumber(ctx: any, data: any) {
 }
 
 export async function isToken(ctx: any, address: PublicKey) {
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
   const publicKey = new PublicKey(address);
   const TOKEN_PROGRAM_ID = new PublicKey(
     "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
@@ -42,7 +43,7 @@ export async function isToken(ctx: any, address: PublicKey) {
 
 export async function hasEnoughSol(ctx: any, amount: number) {
   const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
   let userSolBalance = await getSolBalance(userWallet.publicKey, connection);
   if (userSolBalance < amount) {
     await ctx.api.sendMessage(ctx.chat.id, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
@@ -51,7 +52,7 @@ export async function hasEnoughSol(ctx: any, amount: number) {
 }
 
 export async function hasEnoughToken(ctx: any, token: PublicKey, amount: any) {
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = CONNECTION;
   const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
   const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(userWallet.publicKey, token, connection);
   const userTokenBalance = userTokenBalanceAndDetails.userTokenBalance;

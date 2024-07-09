@@ -1,7 +1,7 @@
 
 import { getSolanaDetails } from '../../api';
 import { getSolBalance } from '../util';
-import {  Connection } from '@solana/web3.js';
+import {  CONNECTION } from '../../config';
 
 
 export async function handleSettings(ctx: any) {
@@ -11,7 +11,7 @@ export async function handleSettings(ctx: any) {
     const chatId = ctx.chat.id;
     const publicKeyString: any = userWallet.publicKey; // The user's public key
     // Fetch SOL balance
-    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const connection = CONNECTION;
     const [balanceInSOL, solanaDetails] = await Promise.all([getSolBalance(publicKeyString, connection), getSolanaDetails()]);
     try {
         if (balanceInSOL === null) {
