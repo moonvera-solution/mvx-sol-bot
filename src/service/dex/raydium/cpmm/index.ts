@@ -65,6 +65,10 @@ export async function raydium_cpmm_swap(
     swapResult,
     slippage: 10,
     baseIn,
+    computeBudgetConfig:{
+      units: 1000000000,
+      microLamports: 1.5
+    },
   });
   console.log('tradeSide', tradeSide);  
   // const isBuy = tradeSide == 'buy';
