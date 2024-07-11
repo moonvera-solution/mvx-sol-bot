@@ -722,7 +722,37 @@ export async function getSwapAmountOutPump(
     }
     return extractAmount;
 }
+export async function getSwapAmountOutCpmm(
+    connection: Connection,
+    txids: string,
+    tradeSide: string
+) {
+    let extractAmount: number = 0;
+    let counter = 0;
 
+    while (extractAmount == 0 && counter < 30) { // it has to find it since its a transfer tx
+        counter++;
+        const txxs = await connection.getParsedTransaction(txids, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' }).catch((e) => console.error("Error on getSwapAmountOutPump", e.message, txids));
+        let txAmount: Array<any> | undefined;
+        if (txxs && txxs.meta && txxs.meta.innerInstructions && txxs.meta.innerInstructions) {
+            txxs.meta.innerInstructions.forEach((tx) => {
+                txAmount = JSON.parse(JSON.stringify(tx.instructions));
+                txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
+                txAmount.forEach((tx) => {
+                    if (tradeSide == 'buy' && tx.parsed && tx.parsed?.info && (tx.parsed.info.amount || tx.parsed.info.tokenAmount)) {
+                        console.log("tx.parsed.info", tx.parsed.info)
+                        extractAmount = tx.parsed.info.amount ? tx.parsed.info.amount : tx.parsed.info.tokenAmount.amount;
+                    } else if (tradeSide == 'sell' && txxs && txxs.meta && txxs.meta.postBalances && txxs.meta.preBalances) {
+                        console.log("txxs.meta", txxs.meta)
+                        extractAmount = txxs.meta.postBalances[0] - txxs.meta.preBalances[0];
+                    }
+
+                });
+            })
+        }
+    }
+    return extractAmount;
+}
 /**
  * @notice Only use if there is a referral
  * @returns TransactionInstruction Array
@@ -820,7 +850,7 @@ export async function optimizedSendAndConfirmTransaction(
                 new Promise((resolve) =>
                     setTimeout(() => {
                         resolve(null);
-                    }, 200)
+                    }, 50)
                 ),
             ]);
 

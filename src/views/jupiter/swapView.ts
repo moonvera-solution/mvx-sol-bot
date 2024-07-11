@@ -170,7 +170,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       userWallet = ctx.session.portfolio.wallets[selectedWallet];
     }
     const publicKeyString: any = userWallet.publicKey;
-    console.log('rpcUrl:', rpcUrl)
+    // console.log('rpcUrl:', rpcUrl)
     if (token) {
       const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
       const [
@@ -202,34 +202,45 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const lastRouteHop_5 = Number(jupPriceImpact_5.outAmount)
       const jupTokenValue: any = Object.values(jupTokenRate.data);
       let jupTokenPrice = 0;
+      
+      //check if token is on jupiter
+      if (jupTokenValue[0] && jupTokenValue[0].price) {
+        ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`) });
+        console.log('cpmmPoolId:', ctx.session.cpmmPoolId)
+        if (ctx.session.cpmmPoolId) {
+          await display_cpmm_raydium_details(ctx, false);
+          return;
+        }
+        jupTokenPrice = jupTokenValue[0].price;
+        console.log('jupToken')
+        // return;
+        //if not on jupiter check if token is on raydium 
+      } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined ) {
+        console.log('raydium')
+        ctx.session.activeTradingPool = await getRayPoolKeys(ctx, token);
+        console.log('activeTradingPool:', ctx.session.activeTradingPool)  
+        // go to amm if active trading pool is found
+        if (ctx.session.activeTradingPool) {
+          await display_raydium_details(ctx, false);
+          return;
+          // check for cpmm pool if no active trading pool is found
+        } else if(!ctx.session.activeTradingPool){
+          console.log('cpmm')
+          ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`) });
+          console.log('cpmmPoolId:', ctx.session.cpmmPoolId)
+          if (ctx.session.cpmmPoolId) {
+            await display_cpmm_raydium_details(ctx, false);
+            return;
+          } else {
+            // token not found on raydium or jupiter
+            console.log('pump fun ')
+            ctx.session.pumpToken = new PublicKey(token);
+            await display_pumpFun(ctx, false);
+            return;
+          }
 
-      ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`) });
-        if(ctx.session.cpmmPoolId){
-      await display_cpmm_raydium_details(ctx, false) ;
-      return;
-    }
-      // if (jupTokenValue[0] && jupTokenValue[0].price) {
-      //   jupTokenPrice = jupTokenValue[0].price;
-      //   // return;
-      //   console.log('jupToken')
-      // } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined) {
-      //   // ctx.session.latestCommand = 'raydium_swap';
-      //   ctx.session.activeTradingPool = await getRayPoolKeys(ctx, token);
-      //   if (ctx.session.activeTradingPool) {
-      //     await display_raydium_details(ctx, false);
-      //     return;
-      //   } else if(!ctx.session.activeTradingPool){
-      //     ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`) });
-      //     await display_cpmm_raydium_details(ctx, false);
-      //     return;
-      //   } else {
-      //     // ctx.session.latestCommand = 'pump_fun';
-      //     ctx.session.pumpToken = new PublicKey(token);
-      //     await display_pumpFun(ctx, false);
-      //     return;
-      //   }
-
-      // }
+        } 
+      }
       const {
         tokenData,
       } = tokenMetadataResult;
@@ -247,14 +258,8 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const baseDecimals = tokenData.mint.decimals;
       const totalSupply = new BigNumber(tokenData.mint.supply.basisPoints);
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(tokenPriceUSD)));
-      const userTokenBalance = birdeyeData
-        && birdeyeData.walletTokenPosition
-        && birdeyeData.walletTokenPosition.data
-        // && birdeyeData.walletTokenPosition.data.data
-        && birdeyeData.walletTokenPosition.data.balance > 0
-        && birdeyeData.walletTokenPosition.data.valueUsd > 0
-        ? birdeyeData.walletTokenPosition.data.uiAmount : (userTokenDetails.userTokenBalance);
-
+      const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
+      // console.log('userTokenBalance:', userTokenBalance)
       const netWorth = birdeyeData
         && birdeyeData.birdeyePosition
         && birdeyeData.birdeyePosition.data

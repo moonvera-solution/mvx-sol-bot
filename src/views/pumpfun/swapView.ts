@@ -135,6 +135,7 @@ export async function swap_pump_fun(ctx: any) {
 }
 
 export async function display_pumpFun(ctx: any, isRefresh: boolean) {
+  console.log('display_pumpFun');
   try {
     const chatId = ctx.chat.id;
     const session = ctx.session;
@@ -186,13 +187,7 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
       const baseDecimals = tokenData.mint.decimals;
       const totalSupply = new BigNumber(tokenData.mint.supply.basisPoints);
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(swapRates)) * solPrice);
-      const userTokenBalance = birdeyeData
-        && birdeyeData.walletTokenPosition
-        && birdeyeData.walletTokenPosition.data
-        // && birdeyeData.walletTokenPosition.data.data
-        && birdeyeData.walletTokenPosition.data.balance > 0
-        && birdeyeData.walletTokenPosition.data.valueUsd > 0
-        ? birdeyeData.walletTokenPosition.data.uiAmount : (userTokenDetails.userTokenBalance);
+      const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
       const netWorth = birdeyeData
         && birdeyeData.birdeyePosition
         && birdeyeData.birdeyePosition.data

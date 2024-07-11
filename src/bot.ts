@@ -378,6 +378,7 @@ bot.command("settings", async (ctx) => {
 /*                      BOT ON MSG                            */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 const commandNumbers = [
+  'snipe',
   "buy_X_JUP",
   "sell_X_JUP",
   "set_slippage",
@@ -443,9 +444,7 @@ bot.on("message", async (ctx) => {
           ctx.session.jupSwap_token = msgTxt;
           await display_jupSwapDetails(ctx, false);
           return;
-        } else {
-          ctx.api.sendMessage(chatId, "Invalid address");
-        }
+        } 
       }
     }
     switch (latestCommand) {
@@ -725,7 +724,14 @@ bot.on("message", async (ctx) => {
                 ctx.session.jupSwap_amount = amt;
                 ctx.session.jupSwap_side = "buy";
                 await jupiterSwap(ctx);
-              } else {
+              } else if(ctx.session.swaptypeDex == "cpmm_swap"){
+                ctx.session.cpmm_amountIn = amt;
+                ctx.session.cpmm_side = "buy";
+                await ray_cpmm_swap(
+                  ctx
+                );
+              }
+              else {
                 const poolKeys = await getRayPoolKeys(
                   ctx,
                   ctx.session.positionPool[ctx.session.positionIndex]
@@ -1053,6 +1059,11 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.jupSwap_amount = sellPercentage;
         ctx.session.jupSwap_side = "sell";
         await jupiterSwap(ctx);
+
+      } else if (ctx.session.swaptypeDex == "cpmm_swap") {
+        ctx.session.cpmm_amountIn = sellPercentage;
+        ctx.session.cpmm_side = "sell";
+        await ray_cpmm_swap(ctx);
       } else {
         const poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
         if (poolKeys) {
@@ -1227,6 +1238,9 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       case "refresh_trade":
         await display_raydium_details(ctx, true);
+        break;
+      case "refresh_cpmm_trade":
+        await display_cpmm_raydium_details(ctx, true);
         break;
       case "delete_wallet":
         await resetWallet(ctx);
@@ -1732,3 +1746,7 @@ process.on("SIGINT", async () => {
   }
   process.exit();
 });
+function display_cpmm_details(ctx: any, arg1: boolean) {
+  throw new Error("Function not implemented.");
+}
+

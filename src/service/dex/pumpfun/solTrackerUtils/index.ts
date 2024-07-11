@@ -63,8 +63,8 @@ class SolanaTracker {
     });
     const url = `${this.baseUrl}/rate?${params}`;
     try {
-      const response = await axios.get(url);
-      return response.data as RateResponse;
+      const response = await fetch(url).then((response) => response.json());
+      return response as RateResponse;
     } catch (error) {
       console.error("Error fetching rate:", error);
       throw error;

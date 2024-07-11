@@ -2,7 +2,7 @@ import {getpoolDataCpmm, getRayCpmmPoolKeys, raydium_cpmm_swap} from "../../serv
 import {  PublicKey } from '@metaplex-foundation/js';
 import { getTokenMetadata, getUserTokenBalanceAndDetails } from '../../service/feeds';
 
-import { formatNumberToKOrM, getSolBalance, getSwapAmountOutPump, updatePositions } from '../../service/util';
+import { formatNumberToKOrM, getSolBalance, getSwapAmountOutCpmm, getSwapAmountOutPump, updatePositions } from '../../service/util';
 import { Keypair, Connection } from '@solana/web3.js';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import { getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
@@ -50,11 +50,13 @@ export async function ray_cpmm_swap(ctx: any){
       ctx.session.cpmmPoolId,
       amountIn,
       (ctx.session.latestSlippage / 100),
-     { refWallet: ctx.session.referralWallet, referral: true, refCommission: ctx.session.referralCommision }
+     { refWallet: ctx.session.referralWallet, referral: true, refCommission: ctx.session.referralCommision },
+      ctx
     ).then(async (txid) => {
       if (!txid) return;
       const tradeType = isBuySide ? 'buy' : 'sell';
       if(txid){
+      
         const config = {
           searchTransactionHistory: true
         };
@@ -66,28 +68,23 @@ export async function ray_cpmm_swap(ctx: any){
         let tokenAmount, confirmedMsg;
         let solFromSell = 0;
         const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
-        let extractAmount = await getSwapAmountOutPump(connection, txid, tradeType)
+        let extractAmount = await getSwapAmountOutCpmm(connection, txid, tradeType)
         const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
         tradeType == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
-        confirmedMsg = `✅ <b>${tradeType.toUpperCase()} tx confirmed</b> ${tradeType == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${ctx.session.jupSwap_amount} SOL</b>` : `You sold <b>${amountToSell / Math.pow(10, userTokenBalanceAndDetails.decimals)}</b> <b>${_symbol}</b> and received <b>${(solFromSell / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txid}">View Details</a>.`;
+        confirmedMsg = `✅ <b>${tradeType.toUpperCase()} tx confirmed</b> ${tradeType == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${amountIn / 1e9} SOL</b>` : `You sold <b>${amountToSell / Math.pow(10, userTokenBalanceAndDetails.decimals)}</b> <b>${_symbol}</b> and received <b>${(ctx.session.CpmmSolExtracted / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txid}">View Details</a>.`;
         const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
         let oldPositionSol: number = 0;
         let oldPositionToken: number = 0;
         if (userPosition) {
-
           const existingPositionIndex = userPosition.positions.findIndex(
             position => position.baseMint === (isBuySide ? tokenOut.toString() : tokenIn.toString())
           );
-  
           // console.log('existingPositionIndex', existingPositionIndex);
           if (userPosition.positions[existingPositionIndex]) {
             oldPositionSol = userPosition.positions[existingPositionIndex].amountIn
             oldPositionToken = userPosition.positions[existingPositionIndex].amountOut!
-  
           }
         }
-
-
       if (tradeType == 'buy') {
         saveUserPosition(chatId,
           userWallet.publicKey.toString(), {
@@ -95,7 +92,7 @@ export async function ray_cpmm_swap(ctx: any){
           name: userTokenBalanceAndDetails.userTokenName,
           symbol: _symbol,
           tradeType: `cpmm_swap`,
-          amountIn: oldPositionSol ? oldPositionSol + (ctx.session.jupSwap_amount * 1e9) : (ctx.session.jupSwap_amount * 1e9),
+          amountIn: oldPositionSol ? oldPositionSol + (ctx.session.cpmm_amountIn  * 1e9) : (ctx.session.cpmm_amountIn  * 1e9),
           amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
 
         });
@@ -109,11 +106,9 @@ export async function ray_cpmm_swap(ctx: any){
           newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
           newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
         }
-
         if (newAmountIn <= 0 || newAmountOut <= 0) {
           await UserPositions.updateOne({ walletId: userWallet.publicKey.toString() }, { $pull: { positions: { baseMint: tokenIn } } });
           ctx.session.positionIndex = 0;
-
         } else {
           saveUserPosition(chatId,
             userWallet.publicKey.toString(), {
@@ -138,7 +133,6 @@ export async function ray_cpmm_swap(ctx: any){
   }).catch(async (error: any) => {
     await ctx.api.sendMessage(chatId, error.message, { parse_mode: 'HTML', disable_web_page_preview: true });
   });
-      
 }
 
 export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean) { 
@@ -149,8 +143,11 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
         priority_Level = 0;
     }
     const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
-    const cpmmPoolKey = ctx.session.cpmmPoolId.toBase58();
-    console.log('cpmmPoolKey', cpmmPoolKey);
+    const cpmmPoolKey = ctx.session.cpmmPoolId;
+    if(!cpmmPoolKey){
+        return undefined;
+    }
+    // console.log('cpmmPoolKey', cpmmPoolKey);
     ctx.session.cpmmPoolInfo = await getpoolDataCpmm(cpmmPoolKey, connection);
     // console.log('ctx.session.cpmmPoolInfo', ctx.session.cpmmPoolInfo);
     const chatId = ctx.chat.id;
@@ -269,7 +266,7 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
                 disable_web_page_preview: true,
                 reply_markup: {
                   inline_keyboard: [
-                    [{ text: ' 🔂 Refresh ', callback_data: 'refresh_trade' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
+                    [{ text: ' 🔂 Refresh ', callback_data: 'refresh_cpmm_trade' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
                     [{ text: 'Buy (X SOL)', callback_data: 'buy_X_CPMM' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_CPMM' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_CPMM' }],
                     [{ text: `Sell X %`, callback_data: 'sell_X_CPMM' },{ text: 'Sell 50%  ', callback_data: 'sell_50_CPMM' },{ text: 'Sell 100%  ', callback_data: 'sell_100_CPMM' }],
               

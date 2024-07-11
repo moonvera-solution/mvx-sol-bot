@@ -17,8 +17,8 @@ export async function getTokenPriceFromJupiter(tokenAddress: String) {
             }
         };
 
-        const response = await axios.get(url, options);
-        return await response.data.data[`${tokenAddress}`].price ;
+        const response = await fetch(url, options).then((res) => res.json());
+        return await response.data[`${tokenAddress}`].price ;
        // Adjust this based on the actual response structure
     } catch (error: any) {
         console.log(

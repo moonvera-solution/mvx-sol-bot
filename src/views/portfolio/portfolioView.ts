@@ -12,6 +12,7 @@ import { getTokenMetadata, getUserTokenBalanceAndDetails } from '../../service/f
 import { SOL_ADDRESS ,CONNECTION} from '../../config';
 import { getSwapDetails } from '../../service/dex/pumpfun';
 import { getSolanaDetails } from '../../api';
+import { getpoolDataCpmm, getRayCpmmPoolKeys } from '../../service/dex/raydium/cpmm';
 
 export async function display_all_positions(ctx: any, isRefresh: boolean) {
   const { publicKey: userWallet } = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex] || {};
@@ -150,13 +151,7 @@ if (tradeDex.includes('jup_swap') || tradeDex.includes('ray_swap')) {
     profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
   }
   
-  const userTokenBalance = birdeyeData 
-  && birdeyeData.walletTokenPosition
-  && birdeyeData.walletTokenPosition.data
-  && birdeyeData.walletTokenPosition.data.data
-  && birdeyeData.walletTokenPosition.data.data.balance > 0
-  && birdeyeData.walletTokenPosition.data.data.valueUsd > 0
-  ? birdeyeData.walletTokenPosition.data.data.uiAmount : (userTokenDetails.userTokenBalance);
+  const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
 
   
   // Composing the message
@@ -346,7 +341,20 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
         && birdeyeData.response.data.price != null  // This checks for both null and undefined
         ? birdeyeData.response.data.price
         : jupTokenPrice;
-      }else {
+      } else if(tradeDex.includes('cpmm_swap')){
+        ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`) });
+        const cpmmPoolKey = ctx.session.cpmmPoolId
+        ctx.session.cpmmPoolInfo = await getpoolDataCpmm(cpmmPoolKey, connection);
+        const priceCpmm = ctx.session.cpmmPoolInfo.mintAmountA / ctx.session.cpmmPoolInfo.mintAmountB;
+
+        tokenPriceUSD = birdeyeData
+        && birdeyeData.response
+        && birdeyeData.response.data
+        && birdeyeData.response.data.price != null  // This checks for both null and undefined
+        ? birdeyeData.response.data.price
+        : priceCpmm * solPrice;
+      }
+      else {
         const tokenRatePuMP =  await getSwapDetails(pos.baseMint,SOL_ADDRESS, 1, 0 )
          tokenPriceUSD = tokenRatePuMP * solPrice;
          console.log('tokenPricePUMP', tokenPriceUSD);
@@ -379,23 +387,15 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
     profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
 
   }
-  const userTokenBalance = birdeyeData 
-  && birdeyeData.walletTokenPosition
-  && birdeyeData.walletTokenPosition.data
-  // && birdeyeData.walletTokenPosition.data.data
-  && birdeyeData.walletTokenPosition.data.balance > 0
-  && birdeyeData.walletTokenPosition.data.valueUsd > 0
-  ? birdeyeData.walletTokenPosition.data.uiAmount : (userTokenDetails.userTokenBalance);
-  console.log('userTokenBalance', userTokenBalance);
+  const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
+
   const netWorth = birdeyeData
   && birdeyeData.birdeyePosition
   && birdeyeData.birdeyePosition.data
-  // && birdeyeData.birdeyePosition.data.data
   && birdeyeData.birdeyePosition.data.totalUsd
   ? birdeyeData.birdeyePosition.data.totalUsd : NaN;
 
     const netWorthSol = netWorth / solPrice;
-  console.log('balnceInSOL', userTokenBalance * Number(tokenPriceSOL));
       fullMessage += `<b>${pos.name} (${pos.symbol})</b> | <code>${pos.baseMint}</code>\n` +
         `Mcap: ${Mcap} <b>USD</b>\n` +
         `Initial: ${initialInSOL.toFixed(4)} <b>SOL</b> | ${initialInUSD.toFixed(4)} <b>USD </b>\n` +

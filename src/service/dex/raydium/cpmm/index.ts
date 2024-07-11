@@ -38,6 +38,7 @@ export async function raydium_cpmm_swap(
   inputAmount: number,
   slippage: number,
   refObj: { refWallet: string, referral: boolean, refCommission: number },
+  ctx: any
 ): Promise<string | null> {
   let poolKeys: CpmmKeys | undefined
   const raydium = await initSdk(wallet, connection);
@@ -48,6 +49,7 @@ export async function raydium_cpmm_swap(
   if (!isValidCpmm(poolInfo.programId)) throw new Error('target pool is not CPMM pool');
   const rpcData = await raydium.cpmm.getRpcPoolInfo(poolId, true);
   console.log('inputAmount', inputAmount);
+  console.log('poolInfo', poolInfo);  
   // swap pool mintA for mintB
   const swapResult = CurveCalculator.swap(
     new BN(inputAmount),
@@ -55,6 +57,8 @@ export async function raydium_cpmm_swap(
     baseIn ? rpcData.quoteReserve : rpcData.baseReserve,
     rpcData.configInfo!.tradeFeeRate
   )  
+
+  
   console.log('swapResult_1', swapResult.sourceAmountSwapped.toNumber());
   console.log('swapResult_2', swapResult.destinationAmountSwapped.toNumber());
   console.log('slippage', slippage);
@@ -63,13 +67,18 @@ export async function raydium_cpmm_swap(
     poolInfo, 
     poolKeys,
     swapResult,
-    slippage: 10,
+    slippage: 0,
     baseIn,
+    computeBudgetConfig: {
+      microLamports: ctx.session.customPriorityFee * 1e9, 
+    }
   });
   console.log('tradeSide', tradeSide);  
   // const isBuy = tradeSide == 'buy';
   const solAmount = tradeSide == 'buy' ? new BigNumber(swapResult.sourceAmountSwapped.toNumber()) : new BigNumber(swapResult.destinationAmountSwapped.toNumber());
-
+  if( tradeSide == 'sell') {
+    ctx.session.CpmmSolExtracted = solAmount
+  }
   console.log("solAmount", solAmount.toNumber());
 
   if (refObj.refWallet && refObj.refCommission > 0) {
@@ -83,11 +92,11 @@ export async function raydium_cpmm_swap(
     const tx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, wallet, (await connection.getLatestBlockhash()).blockhash));
     tx.sign([wallet]);
     txSig = await optimizedSendAndConfirmTransaction(
-      tx, connection, (await connection.getLatestBlockhash()).blockhash, 2000
+      tx, connection, (await connection.getLatestBlockhash()).blockhash, 50
     );
   } else if (transaction instanceof VersionedTransaction) {
     txSig = await optimizedSendAndConfirmTransaction(
-      transaction, connection, (await connection.getLatestBlockhash()).blockhash, 2000
+      transaction, connection, (await connection.getLatestBlockhash()).blockhash, 50
     );
   }
   return txSig;

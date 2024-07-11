@@ -29,6 +29,7 @@ export const DefaultPortfolioData: PORTFOLIO_TYPE = {
 }
 
 export interface ISESSION_DATA {
+  CpmmSolExtracted: number;
   cpmm_amountIn: number;
   cpmm_side: string;
   cpmmPoolId: string;
@@ -126,6 +127,7 @@ export const DefaultSessionData: ISESSION_DATA = {
     positions: [],
     activeWalletIndex: 0
   },
+  CpmmSolExtracted: 0,
   cpmm_amountIn: 0,
   cpmm_side: '',
   cpmmPoolId: '',

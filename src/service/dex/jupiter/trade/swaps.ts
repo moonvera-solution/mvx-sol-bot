@@ -38,14 +38,16 @@ export async function jupiter_inx_swap(
 ) : Promise<string | null>{
   const feeAccount = null;
   let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}${feeAccount ? '&platformFeeBps=08' : ''}`.trim();
-  let quoteResponse : any = await axios.get(swapUrl);
+  let quoteResponse : any = await fetch(swapUrl).then(res => res.json());
+  console.log("quoteResponse:: ",quoteResponse);
 
-
+  if(quoteResponse.error){
+    
+  }
   // TODO add priority fee
-  const lastRouteHop = quoteResponse.data.routePlan[quoteResponse.data.routePlan.length - 1].swapInfo.ammKey;
+  // const lastRouteHop = quoteResponse.data.routePlan[quoteResponse.data.routePlan.length - 1].swapInfo.ammKey;
   
-  quoteResponse = quoteResponse.data;
-
+  // quoteResponse = quoteResponse.data;
   const solAmount = tokenIn === SOL_ADDRESS ? new BigNumber(quoteResponse.inAmount) : new BigNumber(quoteResponse.outAmount);
   const instructions = await (
     await fetch('https://quote-api.jup.ag/v6/swap-instructions', {
@@ -57,7 +59,7 @@ export async function jupiter_inx_swap(
       })
     })
   ).json();
-
+  console.log("instructions:: ",instructions);
   if (instructions.error) {
     throw new Error("Failed to get swap instructions: " + instructions.error);
   }
