@@ -172,7 +172,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
     const publicKeyString: any = userWallet.publicKey;
     // console.log('rpcUrl:', rpcUrl)
     if (token) {
-      const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+      const connection = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
       const [
         birdeyeData,
         tokenMetadataResult,
