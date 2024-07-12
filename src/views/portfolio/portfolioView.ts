@@ -342,7 +342,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
         ? birdeyeData.response.data.price
         : jupTokenPrice;
       } else if(tradeDex.includes('cpmm_swap')){
-        ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`) });
+        ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`) });
         const cpmmPoolKey = ctx.session.cpmmPoolId
         ctx.session.cpmmPoolInfo = await getpoolDataCpmm(cpmmPoolKey, connection);
         const priceCpmm = ctx.session.cpmmPoolInfo.mintAmountA / ctx.session.cpmmPoolInfo.mintAmountB;

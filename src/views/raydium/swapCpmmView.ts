@@ -14,7 +14,7 @@ import { saveUserPosition } from '../../service/portfolio/positions';
 
 export async function ray_cpmm_swap(ctx: any){
     const chatId = ctx.chat.id;
-    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const connection = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
     // const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
     const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
     const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
@@ -142,7 +142,7 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
     if(priority_custom === true){
         priority_Level = 0;
     }
-    const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+    const connection = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
     const cpmmPoolKey = ctx.session.cpmmPoolId;
     if(!cpmmPoolKey){
         return undefined;
