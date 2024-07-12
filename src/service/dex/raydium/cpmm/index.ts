@@ -1,11 +1,12 @@
 import { ApiV3PoolInfoStandardItemCpmm, CurveCalculator, CREATE_CPMM_POOL_PROGRAM, DEV_CREATE_CPMM_POOL_PROGRAM, CpmmPoolInfoLayout, CpmmConfigInfoInterface } from '@raydium-io/raydium-sdk-v2';
 import { Raydium, TxVersion, parseTokenAccountResp,  CpmmKeys } from '@raydium-io/raydium-sdk-v2'
 import { optimizedSendAndConfirmTransaction, wrapLegacyTx, add_mvx_and_ref_inx_fees, addMvxFeesInx } from '../../../util';
-import { Connection, Keypair, PublicKey, VersionedTransaction, Transaction } from '@solana/web3.js'
+import { Connection, Keypair, PublicKey, VersionedTransaction, Transaction, TransactionMessage, AddressLookupTableAccount } from '@solana/web3.js'
 import BigNumber from 'bignumber.js';
 import dotenv from 'dotenv'; dotenv.config();
 import bs58 from 'bs58'
 import BN from 'bn.js'
+import { TransactionInstruction } from '@solana/web3.js';
 
 
 export const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
@@ -48,8 +49,8 @@ export async function raydium_cpmm_swap(
   const baseIn = inputMint === poolInfo.mintA.address
   if (!isValidCpmm(poolInfo.programId)) throw new Error('target pool is not CPMM pool');
   const rpcData = await raydium.cpmm.getRpcPoolInfo(poolId, true);
-  console.log('inputAmount', inputAmount);
-  console.log('poolInfo', poolInfo);  
+  // console.log('inputAmount', inputAmount);
+  // console.log('poolInfo', poolInfo);  
   // swap pool mintA for mintB
   const swapResult = CurveCalculator.swap(
     new BN(inputAmount),
@@ -57,11 +58,6 @@ export async function raydium_cpmm_swap(
     baseIn ? rpcData.quoteReserve : rpcData.baseReserve,
     rpcData.configInfo!.tradeFeeRate
   )  
-
-  
-  console.log('swapResult_1', swapResult.sourceAmountSwapped.toNumber());
-  console.log('swapResult_2', swapResult.destinationAmountSwapped.toNumber());
-  console.log('slippage', slippage);
   // range: 1 ~ 0.0001, means 100% ~ 0.01%e
   let { transaction } =  await raydium.cpmm.swap({
     poolInfo, 
@@ -73,30 +69,47 @@ export async function raydium_cpmm_swap(
       microLamports: ctx.session.customPriorityFee * 1e9, 
     }
   });
-  console.log('tradeSide', tradeSide);  
-  // const isBuy = tradeSide == 'buy';
+
   const solAmount = tradeSide == 'buy' ? new BigNumber(swapResult.sourceAmountSwapped.toNumber()) : new BigNumber(swapResult.destinationAmountSwapped.toNumber());
   if( tradeSide == 'sell') {
     ctx.session.CpmmSolExtracted = solAmount
   }
-  console.log("solAmount", solAmount.toNumber());
 
-  if (refObj.refWallet && refObj.refCommission > 0) {
-    add_mvx_and_ref_inx_fees(wallet, refObj.refWallet, solAmount, refObj.refCommission);
-  } else {
-    addMvxFeesInx(wallet, solAmount);
-  }
+
 
   let txSig: any = '';
   if (transaction instanceof Transaction) {
+    if (refObj.refWallet) {
+      transaction.instructions.push(...add_mvx_and_ref_inx_fees(wallet, refObj.refWallet, solAmount, refObj.refCommission));
+      // add_mvx_and_ref_inx_fees(wallet, refObj.refWallet, solAmount, refObj.refCommission);
+    } else {
+      transaction.instructions.push(...addMvxFeesInx(wallet, solAmount));
+      addMvxFeesInx(wallet, solAmount);
+    }
     const tx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, wallet, (await connection.getLatestBlockhash()).blockhash));
     tx.sign([wallet]);
     txSig = await optimizedSendAndConfirmTransaction(
       tx, connection, (await connection.getLatestBlockhash()).blockhash, 50
     );
   } else if (transaction instanceof VersionedTransaction) {
+    const addressLookupTableAccounts = await Promise.all(
+      transaction.message.addressTableLookups.map(async (lookup) => {
+          return new AddressLookupTableAccount({
+              key: lookup.accountKey,
+              state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data)),
+          })
+      }));
+    var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
+
+    if (refObj.refWallet) {
+      message.instructions.push(...add_mvx_and_ref_inx_fees(wallet, refObj.refWallet, solAmount, refObj.refCommission));
+      // add_mvx_and_ref_inx_fees(wallet, refObj.refWallet, solAmount, refObj.refCommission);
+    } else {
+      message.instructions.push(...addMvxFeesInx(wallet, solAmount));
+      addMvxFeesInx(wallet, solAmount);
+    }
     txSig = await optimizedSendAndConfirmTransaction(
-      transaction, connection, (await connection.getLatestBlockhash()).blockhash, 50
+      new VersionedTransaction(transaction.message), connection, (await connection.getLatestBlockhash()).blockhash, 50
     );
   }
   return txSig;
