@@ -187,9 +187,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         userPosition,
         jupPriceImpact_5,
         jupSolPrice,
-        quoteResponse 
-        
-
+        quoteResponse
       ] = await Promise.all([
         getTokenDataFromBirdEyePositions(token, publicKeyString),
         getTokenMetadata(ctx, token),
