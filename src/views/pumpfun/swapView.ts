@@ -155,7 +155,6 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
     const publicKeyString: any = userWallet.publicKey;
     if (token) {
       const connection = CONNECTION;
-      const pumpFunLink = `https://pump.fun/${token}`;
       const [
         birdeyeData,
         tokenMetadataResult,

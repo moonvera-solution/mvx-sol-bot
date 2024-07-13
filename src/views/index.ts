@@ -17,7 +17,7 @@ import {
     display_single_order,
     cancel_all_orders,
     cancel_orders
-  } from "./jupiter/limitOrder";
+  } from "./jupiter/limitOrderView";
 export {
     sendHelpMessage,
     handleCloseKeyboard,

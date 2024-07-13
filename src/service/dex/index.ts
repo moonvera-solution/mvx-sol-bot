@@ -2,7 +2,7 @@ import {raydium_amm_swap} from './raydium/amm';
 import {raydium_cpmm_swap} from './raydium/cpmm';
 import {pump_fun_swap} from './pumpfun';
 import {jupiter_inx_swap} from './jupiter/trade/swaps';
-import {jupiter_limit_order} from './jupiter/trade/limitOrder';
+import {jupiter_limit_order} from './jupiter/trade/LimitOrder';
 
 //*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 //*                     Dex Aggregation                        */

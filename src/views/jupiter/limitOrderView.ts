@@ -13,7 +13,7 @@ import { UserPositions } from "../../db";
 import { getTokenDataFromBirdEye } from "../../api/priceFeeds/birdEye";
 import { getTokenPriceFromJupiter } from "../../api/priceFeeds/jupiter";
 import { LimitOrderProvider, ownerFilter, OrderHistoryItem, TradeHistoryItem } from "@jup-ag/limit-order-sdk";
-import { jupiter_limit_order, getOpenOrders, cancelOrder, cancelBatchOrder } from "../../service/dex/jupiter/trade/limitOrder";
+import { jupiter_limit_order, getOpenOrders, cancelOrder, cancelBatchOrder } from "../../../src/service/dex/jupiter/trade/LimitOrder";
 import { SOL_ADDRESS } from "../../config";
 import { getPriorityFeeLabel, waitForConfirmation } from "../../service/util";
 import bs58 from 'bs58';
