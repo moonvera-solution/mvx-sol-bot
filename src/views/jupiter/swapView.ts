@@ -172,7 +172,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
     const publicKeyString: any = userWallet.publicKey;
     // console.log('rpcUrl:', rpcUrl)
     if (token) {
-      const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+      const connection = new Connection(rpcUrl);
       // check if the token is tradable on jupiter
       const feeAccount = null;
       let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${SOL_ADDRESS}&outputMint=${token}&amount=${1}&slippageBps=${ctx.session.latestSlippage}${feeAccount ? '&platformFeeBps=08' : ''}`.trim();
@@ -212,7 +212,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       console.log("quoteResponse:: ",quoteResponse);
       //check if token is on jupiter
       if (jupTokenValue[0] && jupTokenValue[0].price) {
-        ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`) });
+        ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`) });
         console.log('cpmmPoolId:', ctx.session.cpmmPoolId)
         if (ctx.session.cpmmPoolId) {
           await display_cpmm_raydium_details(ctx, false);
@@ -232,7 +232,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
           // check for cpmm pool if no active trading pool is found
         } else if(!ctx.session.activeTradingPool){
           console.log('cpmm dex')
-          ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`) });
+          ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`) });
           // console.log('cpmmPoolId:', ctx.session.cpmmPoolId)
           if (ctx.session.cpmmPoolId) {
             await display_cpmm_raydium_details(ctx, false);
