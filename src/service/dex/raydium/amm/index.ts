@@ -39,13 +39,15 @@ import {
   add_mvx_and_ref_inx_fees,
   addMvxFeesInx
 } from "../../../util";
+import { S } from "@raydium-io/raydium-sdk-v2/lib/api-33b5ab27";
 
 type refObject = { referralWallet: string, referralCommision: number };
 
 export type TxInputInfo = {
   connection: Connection;
   side: "buy" | "sell";
-  refObject: refObject;
+  generatorWallet: PublicKey;
+  referralCommision: number;
   outputToken: Token;
   targetPool: string;
   inputTokenAmount: TokenAmount;
@@ -92,15 +94,15 @@ export async function raydium_amm_swap(input: TxInputInfo): Promise<string | nul
   /*                      REFERRAL AMOUNT                      */
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
   // In case of having a referral
-  const referralFee = input.refObject.referralCommision / 100;
-
+  const referralFee = input.referralCommision / 100;
+ 
   if (referralFee > 0) {
     innerTransactions[0].instructions.push(
       ...add_mvx_and_ref_inx_fees(
         input.wallet,
-        input.refObject.referralWallet,
+        new PublicKey(input.generatorWallet).toBase58(),
         input.side === "sell" ? new BigNumber(amountOut.raw.toNumber() ): new BigNumber(input.inputTokenAmount.raw.toNumber()),
-        input.refObject.referralCommision
+        input.referralCommision
       ));
   } else {
     let feeAmt = Number.isInteger(amountOut.raw.toNumber()) ? amountOut.raw.toNumber() : Math.ceil(Number.parseFloat(amountOut.raw.toNumber().toFixed(2)));
@@ -112,9 +114,11 @@ export async function raydium_amm_swap(input: TxInputInfo): Promise<string | nul
       )
     );
   }
-
+  console.log("input.customPriorityFee:: ", input.customPriorityFee);
   let maxPriorityFee = Math.ceil(Number.parseFloat(String(input.customPriorityFee)) * 1e9);
+  console.log("maxPriorityFee:: ", maxPriorityFee);
   innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee }));
+  console.log("referralFee:: ", referralFee);
 
   const vTxx = new VersionedTransaction(wrapLegacyTx(innerTransactions[0].instructions, input.wallet, (await connection.getLatestBlockhash()).blockhash));
   const addressLookupTableAccounts = await Promise.all(

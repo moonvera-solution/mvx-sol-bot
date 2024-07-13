@@ -69,16 +69,18 @@ export async function handle_radyum_swap(
     const poolKeys = ctx.session.activeTradingPool;
     const inputTokenAmount = new TokenAmount(tokenIn!, new BigNumber(amountIn).toFixed());
     const slippage = new Percent(Math.ceil(ctx.session.latestSlippage * 100), 10_000);
-    const refObject = { referralWallet: ctx.session.generatorWallet, referralCommision: ctx.session.referralCommision };
+    const generatorWallet = ctx.session.generatorWallet;
+    const referralCommision = ctx.session.referralCommision;
     const customPriorityFee = ctx.session.customPriorityFee;
-
+    console.log("customPriorityFee before swap:: ", customPriorityFee);
     let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing...\n Please wait for confirmation.`
     await ctx.api.sendMessage(ctx.session.chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
   
     raydium_amm_swap({
       connection,
       side,
-      refObject,
+      generatorWallet,
+      referralCommision,
       outputToken,
       targetPool: poolKeys.id, // ammId
       inputTokenAmount,
@@ -87,7 +89,7 @@ export async function handle_radyum_swap(
       wallet: Keypair.fromSecretKey(bs58.decode(String(userWallet.secretKey))),
     }).then(async (txids) => {
       if (!txids) return;
-
+      console.log("txids:: ", txids);
       let extractAmount = await getSwapAmountOut(connection, txids);
       let confirmedMsg, solAmount, tokenAmount, _symbol = userTokenBalanceAndDetails.userTokenSymbol;
       let solFromSell = new BigNumber(0);

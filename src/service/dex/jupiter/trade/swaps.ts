@@ -65,7 +65,6 @@ export async function jupiter_inx_swap(
   }
 
   const {
-    tokenLedgerInstruction, // If you are using `useTokenLedger = true`.
     computeBudgetInstructions, // The necessary instructions to setup the compute budget.
     setupInstructions, // Setup missing ATA for the users.
     swapInstruction: swapInstructionPayload, // The actual swap instruction.
@@ -115,7 +114,7 @@ export async function jupiter_inx_swap(
 
   const blockhash = (await connection.getLatestBlockhash()).blockhash;
   const hasReferral = refObject.referralWallet && refObject.referralCommision > 0;
-
+  console.log("refObject:: ",refObject);
   console.log("hasReferral:: jup ",hasReferral);
   
   const txInxs = hasReferral ?

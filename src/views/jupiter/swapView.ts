@@ -34,7 +34,8 @@ export async function jupiterSwap(ctx: any) {
 
   const amountToSell = Math.floor((ctx.session.jupSwap_amount / 100) * userTokenBalanceAndDetails.userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals));
   const amountIn = isBuySide ? ctx.session.jupSwap_amount * 1e9 : amountToSell;
-  const refObject = { referralWallet: ctx.session.referralWallet, referralCommision: ctx.session.referralCommision };
+  const refObject = { referralWallet: new PublicKey(ctx.session.generatorWallet).toBase58(), referralCommision: ctx.session.referralCommision };
+  console.log('refObject:', refObject)
   const userSolBalance = (await getSolBalance(userWallet.publicKey, connection) * 1e9);
 
   const minBalance = (amountIn + (amountIn * MVXBOT_FEES.toNumber()) + (ctx.session.customPriorityFee * 1e9));
@@ -209,15 +210,9 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const lastRouteHop_5 = Number(jupPriceImpact_5.outAmount)
       const jupTokenValue: any = Object.values(jupTokenRate.data);
       let jupTokenPrice = 0;
-      console.log("quoteResponse:: ",quoteResponse);
-      //check if token is on jupiter
-      if (jupTokenValue[0] && jupTokenValue[0].price) {
-        ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`) });
-        console.log('cpmmPoolId:', ctx.session.cpmmPoolId)
-        if (ctx.session.cpmmPoolId) {
-          await display_cpmm_raydium_details(ctx, false);
-          return;
-        }
+  
+      if (jupTokenValue[0] && jupTokenValue[0].price && quoteResponse?.errorCode !== 'TOKEN_NOT_TRADABLE') {
+   
         jupTokenPrice = jupTokenValue[0].price;
         console.log('jupToken')
         //if not on jupiter check if token is on raydium 
