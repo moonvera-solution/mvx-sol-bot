@@ -5,7 +5,7 @@ import { TOKEN_PROGRAM_ID } from '@raydium-io/raydium-sdk';
 import { getTokenDataFromBirdEyePositions } from "../../api/priceFeeds/birdEye";
 import { Portfolios } from '../../db';
 import { formatNumberToKOrM, getSolBalance } from '../../service/util';
-import { Connection } from '@solana/web3.js';
+import { Connection,Keypair } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import { Position, UserPosition } from '../../service/portfolio/positions';
 import { getTokenMetadata, getUserTokenBalanceAndDetails } from '../../service/feeds';
@@ -13,6 +13,7 @@ import { SOL_ADDRESS ,CONNECTION} from '../../config';
 import { getSwapDetails } from '../../service/dex/pumpfun';
 import { getSolanaDetails } from '../../api';
 import { getpoolDataCpmm, getRayCpmmPoolKeys } from '../../service/dex/raydium/cpmm';
+import bs58 from 'bs58';
 
 export async function display_all_positions(ctx: any, isRefresh: boolean) {
   const { publicKey: userWallet } = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex] || {};
@@ -194,7 +195,8 @@ async function synchronizePools(userPositions: any) {
 
 export async function display_single_position(ctx: any, isRefresh: boolean) {
   const chatId = ctx.chat.id;
-  const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex]?.publicKey;
+  const walletIndex = ctx.session.portfolio.activeWalletIndex;
+  const userWallet = ctx.session.portfolio.wallets[walletIndex]?.publicKey;
   const userPosition: any = await UserPositions.find(
     {
       positionChatId: chatId,
@@ -344,7 +346,11 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       } else if(tradeDex.includes('cpmm_swap')){
         ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`) });
         const cpmmPoolKey = ctx.session.cpmmPoolId
-        ctx.session.cpmmPoolInfo = await getpoolDataCpmm(cpmmPoolKey, connection);
+        const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
+        const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
+
+        
+        ctx.session.cpmmPoolInfo = await getpoolDataCpmm(payerKeypair,cpmmPoolKey, connection);
         const priceCpmm = ctx.session.cpmmPoolInfo.mintAmountA / ctx.session.cpmmPoolInfo.mintAmountB;
 
         tokenPriceUSD = birdeyeData
