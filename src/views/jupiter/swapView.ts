@@ -22,7 +22,7 @@ import { display_cpmm_raydium_details } from '../raydium/swapCpmmView';
 
 export async function jupiterSwap(ctx: any) {
   const chatId = ctx.chat.id;
-  const connection = new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`);
+  const connection = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
   const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
   const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
   const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
@@ -211,8 +211,13 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       let jupTokenPrice = 0;
       console.log("quoteResponse:: ",quoteResponse);
       //check if token is on jupiter
-      if (jupTokenValue[0] && jupTokenValue[0].price && quoteResponse?.errorCode !== 'TOKEN_NOT_TRADABLE') {
-      
+      if (jupTokenValue[0] && jupTokenValue[0].price) {
+        ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${ctx.session.tritonRPC}${ctx.session.tritonToken}`) });
+        console.log('cpmmPoolId:', ctx.session.cpmmPoolId)
+        if (ctx.session.cpmmPoolId) {
+          await display_cpmm_raydium_details(ctx, false);
+          return;
+        }
         jupTokenPrice = jupTokenValue[0].price;
         console.log('jupToken')
         //if not on jupiter check if token is on raydium 
