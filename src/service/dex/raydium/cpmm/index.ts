@@ -178,7 +178,7 @@ export async function getpoolDataCpmm(wallet: Keypair, poolID: any, connection: 
     console.error('Pool Cpmm not found')
     return null;
   }
-  const data = await raydium.api.fetchPoolById({ ids: String('9DKELiX58XvgYLjpZMsNhRYebDogzGFMNvQegkbDx9YB') })
+  const data = await raydium.api.fetchPoolById({ ids: String(poolID) })
   const poolInfo = data[0] as ApiV3PoolInfoStandardItemCpmm;
   console.log('poolInfo --c>', poolInfo);
   return poolInfo;

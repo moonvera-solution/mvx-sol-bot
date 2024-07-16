@@ -146,6 +146,7 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
   }
   const connection = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
   const cpmmPoolKey = ctx.session.cpmmPoolId;
+  console.log('cpmmPoolKey', cpmmPoolKey);
   if (!cpmmPoolKey) {
     return undefined;
   }
@@ -154,7 +155,7 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
   const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
   const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
   const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
-  console.log("cpmmPoolKey-%c>", cpmmPoolKey);
+  // console.log("cpmmPoolKey-%c>", cpmmPoolKey);
   ctx.session.cpmmPoolInfo = await getpoolDataCpmm(payerKeypair, cpmmPoolKey, connection);
 
   const tokenAddress = new PublicKey(ctx.session.cpmmPoolInfo.mintB.address);

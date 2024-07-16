@@ -133,6 +133,7 @@ async function _validateSession(ctx: any) {
       // NOTE: update db manually, if schema changes! avoid stopping the bot
       ctx.session = JSON.parse(JSON.stringify(restoredSession));
       console.log("Session restored.");
+
     }
   }
 }
@@ -143,6 +144,8 @@ async function _validateSession(ctx: any) {
 bot.command("start", async (ctx: any) => {
   await _validateSession(ctx);
   backupSession = ctx.session;
+  console.log("ctx.session.generatorWallet", ctx.session.generatorWallet);
+  console.log('ctx.session.referralCommision', ctx.session.referralCommision);
   try {
     const chatId = ctx.chat.id;
     ctx.session.chatId = chatId;
@@ -170,7 +173,9 @@ bot.command("start", async (ctx: any) => {
       const referralRecord = await Referrals.findOne({
         referralCode: referralCode,
       });
-      if (referralRecord && referralRecord.generatorChatId !== chatId) {
+      console.log("referralRecord:", referralRecord);
+     referralRecord ? ctx.session.generatorWallet = (referralRecord.generatorWallet): null;
+      if (referralRecord ) {
         if (!referralRecord.referredUsers.includes(chatId)) {
           // Add the user's chatId to the referredUsers array
           referralRecord.referredUsers.push(chatId);
@@ -181,6 +186,7 @@ bot.command("start", async (ctx: any) => {
             referralRecord.generatorWallet
           );
           ctx.session.referralCommision = referralRecord.commissionPercentage;
+          console.log('ctx.session.referralCommision', ctx.session.referralCommision);
           // ctx.session.referralEarnings = referralRecord.earnings;
           // Optional: Notify the user that they have been referred successfully
           await ctx.reply("Welcome! You have been referred successfully.");
@@ -513,7 +519,7 @@ bot.on("message", async (ctx) => {
         ctx.session.latestCommand = "buy_X_PUMP";
         if (msgTxt) {
 
-          const isNumeric = /^[0-9]+(\.[0-9]+)?$/.test(msgTxt);
+          const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
 
           if (isNumeric) {
             const amt = Number(msgTxt);
@@ -535,7 +541,7 @@ bot.on("message", async (ctx) => {
         ctx.session.latestCommand = "buy_X_JUP";
         if (msgTxt) {
 
-          const isNumeric = /^[0-9]+(\.[0-9]+)?$/.test(msgTxt);
+          const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
 
           if (isNumeric) {
             const amt = Number(msgTxt);
@@ -603,9 +609,10 @@ bot.on("message", async (ctx) => {
         console.log("buy_X_RAY here");
         ctx.session.latestCommand = "buy_X_RAY";
         if (msgTxt) {
-          const amt = msgTxt.includes(".")
-            ? Number.parseFloat(msgTxt)
-            : Number.parseInt(msgTxt);
+          const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
+
+          const amt = Number(msgTxt);
+          if(isNumeric){
           if (!isNaN(amt)) {
             await handle_radyum_swap(
               ctx,
@@ -614,20 +621,25 @@ bot.on("message", async (ctx) => {
               Number(amt)
             );
             break;
+          
           } else {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
-            
+            break;  
           }
+        } else {
+          return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+        }
         
-      }   break;
+      }
 
       case "buy_X_CPMM":
           console.log("buy_X_CPMM here");
           ctx.session.latestCommand = "buy_X_CPMM";
           if (msgTxt) {
-            const amt = msgTxt.includes(".")
-              ? Number.parseFloat(msgTxt)
-              : Number.parseInt(msgTxt);
+            const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
+
+            if (isNumeric) {
+              const amt = Number(msgTxt);
             if (!isNaN(amt)) {
               ctx.session.cpmm_amountIn = amt;
               ctx.session.cpmm_side = "buy";
@@ -638,7 +650,10 @@ bot.on("message", async (ctx) => {
             } else {
               return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
             }
+          } else {
+            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
+        }
           case "sell_X_CPMM": {
             console.log("sell_X_CPMM here");
 
@@ -905,10 +920,12 @@ bot.on("message", async (ctx) => {
       case "refer_friends": {
         ctx.session.awaitingWalletAddress = false; // Reset the flag
         const walletAddress = ctx.message.text;
-
         // Generate the referral link with the wallet address
         if (walletAddress) {
+
           const recipientAddress = new PublicKey(walletAddress);
+          const recipientWalletBalance = await getSolBalance(recipientAddress, CONNECTION);
+          console.log("recipientWalletBalance", recipientWalletBalance);
           const referralLink = await _generateReferralLink(
             ctx,
             recipientAddress
@@ -932,7 +949,7 @@ bot.on("message", async (ctx) => {
             `💰 <b>Total Earnings:</b> ${referEarningSol} SOL ($${referEarningDollar})\n` +
             `Rewards are credited instantly to your SOL balance.\n\n` +
             `💡 <b>Earn Rewards:</b> Receive 35% of trading fees in SOL/$Token from your referrals.\n\n` +
-            `Your total earnings have been sent to your referral wallet <b>${recipientAddress}</b>.\n\n` +
+            `Your total earnings have been sent to your referral wallet <b>${recipientWalletBalance.toFixed(4)}</b>.\n\n` +
             `<i>Note: Rewards are updated and sent in real-time and reflect your active contributions to the referral program.</i>`;
           const options: any = {
             reply_markup: JSON.stringify({
@@ -1128,6 +1145,8 @@ bot.on("callback_query", async (ctx: any) => {
             // Existing referral found, display referral data
             const referralData = await _getReferralData(ctx);
             const referralLink = referralData?.referralLink;
+            const referralWallet = referralData?.referralWallet;
+
             const referEarningSol = (
               Number(referralData?.totalEarnings) / 1e9
             ).toFixed(6);
