@@ -1,6 +1,6 @@
 import { getpoolDataCpmm, getRayCpmmPoolKeys, raydium_cpmm_swap } from "../../service/dex/raydium/cpmm/index";
 import { PublicKey } from '@metaplex-foundation/js';
-import { getTokenMetadata, getUserTokenBalanceAndDetails } from '../../service/feeds';
+import { getTokenMetadata, getuserShitBalance, getUserTokenBalanceAndDetails } from '../../service/feeds';
 import dotenv from "dotenv"; dotenv.config();
 import { formatNumberToKOrM, getSolBalance, getSwapAmountOutCpmm, getSwapAmountOutPump, updatePositions } from '../../service/util';
 import { Keypair, Connection } from '@solana/web3.js';
@@ -160,6 +160,7 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
 
   const tokenAddress = new PublicKey(ctx.session.cpmmPoolInfo.mintB.address);
   const [
+    shitBalance,
     birdeyeData,
     tokenMetadataResult,
     balanceInSOL,
@@ -168,6 +169,7 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
     jupSolPrice
 
   ] = await Promise.all([
+    getuserShitBalance(userPublicKey,tokenAddress, connection),
     getTokenDataFromBirdEyePositions(tokenAddress.toString(), userPublicKey),
     getTokenMetadata(ctx, tokenAddress.toBase58()),
     getSolBalance(userPublicKey, connection),
@@ -259,7 +261,7 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
       `---<code>Trade Position</code>---\n` +
       `Initial : <b>${(initialInSOL).toFixed(4)} SOL</b> | <b>${(initialInUSD.toFixed(4))} USD</b>\n` +
       `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n` +
-      `Token Balance: <b>${userTokenBalance.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n\n` +
+      `Token Balance: <b>${shitBalance.userTokenBalance.toFixed(4)} $${userTokenSymbol} </b> | <b>${((shitBalance.userTokenBalance) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((shitBalance.userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
       // `Price Impact (5.0 SOL) : <b>${priceImpact}%</b> \n\n` +
       // `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
       `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n ` +

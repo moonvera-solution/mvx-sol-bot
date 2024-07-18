@@ -1,6 +1,6 @@
 
 import { PublicKey } from '@metaplex-foundation/js';
-import { getTokenMetadata, getUserTokenBalanceAndDetails } from '../../service/feeds';
+import { getTokenMetadata, getuserShitBalance, getUserTokenBalanceAndDetails } from '../../service/feeds';
 
 import { formatNumberToKOrM, getSolBalance, getSwapAmountOutPump } from '../../service/util';
 import { Keypair, Connection } from '@solana/web3.js';
@@ -179,6 +179,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${SOL_ADDRESS}&outputMint=${token}&amount=${1}&slippageBps=${ctx.session.latestSlippage}${feeAccount ? '&platformFeeBps=08' : ''}`.trim();
     ;
       const [
+        shitBalance,
         birdeyeData,
         tokenMetadataResult,
         getSolBalanceData,
@@ -189,6 +190,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         jupSolPrice,
         quoteResponse
       ] = await Promise.all([
+        getuserShitBalance(publicKeyString,token, connection),
         getTokenDataFromBirdEyePositions(token, publicKeyString),
         getTokenMetadata(ctx, token),
         getSolBalance(publicKeyString, connection),
@@ -208,7 +210,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const lastRouteHop_5 = Number(jupPriceImpact_5.outAmount)
       const jupTokenValue: any = Object.values(jupTokenRate.data);
       let jupTokenPrice = 0;
-  
+
       if (jupTokenValue[0] && jupTokenValue[0].price && quoteResponse?.errorCode !== 'TOKEN_NOT_TRADABLE') {
    
         jupTokenPrice = jupTokenValue[0].price;
@@ -305,7 +307,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         `---<code>Trade Position</code>---\n` +
         `Initial : <b>${(initialInSOL).toFixed(4)} SOL</b> | <b>${(initialInUSD.toFixed(4))} USD</b>\n` +
         `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n` +
-        `Token Balance: <b>${userTokenBalance.toFixed(3)} $${userTokenDetails.userTokenSymbol} </b> | <b>${((userTokenBalance) * Number(tokenPriceUSD)).toFixed(4)} USD </b>| <b>${((userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n\n` +
+        `Token Balance: <b>${shitBalance.userTokenBalance.toFixed(4)} $${userTokenSymbol} </b> | <b>${((shitBalance.userTokenBalance) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((shitBalance.userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
         // `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
         `Wallet balance: <b>${getSolBalanceData.toFixed(4)}</b> SOL | <b>${(getSolBalanceData * Number(solPrice)).toFixed(4)}</b> USD\n` +
         `Net Worth: <b>${netWorthSol.toFixed(4)}</b> SOL | <b>${netWorth.toFixed(4)}</b> USD\n`;

@@ -39,8 +39,8 @@ export async function getUserTokenBalanceAndDetails(userWallet: PublicKey, token
             metaplex.nfts().findByMint({ mintAddress }),
             connection.getParsedTokenAccountsByOwner(walletPublicKey, {
                     mint: mintAddress,
-                    programId: TOKEN_PROGRAM_ID
-                })
+                    programId: TOKEN_PROGRAM_ID,
+                },  'processed')
         ]) ;
    
         userBalance = tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.uiAmount;
@@ -67,6 +67,30 @@ export async function getLiquityFromOwner(userWallet: PublicKey, tokenAddress: P
             mint: mintAddress,
             programId: TOKEN_PROGRAM_ID
         });
+        userBalance = tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.uiAmount;
+        let userBalanceTest:number = userBalance ? userBalance : 0;
+        return {
+            userTokenBalance: userBalanceTest,
+          
+        }
+    
+    } catch (error) {
+        console.error("Error in getUserTokenBalanceAndDetails: ", error);
+    }
+}
+
+
+export async function getuserShitBalance(userWallet: PublicKey, tokenAddress: PublicKey,connection:Connection) : Promise<any> {
+    let userBalance = 0;
+    try {
+        const mintAddress = (tokenAddress instanceof PublicKey) ? tokenAddress : new PublicKey(tokenAddress);
+        const walletPublicKey = (userWallet instanceof PublicKey) ? userWallet : new PublicKey(userWallet);
+        // const accountChange = await connection.getTokenAccountBalance(new PublicKey('FvVDc6gZmYho6DLLuJ3ptHS6rxb797Cxf1insiUnu2BL'),'processed');
+        // console.log("accountChange",accountChange);
+        let tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(walletPublicKey, {
+            mint: mintAddress,
+            programId: TOKEN_PROGRAM_ID
+        }, 'processed');
         userBalance = tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.uiAmount;
         let userBalanceTest:number = userBalance ? userBalance : 0;
         return {

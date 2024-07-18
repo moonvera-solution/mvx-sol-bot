@@ -8,7 +8,7 @@ import { formatNumberToKOrM, getSolBalance } from '../../service/util';
 import { Connection,Keypair } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import { Position, UserPosition } from '../../service/portfolio/positions';
-import { getTokenMetadata, getUserTokenBalanceAndDetails } from '../../service/feeds';
+import { getTokenMetadata, getuserShitBalance, getUserTokenBalanceAndDetails } from '../../service/feeds';
 import { SOL_ADDRESS ,CONNECTION} from '../../config';
 import { getSwapDetails } from '../../service/dex/pumpfun';
 import { getSolanaDetails } from '../../api';
@@ -64,7 +64,7 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
 
       if (!positionlKeys.some(pk => pk.baseMint === pos.baseMint)) positionlKeys.push(pos.baseMint);
       const mint = pos.baseMint.toString();
-      const [birdeyeData, jupRate,tokenMetadataResult,userTokenDetails,jupSolPrice] = await Promise.all([
+      const [birdeyeData, jupRate,tokenMetadataResult,userTokenDetails,jupSolPrice, shitBalance] = await Promise.all([
         getTokenDataFromBirdEyePositions(mint,userWallet),
         fetch(
           `https://price.jup.ag/v6/price?ids=${mint}&vsToken=So11111111111111111111111111111111111111112`
@@ -74,11 +74,12 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
         fetch(
           `https://price.jup.ag/v6/price?ids=SOL`
         ).then((response) => response.json()),
+        getuserShitBalance(userWallet,new PublicKey(mint), connection),
 
       ]);
       const tradeDex = pos.tradeType
 
-      return formatPositionMessage(ctx,userWallet,pos, userBalance, birdeyeData,tradeDex,jupRate,tokenMetadataResult,userTokenDetails,jupSolPrice);
+      return formatPositionMessage(ctx,userWallet,pos, userBalance, birdeyeData,tradeDex,jupRate,tokenMetadataResult,userTokenDetails,jupSolPrice,shitBalance);
     });
 
 
@@ -98,7 +99,8 @@ async function formatPositionMessage(
   jupRate: any,
   tokenMetadataResult: any,
   userTokenDetails: any,
-  jupSolPrice: any
+  jupSolPrice: any,
+  shitBalance:any
 ): Promise<string> {
 
 let tokenPriceUSD = 0;
@@ -161,7 +163,7 @@ if (tradeDex.includes('jup_swap') || tradeDex.includes('ray_swap')) {
     `Initial: ${Number(initialInSOL).toFixed(4)} <b>SOL</b> | ${Number(initialInUSD).toFixed(4)} <b>USD</b>\n` +
     `Current value: ${valueInSOL !== 'N/A' ? Number(valueInSOL).toFixed(4) : 'N/A'} <b>SOL</b> | ${valueInUSD !== 'N/A' ? Number(valueInUSD).toFixed(4) : 'N/A'} <b>USD</b>\n` +
     `Profit: ${profitInSol !== 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD !== 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage !== 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n\n` +
-    `Token Balance: ${userTokenBalance.toFixed(4)} <b>${pos.symbol}</b> | ${((userTokenBalance) * Number(tokenPriceUSD)).toFixed(4)}<b>USD</b> |${((userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} <b>SOL</b>\n\n`;
+    `Token Balance: ${shitBalance.userTokenBalance.toFixed(4)} <b>${pos.symbol}</b> | ${((shitBalance.userTokenBalance) * Number(tokenPriceUSD)).toFixed(4)}<b>USD</b> |${((shitBalance.userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} <b>SOL</b>\n\n`;
 }
 
 
