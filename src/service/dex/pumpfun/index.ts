@@ -35,10 +35,11 @@ export async function pump_fun_swap(connection: Connection, {
     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
     const blockhash = await connection.getLatestBlockhash();
 
-    console.log(" ${process.env.SOL_TRACKER_API_URL}/swap:: ",`${process.env.SOL_TRACKER_API_URL}/swap`);
-    const swapInx = await axios.get(`${process.env.SOL_TRACKER_API_URL}/swap`, { params, headers });
-
-    const swapResponse = swapInx.data;
+    // console.log(" ${process.env.SOL_TRACKER_API_URL}/swap:: ",`${process.env.SOL_TRACKER_API_URL}/swap`);
+    const swapInx = await fetch(`${process.env.SOL_TRACKER_API_URL}/swap?${params.toString()}`, { headers }).then((response) => response.json());
+    console.log("== SWAP INX ==", swapInx);
+    if (!swapInx) return null;
+    const swapResponse = swapInx;
     const serializedTransactionBuffer = Buffer.from(swapResponse.txn, "base64");
     let solAmount: BigNumber = side == 'buy' ? new BigNumber(swapResponse.rate.amountIn) : new BigNumber(swapResponse.rate.amountOut);
     let hasReferral = referralWallet && referralCommision! > 0;
