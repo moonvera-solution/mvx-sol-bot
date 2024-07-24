@@ -40,10 +40,13 @@ export async function handleRefreshStart(ctx: any) {
       `Start by choosing a wallet or import one using the "Import Wallet" button.\n` +
       `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
       `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInUSD.toFixed(4))}</b> USD\n\n` +
+      `<i>  - 📣 Limit Order is available</i>\n\n` +
       `<b> Markets </b>\n`+
-      `<i>  - Jupiter </i>\n`+
+      `<i>  - Jupiter  </i>\n`+
       `<i>  - Raydium AMM/CPMM </i>\n`+
-      `<i>  - Pump fun </i>\n`;
+      `<i>  - Pump fun </i>\n\n`+
+      `<i>  - 📢  Dribs Market Maker Bot is available now! 🤖💼
+        For more information or to get started, please contact us directly </i>\n`;
 
  // Define the inline keyboard options
  const options: any = {
@@ -55,8 +58,8 @@ export async function handleRefreshStart(ctx: any) {
             [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
             [{ text: "☑️ Rug Check", callback_data: "rug_check" }],
             [{ text: "💱 Trade", callback_data: "jupiter_swap" },{ text: "🎯 Turbo Snipe", callback_data: "snipe" }],
-            // [{ text: '💱 Buy', callback_data: 'buy' }, { text: 'Sell 📈', callback_data: 'sell' }],
-            [{ text: 'ℹ️ Help', callback_data: 'help' }, { text: 'Refer Friends', callback_data: 'refer_friends' }],
+            [{ text: "⌚️ Set Limit Orders", callback_data: "limitOrders" },
+                { text: "⏳ Open Orders", callback_data: "display_open_orders" }],            [{ text: 'ℹ️ Help', callback_data: 'help' }, { text: 'Refer Friends', callback_data: 'refer_friends' }],
             [{ text: 'Positions', callback_data: 'display_spl_positions' }],
             [{ text: '🔄 Refresh', callback_data: 'refresh_start' }],
            

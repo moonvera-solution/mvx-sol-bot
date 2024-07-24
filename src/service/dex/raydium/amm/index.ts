@@ -114,11 +114,11 @@ export async function raydium_amm_swap(input: TxInputInfo): Promise<string | nul
       )
     );
   }
-  console.log("input.customPriorityFee:: ", input.customPriorityFee);
+  // console.log("input.customPriorityFee:: ", input.customPriorityFee);
   let maxPriorityFee = Math.ceil(Number.parseFloat(String(input.customPriorityFee)) * 1e9);
   console.log("maxPriorityFee:: ", maxPriorityFee);
   innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee }));
-  console.log("referralFee:: ", referralFee);
+  // console.log("referralFee:: ", referralFee);
 
   const vTxx = new VersionedTransaction(wrapLegacyTx(innerTransactions[0].instructions, input.wallet, (await connection.getLatestBlockhash()).blockhash));
   const addressLookupTableAccounts = await Promise.all(

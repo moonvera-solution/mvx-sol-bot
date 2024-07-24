@@ -158,11 +158,11 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
     const chatId = ctx.chat.id;
     const session = ctx.session;
     const token = session.jupSwap_token
-    let priority_Level = ctx.session.priorityFees;
-    const priority_custom = ctx.session.ispriorityCustomFee;
-    if (priority_custom === true) {
-      priority_Level = 0;
-    }
+    // let priority_Level = ctx.session.priorityFees;
+    // const priority_custom = ctx.session.ispriorityCustomFee;
+    // if (priority_custom === true) {
+    //   priority_Level = 0;
+    // }
     const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
 
     let userWallet: any;
@@ -302,7 +302,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
         `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
         `Market Cap: <b>${Mcap}</b> USD\n` +
-        `Price:  <b>${tokenPriceSOL.toFixed(9)} SOL</b> | <b>${(tokenPriceUSD).toFixed(9)} USD</b> | <b>${tokenPriceSOL.toFixed(4)}</b> SOL\n\n` +
+        `Price:  <b>${tokenPriceSOL.toFixed(9)} SOL</b> | <b>${(tokenPriceUSD).toFixed(9)} USD</b> \n\n` +
         // `Price impact (5 SOL): <b>${priceImpact_5.toFixed(2)}%</b>\n\n` +
         `---<code>Trade Position</code>---\n` +
         `Initial : <b>${(initialInSOL).toFixed(4)} SOL</b> | <b>${(initialInUSD.toFixed(4))} USD</b>\n` +

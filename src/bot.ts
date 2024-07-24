@@ -68,6 +68,9 @@ import {
 import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
 import { hasEnoughSol } from "./service/util/validations";
 import { ray_cpmm_swap } from "./views/raydium/swapCpmmView";
+import { getTokenMetadata, getuserShitBalance } from "./service/feeds";
+import { review_limitOrder_details_sell, submit_limitOrder_sell } from "./views/jupiter/limitOrderView";
+// import { review_limitOrder_details_sell } from "./views/jupiter/limitOrderView";
 // import { br } from "@raydium-io/raydium-sdk-v2/lib/type-9fe71e3c";
 const express = require("express");
 const app = express();
@@ -244,10 +247,14 @@ bot.command("start", async (ctx: any) => {
       `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
       `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInUSD.toFixed(4))}</b> USD\n\n` +
       // `⚠️ We recommend exporting your private key and keeping it on paper. ⚠️ \n` +
+      `<i>  - 📣 Limit Order is available</i>\n\n` +
       `<b> Markets </b>\n`+
-      `<i>  - Jupiter </i>\n`+
+      `<i>  - Jupiter  </i>\n`+
       `<i>  - Raydium AMM/CPMM </i>\n`+
-      `<i>  - Pump fun </i>\n`;
+      `<i>  - Pump fun </i>\n\n`+
+      `<i>  - 📢  Dribs Market Maker Bot is available now! 🤖💼
+        For more information or to get started, please contact us directly </i>\n`;
+
 
 
     // Set the options for th e inline keyboard with social links
@@ -266,8 +273,8 @@ bot.command("start", async (ctx: any) => {
             { text: "💱 Trade", callback_data: "jupiter_swap" },
             { text: "🎯 Turbo Snipe", callback_data: "snipe" },
           ],
-          // [{ text: "⏳ Limit Orders", callback_data: "limitOrders" },
-          // { text: "⏳ Open Orders", callback_data: "display_open_orders" }],
+          [{ text: "⌚️ Set Limit Orders", callback_data: "limitOrders" },
+          { text: "⏳ Open Orders", callback_data: "display_open_orders" }],
           [
             { text: "ℹ️ Help", callback_data: "help" },
             { text: "Refer Friends", callback_data: "refer_friends" },
@@ -409,7 +416,15 @@ const commandNumbers = [
   "buy_X_SOL_IN_POSITION",
   "rug_check",
   'snipe_X_SOL',
-  'import_wallet'
+  'import_wallet',
+  'limitOrders',
+  'set_limit_order_amount_buy',
+  'set_limit_order_amount_sell',
+  'set_limit_order_price',
+  'submit_limit_order',
+  'set_limit_order_time',
+  'review_limitOrder_details',
+
 
   // 'jupiter_swap',
 ];
@@ -978,56 +993,143 @@ bot.on("message", async (ctx) => {
         break;
       }
       case "limitOrders": {
-        try {
-          if (!msgTxt || !PublicKey.isOnCurve(msgTxt) || !await checkAccountType(ctx, msgTxt)) throw new Error("Invalid token address");
-          ctx.session.limitOrders.token = ctx.message.text!;
-          ctx.session.latestCommand = "limitOrders";
+        console.log("limitOrders here");
+ 
+          if(msgTxt){
+          if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {
+            const isTOken = await checkAccountType(ctx, msgTxt);
+            if (!isTOken) {
+              ctx.api.sendMessage(chatId, "Invalid address");
+              return;
+            }
+            ctx.session.latestCommand = "limitOrders";
+            let limitOrderToken = new PublicKey(msgTxt);
+             ctx.session.limitOrders_token = limitOrderToken;
+        
           await display_limitOrder_token_details(ctx, false);
           break;
-        } catch (error: any) {
-          console.error("ERROR on bot.on txt msg", error, error.message);
+          }
         }
-      }
-      case "set_limit_order_amount": {
-        // TODO: add checks for the amount
-        ctx.session.limitOrders.amount = Number(msgTxt!);
-        const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
-        const connection = CONNECTION;
-        let userSolBalance = await getSolBalance(userWallet.publicKey, connection);
-        if (userSolBalance < ctx.session.limitOrders.amount && ctx.session.limitOrders.side == "buy") {
-          await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
-          break;
-        }
-        await ctx.api.sendMessage(chatId, "Enter the token target price (in SOL)");
-        ctx.session.latestCommand = "set_limit_order_price";
         break;
       }
+      case "set_limit_order_amount_sell": {
+        // TODO: add checks for the amount
+        if(msgTxt){
+          console.log('msgTxt', msgTxt);  
+          const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
+          const isTokenAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(msgTxt);
+          if(isTokenAddress && !isNumeric){
+            await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+            return;
+          }
+          if (isNumeric) {
+         
+            const amt = Number(msgTxt);
+            if (!isNaN(amt)) {
+     
+              const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+              const connection = CONNECTION;
+              const [userTokenBalance,tokenMetadataResult] = await Promise.all([
+                getuserShitBalance(new PublicKey(userWallet.publicKey),ctx.session.limitOrders_token, connection),
+                getTokenMetadata(ctx, ctx.session.limitOrders_token.toBase58())
+              ]);
+              if (userTokenBalance <= 0) {
+                await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userTokenBalance} SOL`);
+                 return;
+              }
+              const decimalsToken = tokenMetadataResult.tokenData.mint.decimals;
+              let sellingAmmt = Math.floor(Number(msgTxt!)/ 100 * Number( userTokenBalance.userTokenBalance) * Math.pow(10, decimalsToken)) ;
+              ctx.session.limitOrders_amount = sellingAmmt;
+              await ctx.api.sendMessage(chatId, "Enter the token target price (in SOL)");
+              ctx.session.latestCommand = "set_limit_order_price";
+              break;
+          
+            } else {
+              return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+            }
+          }
+        }
+      }
+      case "set_limit_order_amount_buy": {
+        // TODO: add checks for the amount
+        if(msgTxt){
+          console.log('msgTxt', msgTxt);  
+          const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
+          const isTokenAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(msgTxt);
+          if(isTokenAddress && !isNumeric){
+            await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+            return;
+          }
+          if (isNumeric) {
+            const amt = Number(msgTxt);
+            if (!isNaN(amt)) {
+              // console.log('hit here not below');
+              ctx.session.limitOrders_amount = Number(msgTxt!);
+              const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+              const connection = CONNECTION;
+              let userSolBalance = await getSolBalance(userWallet.publicKey, connection);
+              if (userSolBalance < ctx.session.limitOrders_amount && ctx.session.limitOrders_side == "buy") {
+                await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
+                 return;
+              }
+              // console.log('hit here');
+              await ctx.api.sendMessage(chatId, "Enter the token target price (in SOL)");
+              ctx.session.latestCommand = "set_limit_order_price";
+              break;
+          
+            } else {
+              return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+            }
+          }
+        }
+      }
       case "set_limit_order_price": {
+        if(msgTxt){
+          const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
+          if (!isNumeric) {
+            await ctx.api.sendMessage(chatId, "🔴 Invalid price");
+            return;
+        }
+       } else {
+          await ctx.api.sendMessage(chatId, "🔴 Invalid price");
+          return;
+       }
         // TODO: add checks for the price
-        ctx.session.limitOrders.price = Number(msgTxt!);
-        await ctx.api.sendMessage(chatId, "Enter expiry time from now - MIN:HR:DAYS - ie: 10:23:01 \n");
-        await ctx.api.sendMessage(chatId, "Or enter NO EXPIRY (keep order open to hit target price)");
+        ctx.session.limitOrders_price = Number(msgTxt!);
+        await ctx.api.sendMessage(chatId, "Enter expiry time from now - DAYS:HR:MIN - ie: 01:23:10 \n");
+        await ctx.api.sendMessage(chatId, "Or enter No to keep the order open to hit target price");
         ctx.session.latestCommand = "set_limit_order_time";
         break;
       }
       case "set_limit_order_time": {
         // TODO: parse NO EXPIRY msgTxt and set ctx.session.limitOrders.time = null
+        if(msgTxt){
         const time = getTargetDate(msgTxt!);
-
-        if (msgTxt?.includes("NO")) {
-          ctx.session.limitOrders.time = null;
-          await review_limitOrder_details(ctx, false);
+        const NoTime = /^(No|no|NO)$/.test(msgTxt);
+        if (NoTime){
+          ctx.session.limitOrders_time = 0;
+            if(ctx.session.limitOrders_side == "buy"){
+            await review_limitOrder_details(ctx, false)
+            } else {
+              console.log('selling order view');
+              await review_limitOrder_details_sell(ctx, false)
+            }
           break;
-
         } else if (time) {
-          ctx.session.limitOrders.time = Number(time);
-          await review_limitOrder_details(ctx, false);
+          ctx.session.limitOrders_time = Number(time);
+        
+          if(ctx.session.limitOrders_side == "buy"){
+            await review_limitOrder_details(ctx, false)
+            } else {
+              await review_limitOrder_details_sell(ctx, false)
+            }
           break;
 
         } else {
           await ctx.api.sendMessage(chatId, "Invalid time format");
           return;
         }
+      }
       }
 
     }
@@ -1244,9 +1346,7 @@ bot.on("callback_query", async (ctx: any) => {
       case "refresh_limit_order":
         await display_limitOrder_token_details(ctx, true);
         break;
-      case "display_open_orders":
-        await display_open_orders(ctx);
-        break;
+ 
       case "manage_limit_orders":
         ctx.session.latestCommand = "manage_limit_orders";
         await display_single_order(ctx, false);
@@ -1576,6 +1676,14 @@ bot.on("callback_query", async (ctx: any) => {
 
         break;
       }
+      case 'refresh_review_limit_order': {
+        await review_limitOrder_details(ctx, true);
+        break;
+      }
+      case 'refresh_review_limit_order_sell': {
+        await review_limitOrder_details_sell(ctx, true);
+        break;
+      }
 
       case "display_single_position": {
         ctx.session.latestCommand = "display_single_position";
@@ -1664,26 +1772,36 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "set_limit_order_buy": {
-        ctx.session.latestCommand = "set_limit_order_amount";
-        ctx.session.limitOrders.side = "buy";
+        ctx.session.latestCommand = "set_limit_order_amount_buy";
+        ctx.session.limitOrders_side = "buy";
         await ctx.api.sendMessage(chatId, "Enter amount of Buy order (in SOL).");
         break;
       }
       case "set_limit_order_sell": {
-        ctx.session.latestCommand = "set_limit_order_amount";
-        ctx.session.limitOrders.side = "sell";
-        await ctx.api.sendMessage(chatId, "Enter amount of Sell order (in SOL).");
+        ctx.session.latestCommand = "set_limit_order_amount_sell";
+        ctx.session.limitOrders_side = "sell";
+        await ctx.api.sendMessage(chatId, "Enter the percentage of amount to sell (eg. 25 for 25%)");
         break;
       }
       case "submit_limit_order": {
-        await ctx.api.sendMessage(chatId, "Submitting limit order...");
+        await ctx.api.sendMessage(chatId, "Submitting limit order... Please wait!");
         await submit_limitOrder(ctx);
         break;
       }
-      case "display_open_orders": {
-        await display_open_orders(ctx);
+      case "submit_limit_order_sell": {
+        await ctx.api.sendMessage(chatId, "Submitting limit order... Please wait!");
+        await submit_limitOrder_sell(ctx);
         break;
       }
+      case "display_open_orders": {
+        await display_open_orders(ctx,false);
+        break;
+      }
+      case 'refresh_limit_orders': {
+        await display_open_orders(ctx,true);
+        break;
+      }
+
       case "cancel_all_orders": {
         await cancel_all_orders(ctx);
         break;

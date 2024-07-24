@@ -29,6 +29,7 @@ export const DefaultPortfolioData: PORTFOLIO_TYPE = {
 }
 
 export interface ISESSION_DATA {
+  expectedAmountOut_order: number;
   CpmmSolExtracted: number;
   cpmm_amountIn: number;
   cpmm_side: string;
@@ -71,7 +72,11 @@ export interface ISESSION_DATA {
   jupSwap_amount: number,
   jupSwap:{token:String,side:String,amount:number},
   ammAddress: string,
-  limitOrders:{token:String,side:String,amount:number,price:number, time: number |null },
+  limitOrders_token: PublicKey,
+  limitOrders_side: string,
+  limitOrders_amount: number,
+  limitOrders_price: number,
+  limitOrders_time: number,
   poolSchedule: {
     status: String,
     baseDecimals: Number,
@@ -127,6 +132,7 @@ export const DefaultSessionData: ISESSION_DATA = {
     positions: [],
     activeWalletIndex: 0
   },
+  expectedAmountOut_order: 0,
   CpmmSolExtracted: 0,
   cpmm_amountIn: 0,
   cpmm_side: '',
@@ -166,7 +172,11 @@ export const DefaultSessionData: ISESSION_DATA = {
   // priorityFees: PriotitizationFeeLevels.LOW,
   positionIndex: 0,
   allowedReferral:'', // tg Username
-  limitOrders:{token:'',side:'',amount:0,price:0,time:0},
+  limitOrders_token: DEFAULT_PUBLIC_KEY,
+  limitOrders_side: '',
+  limitOrders_amount: 0,
+  limitOrders_price: 0,
+  limitOrders_time: 0,
   jupSwap_token: '',
   jupSwap:{token:'',side:'',amount:0},
   poolSchedule: {

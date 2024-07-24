@@ -985,7 +985,7 @@ export async function updateReferralBalance(chatId: string,amountUse:BigNumber,r
 
 export function getTargetDate(msg: any): Date | null {
     try {  // Split the message into its components
-        const [mins, hrs, days] = msg.split(':').map(Number);
+        const [days, hrs, mins ] = msg.split(':').map(Number);
 
         // Get the current date
         const date = new Date(Date.now());
@@ -996,7 +996,7 @@ export function getTargetDate(msg: any): Date | null {
         date.setDate(date.getDate() + days);
 
         // Return the new date
-        console.log('expiry date: ', date.toLocaleString());
+        // console.log('expiry date: ', date.toLocaleString());
         
         return date;
     } catch (error: any) {
