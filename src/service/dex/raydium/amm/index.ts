@@ -96,24 +96,32 @@ export async function raydium_amm_swap(input: TxInputInfo): Promise<string | nul
   // In case of having a referral
   const referralFee = input.referralCommision / 100;
  
-  if (referralFee > 0) {
-    innerTransactions[0].instructions.push(
-      ...add_mvx_and_ref_inx_fees(
-        input.wallet,
-        new PublicKey(input.generatorWallet).toBase58(),
-        input.side === "sell" ? new BigNumber(amountOut.raw.toNumber() ): new BigNumber(input.inputTokenAmount.raw.toNumber()),
-        input.referralCommision
-      ));
-  } else {
-    let feeAmt = Number.isInteger(amountOut.raw.toNumber()) ? amountOut.raw.toNumber() : Math.ceil(Number.parseFloat(amountOut.raw.toNumber().toFixed(2)));
-    console.log("feeAmt:: ", feeAmt);
-    innerTransactions[0].instructions.push(
-      ...addMvxFeesInx(
-        input.wallet,
-        input.side === "sell" ? new BigNumber(feeAmt) : new BigNumber(input.inputTokenAmount.raw.toNumber())
-      )
-    );
-  }
+  // if (referralFee > 0) {
+  //   innerTransactions[0].instructions.push(
+  //     ...add_mvx_and_ref_inx_fees(
+  //       input.wallet,
+  //       new PublicKey(input.generatorWallet).toBase58(),
+  //       input.side === "sell" ? new BigNumber(amountOut.raw.toNumber() ): new BigNumber(input.inputTokenAmount.raw.toNumber()),
+  //       input.referralCommision
+  //     ));
+  // } else {
+  //   let feeAmt = Number.isInteger(amountOut.raw.toNumber()) ? amountOut.raw.toNumber() : Math.ceil(Number.parseFloat(amountOut.raw.toNumber().toFixed(2)));
+  //   console.log("feeAmt:: ", feeAmt);
+  //   innerTransactions[0].instructions.push(
+  //     ...addMvxFeesInx(
+  //       input.wallet,
+  //       input.side === "sell" ? new BigNumber(feeAmt) : new BigNumber(input.inputTokenAmount.raw.toNumber())
+  //     )
+  //   );
+  // }
+  let feeAmt = Number.isInteger(amountOut.raw.toNumber()) ? amountOut.raw.toNumber() : Math.ceil(Number.parseFloat(amountOut.raw.toNumber().toFixed(2)));
+  console.log("feeAmt:: ", feeAmt);
+  innerTransactions[0].instructions.push(
+    ...addMvxFeesInx(
+      input.wallet,
+      input.side === "sell" ? new BigNumber(feeAmt) : new BigNumber(input.inputTokenAmount.raw.toNumber())
+    )
+  );
   // console.log("input.customPriorityFee:: ", input.customPriorityFee);
   let maxPriorityFee = Math.ceil(Number.parseFloat(String(input.customPriorityFee)) * 1e9);
   console.log("maxPriorityFee:: ", maxPriorityFee);

@@ -196,30 +196,37 @@ export async function startSnippeSimulation(
     let referralInx: any = null;
     let minimumBalanceNeeded = 0;
     minimumBalanceNeeded += amountIn.toNumber()
-    if (referralFee > 0) {
-        mvxFeeInx = SystemProgram.transfer({
-            fromPubkey: userWallet.publicKey,
-            toPubkey: new PublicKey(WALLET_MVX),
-            lamports: cut_bot_fee,
-        });
-        referralInx = SystemProgram.transfer({
-            fromPubkey: userWallet.publicKey,
-            toPubkey: new PublicKey(referralWallet),
-            lamports: referralAmmount,
-        });
+    // if (referralFee > 0) {
+    //     mvxFeeInx = SystemProgram.transfer({
+    //         fromPubkey: userWallet.publicKey,
+    //         toPubkey: new PublicKey(WALLET_MVX),
+    //         lamports: cut_bot_fee,
+    //     });
+    //     referralInx = SystemProgram.transfer({
+    //         fromPubkey: userWallet.publicKey,
+    //         toPubkey: new PublicKey(referralWallet),
+    //         lamports: referralAmmount,
+    //     });
 
-        innerTransactions[0].instructions.push(mvxFeeInx);
-        innerTransactions[0].instructions.push(referralInx);
-        minimumBalanceNeeded += cut_bot_fee + referralAmmount;
-    } else {
-        mvxFeeInx = SystemProgram.transfer({
-            fromPubkey: userWallet.publicKey,
-            toPubkey: new PublicKey(WALLET_MVX),
-            lamports: bot_fee, // 5_000 || 6_000
-        });
-        innerTransactions[0].instructions.push(mvxFeeInx);
-        minimumBalanceNeeded += bot_fee;
-    }
+    //     innerTransactions[0].instructions.push(mvxFeeInx);
+    //     innerTransactions[0].instructions.push(referralInx);
+    //     minimumBalanceNeeded += cut_bot_fee + referralAmmount;
+    // } else {
+    //     mvxFeeInx = SystemProgram.transfer({
+    //         fromPubkey: userWallet.publicKey,
+    //         toPubkey: new PublicKey(WALLET_MVX),
+    //         lamports: bot_fee, // 5_000 || 6_000
+    //     });
+    //     innerTransactions[0].instructions.push(mvxFeeInx);
+    //     minimumBalanceNeeded += bot_fee;
+    // }
+    mvxFeeInx = SystemProgram.transfer({
+        fromPubkey: userWallet.publicKey,
+        toPubkey: new PublicKey(WALLET_MVX),
+        lamports: bot_fee, // 5_000 || 6_000
+    });
+    innerTransactions[0].instructions.push(mvxFeeInx);
+    minimumBalanceNeeded += bot_fee;
 
     const userSolBalance = await getSolBalance(userWallet.publicKey, connection);
 

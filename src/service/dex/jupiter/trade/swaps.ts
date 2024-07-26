@@ -118,7 +118,8 @@ export async function jupiter_inx_swap(
   console.log("hasReferral:: jup ",hasReferral);
   
   const txInxs = hasReferral ?
-    add_mvx_and_ref_inx_fees(wallet, refObject.referralWallet!, solAmount, refObject.referralCommision!) :
+  addMvxFeesInx(wallet, solAmount):
+    // add_mvx_and_ref_inx_fees(wallet, refObject.referralWallet!, solAmount, refObject.referralCommision!) :
     addMvxFeesInx(wallet, solAmount);
 
   const messageV0 = new TransactionMessage({

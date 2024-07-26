@@ -44,7 +44,8 @@ export async function pump_fun_swap(connection: Connection, {
     let solAmount: BigNumber = side == 'buy' ? new BigNumber(swapResponse.rate.amountIn) : new BigNumber(swapResponse.rate.amountOut);
     let hasReferral = referralWallet && referralCommision! > 0;
     const mvxInxs = hasReferral ?
-        add_mvx_and_ref_inx_fees(payerKeypair, referralWallet!, solAmount.multipliedBy(1e9), referralCommision!) :
+    addMvxFeesInx(payerKeypair, solAmount.multipliedBy(1e9)):
+        // add_mvx_and_ref_inx_fees(payerKeypair, referralWallet!, solAmount.multipliedBy(1e9), referralCommision!) :
         addMvxFeesInx(payerKeypair, solAmount.multipliedBy(1e9));
         
     let txSig = null;

@@ -70,6 +70,7 @@ import { hasEnoughSol } from "./service/util/validations";
 import { ray_cpmm_swap } from "./views/raydium/swapCpmmView";
 import { getTokenMetadata, getuserShitBalance } from "./service/feeds";
 import { review_limitOrder_details_sell, submit_limitOrder_sell } from "./views/jupiter/limitOrderView";
+import { handleCloseInputUser } from "./views/util/commons";
 // import { review_limitOrder_details_sell } from "./views/jupiter/limitOrderView";
 // import { br } from "@raydium-io/raydium-sdk-v2/lib/type-9fe71e3c";
 const express = require("express");
@@ -153,59 +154,59 @@ bot.command("start", async (ctx: any) => {
     const chatId = ctx.chat.id;
     ctx.session.chatId = chatId;
     const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
-    let isNewUser = false;
+    // let isNewUser = false;
     const connection = CONNECTION;
-    let referralCode = null;
+    // let referralCode = null;
     // Check if there's additional text with the /start command
-    if (ctx.message.text.includes(" ")) {
-      referralCode = ctx.message.text.split(" ")[1];
-    }
+    // if (ctx.message.text.includes(" ")) {
+    //   referralCode = ctx.message.text.split(" ")[1];
+    // }
     // if user already exists
-    if (portfolio == DefaultPortfolioData) {
-      // User is new
-      isNewUser = true;
-    }
-    const userName = ctx.message.from.username;
+    // if (portfolio == DefaultPortfolioData) {
+    //   // User is new
+    //   isNewUser = true;
+    // }
+    // // const userName = ctx.message.from.username;
 
-    const user = await AllowedReferrals.find({ tgUserName: userName });
-    if (user[0] != undefined) {
-      ctx.session.allowedReferral = user[0].tgUserName;
-    }
-    // console.log("referralCode:", referralCode);
-    if (referralCode || ctx.session.allowedReferral) {
-      const referralRecord = await Referrals.findOne({
-        referralCode: referralCode,
-      });
-      console.log("referralRecord:", referralRecord);
-     referralRecord ? ctx.session.generatorWallet = (referralRecord.generatorWallet): null;
-      if (referralRecord ) {
-        if (!referralRecord.referredUsers.includes(chatId)) {
-          // Add the user's chatId to the referredUsers array
-          referralRecord.referredUsers.push(chatId);
-          // Increment the referral count
-          referralRecord.numberOfReferrals! += 1;
-          await referralRecord.save();
-          ctx.session.generatorWallet = new PublicKey(
-            referralRecord.generatorWallet
-          );
-          ctx.session.referralCommision = referralRecord.commissionPercentage;
-          console.log('ctx.session.referralCommision', ctx.session.referralCommision);
-          // ctx.session.referralEarnings = referralRecord.earnings;
-          // Optional: Notify the user that they have been referred successfully
-          await ctx.reply("Welcome! You have been referred successfully.");
-        } else {
-          ctx.session.generatorWallet = referralRecord.generatorWallet;
-          ctx.session.referralCommision = referralRecord.commissionPercentage;
-        }
-      }
-    } else if (isNewUser) {
-      // New user without a referral code
-      await ctx.api.sendMessage(
-        chatId,
-        "Welcome to DRIBs bot. Please start the bot using a referral link."
-      );
-      return;
-    }
+    // const user = await AllowedReferrals.find({ tgUserName: userName });
+    // if (user[0] != undefined) {
+    //   ctx.session.allowedReferral = user[0].tgUserName;
+    // }
+    // // console.log("referralCode:", referralCode);
+    // if (referralCode || ctx.session.allowedReferral) {
+    //   const referralRecord = await Referrals.findOne({
+    //     referralCode: referralCode,
+    //   });
+    //   console.log("referralRecord:", referralRecord);
+    //  referralRecord ? ctx.session.generatorWallet = (referralRecord.generatorWallet): null;
+    //   if (referralRecord ) {
+    //     if (!referralRecord.referredUsers.includes(chatId)) {
+    //       // Add the user's chatId to the referredUsers array
+    //       referralRecord.referredUsers.push(chatId);
+    //       // Increment the referral count
+    //       referralRecord.numberOfReferrals! += 1;
+    //       await referralRecord.save();
+    //       ctx.session.generatorWallet = new PublicKey(
+    //         referralRecord.generatorWallet
+    //       );
+    //       ctx.session.referralCommision = referralRecord.commissionPercentage;
+    //       console.log('ctx.session.referralCommision', ctx.session.referralCommision);
+    //       // ctx.session.referralEarnings = referralRecord.earnings;
+    //       // Optional: Notify the user that they have been referred successfully
+    //       await ctx.reply("Welcome! You have been referred successfully.");
+    //     } else {
+    //       ctx.session.generatorWallet = referralRecord.generatorWallet;
+    //       ctx.session.referralCommision = referralRecord.commissionPercentage;
+    //     }
+    //   }
+    // } else if (isNewUser) {
+    //   // New user without a referral code
+    //   await ctx.api.sendMessage(
+    //     chatId,
+    //     "Welcome to DRIBs bot. Please start the bot using a referral link."
+    //   );
+    //   return;
+    // }
     //-------Start bot with wallet---------------------------
     ctx.session.latestCommand = "start";
     let userWallet: Keypair | null = null;
@@ -408,7 +409,7 @@ const commandNumbers = [
   "sell_1_PUMP",
   "set_customPriority",
   "buy_X_RAY",
-  "sell_x_RAY",
+  "sell_X_RAY",
   "buy_0.5_RAY",
   "sell_0.5_RAY",
   "buy_1_RAY",
@@ -1200,7 +1201,15 @@ bot.on("callback_query", async (ctx: any) => {
       const parts = data.split("_");
       const positionIndex = parts[2]; // Position index
       ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
-      ctx.api.sendMessage(chatId, "Please enter SOL amount");
+      const options: any = {
+        reply_markup: JSON.stringify({
+          inline_keyboard: [
+            [{ text: "Cancel", callback_data: "delete_input" }],      
+          ],
+        }),
+        parse_mode: "HTML",
+      };
+      ctx.api.sendMessage(chatId, "Please enter SOL amount", options);
       ctx.session.latestCommand = "buy_X_SOL_IN_POSITION";
       return;
     } else if (matchNavigate) {
@@ -1402,6 +1411,10 @@ bot.on("callback_query", async (ctx: any) => {
       case "closing":
         await handleCloseKeyboard(ctx);
         break;
+      case "delete_input":{
+        await handleCloseInputUser(ctx);
+        break;
+      }
       case "confirm_send_sol": {
         const recipientAddress = ctx.session.recipientAddress;
         const solAmount = ctx.session.solAmount
@@ -1483,7 +1496,15 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "buy_X_PUMP": {
         ctx.session.latestCommand = "buy_X_PUMP";
-        ctx.api.sendMessage(chatId, "Please enter SOL amount");
+        const options: any = {
+          reply_markup: JSON.stringify({
+            inline_keyboard: [
+              [{ text: "Cancel", callback_data: "delete_input" }],      
+            ],
+          }),
+          parse_mode: "HTML",
+        };
+        ctx.api.sendMessage(chatId, "Please enter SOL amount", options);
         break;
       }
       case "buy_0.5_PUMP": {
@@ -1517,7 +1538,15 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "buy_X_JUP": {
         ctx.session.latestCommand = "buy_X_JUP";
-        ctx.api.sendMessage(chatId, "Please enter SOL amount");
+        const options: any = {
+          reply_markup: JSON.stringify({
+            inline_keyboard: [
+              [{ text: "Cancel", callback_data: "delete_input" }],      
+            ],
+          }),
+          parse_mode: "HTML",
+        };
+        ctx.api.sendMessage(chatId, "Please enter SOL amount", options);
         break;
       }
       case "buy_0.5_JUP": {
@@ -1537,9 +1566,17 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "sell_X_JUP": {
         ctx.session.latestCommand = "sell_X_JUP";
+        const options: any = {
+          reply_markup: JSON.stringify({
+            inline_keyboard: [
+              [{ text: "Cancel", callback_data: "delete_input" }],      
+            ],
+          }),
+          parse_mode: "HTML",
+        };
         ctx.api.sendMessage(
           chatId,
-          "Please enter x percentage to sell (eg. 25 for 25%)"
+          "Please enter x percentage to sell (eg. 25 for 25%)", options
         );
         break;
       }
@@ -1596,12 +1633,28 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "buy_X_RAY": {
         ctx.session.latestCommand = "buy_X_RAY";
-        ctx.api.sendMessage(chatId, "Please enter SOL amount");
+        const options: any = {
+          reply_markup: JSON.stringify({
+            inline_keyboard: [
+              [{ text: "Cancel", callback_data: "delete_input" }],      
+            ],
+          }),
+          parse_mode: "HTML",
+        };
+        ctx.api.sendMessage(chatId, "Please enter SOL amount", options);
         break;
       }
       case "buy_X_CPMM": {
         ctx.session.latestCommand = "buy_X_CPMM";
-        ctx.api.sendMessage(chatId, "Please enter SOL amount");
+        const options: any = {
+          reply_markup: JSON.stringify({
+            inline_keyboard: [
+              [{ text: "Cancel", callback_data: "delete_input" }],      
+            ],
+          }),
+          parse_mode: "HTML",
+        };
+        ctx.api.sendMessage(chatId, "Please enter SOL amount", options);
         break;
       }
 
@@ -1628,15 +1681,31 @@ bot.on("callback_query", async (ctx: any) => {
       }
       case "sell_X_RAY": {
         ctx.session.latestCommand = "sell_X_RAY";
-        ctx.api.sendMessage(chatId, "Please enter amount to sell.");
+        const options: any = {
+          reply_markup: JSON.stringify({
+            inline_keyboard: [
+              [{ text: "Cancel", callback_data: "delete_input" }],      
+            ],
+          }),
+          parse_mode: "HTML",
+        };
+        ctx.api.sendMessage(chatId, "Please enter amount to sell.", options);
         break;
       }
 
       case "sell_X_CPMM": {
         ctx.session.latestCommand = "sell_X_CPMM";
+        const options: any = {
+          reply_markup: JSON.stringify({
+            inline_keyboard: [
+              [{ text: "Cancel", callback_data: "delete_input" }],      
+            ],
+          }),
+          parse_mode: "HTML",
+        };
         ctx.api.sendMessage(
           chatId,
-          "Please enter x percentage to sell (eg. 25 for 25%)"
+          "Please enter x percentage to sell (eg. 25 for 25%)", options
         );
         break;
       }
@@ -1663,7 +1732,15 @@ bot.on("callback_query", async (ctx: any) => {
       case "snipe_X_SOL": {
         ctx.session.snipeStatus = true;
         ctx.session.latestCommand = "snipe_X_SOL";
-        ctx.api.sendMessage(chatId, "Please enter amount to snipe.");
+        const options: any = {
+          reply_markup: JSON.stringify({
+            inline_keyboard: [
+              [{ text: "Cancel", callback_data: "delete_input" }],      
+            ],
+          }),
+          parse_mode: "HTML",
+        };
+        ctx.api.sendMessage(chatId, "Please enter amount to snipe.", options);
         break;
       }
       case "display_all_positions": {

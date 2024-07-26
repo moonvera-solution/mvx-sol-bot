@@ -66,7 +66,8 @@ export async function jupiter_limit_order(ctx: any,
     let solAmount: BigNumber = isBuySide ? new BigNumber(inAmount) : new BigNumber(expectedAmountOut);
       let mvxFeeFromOrder = isBuySide ? solAmount.multipliedBy(1e9) : new BigNumber(Math.ceil(expectedAmountOut));
     const txInxs = hasReferral ?
-      add_mvx_and_ref_inx_fees(userWallet, referralInfo.referralWallet!, solAmount, referralInfo.referralCommision!) :
+    addMvxFeesInx(userWallet,  mvxFeeFromOrder):
+      // add_mvx_and_ref_inx_fees(userWallet, referralInfo.referralWallet!, solAmount, referralInfo.referralCommision!) :
       addMvxFeesInx(userWallet,  mvxFeeFromOrder);
 
     txInxs.forEach((inx) => {  tx.add(inx); });
