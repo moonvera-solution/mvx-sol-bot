@@ -472,7 +472,7 @@ bot.on("message", async (ctx) => {
     switch (latestCommand) {
       case "set_slippage": {
         ctx.session.latestSlippage = Number(msgTxt);
-        await display_raydium_details(ctx, false);
+        await display_jupSwapDetails(ctx, false);
         break;
       }
       case "set_snipe_slippage": {
