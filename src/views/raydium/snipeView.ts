@@ -3,22 +3,23 @@ import { getTokenMetadata, getUserTokenBalanceAndDetails } from '../../service/f
 import { quoteToken } from './../util/dataCalculation';
 import { formatNumberToKOrM, getSolBalance } from '../../service/util';
 import { RAYDIUM_POOL_TYPE } from '../../service/util/types';
-import {CONNECTION} from '../../config';
-import {  Connection } from '@solana/web3.js';
+import { CONNECTION } from '../../config';
+import { Connection } from '@solana/web3.js';
 import { runAllFees } from '../util/getPriority';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import { UserPositions } from '../../db';
 import { getTokenDataFromBirdEye, getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
+import BigNumber from 'bignumber.js';
 
 export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt?: string) {
   try {
     let messageText;
     let priority_Level = ctx.session.priorityFees;
     const priority_custom = ctx.session.ispriorityCustomFee;
-    if(priority_custom === true){
+    if (priority_custom === true) {
       priority_Level = 0;
     }
-    let raydiumId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
+
     const activePool = ctx.session.activeTradingPool;
     const connection = CONNECTION;
     const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
@@ -26,29 +27,23 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
     // console.log("activePool",activePool)
     if (!msgTxt && !activePool) { await ctx.api.sendMessage(ctx.chat.id, "Enter token address to snipe.", { parse_mode: 'HTML' }); return; }
 
-    if (activePool && activePool.baseMint != DEFAULT_PUBLIC_KEY) {
+    const isCpmmPool = ctx.session.isCpmmPool;
+    const baseMint = isCpmmPool ? ctx.session.activeTradingPool.mintB : ctx.session.activeTradingPool.baseMint;
 
-      const rayPoolKeys: RAYDIUM_POOL_TYPE = ctx.session.activeTradingPool;
+    if (activePool && baseMint) {
 
-      const baseVault = rayPoolKeys.baseVault;
-      const quoteVault = rayPoolKeys.quoteVault;
-      const baseDecimals = rayPoolKeys.baseDecimals;
-      const quoteDecimals = rayPoolKeys.quoteDecimals;
-      const baseMint = rayPoolKeys.baseMint;
-      const chatId = ctx.chat.id;
+      const rayPoolKeys = ctx.session.activeTradingPool;
       const tokenAddress = new PublicKey(ctx.session.snipeToken);
 
       const [
         birdeyeData,
         tokenMetadataResult,
-        tokenInfo,
         balanceInSOL,
         userTokenDetails,
         jupSolPrice
       ] = await Promise.all([
-        getTokenDataFromBirdEye(tokenAddress.toString(),userPublicKey),
+        getTokenDataFromBirdEye(tokenAddress.toString(), userPublicKey),
         getTokenMetadata(ctx, tokenAddress.toBase58()),
-        quoteToken({ baseVault, quoteVault, baseDecimals, quoteDecimals, baseSupply: baseMint, connection }),
         getSolBalance(userPublicKey, connection),
         getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
         fetch(
@@ -56,8 +51,20 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
         ).then((response) => response.json()),
       ]);
 
-      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value :  Number(jupSolPrice.data.SOL.price);
+      const baseDecimals = isCpmmPool ? rayPoolKeys.mintB.decimals : rayPoolKeys.baseDecimals;
+      const tokenInfo = isCpmmPool ? {
+        price: new BigNumber(0),
+        baseTokenSupply: new BigNumber(0),
+        priceImpact: new BigNumber(0),
+      } : await quoteToken({
+        baseVault: rayPoolKeys.baseVault,
+        quoteVault: rayPoolKeys.quoteVault,
+        baseDecimals: rayPoolKeys.baseDecimals,
+        quoteDecimals: rayPoolKeys.quoteDecimals,
+        baseSupply: baseMint, connection
+      });
 
+      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : Number(jupSolPrice.data.SOL.price);
 
       const {
         birdeyeURL,
@@ -66,24 +73,24 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
         tokenData,
       } = tokenMetadataResult;
       const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
-      
+
       const tokenPriceUSD = birdeyeData
-      && birdeyeData.response
-      && birdeyeData.response.data
-      // && birdeyeData.response.data.data
-      && birdeyeData.response.data.price != null  // This checks for both null and undefined
-      ? birdeyeData.response.data.price
-      : tokenInfo.price.times(solPrice).toNumber();
+        && birdeyeData.response
+        && birdeyeData.response.data
+        // && birdeyeData.response.data.data
+        && birdeyeData.response.data.price != null  // This checks for both null and undefined
+        ? birdeyeData.response.data.price
+        : tokenInfo.price.times(solPrice).toNumber();
 
       const baseSupply = birdeyeData
-  && birdeyeData.response
-  && birdeyeData.response.data
-  // && birdeyeData.response.data.data
-  && birdeyeData.response.data.supply != null  // This checks for both null and undefined
-  ? birdeyeData.response.data.supply
-  : Number(tokenInfo.baseTokenSupply.dividedBy(Math.pow(10, baseDecimals)));
-  const mcap = baseSupply * tokenPriceUSD;  
-  const formattedmac = await formatNumberToKOrM(mcap) ?? "NA";
+        && birdeyeData.response
+        && birdeyeData.response.data
+        // && birdeyeData.response.data.data
+        && birdeyeData.response.data.supply != null  // This checks for both null and undefined
+        ? birdeyeData.response.data.supply
+        : Number(tokenInfo.baseTokenSupply.dividedBy(Math.pow(10, baseDecimals)));
+      const mcap = baseSupply * tokenPriceUSD;
+      const formattedmac = await formatNumberToKOrM(mcap) ?? "NA";
 
       ctx.session.currentMode = 'snipe';
       // showing the user the countdowm to the snipe
@@ -98,8 +105,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
         const countdown = new Date(timeDiff).toISOString().substr(11, 8);
         poolStatusMessage = `⏳ Opening in ${countdown}`;
       }
-      console.log('(tokenInfo.price.times(solPrice)', (tokenInfo.price.times(solPrice).toNumber()));
-     
+
       const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solPrice) : tokenInfo.price.toNumber();
 
       const priceImpact = tokenInfo.priceImpact.toFixed(2);
@@ -107,7 +113,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
 
 
       const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
-
+      const priceImpactTxt = isCpmmPool ? '' : `price Impact (5.0 SOL) : <b>${priceImpact}%</b> \n\n`;
       messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
         `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
         `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
@@ -115,7 +121,7 @@ export async function display_snipe_options(ctx: any, isRefresh: boolean, msgTxt
         `Market Cap: <b>${formattedmac} USD</b>\n` +
         `Token Price: <b> ${tokenPriceUSD.toFixed(9)} USD</b> | <b> ${tokenPriceSOL.toFixed(9)} SOL</b> \n\n` +
         // `💧 Liquidity: <b>${(formattedLiquidity)}</b>  USD\n` + 
-        `price Impact (5.0 SOL) : <b>${priceImpact}%</b> \n\n` +
+        priceImpactTxt +
         `Pool Status: <b>${poolStatusMessage}</b>\n\n` +
         // `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
         `Token Balance: <b>${userTokenBalance.toFixed(3)} $${userTokenSymbol} </b> | <b>${((userTokenBalance) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +

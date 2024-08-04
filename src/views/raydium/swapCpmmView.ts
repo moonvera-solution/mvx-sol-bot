@@ -14,7 +14,7 @@ import { saveUserPosition } from '../../service/portfolio/positions';
 
 export async function ray_cpmm_swap(ctx: any) {
   const chatId = ctx.chat.id;
-  const TRITON_RPC_URL='https://moonvera-ams.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'
+  const TRITON_RPC_URL = 'https://moonvera-ams.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'
   const connection = new Connection(TRITON_RPC_URL);
   // const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
   const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
@@ -146,7 +146,8 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
   }
   const connection = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
   const cpmmPoolKey = ctx.session.cpmmPoolId;
-  console.log('cpmmPoolKey', cpmmPoolKey);
+  console.log("cpmmPoolKey-c>",cpmmPoolKey);
+
   if (!cpmmPoolKey) {
     return undefined;
   }
@@ -155,7 +156,6 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
   const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
   const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
   const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
-  // console.log("cpmmPoolKey-%c>", cpmmPoolKey);
   ctx.session.cpmmPoolInfo = await getpoolDataCpmm(payerKeypair, cpmmPoolKey, connection);
 
   const tokenAddress = new PublicKey(ctx.session.cpmmPoolInfo.mintB.address);
@@ -169,7 +169,7 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
     jupSolPrice
 
   ] = await Promise.all([
-    getuserShitBalance(userPublicKey,tokenAddress, connection),
+    getuserShitBalance(userPublicKey, tokenAddress, connection),
     getTokenDataFromBirdEyePositions(tokenAddress.toString(), userPublicKey),
     getTokenMetadata(ctx, tokenAddress.toBase58()),
     getSolBalance(userPublicKey, connection),

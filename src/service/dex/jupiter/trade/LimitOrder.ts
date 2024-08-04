@@ -8,7 +8,6 @@ import BigNumber from 'bignumber.js';
 import bs58 from 'bs58';
 import { version } from "node:os";
 import { getTokenDataFromBirdEyePositions } from "../../../../api/priceFeeds/birdEye";
-import { e } from "@raydium-io/raydium-sdk-v2/lib/api-33b5ab27";
 
 type LIMIT_ORDER_PARAMS = {
   userWallet: Keypair;

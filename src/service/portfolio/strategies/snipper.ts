@@ -1,11 +1,12 @@
 import BigNumber from 'bignumber.js';
 import {
-    Liquidity, TokenAmount, LiquidityPoolKeys, Token, SPL_ACCOUNT_LAYOUT,
-    TOKEN_PROGRAM_ID, TokenAccount, TxVersion, jsonInfo2PoolKeys
+    Liquidity, TokenAmount, LiquidityPoolKeys, Token, SPL_ACCOUNT_LAYOUT, TOKEN_PROGRAM_ID, TokenAccount, TxVersion, jsonInfo2PoolKeys
 } from "@raydium-io/raydium-sdk";
-import { Connection, PublicKey, Keypair, SystemProgram, VersionedTransaction, TransactionMessage, ComputeBudgetProgram } from "@solana/web3.js";
-import { MVXBOT_FEES, WALLET_MVX, SNIPE_SIMULATION_COUNT_LIMIT, CONNECTION,RAYDIUM_AUTHORITY } from "../../../config";
-import { buildAndSendTx, getPriorityFeeLabel, getSwapAmountOut, optimizedSendAndConfirmTransaction, wrapLegacyTx } from '../../util';
+import dotenv from 'dotenv'; dotenv.config();
+import { Connection, PublicKey, Keypair, SystemProgram, VersionedTransaction, Transaction, TransactionMessage, ComputeBudgetProgram, AddressLookupTableAccount, sendAndConfirmRawTransaction } from "@solana/web3.js";
+import { MVXBOT_FEES, WALLET_MVX, SNIPE_SIMULATION_COUNT_LIMIT, CONNECTION, RAYDIUM_AUTHORITY } from "../../../config";
+import { buildAndSendTx, getPriorityFeeLabel, getSwapAmountOut, optimizedSendAndConfirmTransaction, wrapLegacyTx, addMvxFeesInx } from '../../util';
+import { ApiV3PoolInfoStandardItemCpmm, CurveCalculator, CREATE_CPMM_POOL_PROGRAM, DEV_CREATE_CPMM_POOL_PROGRAM, CpmmPoolInfoLayout, CpmmConfigInfoInterface } from '@raydium-io/raydium-sdk-v2';
 import { saveUserPosition } from '../positions';
 const log = (k: any, v: any) => console.log(k, v);
 import base58 from 'bs58';
@@ -14,8 +15,10 @@ import { getTokenMetadata } from "../../feeds";
 import { waitForConfirmation, getSolBalance } from '../../util';
 import { Referrals, UserPositions } from "../../../db/mongo/schema";
 import { getMaxPrioritizationFeeByPercentile } from "../../../service/fees/priorityFees";
-
+import { initSdk } from "../../dex/raydium/cpmm";
 import { display_jupSwapDetails } from '../../../views/jupiter/swapView';
+import BN from 'bn.js'
+import bs58 from 'bs58';
 
 export async function snipperON(ctx: any, amount: string) {
     try {
@@ -91,12 +94,13 @@ export async function snipperON(ctx: any, amount: string) {
 export async function setSnipe(ctx: any, amountIn: any) {
     // Returns either the time to wait or indicates pool is already open
     console.log('Snipe set ...');
+    const isCpmmPool = ctx.session.isCpmmPool;
     const connection = CONNECTION;
-    const snipeToken = new PublicKey(ctx.session.activeTradingPool.baseMint);
+    const snipeToken = new PublicKey(isCpmmPool ? ctx.session.activeTradingPool.mintB.address : ctx.session.activeTradingPool.baseMint);
 
     const amountInLamports = new BigNumber(Number.parseFloat(amountIn)).times(1e9);
     const snipeSlippage = ctx.session.snipeSlippage;
-    console.log('snipeSlippage', snipeSlippage);
+
     const currentWalletIdx = ctx.session.portfolio.activeWalletIndex;
     const currentWallet = ctx.session.portfolio.wallets[currentWalletIdx];
     const [balanceInSOL, { tokenData }] = await Promise.all([
@@ -105,7 +109,6 @@ export async function setSnipe(ctx: any, amountIn: any) {
     ]);
     const userKeypair = Keypair.fromSecretKey(base58.decode(String(currentWallet.secretKey)));
     ctx.session.snipeStatus = true;
-
 
     if (balanceInSOL * 1e9 < amountInLamports.toNumber()) {
         await ctx.api.sendMessage(ctx.session.portfolio.chatId, '🔴 Insufficient balance for transaction.',
@@ -125,18 +128,99 @@ export async function setSnipe(ctx: any, amountIn: any) {
     await simulationPromise;
 }
 
-export async function startSnippeSimulation(
-    ctx: any,
-    userWallet: Keypair,
-    amountIn: BigNumber,
-    snipeSlippage: number,
-    poolStartTime: number,
-    tokenData: any
-) {
+async function _getCpmmSwapTx(ctx: any, tradeSide: 'buy' | 'sell', poolKeys: any, userWallet: Keypair, amountIn: number): Promise<VersionedTransaction |null > {
     const chatId = ctx.chat.id;
     const connection = CONNECTION;
+    console.log("userWallet --c>", userWallet.publicKey.toBase58());
+    const raydium = await initSdk(userWallet, connection);
+
+    const poolId = poolKeys.id;
+    if (!poolId) throw new Error(`No CPMM pool Id found for token ${poolKeys.mintB.address}`);
+    const data = await raydium.api.fetchPoolById({ ids: poolKeys.id })
+    const poolInfoFromRpc = await raydium.cpmm.getPoolInfoFromRpc(poolId);
+
+    const poolInfo = data[0] as ApiV3PoolInfoStandardItemCpmm;
+    const inputMint = tradeSide == 'buy' ? poolInfo.mintA.address : poolInfo.mintB.address;
+    const baseIn = inputMint === poolInfo.mintA.address;
+    const isValidCpmm = (id: string) => VALID_PROGRAM_ID.has(id);
+
+    const VALID_PROGRAM_ID = new Set([CREATE_CPMM_POOL_PROGRAM.toBase58(), DEV_CREATE_CPMM_POOL_PROGRAM.toBase58()])
+
+    if (!isValidCpmm(poolInfo.programId)) throw new Error('target pool is not CPMM pool');
+    const rpcData = await raydium.cpmm.getRpcPoolInfo(poolKeys.id, true);
+
+    const swapResult = CurveCalculator.swap(
+        new BN(amountIn),
+        baseIn ? rpcData.baseReserve : rpcData.quoteReserve,
+        baseIn ? rpcData.quoteReserve : rpcData.baseReserve,
+        rpcData.configInfo!.tradeFeeRate
+    );
+
+    if (!poolInfo) throw new Error('Invalid pool information retrieved');
+
+    /**
+     *     
+     *     poolInfo: ApiV3PoolInfoStandardItemCpmm;
+           poolKeys?: CpmmKeys;
+           payer?: PublicKey;
+           baseIn: boolean;
+           slippage?: number;
+           swapResult: SwapResult;
+           config?: {
+               bypassAssociatedCheck?: boolean;
+               checkCreateATAOwner?: boolean;
+               associatedOnly?: boolean;
+           };
+           computeBudgetConfig?: ComputeBudgetConfig;
+           txVersion?: T;
+     */
+    let { transaction } = await raydium.cpmm.swap({
+        poolInfo: poolInfoFromRpc.poolInfo,
+        poolKeys: poolInfoFromRpc.poolKeys,
+        baseIn,
+        slippage: 1,
+        swapResult,
+        computeBudgetConfig: {
+            microLamports: ctx.session.customPriorityFee * 1e9,
+          }
+    });
+
+    const solAmount = tradeSide == 'buy' ? new BigNumber(swapResult.sourceAmountSwapped.toNumber()) : new BigNumber(swapResult.destinationAmountSwapped.toNumber());
+    if (tradeSide == 'sell') {
+        ctx.session.CpmmSolExtracted = solAmount
+    }
+
+    if (transaction instanceof Transaction) {
+        // transaction.instructions.push(...addMvxFeesInx(userWallet, solAmount));
+        const tx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, userWallet, (await connection.getLatestBlockhash()).blockhash));
+        tx.sign([userWallet]);
+        return tx;
+    } else if (transaction instanceof VersionedTransaction) {
+        console.log("is VersionedTransaction....");
+        const addressLookupTableAccounts = await Promise.all(
+            transaction.message.addressTableLookups.map(async (lookup) => {
+                return new AddressLookupTableAccount({
+                    key: lookup.accountKey,
+                    state: AddressLookupTableAccount.deserialize(
+                        await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data),
+                    ),
+                })
+            }));
+        var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
+        message.instructions.push(...addMvxFeesInx(userWallet, solAmount));
+        const tx = new VersionedTransaction(transaction.message);
+        tx.message.recentBlockhash = await connection.getLatestBlockhash().then((blockhash: any) => blockhash.blockhash);
+        tx.sign([userWallet]);
+        return tx;
+    }
+    return null;
+}
+
+async function _getAmmSwapTx(ctx: any, poolKeys: any, userWallet: Keypair, amountIn: BigNumber): Promise<VersionedTransaction | null> {
+    const chatId = ctx.chat.id;
+    const snipeSlippage = ctx.session.snipeSlippage;
+    const connection = CONNECTION;
     const walletTokenAccounts = await _getWalletTokenAccount(connection, userWallet.publicKey);
-    const poolKeys = ctx.session.activeTradingPool;
     const _tokenIn: Token = new Token(TOKEN_PROGRAM_ID, new PublicKey(poolKeys.quoteMint), poolKeys.quoteDecimals, '', '');
     const _tokenOut: Token = new Token(TOKEN_PROGRAM_ID, new PublicKey(poolKeys.baseMint), poolKeys.baseDecimals, '', '');
 
@@ -146,30 +230,14 @@ export async function startSnippeSimulation(
     const inputTokenAmount = new TokenAmount(_tokenIn, amountIn.toFixed(0), true);
     const minOutTokenAmount = new TokenAmount(_tokenOut, amountOut_with_slippage.toFixed(0), true);
 
-
-    // ------- check user balanace in DB --------
-    const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
-
-    let oldPositionSol: number = 0;
-    let oldPositionToken: number = 0;
-    if (userPosition) {
-        const existingPositionIndex = userPosition.positions.findIndex(
-            position => position.baseMint === _tokenOut.mint.toBase58()
-        );
-        // console.log('existingPositionIndex', existingPositionIndex);
-        if (userPosition.positions[existingPositionIndex]) {
-            oldPositionSol = userPosition?.positions[existingPositionIndex].amountIn
-            oldPositionToken = userPosition?.positions[existingPositionIndex].amountOut!
-        }
-    }
-
     //-------------- Update Earnings referal on Db ----------------
-    const [referralRecord, targetPoolInfo] = await Promise.all([
-        Referrals.findOne({ referredUsers: chatId }),
-        formatAmmKeysById(ctx.session.activeTradingPool.id, connection)
-    ]);
+    // const [referralRecord, targetPoolInfo] = await Promise.all([
+    //     Referrals.findOne({ referredUsers: chatId }),
+    //     formatAmmKeysById(ctx.session.activeTradingPool.id, connection)
+    // ]);
+    const targetPoolInfo = await formatAmmKeysById(ctx.session.activeTradingPool.id, connection)
     // const referralRecord = await Referrals.findOne({ referredUsers: chatId });
-    let actualEarnings = referralRecord && referralRecord.earnings;
+    // let actualEarnings = referralRecord && referralRecord.earnings;
 
     // const targetPoolInfo = await formatAmmKeysById(ctx.session.activeTradingPool.id, connection);
 
@@ -196,43 +264,19 @@ export async function startSnippeSimulation(
     let referralInx: any = null;
     let minimumBalanceNeeded = 0;
     minimumBalanceNeeded += amountIn.toNumber()
-    // if (referralFee > 0) {
-    //     mvxFeeInx = SystemProgram.transfer({
-    //         fromPubkey: userWallet.publicKey,
-    //         toPubkey: new PublicKey(WALLET_MVX),
-    //         lamports: cut_bot_fee,
-    //     });
-    //     referralInx = SystemProgram.transfer({
-    //         fromPubkey: userWallet.publicKey,
-    //         toPubkey: new PublicKey(referralWallet),
-    //         lamports: referralAmmount,
-    //     });
-
-    //     innerTransactions[0].instructions.push(mvxFeeInx);
-    //     innerTransactions[0].instructions.push(referralInx);
-    //     minimumBalanceNeeded += cut_bot_fee + referralAmmount;
-    // } else {
-    //     mvxFeeInx = SystemProgram.transfer({
-    //         fromPubkey: userWallet.publicKey,
-    //         toPubkey: new PublicKey(WALLET_MVX),
-    //         lamports: bot_fee, // 5_000 || 6_000
-    //     });
-    //     innerTransactions[0].instructions.push(mvxFeeInx);
-    //     minimumBalanceNeeded += bot_fee;
-    // }
     mvxFeeInx = SystemProgram.transfer({
         fromPubkey: userWallet.publicKey,
         toPubkey: new PublicKey(WALLET_MVX),
         lamports: bot_fee, // 5_000 || 6_000
     });
-    innerTransactions[0].instructions.push(mvxFeeInx);
+    // innerTransactions[0].instructions.push(mvxFeeInx);
     minimumBalanceNeeded += bot_fee;
 
     const userSolBalance = await getSolBalance(userWallet.publicKey, connection);
 
     if ((userSolBalance * 1e9) < minimumBalanceNeeded) {
         await ctx.api.sendMessage(chatId, `🔴 Insufficient balance for Turbo Snipping. Your balance is ${userSolBalance} SOL.`);
-        return;
+        return null;
     }
 
     const customPreorityFee = new BigNumber(Number.parseFloat(ctx.session.customPriorityFee)).multipliedBy(1e9).toNumber();
@@ -247,9 +291,37 @@ export async function startSnippeSimulation(
 
     let txV = new VersionedTransaction(tx);
     txV.sign([userWallet]);
-    let simulationResult: any;
+    return txV;
+}
+
+export async function startSnippeSimulation(
+    ctx: any,
+    userWallet: Keypair,
+    amountIn: BigNumber,
+    snipeSlippage: number,
+    poolStartTime: number,
+    tokenData: any
+) {
+    const chatId = ctx.chat.id;
+    const connection = CONNECTION;
+    const isCpmmPool = ctx.session.isCpmmPool;
+    const poolKeys = ctx.session.activeTradingPool;
+
+    let txV: VersionedTransaction | null;
+    let token: string;
+    
+    if (isCpmmPool) {
+        token = poolKeys.mintB.address;
+        txV = await _getCpmmSwapTx(ctx, 'buy', poolKeys, userWallet, amountIn.toNumber());
+    } else {
+        token = poolKeys.baseMint.toBase58();
+        txV = await _getAmmSwapTx(ctx, poolKeys, userWallet, amountIn);
+    }
+
+
     let count = 0;
     let sim: boolean = true;
+    let simulationResult: any;
     let diff_1 = new BigNumber(poolStartTime).minus(new BigNumber(new Date().getTime()));
     let diff = diff_1.toNumber() > 0 ? diff_1.plus(400) : diff_1;
     let snipeStatus: boolean = ctx.session.snipeStatus;
@@ -268,13 +340,13 @@ export async function startSnippeSimulation(
         while (sim && snipeStatus && count < SNIPE_SIMULATION_COUNT_LIMIT) {
             count++
             snipeStatus = ctx.session.snipeStatus;
-            simulationResult = await connection.simulateTransaction(txV, { replaceRecentBlockhash: true, commitment: 'processed' });
+            simulationResult = await connection.simulateTransaction(txV!, { replaceRecentBlockhash: true, commitment: 'processed' });
             await catchSimulationErrors(ctx, simulationResult);
 
             if (simulationResult.value.err == null) {
                 sim = false;
-                
-                const txSig = await optimizedSendAndConfirmTransaction(txV, connection, (await connection.getLatestBlockhash()).blockhash, 2000);
+
+                const txSig = await optimizedSendAndConfirmTransaction(txV!, connection, (await connection.getLatestBlockhash()).blockhash, 2000);
                 let msg = `🟢 Snipe <a href="https://solscan.io/tx/${txSig}">transaction</a> sent. Please wait for confirmation...`
                 await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
                 let extractAmount = await getSwapAmountOut(connection, txSig!);
@@ -288,10 +360,23 @@ export async function startSnippeSimulation(
                     ctx.api.sendMessage(chatId, '✅ Snipe Tx Confirmed');
                 }
 
-                if (referralFee > 0 && referralRecord) {
-                    let updateEarnings = actualEarnings && actualEarnings + referralAmmount;
-                    referralRecord.earnings = Number(updateEarnings && updateEarnings.toFixed(0));
-                    await referralRecord.save();
+                // if (referralFee > 0 && referralRecord) {
+                //     let updateEarnings = actualEarnings && actualEarnings + referralAmmount;
+                //     referralRecord.earnings = Number(updateEarnings && updateEarnings.toFixed(0));
+                //     await referralRecord.save();
+                // }
+
+                // ------- check user balanace in DB --------
+                const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
+
+                let oldPositionSol: number = 0;
+                let oldPositionToken: number = 0;
+                if (userPosition) {
+                    const existingPositionIndex = userPosition.positions.findIndex(position => position.baseMint === (token));
+                    if (userPosition.positions[existingPositionIndex]) {
+                        oldPositionSol = userPosition?.positions[existingPositionIndex].amountIn
+                        oldPositionToken = userPosition?.positions[existingPositionIndex].amountOut!
+                    }
                 }
 
                 saveUserPosition(
@@ -300,7 +385,7 @@ export async function startSnippeSimulation(
                     baseMint: ctx.session.originalBaseMint,
                     name: tokenData.name,
                     symbol: tokenData.symbol,
-                    tradeType: `ray_swap`,
+                    tradeType: isCpmmPool ? `cpmm_swap` : `ray_swap`,
                     amountIn: oldPositionSol ? oldPositionSol + amountIn.toNumber() : amountIn.toNumber(),
                     amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount)
                 });
@@ -310,7 +395,8 @@ export async function startSnippeSimulation(
                 await display_jupSwapDetails(ctx, false);
 
             }
-        }}, diff.toNumber());
+        }
+    }, diff.toNumber());
 
     if (count == SNIPE_SIMULATION_COUNT_LIMIT) {
         await ctx.api.sendMessage(chatId, `🔴 Snipe fail, busy Network, please try again.`);
@@ -390,6 +476,8 @@ export async function catchSimulationErrors(ctx: any, simulationResult: any) {
     const BALANCE_ERROR = /Transfer: insufficient lamports/;
     if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
         console.log(simulationResult.value.logs)
+        console.log("SIM EERROR --c>", JSON.parse(JSON.stringify(simulationResult.value)));
+
         throw new Error(`🔴 Insufficient balance for transaction.`);
     }
     const FEES_ERROR = 'InsufficientFundsForFee';
@@ -397,4 +485,5 @@ export async function catchSimulationErrors(ctx: any, simulationResult: any) {
         console.log(simulationResult.value.logs)
         throw new Error(`🔴 Swap failed! Please try again.`);
     }
+    
 }

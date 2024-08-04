@@ -1,6 +1,11 @@
-import {ApiPoolInfoV4,LIQUIDITY_STATE_LAYOUT_V4,Liquidity,LiquidityPoolKeys,MARKET_STATE_LAYOUT_V3,Market,SPL_MINT_LAYOUT,jsonInfo2PoolKeys} from '@raydium-io/raydium-sdk';
-import { PublicKey, Connection } from '@solana/web3.js';
-import {CONNECTION} from '../../../../config';
+import { ApiPoolInfoV4, LIQUIDITY_STATE_LAYOUT_V4, Liquidity, LiquidityPoolKeys, MARKET_STATE_LAYOUT_V3, Market, SPL_MINT_LAYOUT, jsonInfo2PoolKeys } from '@raydium-io/raydium-sdk';
+import { CpmmPoolInfoLayout, ApiV3PoolInfoStandardItemCpmm } from '@raydium-io/raydium-sdk-v2';
+import { DefaultPoolInfoData } from "../../../util/types";
+import { getpoolDataCpmm } from '../cpmm';
+import { PublicKey, Connection, Keypair } from '@solana/web3.js';
+import { CONNECTION } from '../../../../config';
+import bs58 from 'bs58';
+import dotenv from 'dotenv';
 
 export async function fetchPoolSchedule(keys: any, connection: Connection) {
   let poolKeys = jsonInfo2PoolKeys(keys) as LiquidityPoolKeys;
@@ -10,54 +15,69 @@ export async function fetchPoolSchedule(keys: any, connection: Connection) {
 export async function getRayPoolKeys(ctx: any, shitcoin: string) {
   const connection = CONNECTION;
   const quoteMint = 'So11111111111111111111111111111111111111112';
-  let keys = undefined;
+
+  const walletKeyPair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
+  console.log("userWallet --c>", walletKeyPair.publicKey.toBase58());
+
+  let keys: any;
   try {
-    keys = await _getRayPoolKeys({ t1: shitcoin, t2: quoteMint, connection });
-    // console.log('keys', keys);
-    if (keys) {
-      ctx.session.poolTime = Number((await fetchPoolSchedule(keys, connection)).startTime);
-    
-      ctx.session.originalBaseMint = keys.baseMint;
+    let { isCpmmPool, keys } = await _getRayPoolKeys({ t1: shitcoin, t2: quoteMint, connection, userWallet: walletKeyPair });
+    if (isCpmmPool) {
+      keys = keys as ApiV3PoolInfoStandardItemCpmm;
+      ctx.session.poolTime = Number(keys.openTime);
+      ctx.session.activeTradingPool = keys;
+      ctx.session.isCpmmPool = true;
+      return keys;
+
     } else {
-      keys = await _getRayPoolKeys({ t1: quoteMint, t2: shitcoin, connection });
+      keys = keys as ApiPoolInfoV4;
       if (keys) {
-        ctx.session.originalBaseMint = keys.baseMint;
         ctx.session.poolTime = Number((await fetchPoolSchedule(keys, connection)).startTime);
+        ctx.session.originalBaseMint = keys.baseMint;
+      } else {
+        keys = keys as ApiPoolInfoV4;
+        if (keys) {
+          ctx.session.originalBaseMint = keys.baseMint;
+          ctx.session.poolTime = Number((await fetchPoolSchedule(keys, connection)).startTime);
 
-        let _quoteMint = keys.quoteMint;
-        let _baseMint = keys.baseMint;
-        let _baseVault = keys.baseVault;
-        let _quoteVault = keys.quoteVault;
-        let _baseDecimals = keys.baseDecimals;
-        let _quoteDecimals = keys.quoteDecimals;
-        let _marketQuoteVault = keys.marketQuoteVault;
-        let _marketBaseVault = keys.marketBaseVault;
+          let _quoteMint = keys.quoteMint;
+          let _baseMint = keys.baseMint;
+          let _baseVault = keys.baseVault;
+          let _quoteVault = keys.quoteVault;
+          let _baseDecimals = keys.baseDecimals;
+          let _quoteDecimals = keys.quoteDecimals;
+          let _marketQuoteVault = keys.marketQuoteVault;
+          let _marketBaseVault = keys.marketBaseVault;
 
-        keys.baseMint = _quoteMint;
-        keys.quoteMint = _baseMint;
-        keys.quoteVault = _baseVault;
-        keys.baseVault = _quoteVault;
-        keys.quoteDecimals = _baseDecimals;
-        keys.baseDecimals = _quoteDecimals;
-        keys.marketBaseVault = _marketQuoteVault;
-        keys.marketQuoteVault = _marketBaseVault;
-      } 
+          keys.baseMint = _quoteMint;
+          keys.quoteMint = _baseMint;
+          keys.quoteVault = _baseVault;
+          keys.baseVault = _quoteVault;
+          keys.quoteDecimals = _baseDecimals;
+          keys.baseDecimals = _quoteDecimals;
+          keys.marketBaseVault = _marketQuoteVault;
+          keys.marketQuoteVault = _marketBaseVault;
+        }
+        return keys;
+      }
     }
   } catch (e) {
     console.log(e);
   }
-  // console.log('keys', keys);
-  return keys;
+
 }
 
-async function _getRayPoolKeys({ t1, t2, connection }: { t1: string, t2: string, connection: Connection }) {
+
+async function _getRayPoolKeys({ t1, t2, connection, userWallet }: { t1: string, t2: string, connection: Connection, userWallet: Keypair }):
+  Promise<{ isCpmmPool: boolean, keys: ApiV3PoolInfoStandardItemCpmm | ApiPoolInfoV4 }> {
+
   const commitment = "processed";
   const AMMV4 = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8');
   const baseMint = new PublicKey(t1);
   const quoteMint = new PublicKey(t2);
-  // console.log(t1, t2)
+  let isCpmmPool = false;
 
-  const accounts = await connection.getProgramAccounts(
+  let accounts = await connection.getProgramAccounts(
     AMMV4,
     {
       commitment,
@@ -79,15 +99,43 @@ async function _getRayPoolKeys({ t1, t2, connection }: { t1: string, t2: string,
     }
   );
 
+  if (accounts.length < 1) {
+    const RAYDIUM_CPMM = new PublicKey('CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C');
+
+    isCpmmPool = true;
+    accounts = await connection.getProgramAccounts(
+      RAYDIUM_CPMM,
+      {
+        commitment,
+        filters: [
+          { dataSize: CpmmPoolInfoLayout.span },
+          {
+            memcmp: {
+              offset: CpmmPoolInfoLayout.offsetOf("mintB"),
+              bytes: baseMint.toBase58(),
+            },
+          },
+          {
+            memcmp: {
+              offset: CpmmPoolInfoLayout.offsetOf("mintA"),
+              bytes: quoteMint.toBase58(),
+            },
+          },
+        ],
+      }
+    );
+  }
 
   const ammId = accounts && accounts[0] && accounts[0].pubkey;
-  let keys: any = null;
+  let keys: any;
 
   // ammid exists and keys still null
   while (ammId && keys == undefined) {
-    keys = await formatAmmKeysById(ammId.toString(), connection);
+    keys = isCpmmPool ?
+      await getpoolDataCpmm(userWallet, ammId.toString(), connection) :
+      await formatAmmKeysById(ammId.toString(), connection);
   }
-  return keys;
+  return { isCpmmPool, keys };
 }
 
 

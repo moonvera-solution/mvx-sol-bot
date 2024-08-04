@@ -37,13 +37,15 @@ export interface ISESSION_DATA {
   cpmmPoolInfo: any;
   chatId: number;
   portfolio: PORTFOLIO_TYPE,
-  activeTradingPool: RAYDIUM_POOL_TYPE;
+  activeTradingPool: any;
   latestCommand: string;
   previousCommand: string;
   currentMode: string;
   latestSlippage: number
   metadataMessageId: number;
   snipeToken: PublicKey;
+  cpmmSnipeToken :PublicKey;
+  isCpmmPool: boolean;
   pumpToken: PublicKey;
   latestToken: PublicKey;
   snipeAmount: number;
@@ -155,13 +157,15 @@ export const DefaultSessionData: ISESSION_DATA = {
   pumpToken: DEFAULT_PUBLIC_KEY,
   solAmount: 0,
   recipientAddress: DEFAULT_PUBLIC_KEY,
-  activeTradingPool: DefaultPoolInfoData,
+  activeTradingPool: undefined,
   latestCommand: '',
   previousCommand: '',
   currentMode: '',
   latestSlippage: 5,
   metadataMessageId: 0,
   snipeToken: DEFAULT_PUBLIC_KEY,
+  cpmmSnipeToken: DEFAULT_PUBLIC_KEY,
+  isCpmmPool: false,
   latestToken: DEFAULT_PUBLIC_KEY,
   snipeStatus: true,
   snipperLookup: false,

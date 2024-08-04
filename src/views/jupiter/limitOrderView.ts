@@ -19,7 +19,6 @@ import { SOL_ADDRESS } from "../../config";
 import { getPriorityFeeLabel, waitForConfirmation } from "../../service/util";
 import bs58 from 'bs58';
 import BigNumber from "bignumber.js";
-import { i } from "@raydium-io/raydium-sdk-v2/lib/raydium-b84847b9";
 
 export async function submit_limitOrder(ctx: any) {
   const chatId = ctx.chat.id;

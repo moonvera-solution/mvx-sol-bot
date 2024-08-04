@@ -48,7 +48,6 @@ import {
   DefaultSessionData,
   PORTFOLIO_TYPE,
   DefaultPortfolioData,
-  RAYDIUM_POOL_TYPE,
 } from "./service/util/types";
 import { Keypair, PublicKey, Connection } from "@solana/web3.js";
 import { _initDbConnection } from "./db/mongo/crud";
@@ -135,7 +134,7 @@ async function _validateSession(ctx: any) {
     const restoredSession = await UserSession.findOne({ chatId: ctx.chat.id });
     if (restoredSession) {
       // NOTE: update db manually, if schema changes! avoid stopping the bot
-      ctx.session = JSON.parse(JSON.stringify(restoredSession));
+      // ctx.session = JSON.parse(JSON.stringify(restoredSession));
       console.log("Session restored.");
 
     }
@@ -744,7 +743,7 @@ bot.on("message", async (ctx) => {
                   ctx,
                   ctx.session.positionPool[ctx.session.positionIndex]
                 );
-                ctx.session.activeTradingPool = poolkey as RAYDIUM_POOL_TYPE;
+                ctx.session.activeTradingPool = poolkey;
                 await handle_radyum_swap(
                   ctx,
                   ctx.session.activeTradingPool.baseMint,
@@ -768,7 +767,7 @@ bot.on("message", async (ctx) => {
                   ctx.session.positionPool[ctx.session.positionIndex]
                 );
                 if (poolKeys) {
-                  ctx.session.activeTradingPool = poolKeys as RAYDIUM_POOL_TYPE;
+                  ctx.session.activeTradingPool = poolKeys;
                   await handle_radyum_swap(
                     ctx,
                     ctx.session.activeTradingPool.baseMint,
@@ -911,8 +910,12 @@ bot.on("message", async (ctx) => {
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
               await display_snipe_options(ctx, false, msgTxt);
+
             } else {
+              console.log('ctx.session.isCpmmPool', ctx.session.isCpmmPool); 
               ctx.session.snipeToken = new PublicKey(
+                ctx.session.isCpmmPool ?
+                ctx.session.activeTradingPool.mintB.address :
                 ctx.session.activeTradingPool.baseMint
               );
 
@@ -1170,7 +1173,7 @@ bot.on("callback_query", async (ctx: any) => {
       const positionIndex = parts[2]; // Position index
       if (ctx.session.swaptypeDex == "ray_swap") {
         const poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
-        ctx.session.activeTradingPool = poolKeys as RAYDIUM_POOL_TYPE;
+        ctx.session.activeTradingPool = poolKeys;
         await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", sellPercentage);
         return;
       } else if (ctx.session.swaptypeDex == "jup_swap") {
@@ -1187,7 +1190,7 @@ bot.on("callback_query", async (ctx: any) => {
       } else {
         const poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
         if (poolKeys) {
-          ctx.session.activeTradingPool = poolKeys as RAYDIUM_POOL_TYPE;
+          ctx.session.activeTradingPool = poolKeys;
           await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", sellPercentage);
         } else {
           ctx.session.pumpToken = new PublicKey(ctx.session.positionPool[positionIndex]);

@@ -39,7 +39,6 @@ import {
   add_mvx_and_ref_inx_fees,
   addMvxFeesInx
 } from "../../../util";
-import { S } from "@raydium-io/raydium-sdk-v2/lib/api-33b5ab27";
 
 type refObject = { referralWallet: string, referralCommision: number };
 

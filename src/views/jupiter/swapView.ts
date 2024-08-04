@@ -96,7 +96,6 @@ export async function jupiterSwap(ctx: any) {
         if (userPosition.positions[existingPositionIndex]) {
           oldPositionSol = userPosition.positions[existingPositionIndex].amountIn
           oldPositionToken = userPosition.positions[existingPositionIndex].amountOut!
-
         }
       }
 
@@ -109,7 +108,6 @@ export async function jupiterSwap(ctx: any) {
           tradeType: `jup_swap`,
           amountIn: oldPositionSol ? oldPositionSol + (ctx.session.jupSwap_amount * 1e9) : (ctx.session.jupSwap_amount * 1e9),
           amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
-
         });
       } else if (tradeType == 'sell') {
         let newAmountIn, newAmountOut;
@@ -229,6 +227,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
           console.log('cpmm dex')
           console.log('token here not jup')
           ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`) });
+          ctx.session.cpmmSnipeToken = ctx.session.cpmmPoolId;
           console.log('cpmmPoolId:', ctx.session.cpmmPoolId)
           if (ctx.session.cpmmPoolId) {
             await display_cpmm_raydium_details(ctx, false);
@@ -327,7 +326,6 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
             //   { text: `Medium ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_medium' }, { text: `High ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_high' },{ text: `Custom ${priority_custom === true ? '✅' : ''}`, callback_data: 'priority_custom' }],
             [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
             [{ text: 'Close', callback_data: 'closing' }]
-
           ]
         }
       };
