@@ -182,7 +182,7 @@ export async function getpoolDataCpmm(wallet: Keypair, poolID: any, connection: 
   }
   const data = await raydium.api.fetchPoolById({ ids: String(poolID) })
   const poolInfo = data[0] as ApiV3PoolInfoStandardItemCpmm;
-  console.log('poolInfo --c>', poolInfo);
+  // console.log('poolInfo --c>', poolInfo);
   return poolInfo;
 }
 // getpoolDataCpmm()

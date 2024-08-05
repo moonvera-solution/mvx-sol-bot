@@ -11,6 +11,9 @@ import { MVXBOT_FEES, SOL_ADDRESS,CONNECTION } from '../../config';
 import bs58 from "bs58";
 import BigNumber from 'bignumber.js';
 import { saveUserPosition } from '../../service/portfolio/positions';
+import { createTradeImage } from '../util/image';
+import { InputFile } from 'grammy';
+const fs = require('fs');
 
 
 export async function swap_pump_fun(ctx: any) {
@@ -55,6 +58,14 @@ export async function swap_pump_fun(ctx: any) {
       forceLegacy: true
     }).then(async (txSigs) => {
       if (!txSigs) return;
+      const config = {
+        searchTransactionHistory: true
+      };
+      const sigStatus = await connection.getSignatureStatus(txSigs, config)
+      if (sigStatus?.value?.err) {
+        await ctx.api.sendMessage(chatId, `❌ ${tradeSide.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+        return;
+      }
 
       let confirmedMsg, tokenAmount
       let solFromSell = 0;
@@ -123,6 +134,15 @@ export async function swap_pump_fun(ctx: any) {
         }
         ctx.session.latestCommand = 'jupiter_swap'
       }
+      if(tradeSide == 'sell' && ctx.session.pnlcard){
+      await createTradeImage(_symbol,tokenIn, ctx.session.userProfit).then((buffer) => {
+        // Save the image buffer to a file
+        fs.writeFileSync('trade.png', buffer);
+        console.log('Image created successfully');
+      });
+      await ctx.replyWithPhoto(new InputFile('trade.png' ));
+
+    }
       if (tradeSide == 'buy') {
         ctx.session.latestCommand = 'jupiter_swap'
         // await display_pumpFun(ctx, false);
@@ -220,6 +240,8 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
         profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(swapRates * solPrice)) - initialInUSD : 'N/A';
         profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
       }
+      console.log('profitPercentage:', profitPercentage);
+      ctx.session.userProfit = profitPercentage
 
 
       let messageText = `<b>------ ${tokenData.name}(${tokenData.symbol}) ------</b>\n` +

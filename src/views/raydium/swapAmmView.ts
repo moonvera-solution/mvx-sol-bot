@@ -83,6 +83,7 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
     profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
     profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
   }
+  ctx.session.userProfit = profitPercentage
 
   const {
     birdeyeURL,

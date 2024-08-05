@@ -151,6 +151,20 @@ bot.command("start", async (ctx: any) => {
   console.log("ctx.session.generatorWallet", ctx.session.generatorWallet);
   console.log('ctx.session.referralCommision', ctx.session.referralCommision);
   try {
+    if (backupSession) {
+      await UserSession.findOneAndUpdate(
+        { chatId: backupSession.chatId },
+        backupSession,
+        { upsert: true }
+      )
+        .then(() => {
+          console.log(":: Stored user session to DB");
+        })
+        .catch((e: any) => {
+          console.log("error", e);
+        });
+    }
+    // process.exit();
     const chatId = ctx.chat.id;
     ctx.session.chatId = chatId;
     const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
@@ -254,7 +268,8 @@ bot.command("start", async (ctx: any) => {
       `<i>  - Raydium AMM/CPMM </i>\n`+
       `<i>  - Pump fun </i>\n\n`+
       `<i>  - 📢  Dribs Market Maker Bot is available now! 🤖💼
-        For more information or to get started, please contact us directly </i>\n`;
+        For more information or to get started, please contact us directly </i>\n` ;
+      
 
 
 
@@ -281,10 +296,12 @@ bot.command("start", async (ctx: any) => {
             { text: "Refer Friends", callback_data: "refer_friends" },
           ],
           [{ text: "Positions", callback_data: "display_all_positions" }],
-          [{ text: "🔄 Refresh", callback_data: "refresh_start" }],
+          [{text: "🪪 Generate PnL Card", callback_data: "display_pnlcard"},{ text: "🔄 Refresh", callback_data: "refresh_start" }],
         ],
       }),
       parse_mode: "HTML",
+      disable_web_page_preview: true,
+
     };
     // Send the message with the inline keyboard
     ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
@@ -387,6 +404,7 @@ bot.command("settings", async (ctx) => {
     console.log("bot.command('settings',", error);
   }
 });
+
 
 /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
 /*                      BOT ON MSG                            */
@@ -600,6 +618,7 @@ bot.on("message", async (ctx) => {
         }
         break;
       }
+    
       case "sell_X_JUP": {
         ctx.session.latestCommand = "sell_X_JUP";
         if (msgTxt) {
@@ -734,15 +753,15 @@ bot.on("message", async (ctx) => {
         ctx.session.latestCommand = "display_single_position";
         if (msgTxt) {
           // Check if msgTxt is a numeric value
-          const isNumeric = /^\d+(\.\d+)?$/.test(msgTxt);
+          const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
 
           if (isNumeric) {
             const amt = Number(msgTxt);
             if (!isNaN(amt)) {
-              if (ctx.session.swaptypeDex == "ray_swap") {
+              if (ctx.session.positionToken && ctx.session.swaptypeDex == "ray_swap") {
                 const poolkey = await getRayPoolKeys(
                   ctx,
-                  ctx.session.positionPool[ctx.session.positionIndex]
+                  ctx.session.positionToken
                 );
                 ctx.session.activeTradingPool = poolkey as RAYDIUM_POOL_TYPE;
                 await handle_radyum_swap(
@@ -751,21 +770,22 @@ bot.on("message", async (ctx) => {
                   "buy",
                   Number(msgTxt)
                 );
-              } else if (ctx.session.swaptypeDex == "jup_swap") {
+              } else if (ctx.session.positionToken && ctx.session.swaptypeDex == "jup_swap") {
                 ctx.session.jupSwap_amount = amt;
                 ctx.session.jupSwap_side = "buy";
+                ctx.session.jupSwap_token = ctx.session.positionToken;
                 await jupiterSwap(ctx);
-              } else if(ctx.session.swaptypeDex == "cpmm_swap"){
+              } else if(ctx.session.positionToken &&  ctx.session.swaptypeDex == "cpmm_swap"){
                 ctx.session.cpmm_amountIn = amt;
                 ctx.session.cpmm_side = "buy";
+                ctx.session.jupSwap_token = ctx.session.positionToken;
                 await ray_cpmm_swap(
                   ctx
                 );
-              }
-              else {
+              }  else {
                 const poolKeys = await getRayPoolKeys(
                   ctx,
-                  ctx.session.positionPool[ctx.session.positionIndex]
+                  ctx.session.positionToken
                 );
                 if (poolKeys) {
                   ctx.session.activeTradingPool = poolKeys as RAYDIUM_POOL_TYPE;
@@ -777,7 +797,7 @@ bot.on("message", async (ctx) => {
                   );
                 } else {
                   ctx.session.pumpToken = new PublicKey(
-                    ctx.session.positionPool[ctx.session.positionIndex]
+                    ctx.session.positionToken
                   );
                   ctx.session.pump_amountIn = amt;
                   ctx.session.pump_side = "buy";
@@ -795,7 +815,6 @@ bot.on("message", async (ctx) => {
         }
       case "sell_X_RAY":
         ctx.session.latestCommand = "sell_X_RAY";
-
         if (msgTxt) {
           const amt = msgTxt.includes(".")
             ? Number.parseFloat(msgTxt)
@@ -1181,6 +1200,7 @@ bot.on("callback_query", async (ctx: any) => {
         await jupiterSwap(ctx);
 
       } else if (ctx.session.swaptypeDex == "cpmm_swap") {
+        ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
         ctx.session.cpmm_amountIn = sellPercentage;
         ctx.session.cpmm_side = "sell";
         await ray_cpmm_swap(ctx);
@@ -1200,7 +1220,7 @@ bot.on("callback_query", async (ctx: any) => {
     } else if (matchBuy) {
       const parts = data.split("_");
       const positionIndex = parts[2]; // Position index
-      ctx.session.activeTradingPool = ctx.session.positionPool[positionIndex];
+      ctx.session.positionToken = ctx.session.positionPool[positionIndex];
       const options: any = {
         reply_markup: JSON.stringify({
           inline_keyboard: [
@@ -1216,15 +1236,16 @@ bot.on("callback_query", async (ctx: any) => {
       const parts = data.split("_");
       const newPositionIndex = parseInt(parts[2]); // New position index
       ctx.session.positionIndex = newPositionIndex;
-      ctx.session.jupSwap_token =
-        ctx.session.positionPool[ctx.session.positionIndex].baseMint;
+      console.log('positionIndex', ctx.session.positionIndex)
+      ctx.session.positionToken = ctx.session.positionPool[ctx.session.positionIndex];
+      console.log('ctx.session.positionToken', ctx.session.positionToken)
       await display_single_position(ctx, true);
 
     } else if (matchOrderNavigate) {
       const parts = data.split("_");
       const newOrderIndex = parseInt(parts[2]); // New order index
       ctx.session.orderIndex = newOrderIndex;
-      console.log('orderIndex', ctx.session.orderIndex)
+      // console.log('orderIndex', ctx.session.orderIndex)
       await display_single_order(ctx, true);
 
     } else if (matchCancelOrder) {
@@ -1743,11 +1764,39 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.api.sendMessage(chatId, "Please enter amount to snipe.", options);
         break;
       }
+      case 'display_pnlcard': {
+        console.log('display_pnlcard');
+        const options: any = {
+          reply_markup: JSON.stringify({
+              inline_keyboard: [
+                [{ text: "yes", callback_data: "generate_pnlcard" },
+                 { text: "No", callback_data: "dont_generate_pnlcard" }],    
+                 
+              ],
+          }),
+          parse_mode: 'HTML'
+      };
+      ctx.api.sendMessage(chatId, "Do you want the PnL card to be generated?", options);
+
+        break;
+      }
+      case 'generate_pnlcard': {
+        ctx.session.pnlcard = true;
+        await ctx.api.sendMessage(chatId,`PnL card display is now ON.`);
+        break;
+      }
+      case 'dont_generate_pnlcard': {
+        ctx.session.pnlcard = false;
+        await ctx.api.sendMessage(chatId,`PnL card display is now ON.`);
+        break;
+      }
+
       case "display_all_positions": {
         // await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
         await display_all_positions(ctx, false);
         break;
       }
+
       case "display_refresh_single_spl_positions": {
         await display_single_position(ctx, true);
 
@@ -1960,7 +2009,4 @@ process.on("SIGINT", async () => {
   }
   process.exit();
 });
-function display_cpmm_details(ctx: any, arg1: boolean) {
-  throw new Error("Function not implemented.");
-}
 

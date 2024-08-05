@@ -186,14 +186,14 @@ export async function startSnippeSimulation(
         makeTxVersion: TxVersion.V0
     });
 
-    const referralWallet = ctx.session.generatorWallet;
+    // const referralWallet = ctx.session.generatorWallet;
     const referralFee = ctx.session.referralCommision / 100;
     const bot_fee = new BigNumber(amountIn.multipliedBy(MVXBOT_FEES).toFixed(0)).toNumber();
     const referralAmmount = new BigNumber(bot_fee * (referralFee)).toNumber();
-    const cut_bot_fee = (bot_fee - referralAmmount);
+    // const cut_bot_fee = (bot_fee - referralAmmount);
 
     let mvxFeeInx: any = null;
-    let referralInx: any = null;
+    // let referralInx: any = null;
     let minimumBalanceNeeded = 0;
     minimumBalanceNeeded += amountIn.toNumber()
     // if (referralFee > 0) {

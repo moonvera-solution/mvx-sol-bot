@@ -4,7 +4,6 @@ import { getTokenMetadata, getuserShitBalance, getUserTokenBalanceAndDetails } f
 
 import { formatNumberToKOrM, getSolBalance, getSwapAmountOutPump } from '../../service/util';
 import { Keypair, Connection } from '@solana/web3.js';
-import { runAllFees } from '../util/getPriority';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import { UserPositions } from '../../db';
 import { getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
@@ -18,6 +17,9 @@ import { getRayPoolKeys } from '../../service/dex/raydium/utils/formatAmmKeysByI
 import { display_raydium_details } from '../raydium/swapAmmView';
 import { getRayCpmmPoolKeys } from '../../service/dex/raydium/cpmm';
 import { display_cpmm_raydium_details } from '../raydium/swapCpmmView';
+import { createTradeImage } from '../util/image';
+import { InputFile } from 'grammy';
+const fs = require('fs');
 
 
 export async function jupiterSwap(ctx: any) {
@@ -30,6 +32,7 @@ export async function jupiterSwap(ctx: any) {
   const isBuySide = ctx.session.jupSwap_side == "buy";
   const tokenIn = isBuySide ? SOL_ADDRESS : ctx.session.jupSwap_token;
   const tokenOut = isBuySide ? ctx.session.jupSwap_token : SOL_ADDRESS;
+  console.log('tokenOut',tokenOut)
   const userTokenBalanceAndDetails = isBuySide ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
 
   const amountToSell = Math.floor((ctx.session.jupSwap_amount / 100) * userTokenBalanceAndDetails.userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals));
@@ -140,10 +143,19 @@ export async function jupiterSwap(ctx: any) {
         ctx.session.latestCommand = 'jupiter_swap'
       }
       await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
+      if(tradeType == 'sell' && ctx.session.pnlcard){
+        await createTradeImage(_symbol, tokenIn, ctx.session.userProfit).then((buffer) => {
+          // Save the image buffer to a file
+          fs.writeFileSync('trade.png', buffer);
+          console.log('Image created successfully');
+        });
+        await ctx.replyWithPhoto(new InputFile('trade.png' ));
+      }
       if (tradeType == 'buy') {
         ctx.session.latestCommand = 'jupiter_swap';
         await display_jupSwapDetails(ctx, false);
       }
+
     } else {
       await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
     }
@@ -151,7 +163,6 @@ export async function jupiterSwap(ctx: any) {
     await ctx.api.sendMessage(chatId, error.message, { parse_mode: 'HTML', disable_web_page_preview: true });
   });
 };
-
 
 export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
   try {
@@ -210,7 +221,14 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const lastRouteHop_5 = Number(jupPriceImpact_5.outAmount)
       const jupTokenValue: any = Object.values(jupTokenRate.data);
       let jupTokenPrice = 0;
-
+      
+      // ctx.session.activeTradingPool = await getRayPoolKeys(ctx, token);
+      // // console.log('activeTradingPool:', ctx.session.activeTradingPool)  
+      // // go to amm if active trading pool is found
+      // if (ctx.session.activeTradingPool) {
+      //   await display_raydium_details(ctx, false);
+      //   return;
+      // }
       if (jupTokenValue[0] && jupTokenValue[0].price && quoteResponse?.error_code !== 'TOKEN_NOT_TRADABLE') {
    
         jupTokenPrice = jupTokenValue[0].price;
@@ -293,22 +311,21 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
         profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
       }
-
+      console.log('profitPercentage:', profitPercentage)
+      ctx.session.userProfit = profitPercentage
       const tokenToReceive_5 = ((lastRouteHop_5) / Math.pow(10, userTokenDetails.decimals))
       const newPrice = 5 / tokenToReceive_5;
-      const priceImpact_5 = 1 + ((newPrice - tokenPriceSOL) / tokenPriceSOL) * 100;
+      // const priceImpact_5 = 1 + ((newPrice - tokenPriceSOL) / tokenPriceSOL) * 100;
       let messageText = `<b>------ ${tokenData.name}(${tokenData.symbol}) ------</b> | 📄 CA: <code>${token}</code> <a href="copy:${token}">🅲</a>\n` +
         `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
         `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
         `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
         `Market Cap: <b>${Mcap}</b> USD\n` +
         `Price:  <b>${tokenPriceSOL.toFixed(9)} SOL</b> | <b>${(tokenPriceUSD).toFixed(9)} USD</b> \n\n` +
-        // `Price impact (5 SOL): <b>${priceImpact_5.toFixed(2)}%</b>\n\n` +
         `---<code>Trade Position</code>---\n` +
         `Initial : <b>${(initialInSOL).toFixed(4)} SOL</b> | <b>${(initialInUSD.toFixed(4))} USD</b>\n` +
         `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n` +
         `Token Balance: <b>${shitBalance.userTokenBalance.toFixed(4)} $${userTokenSymbol} </b> | <b>${((shitBalance.userTokenBalance) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((shitBalance.userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
-        // `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
         `Wallet balance: <b>${getSolBalanceData.toFixed(4)}</b> SOL | <b>${(getSolBalanceData * Number(solPrice)).toFixed(4)}</b> USD\n` +
         `Net Worth: <b>${netWorthSol.toFixed(4)}</b> SOL | <b>${netWorth.toFixed(4)}</b> USD\n`;
 

@@ -28,12 +28,12 @@ export async function saveUserPosition(chatId:string, walletId:string, newPositi
             if (existingPositionIndex === -1) {
                 userPosition.positions.push(newPosition);
                 userPosition.save().then(() =>{
-                    console.log("Saved new position:",newPosition);
+                    // console.log("Saved new position:",newPosition);
                 });
               } else {
                 userPosition.positions[existingPositionIndex] = newPosition;
                 userPosition.save().then(() =>{
-                    console.log("Updated existing position on db: ",newPosition);
+                    // console.log("Updated existing position on db: ",newPosition);
                 });
             }
         } else {
@@ -43,7 +43,7 @@ export async function saveUserPosition(chatId:string, walletId:string, newPositi
                 positions: newPosition,
                });
                savePosition.save().then(() =>{
-                console.log('Saved new user & position', newPosition)
+                // console.log('Saved new user & position', newPosition)
             });
         }
     } catch (err) {

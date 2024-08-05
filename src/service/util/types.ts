@@ -29,6 +29,8 @@ export const DefaultPortfolioData: PORTFOLIO_TYPE = {
 }
 
 export interface ISESSION_DATA {
+  pnlcard: boolean;
+  userProfit : number;
   expectedAmountOut_order: number;
   CpmmSolExtracted: number;
   cpmm_amountIn: number;
@@ -87,6 +89,7 @@ export interface ISESSION_DATA {
     lpSupply: String,
     startTime: String
   },
+  positionToken: string,
 }
 
 export const enum PriotitizationFeeLevels {
@@ -132,6 +135,9 @@ export const DefaultSessionData: ISESSION_DATA = {
     positions: [],
     activeWalletIndex: 0
   },
+  positionToken: '',
+  pnlcard: false,
+  userProfit: 0,
   expectedAmountOut_order: 0,
   CpmmSolExtracted: 0,
   cpmm_amountIn: 0,

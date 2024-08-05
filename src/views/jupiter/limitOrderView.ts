@@ -5,21 +5,15 @@ import {
   getUserTokenBalanceAndDetails,
 } from "../../service/feeds";
 import {CONNECTION} from "../../config";
-import { quoteToken } from "../util/dataCalculation";
-import { getSolanaDetails } from "../../api";
 import { formatNumberToKOrM, getSolBalance, optimizedSendAndConfirmTransaction } from "../../service/util";
-import { RAYDIUM_POOL_TYPE } from "../../service/util/types";
 import { Keypair, Connection } from "@solana/web3.js";
 import { UserPositions } from "../../db";
-import { getTokenDataFromBirdEye, getTokenDataFromBirdEyePositions } from "../../api/priceFeeds/birdEye";
-import { getTokenPriceFromJupiter } from "../../api/priceFeeds/jupiter";
+import { getTokenDataFromBirdEyePositions } from "../../api/priceFeeds/birdEye";
 import { LimitOrderProvider, ownerFilter, OrderHistoryItem, TradeHistoryItem, BatchCancelOrderParams } from "@jup-ag/limit-order-sdk";
 import { jupiter_limit_order, cancelOrder, cancelBatchOrder, CalculateLimitOrderAmountout, fetchOpenOrders, calculateOrderSellAmount } from "../../../src/service/dex/jupiter/trade/LimitOrder";
 import { SOL_ADDRESS } from "../../config";
-import { getPriorityFeeLabel, waitForConfirmation } from "../../service/util";
 import bs58 from 'bs58';
 import BigNumber from "bignumber.js";
-import { i } from "@raydium-io/raydium-sdk-v2/lib/raydium-b84847b9";
 
 export async function submit_limitOrder(ctx: any) {
   const chatId = ctx.chat.id;
@@ -27,12 +21,10 @@ export async function submit_limitOrder(ctx: any) {
   const wallet = ctx.session.portfolio.wallets[walletIdx];
   const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(wallet.publicKey), ctx.session.limitOrders_token, CONNECTION);
   const userWallet: Keypair = Keypair.fromSecretKey(bs58.decode(String(wallet.secretKey)));
-
   const isBuySide = ctx.session.limitOrders_side == "buy";
   const amountIn =  ctx.session.limitOrders_amount;
   const tokenIn = isBuySide ? SOL_ADDRESS : ctx.session.limitOrders_token;
   const tokenOut = isBuySide ? ctx.session.limitOrders_token : SOL_ADDRESS;
-  
   const connection = CONNECTION;
   const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
   const referralInfo = { referralWallet: ctx.session.referralWallet, referralCommision: ctx.referralCommision, priorityFee: ctx.session.priorityFees };
@@ -55,7 +47,6 @@ export async function submit_limitOrder(ctx: any) {
         searchTransactionHistory: true
       };
       const tradeType = isBuySide ? 'buy' : 'sell';
-
       const sigStatus = await connection.getSignatureStatus(txSig, config)
       if (sigStatus?.value?.err) {
         await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
@@ -68,7 +59,6 @@ export async function submit_limitOrder(ctx: any) {
       await ctx.api.sendMessage(chatId, confirmMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
 
     }
-   
   });
 }
 export async function submit_limitOrder_sell(ctx: any) {

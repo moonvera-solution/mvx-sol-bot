@@ -143,6 +143,7 @@ const UserSessions = new Schema({
   cpmmPoolInfo: {},
   latestCommand: String,
   previousCommand: String,
+  pnlcard: Boolean,
   currentMode: String,
   latestSlippage: Number,
   metadataMessageId: Number,

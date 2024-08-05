@@ -11,6 +11,9 @@ import { MVXBOT_FEES, SOL_ADDRESS } from '../../config';
 import bs58 from "bs58";
 import BigNumber from 'bignumber.js';
 import { saveUserPosition } from '../../service/portfolio/positions';
+import { createTradeImage } from "../util/image";
+import { InputFile } from "grammy";
+const fs = require('fs');
 
 export async function ray_cpmm_swap(ctx: any) {
   const chatId = ctx.chat.id;
@@ -124,6 +127,15 @@ export async function ray_cpmm_swap(ctx: any) {
         ctx.session.latestCommand = 'jupiter_swap'
       }
       await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
+      if(tradeType == 'sell' && ctx.session.pnlcard){
+        await createTradeImage(_symbol, tokenIn, ctx.session.userProfit).then((buffer) => {
+          // Save the image buffer to a file
+          
+          fs.writeFileSync('trade.png', buffer);
+          console.log('Image created successfully');
+        });
+        await ctx.replyWithPhoto(new InputFile('trade.png' ));
+      }
       if (tradeType == 'buy') {
         ctx.session.latestCommand = 'jupiter_swap';
         await display_cpmm_raydium_details(ctx, false);
@@ -157,7 +169,7 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
   const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
   // console.log("cpmmPoolKey-%c>", cpmmPoolKey);
   ctx.session.cpmmPoolInfo = await getpoolDataCpmm(payerKeypair, cpmmPoolKey, connection);
-
+console.log( '  ctx.session.cpmmPoolInfo>>>>> ', ctx.session.cpmmPoolInfo )
   const tokenAddress = new PublicKey(ctx.session.cpmmPoolInfo.mintB.address);
   const [
     shitBalance,
@@ -220,6 +232,7 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
     profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
     profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
   }
+  ctx.session.userProfit = profitPercentage
 
   const {
     birdeyeURL,

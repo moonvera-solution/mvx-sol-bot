@@ -7,6 +7,9 @@ import { raydium_amm_swap } from '../../dex';
 import BigNumber from 'bignumber.js';
 import bs58 from 'bs58';
 import { display_jupSwapDetails } from '../../../views/jupiter/swapView';
+import { createTradeImage } from '../../../views/util/image';
+import { InputFile } from 'grammy';
+const fs = require('fs');
 
 export async function handle_radyum_swap(
   ctx: any, 
@@ -123,7 +126,15 @@ export async function handle_radyum_swap(
       );
 
       await ctx.api.sendMessage(ctx.session.chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
-
+      if(side == 'sell'&& ctx.session.pnlcard){
+        await createTradeImage(_symbol,  poolKeys.baseMint, ctx.session.userProfit).then((buffer) => {
+          // Save the image buffer to a file
+          
+          fs.writeFileSync('trade.png', buffer);
+          console.log('Image created successfully');
+        });
+        await ctx.replyWithPhoto(new InputFile('trade.png' ));
+      }
       if (side == 'buy') {
         ctx.session.latestCommand = 'jupiter_swap';
         ctx.session.jupSwap_token = poolKeys.baseMint;
