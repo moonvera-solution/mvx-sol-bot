@@ -1,6 +1,9 @@
 import {ApiPoolInfoV4,LIQUIDITY_STATE_LAYOUT_V4,Liquidity,LiquidityPoolKeys,MARKET_STATE_LAYOUT_V3,Market,SPL_MINT_LAYOUT,jsonInfo2PoolKeys} from '@raydium-io/raydium-sdk';
-import { PublicKey, Connection } from '@solana/web3.js';
+import { PublicKey, Connection,Keypair } from '@solana/web3.js';
 import {CONNECTION} from '../../../../config';
+import { CpmmPoolInfoLayout, ApiV3PoolInfoStandardItemCpmm } from '@raydium-io/raydium-sdk-v2';
+import { getpoolDataCpmm } from '../cpmm';
+
 
 export async function fetchPoolSchedule(keys: any, connection: Connection) {
   let poolKeys = jsonInfo2PoolKeys(keys) as LiquidityPoolKeys;
@@ -149,4 +152,75 @@ export async function formatAmmKeysById(id: string, connection: Connection): Pro
     marketEventQueue: marketInfo.eventQueue.toString(),
     lookupTableAccount: PublicKey.default.toString()
   }
+}
+
+export async function _getRayPoolKeysForMM({ t1, t2, userWallet }: { t1: string, t2: string, userWallet: Keypair }):
+  Promise<{ isCpmmPool: boolean, keys: ApiV3PoolInfoStandardItemCpmm | ApiPoolInfoV4 }> {
+  const cnx = CONNECTION;
+  const commitment = "processed";
+  const AMMV4 = new PublicKey('675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8');
+  const baseMint = new PublicKey(t1);
+  const quoteMint = new PublicKey(t2);
+  let isCpmmPool = false;
+
+  let accounts = await cnx.getProgramAccounts(
+    AMMV4,
+    {
+      commitment,
+      filters: [
+        { dataSize: LIQUIDITY_STATE_LAYOUT_V4.span },
+        {
+          memcmp: {
+            offset: LIQUIDITY_STATE_LAYOUT_V4.offsetOf("baseMint"),
+            bytes: baseMint.toBase58(),
+          },
+        },
+        {
+          memcmp: {
+            offset: LIQUIDITY_STATE_LAYOUT_V4.offsetOf("quoteMint"),
+            bytes: quoteMint.toBase58(),
+          },
+        },
+      ],
+    }
+  );
+
+  if (accounts.length < 1) {
+    const RAYDIUM_CPMM = new PublicKey('CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C');
+
+    isCpmmPool = true;
+    accounts = await cnx.getProgramAccounts(
+      RAYDIUM_CPMM,
+      {
+        commitment,
+        filters: [
+          { dataSize: CpmmPoolInfoLayout.span },
+          {
+            memcmp: {
+              offset: CpmmPoolInfoLayout.offsetOf("mintB"),
+              bytes: baseMint.toBase58(),
+            },
+          },
+          {
+            memcmp: {
+              offset: CpmmPoolInfoLayout.offsetOf("mintA"),
+              bytes: quoteMint.toBase58(),
+            },
+          },
+        ],
+      }
+    );
+  }
+
+  const ammId = accounts && accounts[0] && accounts[0].pubkey;
+  let keys: any;
+
+  // ammid exists and keys still null
+  while (ammId && keys == undefined) {
+    keys = isCpmmPool ?
+      await getpoolDataCpmm(userWallet, ammId.toString(), cnx) :
+      await formatAmmKeysById(ammId.toString(), cnx);
+  }
+  console.log('keys--->finder-mm->', keys);
+  return { isCpmmPool,keys };
 }

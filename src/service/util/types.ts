@@ -15,6 +15,15 @@ export type PORTFOLIO_TYPE = {
   activeWalletIndex: number
 }
 
+export type MM_CAMPAIGN_TYPE = {
+  chatId: number,
+  token: String,
+  userWallet: String,
+  fundingWallet: String,
+  fundingAmount: number,
+  wallets: Array<{ publicKey: String, secretKey: String }>
+}
+
 export const DefaultPortfolioData: PORTFOLIO_TYPE = {
   chatId: 0,
   wallets: [{
@@ -27,6 +36,9 @@ export const DefaultPortfolioData: PORTFOLIO_TYPE = {
   activeWalletIndex: 0
 
 }
+
+
+
 
 export interface ISESSION_DATA {
   expectedAmountOut_order: number;
@@ -62,7 +74,7 @@ export interface ISESSION_DATA {
   ispriorityCustomFee: boolean;
   customPriorityFee: number;
   positionIndex: number;
-  allowedReferral:String, // tg Username
+  allowedReferral: String, // tg Username
   pump_amountIn: number,
   pump_side: string,
   pump_amountOut: number,
@@ -70,7 +82,7 @@ export interface ISESSION_DATA {
   jupSwap_token: string,
   jupSwap_side: string,
   jupSwap_amount: number,
-  jupSwap:{token:String,side:String,amount:number},
+  jupSwap: { token: String, side: String, amount: number },
   ammAddress: string,
   limitOrders_token: PublicKey,
   limitOrders_side: string,
@@ -87,6 +99,8 @@ export interface ISESSION_DATA {
     lpSupply: String,
     startTime: String
   },
+  mmToken: String;
+  mmDex: String;
 }
 
 export const enum PriotitizationFeeLevels {
@@ -171,14 +185,14 @@ export const DefaultSessionData: ISESSION_DATA = {
   positionPool: [],
   // priorityFees: PriotitizationFeeLevels.LOW,
   positionIndex: 0,
-  allowedReferral:'', // tg Username
+  allowedReferral: '', // tg Username
   limitOrders_token: DEFAULT_PUBLIC_KEY,
   limitOrders_side: '',
   limitOrders_amount: 0,
   limitOrders_price: 0,
   limitOrders_time: 0,
   jupSwap_token: '',
-  jupSwap:{token:'',side:'',amount:0},
+  jupSwap: { token: '', side: '', amount: 0 },
   poolSchedule: {
     status: '',
     baseDecimals: 0,
@@ -189,6 +203,8 @@ export const DefaultSessionData: ISESSION_DATA = {
     lpSupply: '',
     startTime: ''
   },
+  mmToken: '',
+  mmDex: ''
 }
 
 export type RAYDIUM_POOL_TYPE = {
@@ -244,4 +260,11 @@ export type USERPOSITION_TYPE = {
       amountOut: number | undefined;
     }
   ]
+}
+
+export enum Dex {
+  AMM = 1,
+  CPMM = 2,
+  JUP = 3,
+  PUMP = 4,
 }

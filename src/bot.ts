@@ -30,7 +30,8 @@ import {
   display_limitOrder_token_details,
   submit_limitOrder, review_limitOrder_details, display_open_orders,
   display_single_order,
-  cancel_all_orders, cancel_orders
+  cancel_all_orders, cancel_orders,
+  display_market_maker
 } from "./views";
 import { handle_radyum_swap } from "./service/portfolio/strategies/swaps";
 import {
@@ -58,7 +59,8 @@ import { setSnipe, snipperON } from "./service/portfolio/strategies/snipper";
 import { getSolBalance, getTargetDate, sendSol } from "./service/util";
 import { getRayPoolKeys } from "./service/dex/raydium/utils/formatAmmKeysById";
 import { _generateReferralLink, _getReferralData } from "../src/db/mongo/crud";
-import {CONNECTION} from "./config";
+import { CONNECTION } from "./config";
+import { run_1M_MM } from "./service/mm";
 import {
   Portfolios,
   Referrals,
@@ -249,10 +251,10 @@ bot.command("start", async (ctx: any) => {
       `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInUSD.toFixed(4))}</b> USD\n\n` +
       // `⚠️ We recommend exporting your private key and keeping it on paper. ⚠️ \n` +
       `<i>  - 📣 Limit Order is available</i>\n\n` +
-      `<b> Markets </b>\n`+
-      `<i>  - Jupiter  </i>\n`+
-      `<i>  - Raydium AMM/CPMM </i>\n`+
-      `<i>  - Pump fun </i>\n\n`+
+      `<b> Markets </b>\n` +
+      `<i>  - Jupiter  </i>\n` +
+      `<i>  - Raydium AMM/CPMM </i>\n` +
+      `<i>  - Pump fun </i>\n\n` +
       `<i>  - 📢  Dribs Market Maker Bot is available now! 🤖💼
         For more information or to get started, please contact us directly </i>\n`;
 
@@ -263,13 +265,14 @@ bot.command("start", async (ctx: any) => {
       reply_markup: JSON.stringify({
         inline_keyboard: [
           [
-              { text: 'Tg official channel', url: 'https://t.me/DRIBs_official' },
+            { text: 'Tg official channel', url: 'https://t.me/DRIBs_official' },
           ],
           [
             { text: "⬇️ Import Wallet", callback_data: "import_wallet" },
             { text: "💼 Wallets & Settings⚙️", callback_data: "show_wallets" },
           ],
           [{ text: "☑️ Rug Check", callback_data: "rug_check" }],
+          [{ text: "🌪 Market Maker ", callback_data: "market_maker" }],
           [
             { text: "💱 Trade", callback_data: "jupiter_swap" },
             { text: "🎯 Turbo Snipe", callback_data: "snipe" },
@@ -438,7 +441,7 @@ bot.on("message", async (ctx) => {
     ctx.session.portfolio.chatId = chatId;
     const latestCommand = ctx.session.latestCommand;
     const msgTxt = ctx.update.message.text;
-    if (msgTxt && !commandNumbers.includes(latestCommand)) {
+    if (msgTxt && !commandNumbers.includes(latestCommand) && latestCommand !== 'market_maker') {
       const pumpRegex = /https:\/\/(www\.)?pump\.fun\/([A-Za-z0-9]+)/;
       const birdEyeRegex =
         /https:\/\/(www\.)?birdeye\.so\/token\/([A-Za-z0-9]+)\?chain=solana/;
@@ -466,7 +469,7 @@ bot.on("message", async (ctx) => {
           ctx.session.jupSwap_token = msgTxt;
           await display_jupSwapDetails(ctx, false);
           return;
-        } 
+        }
       }
     }
     switch (latestCommand) {
@@ -505,7 +508,14 @@ bot.on("message", async (ctx) => {
         }
         break;
       }
-
+      case "market_maker": {
+        if (msgTxt && PublicKey.isOnCurve(msgTxt)) {
+          ctx.session.latestCommand = "market_maker";
+          ctx.session.mmToken = msgTxt;
+          await display_market_maker(ctx, false);
+          break;
+        }
+      }
       case "jupiter_swap": {
         if (msgTxt) {
           if (
@@ -628,34 +638,34 @@ bot.on("message", async (ctx) => {
           const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
 
           const amt = Number(msgTxt);
-          if(isNumeric){
-          if (!isNaN(amt)) {
-            await handle_radyum_swap(
-              ctx,
-              ctx.session.activeTradingPool.baseMint,
-              "buy",
-              Number(amt)
-            );
-            break;
-          
+          if (isNumeric) {
+            if (!isNaN(amt)) {
+              await handle_radyum_swap(
+                ctx,
+                ctx.session.activeTradingPool.baseMint,
+                "buy",
+                Number(amt)
+              );
+              break;
+
+            } else {
+              return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+              break;
+            }
           } else {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
-            break;  
           }
-        } else {
-          return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+
         }
-        
-      }
 
       case "buy_X_CPMM":
-          console.log("buy_X_CPMM here");
-          ctx.session.latestCommand = "buy_X_CPMM";
-          if (msgTxt) {
-            const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
+        console.log("buy_X_CPMM here");
+        ctx.session.latestCommand = "buy_X_CPMM";
+        if (msgTxt) {
+          const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
 
-            if (isNumeric) {
-              const amt = Number(msgTxt);
+          if (isNumeric) {
+            const amt = Number(msgTxt);
             if (!isNaN(amt)) {
               ctx.session.cpmm_amountIn = amt;
               ctx.session.cpmm_side = "buy";
@@ -670,65 +680,65 @@ bot.on("message", async (ctx) => {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
         }
-          case "sell_X_CPMM": {
-            console.log("sell_X_CPMM here");
+      case "sell_X_CPMM": {
+        console.log("sell_X_CPMM here");
 
-            ctx.session.latestCommand = "sell_X_CPMM";
-            if (msgTxt) {
-              const amt = msgTxt.includes(".")
-                ? Number.parseFloat(msgTxt)
-                : Number.parseInt(msgTxt);
-              if (!isNaN(amt) && amt >= 0 && amt <= 100) {
-                ctx.session.cpmm_amountIn = amt;
-                ctx.session.cpmm_side = "sell";
-                await ray_cpmm_swap(ctx);
-                break;
-              } else {
-                return await ctx.api.sendMessage(
-                  chatId,
-                  "🔴 Invalid amount. Please enter a number between 0 and 100 to represent the percentage."
-                );
-              }
-            }
+        ctx.session.latestCommand = "sell_X_CPMM";
+        if (msgTxt) {
+          const amt = msgTxt.includes(".")
+            ? Number.parseFloat(msgTxt)
+            : Number.parseInt(msgTxt);
+          if (!isNaN(amt) && amt >= 0 && amt <= 100) {
+            ctx.session.cpmm_amountIn = amt;
+            ctx.session.cpmm_side = "sell";
+            await ray_cpmm_swap(ctx);
             break;
+          } else {
+            return await ctx.api.sendMessage(
+              chatId,
+              "🔴 Invalid amount. Please enter a number between 0 and 100 to represent the percentage."
+            );
           }
-         
-        case "buy_0.5_CPMM":
-            console.log("buy_0.5_CPMM here");
-            ctx.session.latestCommand = "buy_X_CPMM";
-            if (msgTxt) {
-              const amt = msgTxt.includes(".")
-                ? Number.parseFloat(msgTxt)
-                : Number.parseInt(msgTxt);
-              if (!isNaN(amt)) {
-                ctx.session.cpmm_amountIn = 0.5;
-                ctx.session.cpmm_side = "buy";
-                await ray_cpmm_swap(
-                  ctx
-                );
-                break;
-              } else {
-                return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
-              }
+        }
+        break;
+      }
+
+      case "buy_0.5_CPMM":
+        console.log("buy_0.5_CPMM here");
+        ctx.session.latestCommand = "buy_X_CPMM";
+        if (msgTxt) {
+          const amt = msgTxt.includes(".")
+            ? Number.parseFloat(msgTxt)
+            : Number.parseInt(msgTxt);
+          if (!isNaN(amt)) {
+            ctx.session.cpmm_amountIn = 0.5;
+            ctx.session.cpmm_side = "buy";
+            await ray_cpmm_swap(
+              ctx
+            );
+            break;
+          } else {
+            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
-          case "buy_1_CPMM":
-            console.log("buy_1_CPMM here");
-            ctx.session.latestCommand = "buy_1_CPMM";
-            if (msgTxt) {
-              const amt = msgTxt.includes(".")
-                ? Number.parseFloat(msgTxt)
-                : Number.parseInt(msgTxt);
-              if (!isNaN(amt)) {
-                ctx.session.cpmm_amountIn = 1;
-                ctx.session.cpmm_side = "buy";
-                await ray_cpmm_swap(
-                  ctx
-                );
-                break;
-              } else {
-                return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
-              }
+        }
+      case "buy_1_CPMM":
+        console.log("buy_1_CPMM here");
+        ctx.session.latestCommand = "buy_1_CPMM";
+        if (msgTxt) {
+          const amt = msgTxt.includes(".")
+            ? Number.parseFloat(msgTxt)
+            : Number.parseInt(msgTxt);
+          if (!isNaN(amt)) {
+            ctx.session.cpmm_amountIn = 1;
+            ctx.session.cpmm_side = "buy";
+            await ray_cpmm_swap(
+              ctx
+            );
+            break;
+          } else {
+            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
+        }
       // just to solve the position refresh problem temporarly
       case "buy_X_SOL_IN_POSITION":
         ctx.session.latestCommand = "display_single_position";
@@ -755,7 +765,7 @@ bot.on("message", async (ctx) => {
                 ctx.session.jupSwap_amount = amt;
                 ctx.session.jupSwap_side = "buy";
                 await jupiterSwap(ctx);
-              } else if(ctx.session.swaptypeDex == "cpmm_swap"){
+              } else if (ctx.session.swaptypeDex == "cpmm_swap") {
                 ctx.session.cpmm_amountIn = amt;
                 ctx.session.cpmm_side = "buy";
                 await ray_cpmm_swap(
@@ -995,8 +1005,8 @@ bot.on("message", async (ctx) => {
       }
       case "limitOrders": {
         console.log("limitOrders here");
- 
-          if(msgTxt){
+
+        if (msgTxt) {
           if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {
             const isTOken = await checkAccountType(ctx, msgTxt);
             if (!isTOken) {
@@ -1005,46 +1015,46 @@ bot.on("message", async (ctx) => {
             }
             ctx.session.latestCommand = "limitOrders";
             let limitOrderToken = new PublicKey(msgTxt);
-             ctx.session.limitOrders_token = limitOrderToken;
-        
-          await display_limitOrder_token_details(ctx, false);
-          break;
+            ctx.session.limitOrders_token = limitOrderToken;
+
+            await display_limitOrder_token_details(ctx, false);
+            break;
           }
         }
         break;
       }
       case "set_limit_order_amount_sell": {
         // TODO: add checks for the amount
-        if(msgTxt){
-          console.log('msgTxt', msgTxt);  
+        if (msgTxt) {
+          console.log('msgTxt', msgTxt);
           const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
           const isTokenAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(msgTxt);
-          if(isTokenAddress && !isNumeric){
+          if (isTokenAddress && !isNumeric) {
             await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
             return;
           }
           if (isNumeric) {
-         
+
             const amt = Number(msgTxt);
             if (!isNaN(amt)) {
-     
+
               const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
               const connection = CONNECTION;
-              const [userTokenBalance,tokenMetadataResult] = await Promise.all([
-                getuserShitBalance(new PublicKey(userWallet.publicKey),ctx.session.limitOrders_token, connection),
+              const [userTokenBalance, tokenMetadataResult] = await Promise.all([
+                getuserShitBalance(new PublicKey(userWallet.publicKey), ctx.session.limitOrders_token, connection),
                 getTokenMetadata(ctx, ctx.session.limitOrders_token.toBase58())
               ]);
               if (userTokenBalance <= 0) {
                 await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userTokenBalance} SOL`);
-                 return;
+                return;
               }
               const decimalsToken = tokenMetadataResult.tokenData.mint.decimals;
-              let sellingAmmt = Math.floor(Number(msgTxt!)/ 100 * Number( userTokenBalance.userTokenBalance) * Math.pow(10, decimalsToken)) ;
+              let sellingAmmt = Math.floor(Number(msgTxt!) / 100 * Number(userTokenBalance.userTokenBalance) * Math.pow(10, decimalsToken));
               ctx.session.limitOrders_amount = sellingAmmt;
               await ctx.api.sendMessage(chatId, "Enter the token target price (in SOL)");
               ctx.session.latestCommand = "set_limit_order_price";
               break;
-          
+
             } else {
               return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
             }
@@ -1053,11 +1063,11 @@ bot.on("message", async (ctx) => {
       }
       case "set_limit_order_amount_buy": {
         // TODO: add checks for the amount
-        if(msgTxt){
-          console.log('msgTxt', msgTxt);  
+        if (msgTxt) {
+          console.log('msgTxt', msgTxt);
           const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
           const isTokenAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(msgTxt);
-          if(isTokenAddress && !isNumeric){
+          if (isTokenAddress && !isNumeric) {
             await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
             return;
           }
@@ -1071,13 +1081,13 @@ bot.on("message", async (ctx) => {
               let userSolBalance = await getSolBalance(userWallet.publicKey, connection);
               if (userSolBalance < ctx.session.limitOrders_amount && ctx.session.limitOrders_side == "buy") {
                 await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
-                 return;
+                return;
               }
               // console.log('hit here');
               await ctx.api.sendMessage(chatId, "Enter the token target price (in SOL)");
               ctx.session.latestCommand = "set_limit_order_price";
               break;
-          
+
             } else {
               return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
             }
@@ -1085,16 +1095,16 @@ bot.on("message", async (ctx) => {
         }
       }
       case "set_limit_order_price": {
-        if(msgTxt){
+        if (msgTxt) {
           const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
           if (!isNumeric) {
             await ctx.api.sendMessage(chatId, "🔴 Invalid price");
             return;
-        }
-       } else {
+          }
+        } else {
           await ctx.api.sendMessage(chatId, "🔴 Invalid price");
           return;
-       }
+        }
         // TODO: add checks for the price
         ctx.session.limitOrders_price = Number(msgTxt!);
         await ctx.api.sendMessage(chatId, "Enter expiry time from now - DAYS:HR:MIN - ie: 01:23:10 \n");
@@ -1104,33 +1114,33 @@ bot.on("message", async (ctx) => {
       }
       case "set_limit_order_time": {
         // TODO: parse NO EXPIRY msgTxt and set ctx.session.limitOrders.time = null
-        if(msgTxt){
-        const time = getTargetDate(msgTxt!);
-        const NoTime = /^(No|no|NO)$/.test(msgTxt);
-        if (NoTime){
-          ctx.session.limitOrders_time = 0;
-            if(ctx.session.limitOrders_side == "buy"){
-            await review_limitOrder_details(ctx, false)
+        if (msgTxt) {
+          const time = getTargetDate(msgTxt!);
+          const NoTime = /^(No|no|NO)$/.test(msgTxt);
+          if (NoTime) {
+            ctx.session.limitOrders_time = 0;
+            if (ctx.session.limitOrders_side == "buy") {
+              await review_limitOrder_details(ctx, false)
             } else {
               console.log('selling order view');
               await review_limitOrder_details_sell(ctx, false)
             }
-          break;
-        } else if (time) {
-          ctx.session.limitOrders_time = Number(time);
-        
-          if(ctx.session.limitOrders_side == "buy"){
-            await review_limitOrder_details(ctx, false)
+            break;
+          } else if (time) {
+            ctx.session.limitOrders_time = Number(time);
+
+            if (ctx.session.limitOrders_side == "buy") {
+              await review_limitOrder_details(ctx, false)
             } else {
               await review_limitOrder_details_sell(ctx, false)
             }
-          break;
+            break;
 
-        } else {
-          await ctx.api.sendMessage(chatId, "Invalid time format");
-          return;
+          } else {
+            await ctx.api.sendMessage(chatId, "Invalid time format");
+            return;
+          }
         }
-      }
       }
 
     }
@@ -1204,7 +1214,7 @@ bot.on("callback_query", async (ctx: any) => {
       const options: any = {
         reply_markup: JSON.stringify({
           inline_keyboard: [
-            [{ text: "Cancel", callback_data: "delete_input" }],      
+            [{ text: "Cancel", callback_data: "delete_input" }],
           ],
         }),
         parse_mode: "HTML",
@@ -1235,6 +1245,9 @@ bot.on("callback_query", async (ctx: any) => {
 
 
     switch (data) {
+      case "run_1M_MM":{
+        await run_1M_MM(ctx);
+      }
       case "refer_friends": {
         const chatId = ctx.chat.id;
         const username = ctx.update.callback_query.from.username; //ctx.from.username;
@@ -1355,7 +1368,7 @@ bot.on("callback_query", async (ctx: any) => {
       case "refresh_limit_order":
         await display_limitOrder_token_details(ctx, true);
         break;
- 
+
       case "manage_limit_orders":
         ctx.session.latestCommand = "manage_limit_orders";
         await display_single_order(ctx, false);
@@ -1411,7 +1424,7 @@ bot.on("callback_query", async (ctx: any) => {
       case "closing":
         await handleCloseKeyboard(ctx);
         break;
-      case "delete_input":{
+      case "delete_input": {
         await handleCloseInputUser(ctx);
         break;
       }
@@ -1499,7 +1512,7 @@ bot.on("callback_query", async (ctx: any) => {
         const options: any = {
           reply_markup: JSON.stringify({
             inline_keyboard: [
-              [{ text: "Cancel", callback_data: "delete_input" }],      
+              [{ text: "Cancel", callback_data: "delete_input" }],
             ],
           }),
           parse_mode: "HTML",
@@ -1541,7 +1554,7 @@ bot.on("callback_query", async (ctx: any) => {
         const options: any = {
           reply_markup: JSON.stringify({
             inline_keyboard: [
-              [{ text: "Cancel", callback_data: "delete_input" }],      
+              [{ text: "Cancel", callback_data: "delete_input" }],
             ],
           }),
           parse_mode: "HTML",
@@ -1569,7 +1582,7 @@ bot.on("callback_query", async (ctx: any) => {
         const options: any = {
           reply_markup: JSON.stringify({
             inline_keyboard: [
-              [{ text: "Cancel", callback_data: "delete_input" }],      
+              [{ text: "Cancel", callback_data: "delete_input" }],
             ],
           }),
           parse_mode: "HTML",
@@ -1597,14 +1610,14 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
 
-      case 'sell_100_CPMM':{
+      case 'sell_100_CPMM': {
         ctx.session.latestCommand = "sell_100_CPMM";
         ctx.session.cpmm_amountIn = 100;
         ctx.session.cpmm_side = "sell";
         await ray_cpmm_swap(ctx);
         break;
       }
-      case 'sell_50_CPMM':{
+      case 'sell_50_CPMM': {
         ctx.session.latestCommand = "sell_50_CPMM";
         ctx.session.cpmm_amountIn = 50;
         ctx.session.cpmm_side = "sell";
@@ -1636,7 +1649,7 @@ bot.on("callback_query", async (ctx: any) => {
         const options: any = {
           reply_markup: JSON.stringify({
             inline_keyboard: [
-              [{ text: "Cancel", callback_data: "delete_input" }],      
+              [{ text: "Cancel", callback_data: "delete_input" }],
             ],
           }),
           parse_mode: "HTML",
@@ -1649,7 +1662,7 @@ bot.on("callback_query", async (ctx: any) => {
         const options: any = {
           reply_markup: JSON.stringify({
             inline_keyboard: [
-              [{ text: "Cancel", callback_data: "delete_input" }],      
+              [{ text: "Cancel", callback_data: "delete_input" }],
             ],
           }),
           parse_mode: "HTML",
@@ -1684,7 +1697,7 @@ bot.on("callback_query", async (ctx: any) => {
         const options: any = {
           reply_markup: JSON.stringify({
             inline_keyboard: [
-              [{ text: "Cancel", callback_data: "delete_input" }],      
+              [{ text: "Cancel", callback_data: "delete_input" }],
             ],
           }),
           parse_mode: "HTML",
@@ -1698,7 +1711,7 @@ bot.on("callback_query", async (ctx: any) => {
         const options: any = {
           reply_markup: JSON.stringify({
             inline_keyboard: [
-              [{ text: "Cancel", callback_data: "delete_input" }],      
+              [{ text: "Cancel", callback_data: "delete_input" }],
             ],
           }),
           parse_mode: "HTML",
@@ -1735,7 +1748,7 @@ bot.on("callback_query", async (ctx: any) => {
         const options: any = {
           reply_markup: JSON.stringify({
             inline_keyboard: [
-              [{ text: "Cancel", callback_data: "delete_input" }],      
+              [{ text: "Cancel", callback_data: "delete_input" }],
             ],
           }),
           parse_mode: "HTML",
@@ -1871,17 +1884,22 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       }
       case "display_open_orders": {
-        await display_open_orders(ctx,false);
+        await display_open_orders(ctx, false);
         break;
       }
       case 'refresh_limit_orders': {
-        await display_open_orders(ctx,true);
+        await display_open_orders(ctx, true);
         break;
       }
 
       case "cancel_all_orders": {
         await cancel_all_orders(ctx);
         break;
+      }
+
+      case "market_maker": {
+        ctx.session.latestCommand = "market_maker";
+        await ctx.api.sendMessage(chatId, "Enter the token address for market making.");
       }
     }
   } catch (e: any) {

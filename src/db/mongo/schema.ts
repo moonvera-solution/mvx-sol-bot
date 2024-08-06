@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { PublicKey } from '@solana/web3.js';
-import { PORTFOLIO_TYPE, ISESSION_DATA, RAYDIUM_POOL_TYPE, USERPOSITION_TYPE, REFERRAL_TYPE } from '../../service/util/types';
+import { PORTFOLIO_TYPE,MM_CAMPAIGN_TYPE, ISESSION_DATA, RAYDIUM_POOL_TYPE, USERPOSITION_TYPE, REFERRAL_TYPE } from '../../service/util/types';
 
 
 const Schema = mongoose.Schema;
@@ -50,6 +50,18 @@ const PoolInfoSchema = new Schema<RAYDIUM_POOL_TYPE>({
   marketAsks: String,
   marketEventQueue: String,
   lookupTableAccount: String,
+});
+
+const MarketMakerSchema = new Schema<MM_CAMPAIGN_TYPE>({
+  chatId: { type: Number, required: true },
+  token: { type: String, required: true },
+  userWallet: { type: String, required: true },
+  fundingWallet: { type: String, required: true },
+  fundingAmount:{type: Number, required: true},
+  wallets: [{
+    publicKey: { type: String, required: true },
+    secretKey: { type: String, required: true }
+  }],
 });
 
 const ReferralSchema = new Schema<REFERRAL_TYPE>({
@@ -198,3 +210,4 @@ export const UserSession = mongoose.model("UserSession", UserSessions);
 export const WalletKeys = mongoose.model("WalletKeys", WalletSchema);
 export const Portfolios = mongoose.model("Portfolios", UserPortfolioSchema);
 export const AllowedReferrals = mongoose.model("AllowedReferrals", AllowedReferralsSchema);
+export const MarketMakers = mongoose.model("MarketMakers", MarketMakerSchema);

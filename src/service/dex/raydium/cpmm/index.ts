@@ -8,7 +8,6 @@ import bs58 from 'bs58'
 import BN from 'bn.js'
 import { TransactionInstruction } from '@solana/web3.js';
 
-
 export const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
 export const TOKEN_2022_PROGRAM_ID = new PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb');
 
@@ -20,8 +19,7 @@ export const txVersion = TxVersion.V0;
 let raydium: Raydium | undefined;
 
 export async function initSdk(wallet: Keypair, connection: Connection) {
-  if (raydium) return raydium
-  console.log("--c>, ", wallet.publicKey.toBase58());
+  if (raydium) return raydium;
   raydium = await Raydium.load({
     owner: wallet,
     connection,

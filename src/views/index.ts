@@ -11,6 +11,7 @@ import {quoteToken,quoteTokenquoteToken} from './util/dataCalculation';
 import {handleCloseKeyboard,} from './util/commons';
 import {setCustomPriority,runAllFees} from './util/getPriority';
 import {handleRefreshStart} from './refreshData/refreshStart';
+import {display_market_maker} from './mm/marketMakerView';
 import {
     display_limitOrder_token_details,
     submit_limitOrder, review_limitOrder_details, display_open_orders,
@@ -43,5 +44,6 @@ export {
     submit_limitOrder, review_limitOrder_details, display_open_orders,
     display_single_order,
     cancel_all_orders,
-    cancel_orders
+    cancel_orders,
+    display_market_maker
 };
