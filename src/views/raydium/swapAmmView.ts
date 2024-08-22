@@ -18,12 +18,14 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
   }
   const connection = CONNECTION;
   const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
+  // console.log('rayPoolKeys:', rayPoolKeys);
   const baseVault = rayPoolKeys.baseVault;
   const quoteVault = rayPoolKeys.quoteVault;
   const baseDecimals = rayPoolKeys.baseDecimals;
   const quoteDecimals = rayPoolKeys.quoteDecimals;
   const baseMint = rayPoolKeys.baseMint;
   const tokenAddress = new PublicKey(baseMint);
+  // console.log('tokenAddress:', tokenAddress);
   const chatId = ctx.chat.id;
   const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
   const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
@@ -50,7 +52,7 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
     getuserShitBalance(userPublicKey,tokenAddress, connection),
   ]);
 
-
+console.log('quoteToken:', quoteToken); 
   const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value :  Number(jupSolPrice.data.SOL.price);
 
   const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;

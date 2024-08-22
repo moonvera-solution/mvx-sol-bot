@@ -9,6 +9,7 @@ Promise<{ baseTokenVaultSupply: BigNumber, quoteTokenVaultSupply: BigNumber, bas
         new PublicKey(baseMint)
     ];
     const parsedAccountsInfo = await connection.getMultipleParsedAccounts(publicKeys, { commitment: 'processed' });
+    // console.log('parsedAccountsInfo:', parsedAccountsInfo);
     // Type checking and extracting data
     const baseTokenVaultSupply = parsedAccountsInfo.value[0]?.data instanceof Buffer ? new BigNumber(0) : new BigNumber(parsedAccountsInfo.value[0]?.data.parsed.info.tokenAmount.amount);
     const quoteTokenVaultSupply = parsedAccountsInfo.value[1]?.data instanceof Buffer ? new BigNumber(0) : new BigNumber(parsedAccountsInfo.value[1]?.data.parsed.info.tokenAmount.amount);

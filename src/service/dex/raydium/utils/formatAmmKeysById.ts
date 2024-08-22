@@ -4,49 +4,60 @@ import {CONNECTION} from '../../../../config';
 
 export async function fetchPoolSchedule(keys: any, connection: Connection) {
   let poolKeys = jsonInfo2PoolKeys(keys) as LiquidityPoolKeys;
+
+// let testime = await Liquidity.fetchInfo({ connection, poolKeys });
+
   return await Liquidity.fetchInfo({ connection, poolKeys })
 }
 
 export async function getRayPoolKeys(ctx: any, shitcoin: string) {
+  console.log('shitcoin:', shitcoin);
   const connection = CONNECTION;
   const quoteMint = 'So11111111111111111111111111111111111111112';
   let keys = undefined;
   try {
     keys = await _getRayPoolKeys({ t1: shitcoin, t2: quoteMint, connection });
-    // console.log('keys', keys);
-    if (keys) {
-      ctx.session.poolTime = Number((await fetchPoolSchedule(keys, connection)).startTime);
-    
-      ctx.session.originalBaseMint = keys.baseMint;
+    // console.log('gettttkeys:::::', keys);
+    if (keys ) {
+      console.log('It is going here to get the originallll:');
+      if ( ctx.session.latestCommand === 'snipe'){
+        ctx.session.poolTime = Number((await fetchPoolSchedule(keys, connection)).startTime);
+      }    
+      // ctx.session.originalBaseMint = keys.baseMint;
     } else {
+      console.log('shitcoin', shitcoin);
       keys = await _getRayPoolKeys({ t1: quoteMint, t2: shitcoin, connection });
       if (keys) {
-        ctx.session.originalBaseMint = keys.baseMint;
-        ctx.session.poolTime = Number((await fetchPoolSchedule(keys, connection)).startTime);
+        console.log('It is going here to get the keys:');
+        // ctx.session.originalBaseMint = keys.baseMint;
+        if ( ctx.session.latestCommand === 'snipe'){
+          ctx.session.poolTime = Number((await fetchPoolSchedule(keys, connection)).startTime);
+        }
 
-        let _quoteMint = keys.quoteMint;
-        let _baseMint = keys.baseMint;
-        let _baseVault = keys.baseVault;
-        let _quoteVault = keys.quoteVault;
-        let _baseDecimals = keys.baseDecimals;
-        let _quoteDecimals = keys.quoteDecimals;
-        let _marketQuoteVault = keys.marketQuoteVault;
-        let _marketBaseVault = keys.marketBaseVault;
-
-        keys.baseMint = _quoteMint;
-        keys.quoteMint = _baseMint;
-        keys.quoteVault = _baseVault;
-        keys.baseVault = _quoteVault;
-        keys.quoteDecimals = _baseDecimals;
-        keys.baseDecimals = _quoteDecimals;
-        keys.marketBaseVault = _marketQuoteVault;
-        keys.marketQuoteVault = _marketBaseVault;
+        const _quoteMint = keys.quoteMint;
+        const _baseMint = keys.baseMint;
+        const _baseVault = keys.baseVault;
+        const _quoteVault = keys.quoteVault;
+        const _baseDecimals = keys.baseDecimals;
+        const _quoteDecimals = keys.quoteDecimals;
+        const _marketQuoteVault = keys.marketQuoteVault;
+        const _marketBaseVault = keys.marketBaseVault;
+ 
+            keys.baseMint = _quoteMint;
+            keys.quoteMint = _baseMint;
+            keys.quoteVault = _baseVault;
+            keys.baseVault = _quoteVault;
+            keys.quoteDecimals = _baseDecimals;
+            keys.baseDecimals = _quoteDecimals;
+            keys.marketBaseVault = _marketQuoteVault;
+            keys.marketQuoteVault = _marketBaseVault;
+      
       } 
     }
   } catch (e) {
     console.log(e);
   }
-  // console.log('keys', keys);
+  console.log('keys', keys);
   return keys;
 }
 
@@ -79,14 +90,15 @@ async function _getRayPoolKeys({ t1, t2, connection }: { t1: string, t2: string,
     }
   );
 
-
   const ammId = accounts && accounts[0] && accounts[0].pubkey;
+  console.log('AMMID:', ammId);
   let keys: any = null;
 
-  // ammid exists and keys still null
+  // ammid exists and keys still nul  l
   while (ammId && keys == undefined) {
     keys = await formatAmmKeysById(ammId.toString(), connection);
   }
+  // console.log('Poollllkeys:', keys);
   return keys;
 }
 

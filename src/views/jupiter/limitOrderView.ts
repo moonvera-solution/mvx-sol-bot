@@ -22,7 +22,7 @@ export async function submit_limitOrder(ctx: any) {
   const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(wallet.publicKey), ctx.session.limitOrders_token, CONNECTION);
   const userWallet: Keypair = Keypair.fromSecretKey(bs58.decode(String(wallet.secretKey)));
   const isBuySide = ctx.session.limitOrders_side == "buy";
-  const amountIn =  ctx.session.limitOrders_amount;
+  const amountIn = ctx.session.limitOrders_amount;
   const tokenIn = isBuySide ? SOL_ADDRESS : ctx.session.limitOrders_token;
   const tokenOut = isBuySide ? ctx.session.limitOrders_token : SOL_ADDRESS;
   const connection = CONNECTION;

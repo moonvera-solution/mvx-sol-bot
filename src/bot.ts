@@ -148,8 +148,8 @@ async function _validateSession(ctx: any) {
 bot.command("start", async (ctx: any) => {
   await _validateSession(ctx);
   backupSession = ctx.session;
-  console.log("ctx.session.generatorWallet", ctx.session.generatorWallet);
-  console.log('ctx.session.referralCommision', ctx.session.referralCommision);
+  // console.log("ctx.session.generatorWallet", ctx.session.generatorWallet);
+  // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
   try {
     if (backupSession) {
       await UserSession.findOneAndUpdate(
@@ -342,6 +342,8 @@ bot.command("positions", async (ctx) => {
 });
 
 bot.command("rugchecking", async (ctx) => {
+  await _validateSession(ctx);
+
   try {
     await ctx.api.sendMessage(
       ctx.chat.id,
@@ -378,13 +380,13 @@ bot.command("snipe", async (ctx) => {
   try {
     const chatId = ctx.chat.id;
     ctx.session.snipeStatus = true;
-    const referralRecord = await Referrals.findOne({ referredUsers: chatId });
-    if (referralRecord) {
-      ctx.session.referralCommision = referralRecord.commissionPercentage;
-      ctx.session.generatorWallet = new PublicKey(
-        referralRecord.generatorWallet
-      );
-    }
+    // const referralRecord = await Referrals.findOne({ referredUsers: chatId });
+    // if (referralRecord) {
+    //   ctx.session.referralCommision = referralRecord.commissionPercentage;
+    //   ctx.session.generatorWallet = new PublicKey(
+    //     referralRecord.generatorWallet
+    //   );
+    // }
     ctx.session.latestCommand = "snipe";
     await ctx.api.sendMessage(
       ctx.chat.id,
@@ -1072,37 +1074,47 @@ bot.on("message", async (ctx) => {
       }
       case "set_limit_order_amount_buy": {
         // TODO: add checks for the amount
-        if(msgTxt){
-          console.log('msgTxt', msgTxt);  
+        if (msgTxt) {
+          console.log('msgTxt', msgTxt);
           const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
           const isTokenAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(msgTxt);
-          if(isTokenAddress && !isNumeric){
+          if (isTokenAddress && !isNumeric) {
             await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
             return;
           }
           if (isNumeric) {
             const amt = Number(msgTxt);
             if (!isNaN(amt)) {
-              // console.log('hit here not below');
-              ctx.session.limitOrders_amount = Number(msgTxt!);
+              ctx.session.limitOrders_amount = Number(msgTxt);
               const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
               const connection = CONNECTION;
               let userSolBalance = await getSolBalance(userWallet.publicKey, connection);
               if (userSolBalance < ctx.session.limitOrders_amount && ctx.session.limitOrders_side == "buy") {
                 await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
-                 return;
+                return;
               }
-              // console.log('hit here');
-              await ctx.api.sendMessage(chatId, "Enter the token target price (in SOL)");
-              ctx.session.latestCommand = "set_limit_order_price";
+      
+              // Create an inline keyboard for the user to choose between target price or percentage
+              const options = {
+                reply_markup: {
+                  inline_keyboard: [
+                    [{ text: "Enter Target Price (in SOL)", callback_data: "set_target_price" }],
+                    [{ text: "Enter Percentage (+/-)", callback_data: "set_percentage" }]
+                  ]
+                }
+              };
+      
+              await ctx.api.sendMessage(chatId, "Choose how to set your target:", options);
+              ctx.session.latestCommand = "choose_target_option";
               break;
-          
+      
             } else {
               return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
             }
           }
         }
       }
+      
       case "set_limit_order_price": {
         if(msgTxt){
           const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
@@ -1116,8 +1128,8 @@ bot.on("message", async (ctx) => {
        }
         // TODO: add checks for the price
         ctx.session.limitOrders_price = Number(msgTxt!);
-        await ctx.api.sendMessage(chatId, "Enter expiry time from now - DAYS:HR:MIN - ie: 01:23:10 \n");
-        await ctx.api.sendMessage(chatId, "Or enter No to keep the order open to hit target price");
+        await ctx.api.sendMessage(chatId, "Enter expiry time from now - DAYS:HR:MIN - ie: 01:23:10\nOr enter No to keep the order open to hit target price");
+        // await ctx.api.sendMessage(chatId, "Or enter No to keep the order open to hit target price");
         ctx.session.latestCommand = "set_limit_order_time";
         break;
       }
@@ -1478,13 +1490,13 @@ bot.on("callback_query", async (ctx: any) => {
 
       case "snipe": {
         ctx.session.snipeStatus = true;
-        const referralRecord = await Referrals.findOne({
-          referredUsers: chatId,
-        });
-        if (referralRecord) {
-          ctx.session.referralCommision = referralRecord.commissionPercentage;
-          ctx.session.generatorWallet = referralRecord.generatorWallet;
-        }
+        // const referralRecord = await Referrals.findOne({
+        //   referredUsers: chatId,
+        // });
+        // if (referralRecord) {
+        //   ctx.session.referralCommision = referralRecord.commissionPercentage;
+        //   ctx.session.generatorWallet = referralRecord.generatorWallet;
+        // }
 
         if (ctx.session.latestCommand === "rug_check") {
           ctx.session.latestCommand = "snipe";

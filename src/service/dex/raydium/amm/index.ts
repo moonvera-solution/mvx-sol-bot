@@ -94,7 +94,7 @@ export async function raydium_amm_swap(input: TxInputInfo): Promise<string | nul
   /*                      REFERRAL AMOUNT                      */
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
   // In case of having a referral
-  const referralFee = input.referralCommision / 100;
+  // const referralFee = input.referralCommision / 100;
  
   // if (referralFee > 0) {
   //   innerTransactions[0].instructions.push(
@@ -140,7 +140,7 @@ export async function raydium_amm_swap(input: TxInputInfo): Promise<string | nul
   var message = TransactionMessage.decompile(vTxx.message, { addressLookupTableAccounts: addressLookupTableAccounts })
   vTxx.message = message.compileToV0Message(addressLookupTableAccounts);
   vTxx.sign([input.wallet]);
-
+  console.log('is sending transaction!!!!!!!!');
   return await optimizedSendAndConfirmTransaction(
     vTxx,
     connection,

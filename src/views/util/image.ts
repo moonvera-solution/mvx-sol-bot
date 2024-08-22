@@ -7,7 +7,7 @@ export async function createTradeImage(tokenName: any, contract: any,  profit: n
   const height = 1000;
   const canvas = createCanvas(width, height);
   const context = canvas.getContext('2d');
-  const profitToShow = profit && profit != undefined  ? profit.toFixed(3) : 'N/A';
+  const profitToShow = (typeof profit === 'number' && !isNaN(profit)) ? profit.toFixed(3) : 'N/A';
   // Gradient background from gray to white
   const gradient = context.createLinearGradient(0, 0, 0, height);
   gradient.addColorStop(0, '#212121');
