@@ -57,18 +57,24 @@ export type TxInputInfo = {
 };
 
 export async function raydium_amm_swap(input: TxInputInfo): Promise<string | null> {
+  console.log('going ray')
   const connection = input.connection;
   const targetPoolInfo = await formatAmmKeysById(input.targetPool, connection);
+  console.log('targetPoolInfo:', targetPoolInfo);
   assert(targetPoolInfo, "cannot find the target pool");
   const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys;
-  let minSwapAmountBalance: number = 0;
+  console.log('poolKeys:', poolKeys);
+
+  const infoOfPool = await Liquidity.fetchInfo({ connection, poolKeys });
+  console.log('infoOfPool:', infoOfPool);
+  // poolKeys.baseMint = poolKeys.quoteMint
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                       QUOTE SWAP                           */
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-xwxwwx»-»-»-»-»*/
 
     const { amountOut, minAmountOut } = Liquidity.computeAmountOut({
       poolKeys: poolKeys,
-      poolInfo: await Liquidity.fetchInfo({ connection, poolKeys }),
+      poolInfo: infoOfPool,
       amountIn: input.inputTokenAmount,
       currencyOut: input.outputToken,
       slippage: input.slippage,
@@ -86,7 +92,7 @@ export async function raydium_amm_swap(input: TxInputInfo): Promise<string | nul
       owner: input.wallet.publicKey,
     },
     amountIn: input.inputTokenAmount,
-    amountOut: minAmountOut,
+    amountOut: amountOut,
     fixedSide: "in",
     makeTxVersion
   });

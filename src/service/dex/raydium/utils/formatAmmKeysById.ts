@@ -19,17 +19,17 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
     keys = await _getRayPoolKeys({ t1: shitcoin, t2: quoteMint, connection });
     // console.log('gettttkeys:::::', keys);
     if (keys ) {
-      console.log('It is going here to get the originallll:');
+      // console.log('It is going here to get the originallll:');
       if ( ctx.session.latestCommand === 'snipe'){
         ctx.session.poolTime = Number((await fetchPoolSchedule(keys, connection)).startTime);
       }    
-      // ctx.session.originalBaseMint = keys.baseMint;
+      ctx.session.originalBaseMint = keys.baseMint;
     } else {
-      console.log('shitcoin', shitcoin);
+      // console.log('shitcoin', shitcoin);
       keys = await _getRayPoolKeys({ t1: quoteMint, t2: shitcoin, connection });
       if (keys) {
-        console.log('It is going here to get the keys:');
-        // ctx.session.originalBaseMint = keys.baseMint;
+        // console.log('It is going here to get the keys:');
+        ctx.session.originalBaseMint = keys.baseMint;
         if ( ctx.session.latestCommand === 'snipe'){
           ctx.session.poolTime = Number((await fetchPoolSchedule(keys, connection)).startTime);
         }
@@ -57,7 +57,7 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
   } catch (e) {
     console.log(e);
   }
-  console.log('keys', keys);
+  // console.log('keys', keys);
   return keys;
 }
 

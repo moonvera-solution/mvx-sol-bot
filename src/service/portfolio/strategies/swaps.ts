@@ -78,7 +78,7 @@ export async function handle_radyum_swap(
     console.log("customPriorityFee before swap:: ", customPriorityFee);
     let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing...\n Please wait for confirmation.`
     await ctx.api.sendMessage(ctx.session.chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-    console.log("Debuggin herreee::::: ");
+    // console.log("Debuggin herreee::::: ");
     raydium_amm_swap({
       connection,
       side,

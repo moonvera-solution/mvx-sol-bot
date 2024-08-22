@@ -884,13 +884,14 @@ export async function catchSimulationErrors(simulationResult: any) {
     const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
     const SLIPPAGE_ERROR_ANCHOR = /SlippageToleranceExceeded/;
     console.log("simulationResult", simulationResult.value.err)
+    if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg)) ||
+    simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR_ANCHOR.test(logMsg))) {
+    throw new Error(`🔴 Slippage error, try increasing your slippage %.`);
+    }
     if(simulationResult.value.err) {
         throw new Error(`🔴 Swap failed!`); ;
     }
-    if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg)) ||
-        simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR_ANCHOR.test(logMsg))) {
-        throw new Error(`🔴 Slippage error, try increasing your slippage %.`);
-    }
+  
     const BALANCE_ERROR = /Transfer: insufficient lamports/;
     if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
         throw new Error(`🔴 Insufficient balance for transaction.`);
