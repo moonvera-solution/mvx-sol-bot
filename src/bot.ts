@@ -516,7 +516,7 @@ bot.on("message", async (ctx) => {
             ctx.session.latestCommand = "rug_check";
             let rugCheckToken = new PublicKey(msgTxt);
             ctx.session.rugCheckToken = rugCheckToken;
-            ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
+            ctx.session.activeTradingPoolId = await getRayPoolKeys(ctx, msgTxt);
 
             await display_rugCheck(ctx, false);
           } else {
@@ -653,7 +653,7 @@ bot.on("message", async (ctx) => {
           if (!isNaN(amt)) {
             await handle_radyum_swap(
               ctx,
-              ctx.session.activeTradingPool.baseMint,
+              ctx.session.activeTradingPoolId,
               "buy",
               Number(amt)
             );
@@ -765,10 +765,10 @@ bot.on("message", async (ctx) => {
                   ctx,
                   ctx.session.positionToken
                 );
-                ctx.session.activeTradingPool = poolkey as RAYDIUM_POOL_TYPE;
+                ctx.session.activeTradingPoolId = poolkey ;
                 await handle_radyum_swap(
                   ctx,
-                  ctx.session.activeTradingPool.baseMint,
+                  ctx.session.activeTradingPoolId,
                   "buy",
                   Number(msgTxt)
                 );
@@ -790,10 +790,10 @@ bot.on("message", async (ctx) => {
                   ctx.session.positionToken
                 );
                 if (poolKeys) {
-                  ctx.session.activeTradingPool = poolKeys as RAYDIUM_POOL_TYPE;
+                  ctx.session.activeTradingPoolId = poolKeys ;
                   await handle_radyum_swap(
                     ctx,
-                    ctx.session.activeTradingPool.baseMint,
+                    ctx.session.activeTradingPoolId,
                     "buy",
                     Number(msgTxt)
                   );
@@ -824,7 +824,7 @@ bot.on("message", async (ctx) => {
           if (!isNaN(amt)) {
             await handle_radyum_swap(
               ctx,
-              ctx.session.activeTradingPool.baseMint,
+              ctx.session.activeTradingPoolId,
               "sell",
               Number(msgTxt)
             );
@@ -927,14 +927,14 @@ bot.on("message", async (ctx) => {
               return;
             }
 
-            ctx.session.activeTradingPool = await getRayPoolKeys(ctx, msgTxt);
-            if (!ctx.session.activeTradingPool) {
+            ctx.session.activeTradingPoolId = await getRayPoolKeys(ctx, msgTxt);
+            if (!ctx.session.activeTradingPoolId) {
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
               await display_snipe_options(ctx, false, msgTxt);
             } else {
               ctx.session.snipeToken = new PublicKey(
-                ctx.session.activeTradingPool.baseMint
+                ctx.session.activeTradingPoolId
               );
 
               display_snipe_options(
@@ -1201,8 +1201,8 @@ bot.on("callback_query", async (ctx: any) => {
       const positionIndex = parts[2]; // Position index
       if (ctx.session.swaptypeDex == "ray_swap") {
         const poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
-        ctx.session.activeTradingPool = poolKeys as RAYDIUM_POOL_TYPE;
-        await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", sellPercentage);
+        ctx.session.activeTradingPoolId = poolKeys ;
+        await handle_radyum_swap(ctx, ctx.session.activeTradingPoolId, "sell", sellPercentage);
         return;
       } else if (ctx.session.swaptypeDex == "jup_swap") {
         ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
@@ -1219,8 +1219,8 @@ bot.on("callback_query", async (ctx: any) => {
       } else {
         const poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
         if (poolKeys) {
-          ctx.session.activeTradingPool = poolKeys as RAYDIUM_POOL_TYPE;
-          await handle_radyum_swap(ctx, ctx.session.activeTradingPool.baseMint, "sell", sellPercentage);
+          ctx.session.activeTradingPoolId = poolKeys ;
+          await handle_radyum_swap(ctx, ctx.session.activeTradingPoolId, "sell", sellPercentage);
         } else {
           ctx.session.pumpToken = new PublicKey(ctx.session.positionPool[positionIndex]);
           ctx.session.pump_amountIn = sellPercentage;
@@ -1648,7 +1648,7 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.latestCommand = "buy_0.5_RAY";
         await handle_radyum_swap(
           ctx,
-          ctx.session.activeTradingPool.baseMint,
+          ctx.session.activeTradingPoolId,
           "buy",
           "0.5"
         );
@@ -1658,7 +1658,7 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.latestCommand = "buy_1_RAY";
         await handle_radyum_swap(
           ctx,
-          ctx.session.activeTradingPool.baseMint,
+          ctx.session.activeTradingPoolId,
           "buy",
           "1"
         );
@@ -1695,7 +1695,7 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.latestCommand = "sell_50_RAY";
         await handle_radyum_swap(
           ctx,
-          ctx.session.activeTradingPool.baseMint,
+          ctx.session.activeTradingPoolId,
           "sell",
           "50"
         );
@@ -1706,7 +1706,7 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.latestCommand = "sell_100_RAY";
         await handle_radyum_swap(
           ctx,
-          ctx.session.activeTradingPool.baseMint,
+          ctx.session.activeTradingPoolId,
           "sell",
           "100"
         );

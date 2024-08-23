@@ -77,16 +77,9 @@ export async function raydium_cpmm_swap(
   }
 
 
-
   let txSig: any = '';
   if (transaction instanceof Transaction) {
-    // if (refObj.refWallet) {
-    //   transaction.instructions.push(...add_mvx_and_ref_inx_fees(wallet, refObj.refWallet, solAmount, refObj.refCommission));
-    //   // add_mvx_and_ref_inx_fees(wallet, refObj.refWallet, solAmount, refObj.refCommission);
-    // } else {
-    //   transaction.instructions.push(...addMvxFeesInx(wallet, solAmount));
-    //   addMvxFeesInx(wallet, solAmount);
-    // }
+
     transaction.instructions.push(...addMvxFeesInx(wallet, solAmount));
     addMvxFeesInx(wallet, solAmount);
     const tx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, wallet, (await connection.getLatestBlockhash()).blockhash));
@@ -104,13 +97,10 @@ export async function raydium_cpmm_swap(
       }));
     var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
 
-    if (refObj.refWallet) {
-      message.instructions.push(...add_mvx_and_ref_inx_fees(wallet, refObj.refWallet, solAmount, refObj.refCommission));
-      // add_mvx_and_ref_inx_fees(wallet, refObj.refWallet, solAmount, refObj.refCommission);
-    } else {
+ 
       message.instructions.push(...addMvxFeesInx(wallet, solAmount));
       addMvxFeesInx(wallet, solAmount);
-    }
+
     txSig = await optimizedSendAndConfirmTransaction(
       new VersionedTransaction(transaction.message), connection, (await connection.getLatestBlockhash()).blockhash, 50
     );

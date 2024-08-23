@@ -59,7 +59,7 @@ export async function snipperON(ctx: any, amount: string) {
                 isIntervalDone = true;
                 clearInterval(interval_1); // Stop the interval when the condition is no longer met
                 clearInterval(interval_2);
-                console.log('poolKeys:::::', poolKeys.id);
+                // console.log('poolKeys:::::', poolKeys.id);
                 ctx.session.activeTradingPool = poolKeys;
                 setSnipe(ctx, amount);
             }

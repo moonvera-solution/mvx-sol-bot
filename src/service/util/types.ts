@@ -90,6 +90,7 @@ export interface ISESSION_DATA {
     startTime: String
   },
   positionToken: string,
+  activeTradingPoolId: string
 }
 
 export const enum PriotitizationFeeLevels {
@@ -135,6 +136,7 @@ export const DefaultSessionData: ISESSION_DATA = {
     positions: [],
     activeWalletIndex: 0
   },
+  activeTradingPoolId: '',
   positionToken: '',
   pnlcard: false,
   userProfit: 0,

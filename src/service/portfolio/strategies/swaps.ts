@@ -9,11 +9,12 @@ import bs58 from 'bs58';
 import { display_jupSwapDetails } from '../../../views/jupiter/swapView';
 import { createTradeImage } from '../../../views/util/image';
 import { InputFile } from 'grammy';
+import { raydium_amm_swap_v4 } from '../../../service/dex/raydium/amm/ammv4';
 const fs = require('fs');
 
 export async function handle_radyum_swap(
   ctx: any, 
-  tokenOut: PublicKey,
+  tokenOut: string,
   side: 'buy' | 'sell', 
   amountIn: any
 ) {
@@ -79,7 +80,7 @@ export async function handle_radyum_swap(
     let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing...\n Please wait for confirmation.`
     await ctx.api.sendMessage(ctx.session.chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
     // console.log("Debuggin herreee::::: ");
-    raydium_amm_swap({
+    raydium_amm_swap_v4({
       connection,
       side,
       generatorWallet,

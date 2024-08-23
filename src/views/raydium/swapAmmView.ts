@@ -4,10 +4,12 @@ import { quoteToken } from '../util/dataCalculation';
 import {CONNECTION} from '../../config';
 import { formatNumberToKOrM, getSolBalance } from '../../service/util';
 import { RAYDIUM_POOL_TYPE } from '../../service/util/types';
-import {  Connection } from '@solana/web3.js';
+import {  Connection, Keypair } from '@solana/web3.js';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import { UserPositions } from '../../db';
 import { getTokenDataFromBirdEye, getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
+import { initSdk } from '../../service/dex/raydium/cpmm';
+import bs58 from "bs58";
 
 export async function display_raydium_details(ctx: any, isRefresh: boolean) {  
   console.log('display_raydium_details');
@@ -16,19 +18,32 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
   if(priority_custom === true){
     priority_Level = 0;
   }
+  const chatId = ctx.chat.id;
+  const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
+  const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
+  const userSecretKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey;
+
   const connection = CONNECTION;
-  const rayPoolKeys = ctx.session.activeTradingPool as RAYDIUM_POOL_TYPE;
+  const rayPoolKeys = ctx.session.activeTradingPoolId;
+  const raydium = await initSdk(Keypair.fromSecretKey(bs58.decode(String(userSecretKey))), connection)
+  // console.log('raydium:', raydium);
   // console.log('rayPoolKeys:', rayPoolKeys);
+  const rpcData = await raydium.liquidity.getRpcPoolInfo(rayPoolKeys);
+  const poolKeys = await raydium.liquidity.getAmmPoolKeys(rayPoolKeys);
+
+  console.log('poolKeys:', poolKeys);
+  const [baseReserve, quoteReserve, status] = [rpcData.baseReserve, rpcData.quoteReserve, rpcData.status.toNumber()]
+  // console.log('baseReserve:', Number(baseReserve));
+  // console.log('quoteReserve:', Number(quoteReserve));
+  // console.log('status:', status);
   const baseVault = rayPoolKeys.baseVault;
   const quoteVault = rayPoolKeys.quoteVault;
   const baseDecimals = rayPoolKeys.baseDecimals;
   const quoteDecimals = rayPoolKeys.quoteDecimals;
   const baseMint = rayPoolKeys.baseMint;
   const tokenAddress = new PublicKey(baseMint);
-  // console.log('tokenAddress:', tokenAddress);
-  const chatId = ctx.chat.id;
-  const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
-  const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
+  console.log('tokenAddress:', tokenAddress);
+
   const [
     birdeyeData,
     tokenMetadataResult,
