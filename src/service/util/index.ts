@@ -890,7 +890,7 @@ export async function catchSimulationErrors(simulationResult: any) {
     throw new Error(`🔴 Slippage error, try increasing your slippage %.`);
     }
     if(simulationResult.value.err) {
-        throw new Error(`🔴 Swap failed!`); ;
+        throw new Error(simulationResult.value.logs); ;
     }
   
     const BALANCE_ERROR = /Transfer: insufficient lamports/;

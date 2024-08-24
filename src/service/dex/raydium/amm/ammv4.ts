@@ -10,6 +10,7 @@ import {
   Token,
   TokenAmount
 } from "@raydium-io/raydium-sdk";
+const NATIVE_MINT = require('@solana/spl-token')
 
 import BigNumber from "bignumber.js";
 import {
@@ -54,18 +55,16 @@ type refObject = { referralWallet: string, referralCommision: number };
 export type TxInputInfo = {
     connection: Connection;
     side: "buy" | "sell";
-    generatorWallet: PublicKey;
-    referralCommision: number;
-    outputToken: Token;
-    targetPool: string;
-    inputTokenAmount: TokenAmount;
-    slippage: Percent;
+    AmmPoolId: string;
+    ammPoolKeys: AmmV4Keys | undefined;
+    rpcData: AmmRpcData;
+    outputToken: string;
+    amountIn: number;
+    slippage: number;
     customPriorityFee: number;
     wallet: Keypair;
   };
 
-
- 
 export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | null> {
     // const txVersion = TxVersion.V0 // or TxVersion.LEGACY
     const VALID_PROGRAM_ID = new Set([
@@ -76,65 +75,67 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
     ])
     const isValidAmm = (id: string) => VALID_PROGRAM_ID.has(id)
     const connection = input.connection;
-    const targetPoolInfo = await formatAmmKeysById(input.targetPool, connection);
-    const oldPoolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys;
+
     const raydium = await initSdk(input.wallet, connection)
-    const amountIn = Number(input.inputTokenAmount);
-    const inputMint =  String(input.outputToken.mint.toBase58());
-    const poolv4ID = oldPoolKeys.id.toString()
+
+
     let poolInfo: ApiV3PoolInfoStandardItem | undefined
-    let poolKeys: AmmV4Keys | undefined
-    let rpcData: AmmRpcData
-  
-    const data = await raydium.api.fetchPoolById({ ids: poolv4ID })
+    let poolKeys: AmmV4Keys | undefined = input.ammPoolKeys
+
+    const data = await raydium.api.fetchPoolById({ ids: input.AmmPoolId })
     poolInfo = data[0] as ApiV3PoolInfoStandardItem
-    console.log('poolInfo', poolInfo) 
+    const modifiedPoolInfo = { ...poolInfo };
+
+    if(poolInfo.mintA.address === SOL_ADDRESS){
+      modifiedPoolInfo.mintA = poolInfo.mintB;
+      modifiedPoolInfo.mintB = poolInfo.mintA;
+      modifiedPoolInfo.mintAmountA = poolInfo.mintAmountB;
+      modifiedPoolInfo.mintAmountB = poolInfo.mintAmountA;
+    }
+    console.log('modifiedPoolInfo', modifiedPoolInfo)
     if (!isValidAmm(poolInfo.programId)) throw new Error('target pool is not AMM pool')
-    poolKeys = await raydium.liquidity.getAmmPoolKeys(poolv4ID);
-    rpcData = await raydium.liquidity.getRpcPoolInfo(poolv4ID);
-    const [baseReserve, quoteReserve, status] = [rpcData.baseReserve, rpcData.quoteReserve, rpcData.status.toNumber()]
-    if (poolInfo.mintA.address !== inputMint && poolInfo.mintB.address !== inputMint)
-      throw new Error('input mint does not match pool')
-    const baseIn = inputMint === poolInfo.mintA.address
-    const [mintIn, mintOut] = baseIn ? [poolInfo.mintA, poolInfo.mintB] : [poolInfo.mintB, poolInfo.mintA]
+    const [baseReserve, quoteReserve, status] = [input.rpcData.baseReserve, input.rpcData.quoteReserve, input.rpcData.status.toNumber()]
+    const mintIn = input.side === 'buy' ? modifiedPoolInfo.mintB : modifiedPoolInfo.mintA
+    const mintOut = input.side === 'sell' ? modifiedPoolInfo.mintA : modifiedPoolInfo.mintB
+
     const out = raydium.liquidity.computeAmountOut({
       poolInfo: {
-        ...poolInfo,
+        ...modifiedPoolInfo,
         baseReserve,
         quoteReserve,
         status,
         version: 4,
       },
-      amountIn: new BN(amountIn),
+      amountIn: new BN(input.amountIn),
       mintIn: mintIn.address,
       mintOut: mintOut.address,
-      slippage: 0.11, // range: 1 ~ 0.0001, means 100% ~ 0.01%
+      slippage: input.slippage, // range: 1 ~ 0.0001, means 100% ~ 0.01%
       
     })
-    console.log('out', out.amountOut.toNumber())
-    console.log('out', out.minAmountOut.toNumber())
+    console.log('amountIn', input.amountIn)
+    console.log('out', out)
     
     const { transaction } = await raydium.liquidity.swap({
       poolInfo,
       poolKeys,
-      amountIn: new BN(amountIn),
-      amountOut: out.minAmountOut, // out.amountOut means amount 'without' slippage
+      amountIn: new BN(input.amountIn),
+      amountOut: out.amountOut, // out.amountOut means amount 'without' slippage
       fixedSide: 'in',
       inputMint: mintIn.address,
       // slippage: 0.1,
       computeBudgetConfig: {
-        microLamports: 0.0001 * 1e9,
+        microLamports: input.customPriorityFee * 1e9,
       }
     })
   
-    let feeAmt = Number.isInteger(out.minAmountOut.toNumber()) ? out.minAmountOut.toNumber() : Math.ceil(Number.parseFloat(out.minAmountOut.toNumber().toFixed(2)));
-  
-    
+    const solAmount = input.side == 'buy' ? new BigNumber(input.amountIn) : new BigNumber(out.amountOut.toNumber());
+
+    console.log('solAmount', solAmount)
     let txId: any = '';
     if (transaction instanceof Transaction) {
   
-      transaction.instructions.push(...addMvxFeesInx(input.wallet, BigNumber(feeAmt)));
-      addMvxFeesInx(input.wallet, BigNumber(feeAmt));
+      transaction.instructions.push(...addMvxFeesInx(input.wallet, solAmount));
+      addMvxFeesInx(input.wallet, solAmount);
       const tx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, input.wallet, (await connection.getLatestBlockhash()).blockhash));
       tx.sign([input.wallet]);
       txId = await optimizedSendAndConfirmTransaction(
@@ -149,8 +150,6 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
           })
         }));
       var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
-  
-     
       txId = await optimizedSendAndConfirmTransaction(
         new VersionedTransaction(transaction.message), connection, (await connection.getLatestBlockhash()).blockhash, 50
       );

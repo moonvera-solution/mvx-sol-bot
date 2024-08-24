@@ -7,7 +7,7 @@ import {display_rugCheck} from  './portfolio/rugCheck';
 import {display_jupSwapDetails,jupiterSwap} from './jupiter/swapView';
 import {refreshWallets,handleRereshWallet} from './refreshData/refreshWallets';
 import {sendHelpMessage} from './util/helpMessage';
-import {quoteToken,quoteTokenquoteToken} from './util/dataCalculation';
+import {quoteToken} from './util/dataCalculation';
 import {handleCloseKeyboard,} from './util/commons';
 import {setCustomPriority,runAllFees} from './util/getPriority';
 import {handleRefreshStart} from './refreshData/refreshStart';
@@ -22,7 +22,7 @@ export {
     sendHelpMessage,
     handleCloseKeyboard,
     quoteToken,
-    quoteTokenquoteToken,
+    // quoteTokenquoteToken,
     setCustomPriority,
     runAllFees,
     handleRefreshStart,

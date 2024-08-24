@@ -29,6 +29,7 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
   );
 
   if (!userPosition.length || !userPosition[0].positions.length) {
+    ctx.session.latestCommand = 'jupiter_swap';
     return ctx.api.sendMessage(ctx.chat.id, "No active positions.", { parse_mode: 'HTML' });
   }
   const connection = CONNECTION;
@@ -203,6 +204,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
   );
   const connection = CONNECTION;
   if (!userPosition[0] || userPosition[0].positions.length === 0) {
+    ctx.session.latestCommand = 'jupiter_swap';
     await ctx.api.sendMessage(ctx.chat.id, "No active positions.", { parse_mode: 'HTML' });
     return;
   }

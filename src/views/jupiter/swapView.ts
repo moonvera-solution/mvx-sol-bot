@@ -99,7 +99,6 @@ export async function jupiterSwap(ctx: any) {
         if (userPosition.positions[existingPositionIndex]) {
           oldPositionSol = userPosition.positions[existingPositionIndex].amountIn
           oldPositionToken = userPosition.positions[existingPositionIndex].amountOut!
-
         }
       }
 
@@ -112,7 +111,6 @@ export async function jupiterSwap(ctx: any) {
           tradeType: `jup_swap`,
           amountIn: oldPositionSol ? oldPositionSol + (ctx.session.jupSwap_amount * 1e9) : (ctx.session.jupSwap_amount * 1e9),
           amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
-
         });
       } else if (tradeType == 'sell') {
         let newAmountIn, newAmountOut;
@@ -223,49 +221,39 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const lastRouteHop_5 = Number(jupPriceImpact_5.outAmount)
       const jupTokenValue: any = Object.values(jupTokenRate.data);
       let jupTokenPrice = 0;
-      console.log('token:', token)
-      ctx.session.activeTradingPoolId = await getRayPoolKeys(ctx, token);
-      // console.log('activeTradingPool:', ctx.session.activeTradingPool)
- 
-      // go to amm if active trading pool is found
-      if (ctx.session.activeTradingPoolId) {
-        await display_raydium_details(ctx, false);
-        return;
-      }else{
-        console.log('there is no active trading pool')
-      }
-      // if (jupTokenValue[0] && jupTokenValue[0].price && quoteResponse?.error_code !== 'TOKEN_NOT_TRADABLE') {
+  
+      if (jupTokenValue[0] && jupTokenValue[0].price && quoteResponse?.error_code !== 'TOKEN_NOT_TRADABLE') {
    
-      //   jupTokenPrice = jupTokenValue[0].price;
-      //   console.log('jupToken')
-      //   //if not on jupiter check if token is on raydium 
-      // } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined || quoteResponse?.error_code === 'TOKEN_NOT_TRADABLE') {
-      //   console.log('raydium')
-      //   ctx.session.activeTradingPool = await getRayPoolKeys(ctx, token);
-      //   // console.log('activeTradingPool:', ctx.session.activeTradingPool)  
-      //   // go to amm if active trading pool is found
-      //   if (ctx.session.activeTradingPool) {
-      //     await display_raydium_details(ctx, false);
-      //     return;
-      //     // check for cpmm pool if no active trading pool is found
-      //   } else if(!ctx.session.activeTradingPool){
-      //     console.log('cpmm dex')
-      //     console.log('token here not jup')
-      //     ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`) });
-      //     console.log('cpmmPoolId:', ctx.session.cpmmPoolId)
-      //     if (ctx.session.cpmmPoolId) {
-      //       await display_cpmm_raydium_details(ctx, false);
-      //       return;
-      //     } else {
-      //       // token not found on raydium or jupiter
-      //       console.log('pump fun ')
-      //       ctx.session.pumpToken = new PublicKey(token);
-      //       await display_pumpFun(ctx, false);
-      //       return;
-      //     }
+        jupTokenPrice = jupTokenValue[0].price;
+        console.log('jupToken')
+        //if not on jupiter check if token is on raydium 
+      } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined || quoteResponse?.error_code === 'TOKEN_NOT_TRADABLE') {
+        console.log('raydium')
+        ctx.session.activeTradingPool = await getRayPoolKeys(ctx, token);
+        // console.log('activeTradingPool:', ctx.session.activeTradingPool)  
+        // go to amm if active trading pool is found
+        if (ctx.session.activeTradingPool) {
+          await display_raydium_details(ctx, false);
+          return;
+          // check for cpmm pool if no active trading pool is found
+        } else if(!ctx.session.activeTradingPool){
+          console.log('cpmm dex')
+          console.log('token here not jup')
+          ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`) });
+          console.log('cpmmPoolId:', ctx.session.cpmmPoolId)
+          if (ctx.session.cpmmPoolId) {
+            await display_cpmm_raydium_details(ctx, false);
+            return;
+          } else {
+            // token not found on raydium or jupiter
+            console.log('pump fun ')
+            ctx.session.pumpToken = new PublicKey(token);
+            await display_pumpFun(ctx, false);
+            return;
+          }
 
-      //   } 
-      // }
+        } 
+      }
       const {
         tokenData,
       } = tokenMetadataResult;
@@ -349,7 +337,6 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
             //   { text: `Medium ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_medium' }, { text: `High ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_high' },{ text: `Custom ${priority_custom === true ? '✅' : ''}`, callback_data: 'priority_custom' }],
             [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
             [{ text: 'Close', callback_data: 'closing' }]
-
           ]
         }
       };

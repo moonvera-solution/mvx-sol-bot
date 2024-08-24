@@ -2,7 +2,7 @@ import { Percent, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken } from '
 import { PublicKey, Keypair, Connection } from '@solana/web3.js';
 import {updatePositions, getSolBalance, updateReferralBalance, getSwapAmountOut } from '../../util';
 import { DEFAULT_TOKEN, MVXBOT_FEES,CONNECTION } from '../../../config';
-import { getUserTokenBalanceAndDetails } from '../../feeds';
+import { getuserShitBalance, getUserTokenBalanceAndDetails } from '../../feeds';
 import { raydium_amm_swap } from '../../dex';
 import BigNumber from 'bignumber.js';
 import bs58 from 'bs58';
@@ -10,11 +10,11 @@ import { display_jupSwapDetails } from '../../../views/jupiter/swapView';
 import { createTradeImage } from '../../../views/util/image';
 import { InputFile } from 'grammy';
 import { raydium_amm_swap_v4 } from '../../../service/dex/raydium/amm/ammv4';
+import { AmmRpcData, AmmV4Keys } from '@raydium-io/raydium-sdk-v2';
 const fs = require('fs');
 
 export async function handle_radyum_swap(
   ctx: any, 
-  tokenOut: string,
   side: 'buy' | 'sell', 
   amountIn: any
 ) {
@@ -25,10 +25,11 @@ export async function handle_radyum_swap(
   try {
     let userSolBalance = await getSolBalance(userWallet.publicKey, connection);
     let tokenIn: any, outputToken: any;
-    const userTokenBalanceAndDetails = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection);
-    let userTokenBalance = userTokenBalanceAndDetails.userTokenBalance;
-    const MEME_COIN = new RayddiumToken(TOKEN_PROGRAM_ID, tokenOut, userTokenBalanceAndDetails.decimals);
-
+    const tokenOut =   ctx.session.AmmPoolKeys.mintA.address;
+    const AmmPoolId = ctx.session.AmmPoolKeys.id;
+    const userTokenBalanceAndDetails = await getuserShitBalance(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection);
+    let userTokenBalance = Number(userTokenBalanceAndDetails.userTokenBalance);
+    let tokenDecimal = Number(ctx.session.AmmPoolKeys.mintA.decimals);
     /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
     /*                         BUY                                */
     /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
@@ -40,7 +41,7 @@ export async function handle_radyum_swap(
         return;
       }
       tokenIn = DEFAULT_TOKEN.WSOL;
-      outputToken = MEME_COIN;
+      outputToken = tokenOut;
 
       /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
       /*                        SELL                                */
@@ -52,29 +53,27 @@ export async function handle_radyum_swap(
         await ctx.api.sendMessage(ctx.session.chatId, `🔴 Insufficient balance for transaction fees.`); return;
       }
 
-      let userBalanceInLamports = userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals);
-
+    
       // amountIn is in percentage to sell = 50%, 30% etc 
-      const amountToSell = new BigNumber(userBalanceInLamports).multipliedBy(amountIn).dividedBy(100).integerValue(BigNumber.ROUND_FLOOR);
-      console.log("amountToSell:: ",amountToSell.toNumber());
+      const amountToSell = Math.floor((amountIn/ 100) * userTokenBalance * Math.pow(10, tokenDecimal));
+      console.log("amountToSell:: ",amountToSell);
 
-      if (userTokenBalance == 0 || userBalanceInLamports < amountToSell.toNumber()) {
-        await ctx.api.sendMessage(ctx.session.chatId, `🔴 Insufficient balance. Your balance is ${userTokenBalance} ${userTokenBalanceAndDetails.userTokenSymbol}.`);
+      if ( amountToSell <= 0) {
+        await ctx.api.sendMessage(ctx.session.chatId, `❌ You do not have enough ${ctx.session.AmmPoolKeys.mintA.symbol} to sell.`, { parse_mode: 'HTML', disable_web_page_preview: true });
         return;
       }
 
-      tokenIn = MEME_COIN;
+      tokenIn = tokenOut;
       outputToken = DEFAULT_TOKEN.WSOL;
-      amountIn = amountToSell.toNumber();
+      amountIn = amountToSell;
     }
     /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
     /*                         SWAP                               */
     /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
-    const poolKeys = ctx.session.activeTradingPool;
-    const inputTokenAmount = new TokenAmount(tokenIn!, new BigNumber(amountIn).toFixed());
-    const slippage = new Percent(Math.ceil(ctx.session.latestSlippage * 100), 10_000);
-    const generatorWallet = ctx.session.generatorWallet;
-    const referralCommision = ctx.session.referralCommision;
+    const ammPoolKeys: AmmV4Keys | undefined =    ctx.session.AmmPoolKeys;
+    const rpcData: AmmRpcData = ctx.session.AmmRpcData;
+    // const inputTokenAmount = new TokenAmount(tokenIn!, new BigNumber(amountIn).toFixed());
+    const slippage = Math.ceil(ctx.session.latestSlippage * 100/ 10_000);
     const customPriorityFee = ctx.session.customPriorityFee;
     console.log("customPriorityFee before swap:: ", customPriorityFee);
     let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing...\n Please wait for confirmation.`
@@ -83,11 +82,11 @@ export async function handle_radyum_swap(
     raydium_amm_swap_v4({
       connection,
       side,
-      generatorWallet,
-      referralCommision,
+      AmmPoolId,
+      ammPoolKeys,
+      rpcData,
       outputToken,
-      targetPool: poolKeys.id, // ammId
-      inputTokenAmount,
+      amountIn,
       slippage,
       customPriorityFee,
       wallet: Keypair.fromSecretKey(bs58.decode(String(userWallet.secretKey))),
@@ -95,7 +94,7 @@ export async function handle_radyum_swap(
       if (!txids) return;
       console.log("txids:: ", txids);
       let extractAmount = await getSwapAmountOut(connection, txids);
-      let confirmedMsg, solAmount, tokenAmount, _symbol = userTokenBalanceAndDetails.userTokenSymbol;
+      let confirmedMsg, solAmount, tokenAmount, _symbol = ctx.session.AmmPoolKeys.mintA.symbol;
       let solFromSell = new BigNumber(0);
 
       if (extractAmount > 0) {
@@ -103,8 +102,8 @@ export async function handle_radyum_swap(
         solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
         tokenAmount = amountIn / Math.pow(10, userTokenBalanceAndDetails.decimals);
         side == 'sell' ?
-          confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`
-          : confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4)} <b>${_symbol}</b> for ${(amountIn / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
+          confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${(amountIn/Math.pow(10,tokenDecimal)).toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`
+          : confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${Number(extractAmount / Math.pow(10, tokenDecimal)).toFixed(3)} <b>${_symbol}</b> for ${(amountIn / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
       } else {
         confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
       }
@@ -112,23 +111,23 @@ export async function handle_radyum_swap(
       // update referral DB record
       const amountToUse = side == 'buy' ? amountIn : solFromSell;
       updateReferralBalance(ctx.session.chaidId, new BigNumber(amountToUse), ctx.session.referralCommision);
-      
+      console.log('amountIn:: ', amountIn);
       updatePositions(
         ctx.session.chatId,
         userWallet,
         side,
         'ray_swap', // tradeType
-        poolKeys.baseMint,
-        outputToken.mint,
-        userTokenBalanceAndDetails.userTokenName,
-        userTokenBalanceAndDetails.userTokenSymbol,
+        ctx.session.AmmPoolKeys.mintB.address,
+        ctx.session.AmmPoolKeys.mintA.address,
+        ctx.session.AmmPoolKeys.mintA.name,
+       _symbol,
         amountIn,
         extractAmount,
       );
 
       await ctx.api.sendMessage(ctx.session.chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
-      if(side == 'sell'&& ctx.session.pnlcard){
-        await createTradeImage(_symbol,  poolKeys.baseMint, ctx.session.userProfit).then((buffer) => {
+      if(side == 'sell' && ctx.session.pnlcard){
+        await createTradeImage(_symbol,  ctx.session.AmmPoolKeys.mintA.address, ctx.session.userProfit).then((buffer) => {
           // Save the image buffer to a file
           
           fs.writeFileSync('trade.png', buffer);
@@ -138,8 +137,10 @@ export async function handle_radyum_swap(
       }
       if (side == 'buy') {
         ctx.session.latestCommand = 'jupiter_swap';
-        ctx.session.jupSwap_token = poolKeys.baseMint;
+        ctx.session.jupSwap_token = ctx.session.AmmPoolKeys.mintA.address;
         await display_jupSwapDetails(ctx, false);
+      } else{
+        ctx.session.latestCommand = 'jupiter_swap';
       }
 
     }).catch(async (error: any) => {
