@@ -82,8 +82,10 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
     let poolInfo: ApiV3PoolInfoStandardItem | undefined
     let poolKeys: AmmV4Keys | undefined = input.ammPoolKeys
 
-    const data = await raydium.api.fetchPoolById({ ids: input.AmmPoolId })
-    poolInfo = data[0] as ApiV3PoolInfoStandardItem
+    const data = await raydium.liquidity.getPoolInfoFromRpc({ poolId: input.AmmPoolId })
+    // console.log('data', data)
+    poolInfo = data.poolInfo as ApiV3PoolInfoStandardItem
+    // console.log('poolInfo', poolInfo)
     const modifiedPoolInfo = { ...poolInfo };
 
     if(poolInfo.mintA.address === SOL_ADDRESS){
@@ -91,8 +93,9 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       modifiedPoolInfo.mintB = poolInfo.mintA;
       modifiedPoolInfo.mintAmountA = poolInfo.mintAmountB;
       modifiedPoolInfo.mintAmountB = poolInfo.mintAmountA;
+      // modifiedPoolInfo.feeRate = 0;
     }
-    console.log('modifiedPoolInfo', modifiedPoolInfo)
+    // console.log('modifiedPoolInfo', modifiedPoolInfo)
     if (!isValidAmm(poolInfo.programId)) throw new Error('target pool is not AMM pool')
     const [baseReserve, quoteReserve, status] = [input.rpcData.baseReserve, input.rpcData.quoteReserve, input.rpcData.status.toNumber()]
     const mintIn = input.side === 'buy' ? modifiedPoolInfo.mintB : modifiedPoolInfo.mintA
@@ -110,7 +113,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       mintIn: mintIn.address,
       mintOut: mintOut.address,
       slippage: input.slippage, // range: 1 ~ 0.0001, means 100% ~ 0.01%
-      
+
     })
     console.log('amountIn', input.amountIn)
     console.log('out', out)
@@ -121,9 +124,8 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       amountIn: new BN(input.amountIn),
       amountOut: out.amountOut, // out.amountOut means amount 'without' slippage
       fixedSide: 'in',
-      inputMint: mintIn.address,
-      // slippage: 0.1,
-      computeBudgetConfig: {
+      inputMint: mintIn.address,    
+        computeBudgetConfig: {
         microLamports: input.customPriorityFee * 1e9,
       }
     })

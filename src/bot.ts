@@ -1201,7 +1201,7 @@ bot.on("callback_query", async (ctx: any) => {
       if (ctx.session.swaptypeDex == "ray_swap") {
         const poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
         ctx.session.activeTradingPoolId = poolKeys ;
-        await handle_radyum_swap(ctx,  "sell", sellPercentage);
+        await handle_radyum_swap(ctx,  "sell", Number(sellPercentage));
         return;
       } else if (ctx.session.swaptypeDex == "jup_swap") {
         ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];

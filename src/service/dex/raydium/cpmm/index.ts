@@ -165,7 +165,7 @@ export const fetchTokenAccountData = async (wallet: Keypair, connection: Connect
 
 export async function getpoolDataCpmm(wallet: Keypair, poolID: any, connection: any): Promise<ApiV3PoolInfoStandardItemCpmm> {
   // const poolID = await getRayCpmmPoolKeys({t1:'5X1F16T5MRiAu4qPaFAaNA1oPx9VQzkpV5SzQcHsNUS9', t2:'So11111111111111111111111111111111111111112', connection:new Connection('https://moonvera-ams.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41')})
-  console.log("wallet:: ",wallet);
+  // console.log("wallet:: ",wallet);
   const raydium = await initSdk(wallet, connection);
   if (!poolID) {
     console.error('Pool Cpmm not found')

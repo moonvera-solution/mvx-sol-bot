@@ -51,10 +51,10 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
       connection,
       userWallet: walletKeyPair,
     });
-    console.log("isCpmmPool:", isCpmmPool);
+ 
     if (isCpmmPool) {
       cpmmKeys = keys as ApiV3PoolInfoStandardItemCpmm;
-      ctx.session.poolTime = Number(cpmmKeys.openTime);
+      // ctx.session.poolTime = Number(cpmmKeys.openTime);
       ctx.session.activeTradingPool = cpmmKeys;
       ctx.session.isCpmmPool = true;
       return cpmmKeys;
@@ -84,6 +84,10 @@ export async function getAmmV4PoolKeys(ctx: any) {
     raydium.liquidity.getAmmPoolKeys(ctx.session.activeTradingPoolId),
     raydium.liquidity.getRpcPoolInfo(ctx.session.activeTradingPoolId),
   ]);
+  // console.log("swapQuoteInAmount:", rpcData.swapQuoteInAmount.toNumber());
+  // console.log("swapQuoteOutAmount:", rpcData.swapQuoteOutAmount.toNumber());
+  // console.log("swapBaseInAmount:", rpcData.swapBaseInAmount.toNumber());
+  // console.log("swapBaseOutAmount:", rpcData.swapBaseOutAmount.toNumber());
   const _quoteMint = rpcData.quoteMint;
   const _baseMint = rpcData.baseMint;
   const _baseVault = rpcData.baseVault;
@@ -124,6 +128,9 @@ export async function getAmmV4PoolKeys(ctx: any) {
   // Serve the data to the session
   ctx.session.AmmPoolKeys = modifiedPoolKeys;
   ctx.session.AmmRpcData = rpcData;
+  
+  // console.log("AmmPoolKeys:", modifiedPoolKeys);
+  // console.log("AmmRpcData:", rpcData);
   return { poolKeys: modifiedPoolKeys , rpcData };
 }
 async function _getRayPoolKeys({

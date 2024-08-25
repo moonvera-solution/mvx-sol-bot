@@ -229,18 +229,18 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         //if not on jupiter check if token is on raydium 
       } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined || quoteResponse?.error_code === 'TOKEN_NOT_TRADABLE') {
         console.log('raydium')
-        ctx.session.activeTradingPool = await getRayPoolKeys(ctx, token);
+        ctx.session.activeTradingPoolId = await getRayPoolKeys(ctx, token);
         // console.log('activeTradingPool:', ctx.session.activeTradingPool)  
         // go to amm if active trading pool is found
-        if (ctx.session.activeTradingPool) {
+        if (ctx.session.activeTradingPoolId) {
           await display_raydium_details(ctx, false);
           return;
           // check for cpmm pool if no active trading pool is found
-        } else if(!ctx.session.activeTradingPool){
+        } else if(ctx.session.isCpmmPool){
           console.log('cpmm dex')
-          console.log('token here not jup')
+          // console.log('token here not jup')
           ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`) });
-          console.log('cpmmPoolId:', ctx.session.cpmmPoolId)
+          // console.log('cpmmPoolId:', ctx.session.cpmmPoolId)
           if (ctx.session.cpmmPoolId) {
             await display_cpmm_raydium_details(ctx, false);
             return;

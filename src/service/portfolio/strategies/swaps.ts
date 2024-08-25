@@ -52,8 +52,6 @@ export async function handle_radyum_swap(
       if (userSolBalance < ctx.session.customPriorityFee) {
         await ctx.api.sendMessage(ctx.session.chatId, `🔴 Insufficient balance for transaction fees.`); return;
       }
-
-    
       // amountIn is in percentage to sell = 50%, 30% etc 
       const amountToSell = Math.floor((amountIn/ 100) * userTokenBalance * Math.pow(10, tokenDecimal));
       console.log("amountToSell:: ",amountToSell);
@@ -62,7 +60,6 @@ export async function handle_radyum_swap(
         await ctx.api.sendMessage(ctx.session.chatId, `❌ You do not have enough ${ctx.session.AmmPoolKeys.mintA.symbol} to sell.`, { parse_mode: 'HTML', disable_web_page_preview: true });
         return;
       }
-
       tokenIn = tokenOut;
       outputToken = DEFAULT_TOKEN.WSOL;
       amountIn = amountToSell;
