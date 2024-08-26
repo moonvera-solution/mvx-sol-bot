@@ -154,19 +154,14 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
     priority_Level = 0;
   }
   const connection = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
-  const cpmmPoolKey = ctx.session.cpmmPoolId;
+
   // console.log("cpmmPoolKey-c>",cpmmPoolKey);
 
-  if (!cpmmPoolKey) {
-    return undefined;
-  }
+
   // console.log('ctx.session.cpmmPoolInfo', ctx.session.cpmmPoolInfo);
   const chatId = ctx.chat.id;
   const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
   const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
-  const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
-  ctx.session.cpmmPoolInfo = await getpoolDataCpmm(payerKeypair, cpmmPoolKey, connection);
-// console.log( '  ctx.session.cpmmPoolInfo>>>>> ', ctx.session.cpmmPoolInfo )
   const tokenAddress = new PublicKey(ctx.session.cpmmPoolInfo.mintB.address);
   const [
     shitBalance,

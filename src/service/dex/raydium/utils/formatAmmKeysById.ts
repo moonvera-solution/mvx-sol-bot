@@ -18,6 +18,7 @@ import {
   CpmmPoolInfoLayout,
   ApiV3PoolInfoStandardItemCpmm,
   ApiV3Token,
+  CpmmKeys,
 } from "@raydium-io/raydium-sdk-v2";
 import { getpoolDataCpmm } from "../cpmm";
 
@@ -53,18 +54,22 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
     });
  
     if (isCpmmPool) {
-      cpmmKeys = keys as ApiV3PoolInfoStandardItemCpmm;
+      console.log('isCpmmPool:', isCpmmPool);
+      cpmmKeys = keys ;
+      // console.log("cpmmKeys here", cpmmKeys);
       // ctx.session.poolTime = Number(cpmmKeys.openTime);
-      ctx.session.activeTradingPool = cpmmKeys;
+      ctx.session.cpmmPoolInfo = cpmmKeys;
       ctx.session.isCpmmPool = true;
       return cpmmKeys;
     } else {
       AmmV4Keys = keys;
       if (AmmV4Keys) {
+        ctx.session.isCpmmPool = false;
         console.log("AmmV4Keys here");
         return AmmV4Keys.id;
       }
     }
+  
   } catch (e) {
     console.log(e);
   }
@@ -79,15 +84,13 @@ export async function getAmmV4PoolKeys(ctx: any) {
     Keypair.fromSecretKey(bs58.decode(String(userSecretKey))),
     connection
   );
-  // get the pool keys and rpc data for AMM v4
-  const [poolKeys, rpcData] = await Promise.all([
-    raydium.liquidity.getAmmPoolKeys(ctx.session.activeTradingPoolId),
-    raydium.liquidity.getRpcPoolInfo(ctx.session.activeTradingPoolId),
-  ]);
-  // console.log("swapQuoteInAmount:", rpcData.swapQuoteInAmount.toNumber());
-  // console.log("swapQuoteOutAmount:", rpcData.swapQuoteOutAmount.toNumber());
-  // console.log("swapBaseInAmount:", rpcData.swapBaseInAmount.toNumber());
-  // console.log("swapBaseOutAmount:", rpcData.swapBaseOutAmount.toNumber());
+  // console.log('ctx.session.activeTradingPoolId:', ctx.session.activeTradingPoolId);
+  const data = await raydium.liquidity.getPoolInfoFromRpc({poolId: ctx.session.activeTradingPoolId});
+  const rpcData = data.poolRpcData;
+  const poolKeys = data.poolKeys;
+  const poolInfo = data.poolInfo;
+  // console.log('poolKeys:', poolKeys);
+
   const _quoteMint = rpcData.quoteMint;
   const _baseMint = rpcData.baseMint;
   const _baseVault = rpcData.baseVault;
@@ -99,6 +102,7 @@ export async function getAmmV4PoolKeys(ctx: any) {
   const _marketQuoteVault = poolKeys.marketQuoteVault;
   const _marketBaseVault = poolKeys.marketBaseVault;
   const modifiedPoolKeys = { ...poolKeys };
+  const modifiedPoolInfo = { ...poolInfo };
 
 
   
@@ -120,7 +124,12 @@ export async function getAmmV4PoolKeys(ctx: any) {
    // Swap MintA and MintB in the modified poolKeys
    modifiedPoolKeys.mintA = poolKeys.mintB;
    modifiedPoolKeys.mintB = poolKeys.mintA;
-  
+
+   modifiedPoolInfo.mintA = poolInfo.mintB;
+   modifiedPoolInfo.mintB = poolInfo.mintA;
+   modifiedPoolInfo.mintAmountA = poolInfo.mintAmountB;
+   modifiedPoolInfo.mintAmountB = poolInfo.mintAmountA;
+   modifiedPoolInfo.feeRate = 0;
 
   }
 
@@ -128,10 +137,11 @@ export async function getAmmV4PoolKeys(ctx: any) {
   // Serve the data to the session
   ctx.session.AmmPoolKeys = modifiedPoolKeys;
   ctx.session.AmmRpcData = rpcData;
+  ctx.session.AmmPoolInfo = modifiedPoolInfo;
   
   // console.log("AmmPoolKeys:", modifiedPoolKeys);
   // console.log("AmmRpcData:", rpcData);
-  return { poolKeys: modifiedPoolKeys , rpcData };
+  return { poolKeys: modifiedPoolKeys , rpcData, poolInfo: modifiedPoolInfo };
 }
 async function _getRayPoolKeys({
   t1,
@@ -145,7 +155,7 @@ async function _getRayPoolKeys({
   userWallet: Keypair;
 }): Promise<{
   isCpmmPool: boolean;
-  keys: ApiV3PoolInfoStandardItemCpmm | any;
+  keys: CpmmKeys | any;
 }> {
   const commitment = "processed";
   const AMMV4 = new PublicKey("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8");
@@ -219,6 +229,27 @@ async function _getRayPoolKeys({
         },
       ],
     });
+    //The Cpmm might be reversed at some points
+    if(accounts.length < 1){
+      accounts = await connection.getProgramAccounts(RAYDIUM_CPMM, {
+        commitment,
+        filters: [
+          { dataSize: CpmmPoolInfoLayout.span },
+          {
+            memcmp: {
+              offset: CpmmPoolInfoLayout.offsetOf("mintA"),
+              bytes: baseMint.toBase58(),
+            },
+          },
+          {
+            memcmp: {
+              offset: CpmmPoolInfoLayout.offsetOf("mintB"),
+              bytes: quoteMint.toBase58(),
+            },
+          },
+        ],
+      });
+    }
     console.log("accountsCpmm:", accounts);
   }
 
@@ -231,6 +262,7 @@ async function _getRayPoolKeys({
       ? await getpoolDataCpmm(userWallet, ammId.toString(), connection)
       : await formatAmmKeysById(ammId.toString(), connection);
   }
+
   return { isCpmmPool, keys };
 }
 

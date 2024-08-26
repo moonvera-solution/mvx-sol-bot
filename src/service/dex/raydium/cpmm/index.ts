@@ -44,21 +44,26 @@ export async function raydium_cpmm_swap(
 ): Promise<string | null> {
   let poolKeys: CpmmKeys | undefined
   const raydium = await initSdk(wallet, connection);
-  const data = await raydium.api.fetchPoolById({ ids: poolId })
-  const poolInfo = data[0] as ApiV3PoolInfoStandardItemCpmm;
+  const [data,rpcData] = await Promise.all([
+   raydium.cpmm.getPoolInfoFromRpc(poolId ),
+   raydium.cpmm.getRpcPoolInfo(poolId, true)
+
+  ])
+  const poolInfo = data.poolInfo;
   const inputMint = tradeSide == 'buy' ? poolInfo.mintA.address : poolInfo.mintB.address;
   const baseIn = inputMint === poolInfo.mintA.address
   if (!isValidCpmm(poolInfo.programId)) throw new Error('target pool is not CPMM pool');
-  const rpcData = await raydium.cpmm.getRpcPoolInfo(poolId, true);
-  // console.log('inputAmount', inputAmount);
-  // console.log('poolInfo', poolInfo);  
-  // swap pool mintA for mintB
+
   const swapResult = CurveCalculator.swap(
     new BN(inputAmount),
     baseIn ? rpcData.baseReserve : rpcData.quoteReserve,
     baseIn ? rpcData.quoteReserve : rpcData.baseReserve,
     rpcData.configInfo!.tradeFeeRate
   )
+
+    poolInfo.config.tradeFeeRate = 0
+    poolInfo.feeRate = 0
+
   // range: 1 ~ 0.0001, means 100% ~ 0.01%e
   let { transaction } = await raydium.cpmm.swap({
     poolInfo,
@@ -163,18 +168,16 @@ export const fetchTokenAccountData = async (wallet: Keypair, connection: Connect
 //  getRayCpmmPoolKeys({t1:'5X1F16T5MRiAu4qPaFAaNA1oPx9VQzkpV5SzQcHsNUS9', t2:'So11111111111111111111111111111111111111112', connection:new Connection('https://moonvera-ams.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41')})
 
 
-export async function getpoolDataCpmm(wallet: Keypair, poolID: any, connection: any): Promise<ApiV3PoolInfoStandardItemCpmm> {
-  // const poolID = await getRayCpmmPoolKeys({t1:'5X1F16T5MRiAu4qPaFAaNA1oPx9VQzkpV5SzQcHsNUS9', t2:'So11111111111111111111111111111111111111112', connection:new Connection('https://moonvera-ams.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41')})
-  // console.log("wallet:: ",wallet);
+export async function getpoolDataCpmm(wallet: Keypair, poolID: any, connection: any): Promise<CpmmKeys> {
   const raydium = await initSdk(wallet, connection);
   if (!poolID) {
     console.error('Pool Cpmm not found')
     throw new Error('Cpmm pool not found')
   }
-  const data = await raydium.api.fetchPoolById({ ids: String(poolID) })
-  const poolInfo = data[0] as ApiV3PoolInfoStandardItemCpmm;
-  // console.log('poolInfo --c>', poolInfo);
-  return poolInfo;
+  const cpmmPoolKeys = await raydium.cpmm.getCpmmPoolKeys(poolID)
+  console.log('cpmmPoolKeys>>>', cpmmPoolKeys)
+
+  return cpmmPoolKeys;
 }
 // getpoolDataCpmm()
 /**

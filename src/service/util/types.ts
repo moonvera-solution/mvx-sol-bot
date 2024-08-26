@@ -33,6 +33,7 @@ export const DefaultPortfolioData: PORTFOLIO_TYPE = {
 export interface ISESSION_DATA {
   AmmPoolKeys: any;
   AmmRpcData: any;
+  AmmPoolInfo: any;
   pnlcard: boolean;
   userProfit : number;
   expectedAmountOut_order: number;
@@ -59,6 +60,7 @@ export interface ISESSION_DATA {
   snipeStatus: boolean;
   snipperLookup: boolean;
   rugCheckToken: PublicKey;
+  rugCheckPool: any;
   recipientAddress: PublicKey;
   solAmount: number;
   awaitingWalletAddress: boolean;
@@ -144,6 +146,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   },
   AmmPoolKeys: {},
   AmmRpcData: {},
+  AmmPoolInfo: {},
   activeTradingPoolId: '',
   positionToken: '',
   pnlcard: false,
@@ -168,6 +171,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   awaitingWalletAddress: false,
   generatorWallet: DEFAULT_PUBLIC_KEY,
   rugCheckToken: DEFAULT_PUBLIC_KEY,
+  rugCheckPool: undefined,
   pumpToken: DEFAULT_PUBLIC_KEY,
   solAmount: 0,
   recipientAddress: DEFAULT_PUBLIC_KEY,

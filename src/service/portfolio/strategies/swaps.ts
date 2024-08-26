@@ -10,7 +10,7 @@ import { display_jupSwapDetails } from '../../../views/jupiter/swapView';
 import { createTradeImage } from '../../../views/util/image';
 import { InputFile } from 'grammy';
 import { raydium_amm_swap_v4 } from '../../../service/dex/raydium/amm/ammv4';
-import { AmmRpcData, AmmV4Keys } from '@raydium-io/raydium-sdk-v2';
+import { AmmRpcData, AmmV4Keys, ApiV3PoolInfoStandardItem } from '@raydium-io/raydium-sdk-v2';
 const fs = require('fs');
 
 export async function handle_radyum_swap(
@@ -69,6 +69,7 @@ export async function handle_radyum_swap(
     /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
     const ammPoolKeys: AmmV4Keys | undefined =    ctx.session.AmmPoolKeys;
     const rpcData: AmmRpcData = ctx.session.AmmRpcData;
+    const ammPoolInfo: ApiV3PoolInfoStandardItem = ctx.session.AmmPoolInfo;
     // const inputTokenAmount = new TokenAmount(tokenIn!, new BigNumber(amountIn).toFixed());
     const slippage = Math.ceil(ctx.session.latestSlippage * 100/ 10_000);
     const customPriorityFee = ctx.session.customPriorityFee;
@@ -81,6 +82,7 @@ export async function handle_radyum_swap(
       side,
       AmmPoolId,
       ammPoolKeys,
+      ammPoolInfo,
       rpcData,
       outputToken,
       amountIn,

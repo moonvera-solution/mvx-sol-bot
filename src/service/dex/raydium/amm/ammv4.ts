@@ -57,6 +57,7 @@ export type TxInputInfo = {
     side: "buy" | "sell";
     AmmPoolId: string;
     ammPoolKeys: AmmV4Keys | undefined;
+    ammPoolInfo: ApiV3PoolInfoStandardItem;
     rpcData: AmmRpcData;
     outputToken: string;
     amountIn: number;
@@ -84,7 +85,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
 
     const data = await raydium.liquidity.getPoolInfoFromRpc({ poolId: input.AmmPoolId })
     // console.log('data', data)
-    poolInfo = data.poolInfo as ApiV3PoolInfoStandardItem
+    poolInfo = input.ammPoolInfo;
     // console.log('poolInfo', poolInfo)
     const modifiedPoolInfo = { ...poolInfo };
 
@@ -115,8 +116,8 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       slippage: input.slippage, // range: 1 ~ 0.0001, means 100% ~ 0.01%
 
     })
-    console.log('amountIn', input.amountIn)
-    console.log('out', out)
+    // console.log('amountIn', input.amountIn)
+    // console.log('out', out)
     
     const { transaction } = await raydium.liquidity.swap({
       poolInfo,
@@ -132,7 +133,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
   
     const solAmount = input.side == 'buy' ? new BigNumber(input.amountIn) : new BigNumber(out.amountOut.toNumber());
 
-    console.log('solAmount', solAmount)
+    // console.log('solAmount', solAmount)
     let txId: any = '';
     if (transaction instanceof Transaction) {
   

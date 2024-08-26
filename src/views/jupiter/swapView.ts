@@ -13,7 +13,7 @@ import bs58 from 'bs58';
 import BigNumber from 'bignumber.js';
 import { saveUserPosition } from "../../service/portfolio/positions";
 import { display_pumpFun } from '../pumpfun/swapView';
-import { getAmmV4PoolKeys, getRayPoolKeys } from '../../service/dex/raydium/utils/formatAmmKeysById';
+import {  getRayPoolKeys } from '../../service/dex/raydium/utils/formatAmmKeysById';
 import { display_raydium_details } from '../raydium/swapAmmView';
 import { getRayCpmmPoolKeys } from '../../service/dex/raydium/cpmm';
 import { display_cpmm_raydium_details } from '../raydium/swapCpmmView';
@@ -221,7 +221,8 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const lastRouteHop_5 = Number(jupPriceImpact_5.outAmount)
       const jupTokenValue: any = Object.values(jupTokenRate.data);
       let jupTokenPrice = 0;
-  
+      
+
       if (jupTokenValue[0] && jupTokenValue[0].price && quoteResponse?.error_code !== 'TOKEN_NOT_TRADABLE') {
    
         jupTokenPrice = jupTokenValue[0].price;
@@ -230,9 +231,8 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined || quoteResponse?.error_code === 'TOKEN_NOT_TRADABLE') {
         console.log('raydium')
         ctx.session.activeTradingPoolId = await getRayPoolKeys(ctx, token);
-        // console.log('activeTradingPool:', ctx.session.activeTradingPool)  
-        // go to amm if active trading pool is found
-        if (ctx.session.activeTradingPoolId) {
+      
+        if (!ctx.session.isCpmmPool) {
           await display_raydium_details(ctx, false);
           return;
           // check for cpmm pool if no active trading pool is found

@@ -515,7 +515,7 @@ bot.on("message", async (ctx) => {
             ctx.session.latestCommand = "rug_check";
             let rugCheckToken = new PublicKey(msgTxt);
             ctx.session.rugCheckToken = rugCheckToken;
-            ctx.session.activeTradingPoolId = await getRayPoolKeys(ctx, msgTxt);
+            ctx.session.rugCheckPool = await getRayPoolKeys(ctx, msgTxt);
 
             await display_rugCheck(ctx, false);
           } else {

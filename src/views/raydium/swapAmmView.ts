@@ -34,11 +34,11 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
 
   const connection = CONNECTION;
 
-  const rayPoolKeys = ctx.session.activeTradingPoolId;
+  // const rayPoolKeys = ctx.session.activeTradingPoolId;
   
-  const { poolKeys, rpcData } = await getAmmV4PoolKeys(ctx);
-  // console.log("rayPoolKeys:", rayPoolKeys);
-  // console.log("poolKeys:", poolKeys);
+  const { poolKeys, rpcData, poolInfo } = await getAmmV4PoolKeys(ctx);
+
+
   const [baseReserve, quoteReserve, status] = [
     rpcData.baseReserve,
     rpcData.quoteReserve,
@@ -64,6 +64,7 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
     jupSolPrice,
     shitBalance,
     tokenInfo,
+    tokenMetadataResult,
   ] = await Promise.all([
     getTokenDataFromBirdEyePositions(tokenAddress.toString(), userPublicKey),
     getSolBalance(userPublicKey, connection),
@@ -76,10 +77,13 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
     ),
     getuserShitBalance(userPublicKey, tokenAddress, connection),
     getPoolToken_details(baseVault, quoteVault, baseMint, connection),
-  ]);
-  const birdeyeURL = `https://birdeye.so/token/${tokenAddress}?chain=solana`;
-  const dextoolsURL = `https://www.dextools.io/app/solana/pair-explorer/${tokenAddress}`;
-  const dexscreenerURL = `https://dexscreener.com/solana/${tokenAddress}`;
+     getTokenMetadata(ctx, tokenAddress.toBase58()),  ]);
+     const {
+      birdeyeURL,
+      dextoolsURL,
+      dexscreenerURL,
+      tokenData,
+    } = tokenMetadataResult;
   // console.log("quoteToken:", quoteToken);
   const solPrice = birdeyeData? birdeyeData.solanaPrice.data.value : Number(jupSolPrice.data.SOL.price);
 
@@ -148,7 +152,7 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
     let messageText: any;
 
     messageText =
-      `<b>${poolKeys.mintA.name} (${poolKeys.mintA.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
+      `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
       `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
       `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
       `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +

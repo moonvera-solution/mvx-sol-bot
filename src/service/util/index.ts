@@ -684,7 +684,7 @@ export async function getSwapAmountOut(
                     if (tx.parsed.info.authority == RAYDIUM_AUTHORITY) {
                         extractAmount = tx.parsed.info.amount;
                     }
-                    console.log('inner tx: ', JSON.parse(JSON.stringify(tx)));
+                    // console.log('inner tx: ', JSON.parse(JSON.stringify(tx)));
                 });
             })
         }
@@ -740,10 +740,10 @@ export async function getSwapAmountOutCpmm(
                 txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
                 txAmount.forEach((tx) => {
                     if (tradeSide == 'buy' && tx.parsed && tx.parsed?.info && (tx.parsed.info.amount || tx.parsed.info.tokenAmount)) {
-                        console.log("tx.parsed.info", tx.parsed.info)
+                        // console.log("tx.parsed.info", tx.parsed.info)
                         extractAmount = tx.parsed.info.amount ? tx.parsed.info.amount : tx.parsed.info.tokenAmount.amount;
                     } else if (tradeSide == 'sell' && txxs && txxs.meta && txxs.meta.postBalances && txxs.meta.preBalances) {
-                        console.log("txxs.meta", txxs.meta)
+                        // console.log("txxs.meta", txxs.meta)
                         extractAmount = txxs.meta.postBalances[0] - txxs.meta.preBalances[0];
                     }
 
@@ -888,9 +888,6 @@ export async function catchSimulationErrors(simulationResult: any) {
     if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg)) ||
     simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR_ANCHOR.test(logMsg))) {
     throw new Error(`🔴 Slippage error, try increasing your slippage %.`);
-    }
-    if(simulationResult.value.err) {
-        throw new Error(simulationResult.value.logs); ;
     }
   
     const BALANCE_ERROR = /Transfer: insufficient lamports/;

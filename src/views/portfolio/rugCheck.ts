@@ -5,7 +5,8 @@ import { formatNumberToKOrM } from '../../service/util';
 import { Connection } from '@solana/web3.js';
 import { getTokenDataFromBirdEye } from '../../api/priceFeeds/birdEye';
 import BigNumber from 'bignumber.js';
-import {CONNECTION} from '../../config';
+import {CONNECTION, SOL_ADDRESS} from '../../config';
+import { getAmmV4PoolKeys } from '../../service/dex/raydium/utils/formatAmmKeysById';
 
 
 export async function display_rugCheck(ctx: any, isRefresh: boolean) {
@@ -13,16 +14,43 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
     const chatId = ctx.chat.id;
     const session = ctx.session;
     const token = session.rugCheckToken instanceof PublicKey ? session.rugCheckToken.toBase58() : session.rugCheckToken;
-    const rugPool = session.activeTradingPool;
+    let rugPool;
+    let ammRugPoolId;
+    let baseVault = new PublicKey(SOL_ADDRESS);
+    let quoteVault = new PublicKey(SOL_ADDRESS);
+    let baseDecimals: number = 0;
+    let quoteDecimals: number = 0;
+    let baseMint = new PublicKey(SOL_ADDRESS);
+    let lpMint = new PublicKey(SOL_ADDRESS);
+    if(ctx.session.isCpmmPool){
+      rugPool = ctx.session.cpmmPoolInfo;
+      baseVault = new PublicKey(rugPool.vault.B)
+      quoteVault = new PublicKey(rugPool.vault.A)
+      baseDecimals = rugPool.mintB.decimals;
+      quoteDecimals = rugPool.mintA.decimals;
+      baseMint = new PublicKey(rugPool.mintB.address);
+      lpMint = new PublicKey(rugPool.mintLp.address);
+      // console.log("rugPoolCpmm", rugPool);
+
+    } else{
+     ammRugPoolId = ctx.session.rugCheckPool
+     ctx.session.activeTradingPoolId = ammRugPoolId;
+    const querryAmmKeys =  await getAmmV4PoolKeys(ctx);
+    rugPool = querryAmmKeys;
+    baseVault = new PublicKey(rugPool.poolKeys.vault.A);
+    quoteVault = new PublicKey(rugPool.poolKeys.vault.B);
+    baseDecimals = rugPool.poolKeys.mintA.decimals;
+    quoteDecimals = rugPool.poolKeys.mintB.decimals;
+    baseMint = new PublicKey(rugPool.poolKeys.mintA.address);
+    lpMint = new PublicKey(rugPool.poolKeys.mintLp.address);
+    }
+
+
     if (rugPool) {
-      const baseVault = rugPool.baseVault;
-      const quoteVault = rugPool.quoteVault;
-      const baseDecimals = rugPool.baseDecimals;
-      const quoteDecimals = rugPool.quoteDecimals;
-      const baseMint = rugPool.baseMint;
+
       ctx.session.snipeToken = baseMint;
       ctx.session.buyToken = baseMint;
-      const lpMint = rugPool.lpMint;
+ 
       const connection = CONNECTION;
       const birdeyeURL = `https://birdeye.so/token/${token}?chain=solana`;
       const dextoolsURL = `https://www.dextools.io/app/solana/pair-explorer/${token}`;
