@@ -73,7 +73,7 @@ export async function ray_cpmm_swap(ctx: any) {
       const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
       tradeType == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
       confirmedMsg = `✅ <b>${tradeType.toUpperCase()} tx confirmed</b> ${tradeType == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${amountIn / 1e9} SOL</b>` : `You sold <b>${Number(amountToSell / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(3)}</b> <b>${_symbol}</b> and received <b>${(ctx.session.CpmmSolExtracted / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txid}">View Details</a>.`;
-      const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
+      const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
       let oldPositionSol: number = 0;
       let oldPositionToken: number = 0;
       if (userPosition) {
@@ -87,7 +87,7 @@ export async function ray_cpmm_swap(ctx: any) {
         }
       }
       if (tradeType == 'buy') {
-        saveUserPosition(chatId,
+        saveUserPosition(
           userWallet.publicKey.toString(), {
           baseMint: tokenOut,
           name: userTokenBalanceAndDetails.userTokenName,
@@ -111,7 +111,7 @@ export async function ray_cpmm_swap(ctx: any) {
           await UserPositions.updateOne({ walletId: userWallet.publicKey.toString() }, { $pull: { positions: { baseMint: tokenIn } } });
           ctx.session.positionIndex = 0;
         } else {
-          saveUserPosition(chatId,
+          saveUserPosition(
             userWallet.publicKey.toString(), {
             baseMint: tokenIn,
             name: userTokenBalanceAndDetails.userTokenName,
@@ -177,13 +177,12 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
     getTokenDataFromBirdEyePositions(tokenAddress.toString(), userPublicKey),
     getTokenMetadata(ctx, tokenAddress.toBase58()),
     getSolBalance(userPublicKey, connection),
-    UserPositions.find({ positionChatId: chatId, walletId: userPublicKey }, { positions: { $slice: -7 } }),
+    UserPositions.find({ walletId: userPublicKey }, { positions: { $slice: -7 } }),
     getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
     fetch(
       `https://price.jup.ag/v6/price?ids=SOL`
     ).then((response) => response.json()),
   ]);
-
   const cpmmSupply = new BigNumber(tokenMetadataResult.tokenData.mint.supply.basisPoints)
 
   const priceCpmm = ctx.session.cpmmPoolInfo.mintAmountA / ctx.session.cpmmPoolInfo.mintAmountB;

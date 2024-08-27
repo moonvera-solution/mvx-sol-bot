@@ -84,7 +84,7 @@ export async function jupiterSwap(ctx: any) {
       const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
       tradeType == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
       confirmedMsg = `✅ <b>${tradeType.toUpperCase()} tx confirmed</b> ${tradeType == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${ctx.session.jupSwap_amount} SOL</b>` : `You sold <b>${amountToSell / Math.pow(10, userTokenBalanceAndDetails.decimals)}</b> <b>${_symbol}</b> and received <b>${(solFromSell / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txSig}">View Details</a>.`;
-      const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
+      const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
       let oldPositionSol: number = 0;
       let oldPositionToken: number = 0;
       // console.log('userPosition', userPosition);
@@ -103,7 +103,7 @@ export async function jupiterSwap(ctx: any) {
       }
 
       if (tradeType == 'buy') {
-        saveUserPosition(chatId,
+        saveUserPosition(
           userWallet.publicKey.toString(), {
           baseMint: tokenOut,
           name: userTokenBalanceAndDetails.userTokenName,
@@ -128,7 +128,7 @@ export async function jupiterSwap(ctx: any) {
           ctx.session.positionIndex = 0;
 
         } else {
-          saveUserPosition(chatId,
+          saveUserPosition(
             userWallet.publicKey.toString(), {
             baseMint: tokenIn,
             name: userTokenBalanceAndDetails.userTokenName,
@@ -205,7 +205,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         getSolBalance(publicKeyString, connection),
         fetch(`https://price.jup.ag/v6/price?ids=${token}&vsToken=So11111111111111111111111111111111111111112`).then((response) => response.json()),
         getUserTokenBalanceAndDetails(new PublicKey(publicKeyString), token, connection),
-        UserPositions.find({ positionChatId: chatId, walletId: publicKeyString }, { positions: { $slice: -7 } }),
+        UserPositions.find({ walletId: publicKeyString }, { positions: { $slice: -7 } }),
         fetch(`${rpcUrl}/jupiter/quote?inputMint=${SOL_ADDRESS}&outputMint=${token}&amount=${'5000000000'}&slippageBps=${1}`).then((response) => response.json()),
         fetch(`https://price.jup.ag/v6/price?ids=SOL`).then((response) => response.json()),
         fetch(swapUrl).then(res => res.json())
@@ -223,13 +223,13 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       let jupTokenPrice = 0;
       
 
-      // if (jupTokenValue[0] && jupTokenValue[0].price && quoteResponse?.error_code !== 'TOKEN_NOT_TRADABLE') {
+      if (jupTokenValue[0] && jupTokenValue[0].price && quoteResponse?.error_code !== 'TOKEN_NOT_TRADABLE') {
    
-      //   jupTokenPrice = jupTokenValue[0].price;
-      //   console.log('jupToken')
-      //   //if not on jupiter check if token is on raydium 
-      // } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined || quoteResponse?.error_code === 'TOKEN_NOT_TRADABLE') {
-      //   console.log('raydium')
+        jupTokenPrice = jupTokenValue[0].price;
+        console.log('jupToken')
+        //if not on jupiter check if token is on raydium 
+      } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined || quoteResponse?.error_code === 'TOKEN_NOT_TRADABLE') {
+        console.log('raydium')
         ctx.session.activeTradingPoolId = await getRayPoolKeys(ctx, token);
         // console.log('activeTradingPoolId:', ctx.session.activeTradingPoolId)
         if (!ctx.session.isCpmmPool) {
@@ -254,7 +254,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
           }
 
         } 
-      // }
+      }
       const {
         tokenData,
       } = tokenMetadataResult;

@@ -884,7 +884,9 @@ export async function catchSimulationErrors(simulationResult: any) {
     const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
     const SLIPPAGE_ERROR_ANCHOR = /SlippageToleranceExceeded/;
     
-    console.log("simulationResult", simulationResult.value.err)
+    console.log("simulationResult", simulationResult.value.logs)
+    // console.log("simulationResult", simulationResult.value.err)
+
     if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg)) ||
     simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR_ANCHOR.test(logMsg))) {
     throw new Error(`🔴 Slippage error, try increasing your slippage %.`);
@@ -904,7 +906,7 @@ export async function catchSimulationErrors(simulationResult: any) {
 }
 
 export async function updatePositions(
-    chatId: string,
+    // chatId: string,
     userWallet: Keypair,
     tradeSide: string,
     tradeType: string,
@@ -917,7 +919,7 @@ export async function updatePositions(
 ) {
 
     let newUserPosition: any;
-    const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
+    const userPosition = await UserPositions.findOne({ walletId: userWallet.publicKey.toString() });
 
     let oldPositionSol: number = 0;
     let oldPositionToken: number = 0;
@@ -967,7 +969,7 @@ export async function updatePositions(
             }
         }
     }
-    newUserPosition && await saveUserPosition(chatId, new PublicKey(userWallet.publicKey).toBase58(), newUserPosition);
+    newUserPosition && await saveUserPosition( new PublicKey(userWallet.publicKey).toBase58(), newUserPosition);
 }
 
 export async function updateReferralBalance(chatId: string,amountUse:BigNumber,referralCommision: number) {

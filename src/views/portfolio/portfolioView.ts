@@ -20,7 +20,7 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
   if (!userWallet) return ctx.api.sendMessage(ctx.chat.id, "Wallet not found.", { parse_mode: 'HTML' });
   const userPosition = await UserPositions.find(
     {
-      positionChatId: ctx.chat.id,
+
       walletId: userWallet
     },
     {
@@ -195,7 +195,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
   const userWallet = ctx.session.portfolio.wallets[walletIndex]?.publicKey;
   const userPosition: any = await UserPositions.find(
     {
-      positionChatId: chatId,
+
       walletId: userWallet
     },
     {

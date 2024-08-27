@@ -69,7 +69,7 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
     getTokenDataFromBirdEyePositions(tokenAddress.toString(), userPublicKey),
     getSolBalance(userPublicKey, connection),
     UserPositions.find(
-      { positionChatId: chatId, walletId: userPublicKey },
+      { walletId: userPublicKey },
       { positions: { $slice: -7 } }
     ),
     fetch(`https://price.jup.ag/v6/price?ids=SOL`).then((response) =>
@@ -77,7 +77,7 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
     ),
     getuserShitBalance(userPublicKey, tokenAddress, connection),
     getPoolToken_details(baseVault, quoteVault, baseMint, connection),
-     getTokenMetadata(ctx, tokenAddress.toBase58()),  ]);
+    getTokenMetadata(ctx, tokenAddress.toBase58()),  ]);
      const {
       birdeyeURL,
       dextoolsURL,

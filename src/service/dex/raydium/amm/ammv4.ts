@@ -117,7 +117,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
 
     })
     // console.log('amountIn', input.amountIn)
-    // console.log('out', out)
+    console.log('out', out)
     
     const { transaction } = await raydium.liquidity.swap({
       poolInfo,

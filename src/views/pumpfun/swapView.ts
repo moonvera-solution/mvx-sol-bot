@@ -95,7 +95,7 @@ export async function swap_pump_fun(ctx: any) {
 
       if (tradeSide == 'buy') {
          saveUserPosition( // to display portfolio positions
-          ctx.session.chatId,
+     
           userWallet.publicKey.toString(), {
           baseMint: ctx.session.pumpToken,
           name: userTokenBalanceAndDetails.userTokenName,
@@ -122,7 +122,7 @@ export async function swap_pump_fun(ctx: any) {
         if (newAmountIn <= 0 || newAmountOut <= 0) {
           await UserPositions.updateOne({ walletId: userWallet.publicKey.toString() }, { $pull: { positions: { baseMint: tokenIn } } });
         } else {
-           saveUserPosition(ctx,
+           saveUserPosition(
             userWallet.publicKey.toString(), {
             baseMint: tokenIn,
             name: userTokenBalanceAndDetails.userTokenName,

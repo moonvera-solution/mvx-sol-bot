@@ -17,10 +17,10 @@ export interface UserPosition {
   userBalance: BigNumber;
 }
 // NEVER PASS CTX TO BACKEND FUNCTIONS
-export async function saveUserPosition(chatId:string, walletId:string, newPosition:Position) {
+export async function saveUserPosition( walletId:string, newPosition:Position) {
 
     try {
-        const userPosition = await UserPositions.findOne({positionChatId: chatId, walletId:walletId });
+        const userPosition = await UserPositions.findOne({ walletId:walletId });
         if (userPosition) {
             const existingPositionIndex = userPosition.positions.findIndex(
                 position => position.baseMint === newPosition.baseMint.toString()
@@ -38,7 +38,7 @@ export async function saveUserPosition(chatId:string, walletId:string, newPositi
             }
         } else {
             const savePosition = new UserPositions({
-                positionChatId: chatId,
+                // positionChatId: chatId,
                 walletId: walletId ,
                 positions: newPosition,
                });

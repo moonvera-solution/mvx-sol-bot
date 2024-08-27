@@ -1,8 +1,8 @@
 import { Percent, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken } from '@raydium-io/raydium-sdk';
 import { PublicKey, Keypair, Connection } from '@solana/web3.js';
 import {updatePositions, getSolBalance, updateReferralBalance, getSwapAmountOut } from '../../util';
-import { DEFAULT_TOKEN, MVXBOT_FEES,CONNECTION } from '../../../config';
-import { getuserShitBalance, getUserTokenBalanceAndDetails } from '../../feeds';
+import { DEFAULT_TOKEN, MVXBOT_FEES,CONNECTION, SOL_ADDRESS } from '../../../config';
+import { getTokenMetadata, getuserShitBalance, getUserTokenBalanceAndDetails } from '../../feeds';
 import { raydium_amm_swap } from '../../dex';
 import BigNumber from 'bignumber.js';
 import bs58 from 'bs58';
@@ -11,6 +11,7 @@ import { createTradeImage } from '../../../views/util/image';
 import { InputFile } from 'grammy';
 import { raydium_amm_swap_v4 } from '../../../service/dex/raydium/amm/ammv4';
 import { AmmRpcData, AmmV4Keys, ApiV3PoolInfoStandardItem } from '@raydium-io/raydium-sdk-v2';
+import { token } from '@metaplex-foundation/js';
 const fs = require('fs');
 
 export async function handle_radyum_swap(
@@ -25,11 +26,19 @@ export async function handle_radyum_swap(
   try {
     let userSolBalance = await getSolBalance(userWallet.publicKey, connection);
     let tokenIn: any, outputToken: any;
-    const tokenOut =   ctx.session.AmmPoolKeys.mintA.address;
+    const tokenOut = ctx.session.AmmPoolKeys.mintA.address
+
     const AmmPoolId = ctx.session.AmmPoolKeys.id;
-    const userTokenBalanceAndDetails = await getuserShitBalance(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection);
+    const [userTokenBalanceAndDetails, tokenMeta] = await Promise.all([
+    getuserShitBalance(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection),
+    getTokenMetadata(ctx, tokenOut),
+    ]);
+
     let userTokenBalance = Number(userTokenBalanceAndDetails.userTokenBalance);
     let tokenDecimal = Number(ctx.session.AmmPoolKeys.mintA.decimals);
+    let _symbol = tokenMeta.tokenData.symbol;
+    let _name = tokenMeta.tokenData.name;
+ 
     /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
     /*                         BUY                                */
     /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
@@ -57,7 +66,7 @@ export async function handle_radyum_swap(
       console.log("amountToSell:: ",amountToSell);
 
       if ( amountToSell <= 0) {
-        await ctx.api.sendMessage(ctx.session.chatId, `❌ You do not have enough ${ctx.session.AmmPoolKeys.mintA.symbol} to sell.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+        await ctx.api.sendMessage(ctx.session.chatId, `❌ You do not have enough ${_symbol} to sell.`, { parse_mode: 'HTML', disable_web_page_preview: true });
         return;
       }
       tokenIn = tokenOut;
@@ -93,7 +102,8 @@ export async function handle_radyum_swap(
       if (!txids) return;
       console.log("txids:: ", txids);
       let extractAmount = await getSwapAmountOut(connection, txids);
-      let confirmedMsg, solAmount, tokenAmount, _symbol = ctx.session.AmmPoolKeys.mintA.symbol;
+      let confirmedMsg, solAmount, tokenAmount;
+    
       let solFromSell = new BigNumber(0);
 
       if (extractAmount > 0) {
@@ -107,19 +117,15 @@ export async function handle_radyum_swap(
         confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
       }
 
-      // update referral DB record
-      const amountToUse = side == 'buy' ? amountIn : solFromSell;
-      updateReferralBalance(ctx.session.chaidId, new BigNumber(amountToUse), ctx.session.referralCommision);
       console.log('amountIn:: ', amountIn);
       updatePositions(
-        ctx.session.chatId,
         userWallet,
         side,
         'ray_swap', // tradeType
         ctx.session.AmmPoolKeys.mintB.address,
         ctx.session.AmmPoolKeys.mintA.address,
-        ctx.session.AmmPoolKeys.mintA.name,
-       _symbol,
+        _name,
+        _symbol,
         amountIn,
         extractAmount,
       );

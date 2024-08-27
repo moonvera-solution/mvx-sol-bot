@@ -380,7 +380,7 @@ export async function startSnippeSimulation(
                 }
 
                 saveUserPosition(
-                    chatId,
+      
                     userWallet.publicKey.toBase58(), {
                     baseMint: ctx.session.originalBaseMint,
                     name: tokenData.name,

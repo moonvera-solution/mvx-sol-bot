@@ -53,7 +53,7 @@ export async function raydium_cpmm_swap(
   ])
   const poolInfo = data.poolInfo;
  
-  // rpcData.configInfo!.tradeFeeRate = new BN(0);
+  rpcData.configInfo!.tradeFeeRate = new BN(0);
   const buyAddress =  poolInfo.mintA.address === SOL_ADDRESS ? poolInfo.mintA.address : poolInfo.mintB.address;
   const sellAddress = poolInfo.mintA.address === SOL_ADDRESS ? poolInfo.mintB.address : poolInfo.mintA.address;
 
@@ -68,9 +68,9 @@ export async function raydium_cpmm_swap(
     rpcData.configInfo!.tradeFeeRate
   )
 
-    // poolInfo.config.tradeFeeRate = 0
-    // poolInfo.feeRate = 0
-
+    poolInfo.config.tradeFeeRate = 0
+    poolInfo.feeRate = 0
+  console.log('poolInfo:>>>><<>>>>> ', poolInfo);
   // range: 1 ~ 0.0001, means 100% ~ 0.01%e
   let { transaction } = await raydium.cpmm.swap({
     poolInfo,
