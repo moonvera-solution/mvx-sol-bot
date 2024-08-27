@@ -223,23 +223,24 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       let jupTokenPrice = 0;
       
 
-      if (jupTokenValue[0] && jupTokenValue[0].price && quoteResponse?.error_code !== 'TOKEN_NOT_TRADABLE') {
+      // if (jupTokenValue[0] && jupTokenValue[0].price && quoteResponse?.error_code !== 'TOKEN_NOT_TRADABLE') {
    
-        jupTokenPrice = jupTokenValue[0].price;
-        console.log('jupToken')
-        //if not on jupiter check if token is on raydium 
-      } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined || quoteResponse?.error_code === 'TOKEN_NOT_TRADABLE') {
-        console.log('raydium')
+      //   jupTokenPrice = jupTokenValue[0].price;
+      //   console.log('jupToken')
+      //   //if not on jupiter check if token is on raydium 
+      // } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined || quoteResponse?.error_code === 'TOKEN_NOT_TRADABLE') {
+      //   console.log('raydium')
         ctx.session.activeTradingPoolId = await getRayPoolKeys(ctx, token);
-      
+        // console.log('activeTradingPoolId:', ctx.session.activeTradingPoolId)
         if (!ctx.session.isCpmmPool) {
+          console.log('raydium AMM active')
           await display_raydium_details(ctx, false);
           return;
           // check for cpmm pool if no active trading pool is found
         } else if(ctx.session.isCpmmPool){
-          console.log('cpmm dex')
+          console.log('Raydium CPMM active')
           // console.log('token here not jup')
-          ctx.session.cpmmPoolId = await getRayCpmmPoolKeys({ t1: token, t2: SOL_ADDRESS, connection: new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`) });
+          ctx.session.cpmmPoolId = ctx.session.activeTradingPoolId
           // console.log('cpmmPoolId:', ctx.session.cpmmPoolId)
           if (ctx.session.cpmmPoolId) {
             await display_cpmm_raydium_details(ctx, false);
@@ -253,7 +254,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
           }
 
         } 
-      }
+      // }
       const {
         tokenData,
       } = tokenMetadataResult;

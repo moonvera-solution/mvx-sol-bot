@@ -129,7 +129,7 @@ export async function getAmmV4PoolKeys(ctx: any) {
    modifiedPoolInfo.mintB = poolInfo.mintA;
    modifiedPoolInfo.mintAmountA = poolInfo.mintAmountB;
    modifiedPoolInfo.mintAmountB = poolInfo.mintAmountA;
-   modifiedPoolInfo.feeRate = 0;
+  //  modifiedPoolInfo.feeRate = 0;
 
   }
 
@@ -250,7 +250,7 @@ async function _getRayPoolKeys({
         ],
       });
     }
-    console.log("accountsCpmm:", accounts);
+    // console.log("accountsCpmm:", accounts);
   }
 
   const ammId = accounts && accounts[0] && accounts[0].pubkey;

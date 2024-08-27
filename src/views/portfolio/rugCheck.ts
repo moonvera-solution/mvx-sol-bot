@@ -24,12 +24,21 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
     let lpMint = new PublicKey(SOL_ADDRESS);
     if(ctx.session.isCpmmPool){
       rugPool = ctx.session.cpmmPoolInfo;
-      baseVault = new PublicKey(rugPool.vault.B)
-      quoteVault = new PublicKey(rugPool.vault.A)
-      baseDecimals = rugPool.mintB.decimals;
-      quoteDecimals = rugPool.mintA.decimals;
-      baseMint = new PublicKey(rugPool.mintB.address);
+      if(rugPool.mintA.address != SOL_ADDRESS){
+      baseVault = new PublicKey(rugPool.vault.A)
+      quoteVault = new PublicKey(rugPool.vault.B)
+      baseDecimals = rugPool.mintA.decimals;
+      quoteDecimals = rugPool.mintB.decimals;
+      baseMint = new PublicKey(rugPool.mintA.address);
       lpMint = new PublicKey(rugPool.mintLp.address);
+      } else{
+        baseVault = new PublicKey(rugPool.vault.B)
+        quoteVault = new PublicKey(rugPool.vault.A)
+        baseDecimals = rugPool.mintB.decimals;
+        quoteDecimals = rugPool.mintA.decimals;
+        baseMint = new PublicKey(rugPool.mintB.address);
+        lpMint = new PublicKey(rugPool.mintLp.address);
+      }
       // console.log("rugPoolCpmm", rugPool);
 
     } else{

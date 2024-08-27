@@ -48,7 +48,7 @@ export async function ray_cpmm_swap(ctx: any) {
     connection,
     payerKeypair,
     ctx.session.cpmm_side,
-    ctx.session.cpmmPoolId,
+    ctx.session.cpmmPoolId.id,
     amountIn,
     (ctx.session.latestSlippage / 100),
     { refWallet: ctx.session.referralWallet, referral: true, refCommission: ctx.session.referralCommision },
@@ -162,7 +162,7 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
   const chatId = ctx.chat.id;
   const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
   const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
-  const tokenAddress = new PublicKey(ctx.session.cpmmPoolInfo.mintB.address);
+  const tokenAddress = ctx.session.cpmmPoolInfo.mintA.address == SOL_ADDRESS ? new PublicKey(ctx.session.cpmmPoolInfo.mintB.address): new PublicKey(ctx.session.cpmmPoolInfo.mintA.address);
   const [
     shitBalance,
     birdeyeData,

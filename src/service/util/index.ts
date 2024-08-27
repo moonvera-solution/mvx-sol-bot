@@ -889,7 +889,7 @@ export async function catchSimulationErrors(simulationResult: any) {
     simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR_ANCHOR.test(logMsg))) {
     throw new Error(`🔴 Slippage error, try increasing your slippage %.`);
     }
-  
+    
     const BALANCE_ERROR = /Transfer: insufficient lamports/;
     if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
         throw new Error(`🔴 Insufficient balance for transaction.`);
@@ -897,6 +897,9 @@ export async function catchSimulationErrors(simulationResult: any) {
     const FEES_ERROR = 'InsufficientFundsForFee';
     if (simulationResult.value.err === FEES_ERROR) {
         throw new Error(`🔴 Swap failed! Please try again.`);
+    }
+    if (simulationResult.value.err) {
+        throw new Error(`🔴 Transaction failed`);
     }
 }
 

@@ -83,7 +83,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
     let poolInfo: ApiV3PoolInfoStandardItem | undefined
     let poolKeys: AmmV4Keys | undefined = input.ammPoolKeys
 
-    const data = await raydium.liquidity.getPoolInfoFromRpc({ poolId: input.AmmPoolId })
+    // const data = await raydium.liquidity.getPoolInfoFromRpc({ poolId: input.AmmPoolId })
     // console.log('data', data)
     poolInfo = input.ammPoolInfo;
     // console.log('poolInfo', poolInfo)

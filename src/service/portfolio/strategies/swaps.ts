@@ -71,7 +71,7 @@ export async function handle_radyum_swap(
     const rpcData: AmmRpcData = ctx.session.AmmRpcData;
     const ammPoolInfo: ApiV3PoolInfoStandardItem = ctx.session.AmmPoolInfo;
     // const inputTokenAmount = new TokenAmount(tokenIn!, new BigNumber(amountIn).toFixed());
-    const slippage = Math.ceil(ctx.session.latestSlippage * 100/ 10_000);
+    const slippage = (ctx.session.latestSlippage * 100/ 10_000);
     const customPriorityFee = ctx.session.customPriorityFee;
     console.log("customPriorityFee before swap:: ", customPriorityFee);
     let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing...\n Please wait for confirmation.`
