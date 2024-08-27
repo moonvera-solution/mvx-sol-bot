@@ -358,14 +358,8 @@ bot.command("trade", async (ctx) => {
   await _validateSession(ctx);
   backupSession = ctx.session;
   try {
-    const chatId = ctx.chat.id;
-    const referralRecord = await Referrals.findOne({ referredUsers: chatId });
-    if (referralRecord) {
-      ctx.session.referralCommision = referralRecord.commissionPercentage;
-      ctx.session.generatorWallet = new PublicKey(
-        referralRecord.generatorWallet
-      );
-    }
+   
+ 
     ctx.session.latestCommand = "jupiter_swap";
     ctx.api.sendMessage(ctx.chat.id, 'Please enter the token address you would like to trade.');
     // }
@@ -379,13 +373,7 @@ bot.command("snipe", async (ctx) => {
   try {
     const chatId = ctx.chat.id;
     ctx.session.snipeStatus = true;
-    // const referralRecord = await Referrals.findOne({ referredUsers: chatId });
-    // if (referralRecord) {
-    //   ctx.session.referralCommision = referralRecord.commissionPercentage;
-    //   ctx.session.generatorWallet = new PublicKey(
-    //     referralRecord.generatorWallet
-    //   );
-    // }
+
     ctx.session.latestCommand = "snipe";
     await ctx.api.sendMessage(
       ctx.chat.id,
