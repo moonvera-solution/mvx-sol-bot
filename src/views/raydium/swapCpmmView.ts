@@ -51,7 +51,7 @@ export async function ray_cpmm_swap(ctx: any) {
     ctx.session.cpmm_side,
     ctx.session.cpmmPoolId.id,
     amountIn,
-    (ctx.session.latestSlippage / 100),
+    (ctx.session.latestSlippage + 10),
     { refWallet: ctx.session.referralWallet, referral: true, refCommission: ctx.session.referralCommision },
     ctx
   ).then(async (txid) => {

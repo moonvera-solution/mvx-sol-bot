@@ -76,7 +76,7 @@ export async function raydium_cpmm_swap(
     poolInfo,
     poolKeys,
     swapResult,
-    slippage: slippage * 100 / 10_00,
+    slippage: slippage * 100 / 10_000,
     baseIn,
     computeBudgetConfig: {
       microLamports: ctx.session.customPriorityFee * 1e9,

@@ -123,7 +123,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       poolInfo,
       poolKeys,
       amountIn: new BN(input.amountIn),
-      amountOut: out.amountOut, // out.amountOut means amount 'without' slippage
+      amountOut: out.minAmountOut, // out.amountOut means amount 'without' slippage
       fixedSide: 'in',
       inputMint: mintIn.address,    
       computeBudgetConfig: {
@@ -131,7 +131,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       }
     })
   
-    const solAmount = input.side == 'buy' ? new BigNumber(input.amountIn) : new BigNumber(out.amountOut.toNumber());
+    const solAmount = input.side == 'buy' ? new BigNumber(input.amountIn) : new BigNumber(out.minAmountOut.toNumber());
 
     // console.log('solAmount', solAmount)
     let txId: any = '';
