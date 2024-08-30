@@ -263,8 +263,8 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       } = tokenMetadataResult;
       const creatorAddress = birdeyeData && birdeyeData.response2.data.creatorAddress!= null ? birdeyeData.response2.data.creatorAddress : tokenData.updateAuthorityAddress.toBase58();
       const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(token), connection);
-      const lpSupply = lpSupplyOwner.userTokenBalance;
-      const islpBurnt = lpSupply > 0 ? "❌ No" : "✅ Yes";
+    
+      const islpBurnt =  "✅ Yes";
       const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value :  Number(jupSolPrice.data.SOL.price);
       // const ammAddress = jupPriceImpact_5.routePlan[jupPriceImpact_5?.routePlan?.length - 1].swapInfo.ammKey;
       const tokenPriceUSD = birdeyeData

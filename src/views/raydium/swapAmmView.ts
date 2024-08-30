@@ -39,7 +39,8 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
   
   const { poolKeys, rpcData, poolInfo } = await getAmmV4PoolKeys(ctx);
 
-
+  console.log("poolKeys:", poolKeys); 
+  const LpAddress = poolKeys.mintLp.address;
   const [baseReserve, quoteReserve, status] = [
     rpcData.baseReserve,
     rpcData.quoteReserve,
@@ -138,7 +139,7 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
 
   const netWorthSol = netWorth / solPrice;
   const creatorAddress = birdeyeData && birdeyeData.response2.data.creatorAddress!= null ? birdeyeData.response2.data.creatorAddress : tokenData.updateAuthorityAddress.toBase58();
-  const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), tokenAddress, connection);
+  const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(LpAddress), connection);
   const lpSupply = lpSupplyOwner.userTokenBalance;
   const islpBurnt = lpSupply > 0 ? "❌ No" : "✅ Yes";
   const freezable = birdeyeData?.response2.data.freezeable ? "⚠️ Be careful: This token is freezable." : "✅ Not freezable.";

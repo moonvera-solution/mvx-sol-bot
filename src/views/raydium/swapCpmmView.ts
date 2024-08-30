@@ -164,6 +164,7 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
   const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
   const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
   const tokenAddress = ctx.session.cpmmPoolInfo.mintA.address == SOL_ADDRESS ? new PublicKey(ctx.session.cpmmPoolInfo.mintB.address): new PublicKey(ctx.session.cpmmPoolInfo.mintA.address);
+  // console.log('cpmmPoolInfo', ctx.session.cpmmPoolInfo);
   const [
     shitBalance,
     birdeyeData,
@@ -256,10 +257,10 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
     && birdeyeData.birdeyePosition.data
     && birdeyeData.birdeyePosition.data.totalUsd
     ? birdeyeData.birdeyePosition.data.totalUsd : NaN;
-
+  const lpAddress = new PublicKey(ctx.session.cpmmPoolInfo.mintLp.address);
   const netWorthSol = netWorth / solPrice;
   const creatorAddress = birdeyeData && birdeyeData.response2.data.creatorAddress!= null ? birdeyeData.response2.data.creatorAddress : tokenData.updateAuthorityAddress.toBase58();
-  const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), tokenAddress, connection);
+  const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), lpAddress, connection);
   const lpSupply = lpSupplyOwner.userTokenBalance;
   const islpBurnt = lpSupply > 0 ? "❌ No" : "✅ Yes";
   const freezable = birdeyeData?.response2.data.freezeable ? "⚠️ Be careful: This token is freezable." : "✅ Not freezable.";
