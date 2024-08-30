@@ -818,7 +818,8 @@ export async function optimizedSendAndConfirmTransaction(
 
     try {
         // Simulating the transaction
-        const simulationResult = await connection.simulateTransaction(tx, { commitment: "processed", });
+        const simulationResult = await connection.simulateTransaction(tx, { commitment: "processed" });
+        console.log("optimizedSendAndConfirmTransaction simulationResult", simulationResult.value.logs)
         if (simulationResult.value.err) await catchSimulationErrors(simulationResult);
 
         const signatureRaw: any = tx.signatures[0];
@@ -866,7 +867,7 @@ export async function optimizedSendAndConfirmTransaction(
 
     } catch (error:any) {
         console.error(`${new Date().toISOString()} Error: ${error.message}`);
-        throw new Error(`Transaction failed: ${error.message}`)
+        throw new Error(`❌ Transaction failed!`)
     }
 
     if (!confirmedTx) {

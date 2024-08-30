@@ -126,7 +126,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       amountOut: out.amountOut, // out.amountOut means amount 'without' slippage
       fixedSide: 'in',
       inputMint: mintIn.address,    
-        computeBudgetConfig: {
+      computeBudgetConfig: {
         microLamports: input.customPriorityFee * 1e9,
       }
     })
