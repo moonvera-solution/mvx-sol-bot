@@ -1,6 +1,6 @@
 
 import { PublicKey } from '@metaplex-foundation/js';
-import { getTokenMetadata, getuserShitBalance, getUserTokenBalanceAndDetails } from '../../service/feeds';
+import { getLiquityFromOwner, getTokenMetadata, getuserShitBalance, getUserTokenBalanceAndDetails } from '../../service/feeds';
 
 import { formatNumberToKOrM, getSolBalance, getSwapAmountOutPump } from '../../service/util';
 import { Keypair, Connection } from '@solana/web3.js';
@@ -212,12 +212,15 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       ]);
       // console.log('quoteResponse:', quoteResponse)
       console.log('userPosition:', userPosition)
-      
+
       const {
+        
         birdeyeURL,
         dextoolsURL,
         dexscreenerURL,
       } = tokenMetadataResult;
+    
+
       const lastRouteHop_5 = Number(jupPriceImpact_5.outAmount)
       const jupTokenValue: any = Object.values(jupTokenRate.data);
       let jupTokenPrice = 0;
@@ -258,6 +261,10 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const {
         tokenData,
       } = tokenMetadataResult;
+      const creatorAddress = birdeyeData && birdeyeData.response2.data.creatorAddress!= null ? birdeyeData.response2.data.creatorAddress : tokenData.updateAuthorityAddress.toBase58();
+      const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), new PublicKey(token), connection);
+      const lpSupply = lpSupplyOwner.userTokenBalance;
+      const islpBurnt = lpSupply > 0 ? "❌ No" : "✅ Yes";
       const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value :  Number(jupSolPrice.data.SOL.price);
       // const ammAddress = jupPriceImpact_5.routePlan[jupPriceImpact_5?.routePlan?.length - 1].swapInfo.ammKey;
       const tokenPriceUSD = birdeyeData
@@ -308,12 +315,16 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       console.log('profitPercentage:', profitPercentage)
       ctx.session.userProfit = profitPercentage
       const tokenToReceive_5 = ((lastRouteHop_5) / Math.pow(10, userTokenDetails.decimals))
-      const newPrice = 5 / tokenToReceive_5;
+      const freezable = birdeyeData?.response2.data.freezeable ? "⚠️ Be careful: This token is freezable." : "✅ Not freezable.";
       // const priceImpact_5 = 1 + ((newPrice - tokenPriceSOL) / tokenPriceSOL) * 100;
       let messageText = `<b>------ ${tokenData.name}(${tokenData.symbol}) ------</b> | 📄 CA: <code>${token}</code> <a href="copy:${token}">🅲</a>\n` +
         `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
         `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
         `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
+
+        `<b>LP Burnt:</b> ${islpBurnt} | <b>Freezable:</b> ${freezable} \n\n` +   
+ 
+        `---<code>Token Details</code>---\n` +
         `Market Cap: <b>${Mcap}</b> USD\n` +
         `Price:  <b>${tokenPriceSOL.toFixed(9)} SOL</b> | <b>${(tokenPriceUSD).toFixed(9)} USD</b> \n\n` +
         `---<code>Trade Position</code>---\n` +

@@ -1,6 +1,6 @@
 import { getpoolDataCpmm, getRayCpmmPoolKeys, raydium_cpmm_swap } from "../../service/dex/raydium/cpmm/index";
 import { PublicKey } from '@metaplex-foundation/js';
-import { getTokenMetadata, getuserShitBalance, getUserTokenBalanceAndDetails } from '../../service/feeds';
+import { getLiquityFromOwner, getTokenMetadata, getuserShitBalance, getUserTokenBalanceAndDetails } from '../../service/feeds';
 import dotenv from "dotenv"; dotenv.config();
 import { formatNumberToKOrM, getSolBalance, getSwapAmountOutCpmm, getSwapAmountOutPump, updatePositions } from '../../service/util';
 import { Keypair, Connection } from '@solana/web3.js';
@@ -258,6 +258,12 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
     ? birdeyeData.birdeyePosition.data.totalUsd : NaN;
 
   const netWorthSol = netWorth / solPrice;
+  const creatorAddress = birdeyeData && birdeyeData.response2.data.creatorAddress!= null ? birdeyeData.response2.data.creatorAddress : tokenData.updateAuthorityAddress.toBase58();
+  const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), tokenAddress, connection);
+  const lpSupply = lpSupplyOwner.userTokenBalance;
+  const islpBurnt = lpSupply > 0 ? "❌ No" : "✅ Yes";
+  const freezable = birdeyeData?.response2.data.freezeable ? "⚠️ Be careful: This token is freezable." : "✅ Not freezable.";
+
   try {
 
     const formattedmac = await formatNumberToKOrM(mcap) ?? "NA";
@@ -273,6 +279,8 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
       `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
       `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
       `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
+      `<b>LP Burnt:</b> ${islpBurnt} | <b>Freezable:</b> ${freezable} \n\n` +   
+      `<b>------ Token Details ------</b>\n` +
       `Market Cap: <b>${formattedmac} USD</b>\n` +
       `Token Price: <b> ${tokenPriceUSD.toFixed(9)} USD</b> | <b> ${tokenPriceSOL.toFixed(9)} SOL</b> \n\n` +
       `---<code>Trade Position</code>---\n` +
