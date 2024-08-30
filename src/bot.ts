@@ -24,7 +24,7 @@ import {
   display_pumpFun,
   display_raydium_details,
   display_cpmm_raydium_details,
-  display_snipe_options,
+  // display_snipe_options,
   swap_pump_fun,
   jupiterSwap,
   display_limitOrder_token_details,
@@ -55,9 +55,9 @@ import { handleSettings } from "./service/settings";
 import { getSolanaDetails } from "./api";
 import { setSnipe, snipperON } from "./service/portfolio/strategies/snipper";
 import { getSolBalance, getTargetDate, sendSol } from "./service/util";
-import { getRayPoolKeys } from "./service/dex/raydium/utils/formatAmmKeysById";
+import { getAmmV4PoolKeys, getRayPoolKeys } from "./service/dex/raydium/utils/formatAmmKeysById";
 import { _generateReferralLink, _getReferralData } from "../src/db/mongo/crud";
-import {CONNECTION} from "./config";
+import {CONNECTION, SOL_ADDRESS} from "./config";
 import {
   Portfolios,
   Referrals,
@@ -70,6 +70,8 @@ import { ray_cpmm_swap } from "./views/raydium/swapCpmmView";
 import { getTokenMetadata, getuserShitBalance } from "./service/feeds";
 import { review_limitOrder_details_sell, submit_limitOrder_sell } from "./views/jupiter/limitOrderView";
 import { handleCloseInputUser } from "./views/util/commons";
+import { display_snipe_amm_options, display_snipe_cpmm_options } from "./views/raydium/snipeView";
+import { verify_position_dex } from "./views/util/verifySwapDex";
 // import { review_limitOrder_details_sell } from "./views/jupiter/limitOrderView";
 // import { br } from "@raydium-io/raydium-sdk-v2/lib/type-9fe71e3c";
 const express = require("express");
@@ -489,7 +491,11 @@ bot.on("message", async (ctx) => {
           ctx.session.snipeToken instanceof PublicKey
             ? ctx.session.snipeToken.toBase58()
             : ctx.session.snipeToken;
-        await display_snipe_options(ctx, false, snipeToken);
+            if(!ctx.session.isCpmmPool){
+        await display_snipe_amm_options(ctx, false, snipeToken);
+      } else{
+        await display_snipe_cpmm_options(ctx, false, snipeToken);
+      }
         break;
       }
       case "rug_check": {
@@ -747,6 +753,15 @@ bot.on("message", async (ctx) => {
             const amt = Number(msgTxt);
             if (!isNaN(amt)) {
               if (ctx.session.positionToken && ctx.session.swaptypeDex == "ray_swap") {
+                const isOnJup = await verify_position_dex(ctx,ctx.session.positionToken)
+                console.log('isOnJup', isOnJup);
+                if(isOnJup){
+                  ctx.session.jupSwap_token = ctx.session.positionToken;
+                  ctx.session.jupSwap_amount = amt;
+                  ctx.session.jupSwap_side = "buy";
+                  await jupiterSwap(ctx);
+                  return;
+                }
                 const poolkey = await getRayPoolKeys(
                   ctx,
                   ctx.session.positionToken
@@ -763,6 +778,15 @@ bot.on("message", async (ctx) => {
                 ctx.session.jupSwap_token = ctx.session.positionToken;
                 await jupiterSwap(ctx);
               } else if(ctx.session.positionToken &&  ctx.session.swaptypeDex == "cpmm_swap"){
+                const isOnJup = await verify_position_dex(ctx,ctx.session.positionToken)
+                console.log('isOnJup', isOnJup);
+                if(isOnJup){
+                  ctx.session.jupSwap_token = ctx.session.positionToken;
+                  ctx.session.jupSwap_amount = amt;
+                  ctx.session.jupSwap_side = "buy";
+                  await jupiterSwap(ctx);
+                  return;
+                }
                 ctx.session.cpmm_amountIn = amt;
                 ctx.session.cpmm_side = "buy";
                 ctx.session.jupSwap_token = ctx.session.positionToken;
@@ -775,6 +799,15 @@ bot.on("message", async (ctx) => {
                   ctx.session.positionToken
                 );
                 if (poolKeys) {
+                  const isOnJup = await verify_position_dex(ctx,ctx.session.positionToken)
+                  console.log('isOnJup', isOnJup);
+                  if(isOnJup){
+                    ctx.session.jupSwap_token = ctx.session.positionToken;
+                    ctx.session.jupSwap_amount = amt;
+                    ctx.session.jupSwap_side = "buy";
+                    await jupiterSwap(ctx);
+                    return;
+                  }
                   ctx.session.activeTradingPoolId = poolKeys ;
                   await handle_radyum_swap(
                     ctx,
@@ -911,23 +944,22 @@ bot.on("message", async (ctx) => {
             }
 
             ctx.session.activeTradingPoolId = await getRayPoolKeys(ctx, msgTxt);
-            if (!ctx.session.activeTradingPoolId) {
+            console.log('ctx.session.activeTradingPoolId', ctx.session.activeTradingPoolId);
+            if (ctx.session.activeTradingPoolId && !ctx.session.isCpmmPool) {
               ctx.session.snipperLookup = true;
               ctx.session.snipeToken = new PublicKey(msgTxt);
-              await display_snipe_options(ctx, false, msgTxt);
-
+              await display_snipe_amm_options(ctx, false, msgTxt);
             } else {
               console.log('ctx.session.isCpmmPool', ctx.session.isCpmmPool); 
-              ctx.session.snipeToken = new PublicKey(
-                ctx.session.isCpmmPool ?
-                ctx.session.activeTradingPool.mintB.address :
-                ctx.session.activeTradingPool.baseMint
-              );
+               console.log("cpmmKeys here", ctx.session.cpmmPoolInfo);
 
-              display_snipe_options(
+                ctx.session.snipeToken = ctx.session.cpmmPoolInfo.mintA.address == SOL_ADDRESS ? ctx.session.cpmmPoolInfo.mintB.address : ctx.session.cpmmPoolInfo.mintA.address;
+
+
+              display_snipe_cpmm_options(
                 ctx,
                 false,
-                ctx.session.snipeToken.toBase58()
+                String(ctx.session.snipeToken)
               );
             }
           } else if (
@@ -1080,21 +1112,19 @@ bot.on("message", async (ctx) => {
                 await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
                 return;
               }
-      
+              await ctx.api.sendMessage(chatId, "Enter the token target price (in SOL)");
+              ctx.session.latestCommand = "set_limit_order_price";
               // Create an inline keyboard for the user to choose between target price or percentage
-              const options = {
-                reply_markup: {
-                  inline_keyboard: [
-                    [{ text: "Enter Target Price (in SOL)", callback_data: "set_target_price" }],
-                    [{ text: "Enter Percentage (+/-)", callback_data: "set_percentage" }]
-                  ]
-                }
-              };
-      
-              await ctx.api.sendMessage(chatId, "Choose how to set your target:", options);
-              ctx.session.latestCommand = "choose_target_option";
-              break;
-      
+              // const options = {
+              //   reply_markup: {
+              //     inline_keyboard: [
+              //       [{ text: "Enter Target Price (in SOL)", callback_data: "set_limit_order_price" }],
+              //       [{ text: "Enter Percentage (+/-)", callback_data: "set_percentage" }]
+              //     ]
+              //   }
+              // };
+              // await ctx.api.sendMessage(chatId, "Choose how to set your target:", options);
+              break;     
             } else {
               return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
             }
@@ -1187,8 +1217,19 @@ bot.on("callback_query", async (ctx: any) => {
       const sellPercentage = parts[1]; // '25', '50', '75', or '100'
       const positionIndex = parts[2]; // Position index
       if (ctx.session.swaptypeDex == "ray_swap") {
-        const poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
-        ctx.session.activeTradingPoolId = poolKeys ;
+        console.log('ctx.session.positionPool[positionIndex]', ctx.session.positionPool[positionIndex]);
+        const isOnJup = await verify_position_dex(ctx,ctx.session.positionPool[positionIndex])
+        console.log('isOnJup', isOnJup);
+        if(isOnJup){
+          ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
+          ctx.session.jupSwap_amount = sellPercentage;
+          ctx.session.jupSwap_side = "sell";
+          await jupiterSwap(ctx);
+          return;
+        }
+        const poolKeysID = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
+        ctx.session.activeTradingPoolId = poolKeysID;
+        await getAmmV4PoolKeys(ctx);
         await handle_radyum_swap(ctx,  "sell", Number(sellPercentage));
         return;
       } else if (ctx.session.swaptypeDex == "jup_swap") {
@@ -1199,13 +1240,34 @@ bot.on("callback_query", async (ctx: any) => {
         await jupiterSwap(ctx);
 
       } else if (ctx.session.swaptypeDex == "cpmm_swap") {
+        console.log('ctx.session.positionPool[positionIndex]', ctx.session.positionPool[positionIndex]);
+        const isOnJup = await verify_position_dex(ctx,ctx.session.positionPool[positionIndex])
+        console.log('isOnJup', isOnJup);
+        if(isOnJup){
+          ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
+          ctx.session.jupSwap_amount = sellPercentage;
+          ctx.session.jupSwap_side = "sell";
+          await jupiterSwap(ctx);
+          return;
+        }
         ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
+        const poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
+        ctx.session.cpmmPoolId = poolKeys;
         ctx.session.cpmm_amountIn = sellPercentage;
         ctx.session.cpmm_side = "sell";
         await ray_cpmm_swap(ctx);
       } else {
         const poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
         if (poolKeys) {
+          const isOnJup = await verify_position_dex(ctx,ctx.session.positionPool[positionIndex])
+          console.log('isOnJup', isOnJup);
+          if(isOnJup){
+            ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
+            ctx.session.jupSwap_amount = sellPercentage;
+            ctx.session.jupSwap_side = "sell";
+            await jupiterSwap(ctx);
+            return;
+          }
           ctx.session.activeTradingPoolId = poolKeys ;
           await handle_radyum_swap(ctx, "sell", sellPercentage);
         } else {
@@ -1255,6 +1317,18 @@ bot.on("callback_query", async (ctx: any) => {
 
 
     switch (data) {
+
+      // case 'set_limit_order_price':{
+      //   await ctx.api.sendMessage(chatId, "Enter the token target price (in SOL)");
+      //   ctx.session.latestCommand = "set_limit_order_price";
+      //   break;
+      // }
+      // case 'set_percentage_order':{
+      //   ctx.session.orderPercentPrice = true;
+      //   await ctx.api.sendMessage(chatId, "Enter the percentage (+/-) from the current price");
+      //   ctx.session.latestCommand = "set_limit_order_price";
+      //   break;
+      // }
       case "refer_friends": {
         const chatId = ctx.chat.id;
         const username = ctx.update.callback_query.from.username; //ctx.from.username;
@@ -1394,7 +1468,11 @@ bot.on("callback_query", async (ctx: any) => {
         await resetWallet(ctx);
         break;
       case "refresh_snipe":
-        await display_snipe_options(ctx, true);
+        if(ctx.session.isCpmmPool){
+          await display_snipe_cpmm_options(ctx, true, ctx.session.snipeToken);
+        } else{
+          await display_snipe_amm_options(ctx, true);
+        } 
         break;
       case "import_wallet": {
         ctx.session.latestCommand = "import_wallet";
@@ -1430,6 +1508,7 @@ bot.on("callback_query", async (ctx: any) => {
         break;
       case "closing":
         await handleCloseKeyboard(ctx);
+        // ctx.session.latestCommand = "jupiter_swap";
         break;
       case "delete_input":{
         await handleCloseInputUser(ctx);
@@ -1477,17 +1556,14 @@ bot.on("callback_query", async (ctx: any) => {
 
       case "snipe": {
         ctx.session.snipeStatus = true;
-        // const referralRecord = await Referrals.findOne({
-        //   referredUsers: chatId,
-        // });
-        // if (referralRecord) {
-        //   ctx.session.referralCommision = referralRecord.commissionPercentage;
-        //   ctx.session.generatorWallet = referralRecord.generatorWallet;
-        // }
-
         if (ctx.session.latestCommand === "rug_check") {
           ctx.session.latestCommand = "snipe";
-          await display_snipe_options(ctx, false, ctx.session.rugCheckToken);
+          if(!ctx.session.isCpmmPool){
+          await display_snipe_amm_options(ctx, false, ctx.session.rugCheckToken);
+        } else{
+          await display_snipe_cpmm_options(ctx, false, ctx.session.rugCheckToken);
+
+        }
         } else {
           ctx.session.latestCommand = "snipe";
           await ctx.api.sendMessage(ctx.chat.id, "Enter the token Address you would like to snipe.");
@@ -1816,7 +1892,7 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.priorityFees = PriotitizationFeeLevels.LOW;
         ctx.session.ispriorityCustomFee = false;
         if (ctx.session.latestCommand === "snipe") {
-          await display_snipe_options(ctx, true);
+          await display_snipe_amm_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_position") {
           await display_single_position(ctx, true);
 
@@ -1833,7 +1909,7 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.priorityFees = PriotitizationFeeLevels.MEDIUM;
         ctx.session.ispriorityCustomFee = false;
         if (ctx.session.latestCommand === "snipe") {
-          await display_snipe_options(ctx, true);
+          await display_snipe_amm_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_position") {
           await display_single_position(ctx, true);
 
@@ -1851,7 +1927,7 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.priorityFees = PriotitizationFeeLevels.HIGH;
         ctx.session.ispriorityCustomFee = false;
         if (ctx.session.latestCommand === "snipe") {
-          await display_snipe_options(ctx, true);
+          await display_snipe_amm_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_position") {
           await display_single_position(ctx, true);
 
@@ -1867,7 +1943,7 @@ bot.on("callback_query", async (ctx: any) => {
       case "priority_custom": {
         ctx.session.ispriorityCustomFee = true;
         if (ctx.session.latestCommand === "snipe") {
-          await display_snipe_options(ctx, true);
+          await display_snipe_amm_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_position") {
           await display_single_position(ctx, true);
         } else if (ctx.session.latestCommand === "pump_fun") {

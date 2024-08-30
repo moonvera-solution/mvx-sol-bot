@@ -1,5 +1,5 @@
 import { AmmV4Keys, AmmV5Keys } from '@raydium-io/raydium-sdk-v2';
-import { aN } from '@raydium-io/raydium-sdk-v2/lib/api-33b5ab27';
+import { aN, bo } from '@raydium-io/raydium-sdk-v2/lib/api-33b5ab27';
 import { PublicKey } from '@solana/web3.js';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import dotenv from "dotenv";
@@ -87,6 +87,7 @@ export interface ISESSION_DATA {
   limitOrders_amount: number,
   limitOrders_price: number,
   limitOrders_time: number,
+  orderPercentPrice: boolean,
   poolSchedule: {
     status: String,
     baseDecimals: Number,
@@ -199,6 +200,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   limitOrders_amount: 0,
   limitOrders_price: 0,
   limitOrders_time: 0,
+  orderPercentPrice: false,
   jupSwap_token: '',
   jupSwap:{token:'',side:'',amount:0},
   poolSchedule: {

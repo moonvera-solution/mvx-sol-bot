@@ -57,7 +57,7 @@ export async function submit_limitOrder(ctx: any) {
         ` <a href="https://solscan.io/tx/${txSig}">View transaction</a> on Solscan.\n`+
         `The order will be executed when the price reaches ${(targetPrice).toFixed(9)} SOL.`;
       await ctx.api.sendMessage(chatId, confirmMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
-
+      ctx.session.latestCommand = 'jupiter_swap';
     }
   });
 }
@@ -106,6 +106,7 @@ export async function submit_limitOrder_sell(ctx: any) {
         ` <a href="https://solscan.io/tx/${txSig}">View transaction</a> on Solscan.\n`+
         `The order will be executed when the price reaches ${(targetPrice).toFixed(9)} SOL.`;
       await ctx.api.sendMessage(chatId, confirmMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
+      ctx.session.latestCommand = 'jupiter_swap';
 
     }
    
@@ -114,17 +115,19 @@ export async function submit_limitOrder_sell(ctx: any) {
 
 export async function review_limitOrder_details(ctx: any, isRefresh: boolean) {
   const timeTxt = ctx.session.limitOrders_time ? new Date(ctx.session.limitOrders_time).toLocaleString() : "NA";
-  const baseMint = ctx.session.limitOrders_token;
+  const baseMint = ctx.session.limitOrders_token.toBase58();
+  console.log('baseMint',baseMint);
   const tokenAddress = new PublicKey(baseMint);
   const[tokenMetadataResult,expectedAmountOut, birdeyeData,jupTokenRate, solJup] = await Promise.all([
     getTokenMetadata(ctx, tokenAddress.toBase58()),
     CalculateLimitOrderAmountout(SOL_ADDRESS, ctx.session.limitOrders_amount, ctx.session.limitOrders_token, ctx.session.limitOrders_price, ctx),
     getTokenDataFromBirdEyePositions(baseMint, ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].publicKey),
     fetch(`https://price.jup.ag/v6/price?ids=${baseMint}&vsToken=So11111111111111111111111111111111111111112`).then((response) => response.json()),
-    fetch(`https://price.jup.ag/v6/price?ids=${baseMint}&vsToken=So11111111111111111111111111111111111111112`).then((response) => response.json())
+    fetch(`https://price.jup.ag/v6/price?ids=SOL`).then((response) => response.json()),
   ]);
   
-  let currentJupPrice = jupTokenRate.data[baseMint].price;
+  console.log('jupTokenRate',jupTokenRate.data);
+  let currentJupPrice = jupTokenRate.data.price;
 
   const birdeyeURL = `https://birdeye.so/token/${baseMint}?chain=solana`;
   const dextoolsURL = `https://www.dextools.io/app/solana/pair-explorer/${baseMint}`;
@@ -228,7 +231,7 @@ export async function review_limitOrder_details_sell(ctx: any, isRefresh: boolea
 
 export async function display_limitOrder_token_details(ctx: any, isRefresh: boolean) {
   try {
-  const tokenAddress= (ctx.session.limitOrders_token);
+  const tokenAddress= (ctx.session.limitOrders_token.toBase58());
   const chatId = ctx.chat.id;
   let userWallet: any;
   const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
@@ -272,8 +275,9 @@ export async function display_limitOrder_token_details(ctx: any, isRefresh: bool
       dexscreenerURL,
     } = tokenMetadataResult;
     const jupTokenValue: any = Object.values(jupTokenRate.data);
+    console.log('jupTokenValue',jupTokenValue);
     let jupTokenPrice = 0;
-    if(quoteResponse?.errorCode === 'TOKEN_NOT_TRADABLE'){  
+    if(quoteResponse?.errorCode === 'TOKEN_NOT_TRADABLE' || jupTokenValue.length == 0){  
       await ctx.api.sendMessage(chatId, `🔴 <b>Sorry you cannot sert a limit order for this token at the moment, try later.</b> `, { parse_mode: "HTML" });
       return;
     }
@@ -361,7 +365,9 @@ export async function display_open_orders(ctx: any, isRefresh: boolean) {
 
   let messageText = '';
   for (const order of orders) {
+    console.log('order',order);
     let TokenTocheck = order.account.inputMint === SOL_ADDRESS ? order.account.outputMint : order.account.inputMint;
+    console.log('TokenTocheck',TokenTocheck);
     const [tokenMetadataResult, birdeyeData] = await  Promise.all([
     getTokenMetadata(ctx, TokenTocheck),
     getTokenDataFromBirdEyePositions(TokenTocheck, wallet.publicKey.toBase58())
@@ -379,7 +385,7 @@ export async function display_open_orders(ctx: any, isRefresh: boolean) {
     let OutSymbol = order.account.outputMint === SOL_ADDRESS ? 'SOL' : tokenMetadataResult.tokenData.symbol;
     messageText +=
       `<b> 🗃️ Open Orders:</b> \n\n` +
-      `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${order.account.outputMint}</code> <a href="copy:${order.account.outputMint}">🅲</a>\n` +
+      `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${TokenTocheck}</code> <a href="copy:${TokenTocheck}">🅲</a>\n` +
       `Order type: ${orderType} \n` +
       `Order Amount: ${orderAmount} <b>${symbolToUse}</b> \n` +
       `Expected amount: ${ExpectedTokenAmount} <b>${OutSymbol}</b> \n` +

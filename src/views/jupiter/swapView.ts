@@ -211,7 +211,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         fetch(swapUrl).then(res => res.json())
       ]);
       // console.log('quoteResponse:', quoteResponse)
-    
+      console.log('userPosition:', userPosition)
       
       const {
         birdeyeURL,

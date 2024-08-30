@@ -26,6 +26,7 @@ export async function handle_radyum_swap(
   try {
     let userSolBalance = await getSolBalance(userWallet.publicKey, connection);
     let tokenIn: any, outputToken: any;
+    console.log('ammPoolKeys:: ', ctx.session.AmmPoolKeys);
     const tokenOut = ctx.session.AmmPoolKeys.mintA.address
 
     const AmmPoolId = ctx.session.AmmPoolKeys.id;

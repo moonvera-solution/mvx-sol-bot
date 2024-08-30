@@ -5,6 +5,8 @@ export async function handleCloseKeyboard(ctx: any) {
     try {
       // Delete the message with the inline keyboard
       await ctx.api.deleteMessage(chatId, messageId);
+      ctx.session.latestCommand = 'jupiter_swap';
+
       // console.info(`Message with keyboard deleted for chatId: ${chatId}`);       
     } catch (error: any) {
       console.error(`Error in handleCloseKeyboard for chatId ${chatId}:`, error.message);

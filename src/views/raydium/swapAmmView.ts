@@ -51,11 +51,6 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
   const quoteDecimals = Number(rpcData.quoteDecimal);
   const baseMint = rpcData.baseMint;
   const tokenAddress = new PublicKey(baseMint);
-  // console.log('baseDecimals:', baseDecimals);
-  // console.log('quoteDecimals:', quoteDecimals);
-  // console.log('baseReserve:', Number(baseReserve));
-  // console.log('quoteReserve:', Number(quoteReserve));
-  // console.log('tokenAddress:', tokenAddress);
 
   const [
     birdeyeData,
@@ -86,7 +81,6 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
     } = tokenMetadataResult;
   // console.log("quoteToken:", quoteToken);
   const solPrice = birdeyeData? birdeyeData.solanaPrice.data.value : Number(jupSolPrice.data.SOL.price);
-
 
 
   const tokenPriceUSD = birdeyeData &&

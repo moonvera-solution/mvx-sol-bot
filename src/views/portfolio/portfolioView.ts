@@ -355,7 +355,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
         && birdeyeData.response.data
         && birdeyeData.response.data.price != null  // This checks for both null and undefined
         ? birdeyeData.response.data.price
-        : priceCpmm * solPrice;
+        : jupTokenPrice;
       }
       else {
         const tokenRatePuMP =  await getSwapDetails(pos.baseMint,SOL_ADDRESS, 1, 0 )

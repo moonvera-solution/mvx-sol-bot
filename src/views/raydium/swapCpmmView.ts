@@ -13,6 +13,7 @@ import BigNumber from 'bignumber.js';
 import { saveUserPosition } from '../../service/portfolio/positions';
 import { createTradeImage } from "../util/image";
 import { InputFile } from "grammy";
+import { M } from "@raydium-io/raydium-sdk-v2/lib/raydium-b84847b9";
 const fs = require('fs');
 
 export async function ray_cpmm_swap(ctx: any) {
@@ -170,7 +171,8 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
     balanceInSOL,
     userPosition,
     userTokenDetails,
-    jupSolPrice
+    jupSolPrice,
+    jupTokenRate
 
   ] = await Promise.all([
     getuserShitBalance(userPublicKey, tokenAddress, connection),
@@ -182,25 +184,36 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
     fetch(
       `https://price.jup.ag/v6/price?ids=SOL`
     ).then((response) => response.json()),
-  ]);
-  const cpmmSupply = new BigNumber(tokenMetadataResult.tokenData.mint.supply.basisPoints)
+    fetch(`https://price.jup.ag/v6/price?ids=${tokenAddress.toBase58()}&vsToken=So11111111111111111111111111111111111111112`).then((response) => response.json()),
 
-  const priceCpmm = ctx.session.cpmmPoolInfo.mintAmountA / ctx.session.cpmmPoolInfo.mintAmountB;
+  ]);
+  const jupTokenValue: any = Object.values(jupTokenRate.data);
+  // console.log('jupTokenValue', jupTokenValue);
+  let jupTokenPrice = 0
+  if(jupTokenValue[0] && jupTokenValue[0].price) {
+    jupTokenPrice = jupTokenValue[0].price;
+
+  }
+  
+  // console.log('jupTokenPrice', jupTokenPrice);
+  const cpmmSupply = new BigNumber(tokenMetadataResult.tokenData.mint.supply.basisPoints)
+  // console.log('cpmmSupply', cpmmSupply);
 
   const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : Number(jupSolPrice.data.SOL.price);
   // console.log('cpmmPrice', priceCpmm * solPrice);
 
   const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
-  const tokenSupply = Number(cpmmSupply) / decimals
+  const tokenSupply = Number(cpmmSupply) / Math.pow(10, decimals);
+  // console.log('tokenSupply', tokenSupply);
   const tokenPriceUSD = birdeyeData
     && birdeyeData.response
     && birdeyeData.response.data
     && birdeyeData.response.data.price != null  // This checks for both null and undefined
     ? birdeyeData.response.data.price
-    : priceCpmm * solPrice;
+    : Number(jupTokenPrice) * Number(solPrice);
 
   // console.log('tokenPriceUSD', tokenPriceUSD);
-  const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solPrice) : Number(priceCpmm);
+  const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solPrice) : Number(jupTokenPrice);
 
   let specificPosition;
   if (userPosition[0] && userPosition[0].positions && userPosition[0].positions != undefined) {

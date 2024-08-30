@@ -58,15 +58,15 @@ export async function raydium_cpmm_swap(
   const sellAddress = poolInfo.mintA.address === SOL_ADDRESS ? poolInfo.mintB.address : poolInfo.mintA.address;
 
   const inputMint = tradeSide == 'buy' ? buyAddress : sellAddress;
-  const baseIn = inputMint === poolInfo.mintA.address
+  const baseIn = inputMint === poolInfo.mintA.address;
   if (!isValidCpmm(poolInfo.programId)) throw new Error('target pool is not CPMM pool');
-
+  
   const swapResult = CurveCalculator.swap(
     new BN(inputAmount),
     baseIn ? rpcData.baseReserve : rpcData.quoteReserve,
     baseIn ? rpcData.quoteReserve : rpcData.baseReserve,
     rpcData.configInfo!.tradeFeeRate
-  )
+  );
 
     poolInfo.config.tradeFeeRate = 0
     poolInfo.feeRate = 0
@@ -76,7 +76,7 @@ export async function raydium_cpmm_swap(
     poolInfo,
     poolKeys,
     swapResult,
-    slippage: 0,
+    slippage: slippage * 100 / 10_00,
     baseIn,
     computeBudgetConfig: {
       microLamports: ctx.session.customPriorityFee * 1e9,
