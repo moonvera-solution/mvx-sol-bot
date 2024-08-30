@@ -385,7 +385,17 @@ bot.command("snipe", async (ctx) => {
     console.log("bot on snipe cmd", error);
   }
 });
+bot.command("limitorders", async (ctx) => {
+  try{
+    ctx.session.latestCommand = "limitOrders";
+    await ctx.api.sendMessage(ctx.chat.id, "Enter token address to set limit order.");
+  
+  } catch (error: any) {
+    console.log("bot on limitOrders cmd", error);
+  }
+ 
 
+});
 bot.command("settings", async (ctx) => {
   await _validateSession(ctx);
   backupSession = ctx.session;
