@@ -227,25 +227,22 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
     let pos = userPosition[0].positions[currentIndex];
     token = String(pos.baseMint);
     console.log('tokenzzz', token);
-    const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(
-      new PublicKey(userWallet),
-      {
-        mint: new PublicKey(token),
-        programId: TOKEN_PROGRAM_ID
-      }
-    );
+    // const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(
+    //   new PublicKey(userWallet),
+    //   {
+    //     mint: new PublicKey(token),
+    //     programId: TOKEN_PROGRAM_ID
+    //   }
+    // );
   
-    let userBalance = new BigNumber(
-      tokenAccountInfo.value[0]
-      && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount
-    );
-
+    let userBalance = await getuserShitBalance(userWallet, new PublicKey(token), connection);
+    console.log('userBalance', userBalance.userTokenBalance);
     if (
       pos.amountIn == 0
       || pos.amountOut == 0
       || pos.amountOut < 0
       || pos.amountIn < 0
-      || userBalance.toNumber() == 0
+      || userBalance.userTokenBalance == 0
     ) {
       await UserPositions.updateOne(
         { walletId: userWallet },
@@ -286,22 +283,24 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       const token = String(pos.baseMint);
       const tradeDex = String(pos.tradeType);
       ctx.session.swaptypeDex = pos.tradeType;
-      const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
-      let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
-
+      // const tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(new PublicKey(userWallet), { mint: new PublicKey(token), programId: TOKEN_PROGRAM_ID });
+      // let userBalance = new BigNumber(tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.amount);
+      // console.log('userBalance', userBalance.toNumber()); 
+      let shitBalance = await getuserShitBalance(userWallet, new PublicKey(token), connection);
+      console.log('shitBalance', shitBalance);
       if (
         pos.amountIn == 0
         || pos.amountOut == 0
         || pos.amountOut < 0
         || pos.amountIn < 0
-        || userBalance.toNumber() == 0
+        || shitBalance.userTokenBalance == 0
       ) {
         await UserPositions.updateOne({ walletId: userWallet }, { $pull: { positions: { baseMint: pos.baseMint } } })
           .then(() => { ctx.session.positionIndex = 0; currentIndex = 0; });
         return;
       }
-
-      if (!userBalance.gt(0)) {
+      
+      if (shitBalance.userTokenBalance <= 0) {
         await UserPositions.updateOne({ walletId: userWallet }, { $pull: { positions: { baseMint: token } } })
           .then(() => { ctx.session.positionIndex = 0; currentIndex = 0; });
         return;
