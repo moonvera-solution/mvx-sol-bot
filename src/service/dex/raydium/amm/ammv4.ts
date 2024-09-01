@@ -135,8 +135,8 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       fixedSide: 'in',
       inputMint: mintIn.address,   
       config: {
-        inputUseSolBalance: true, // default: true, if you want to use existed wsol token account to pay token in, pass false
-        outputUseSolBalance: true, // default: true, if you want to use existed wsol token account to receive token out, pass false
+//        inputUseSolBalance: true, // default: true, if you want to use existed wsol token account to pay token in, pass false
+  //      outputUseSolBalance: true, // default: true, if you want to use existed wsol token account to receive token out, pass false
         associatedOnly: true, // default: true, if you want to use ata only, pass true
       }, 
       computeBudgetConfig: {
