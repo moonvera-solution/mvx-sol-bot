@@ -66,7 +66,7 @@ export async function raydium_cpmm_swap(
     baseIn ? rpcData.baseReserve : rpcData.quoteReserve,
     baseIn ? rpcData.quoteReserve : rpcData.baseReserve,
     rpcData.configInfo!.tradeFeeRate
-  );
+  )
 
     poolInfo.config.tradeFeeRate = 0
     poolInfo.feeRate = 0
@@ -81,6 +81,9 @@ export async function raydium_cpmm_swap(
     computeBudgetConfig: {
       microLamports: ctx.session.customPriorityFee * 1e9,
     }
+  }).catch((e) => {
+    console.log('error', e)
+    throw new Error('Failed transaction')
   });
 
   const solAmount = tradeSide == 'buy' ? new BigNumber(swapResult.sourceAmountSwapped.toNumber()) : new BigNumber(swapResult.destinationAmountSwapped.toNumber());

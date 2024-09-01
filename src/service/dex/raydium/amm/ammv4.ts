@@ -101,8 +101,9 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
     const [baseReserve, quoteReserve, status] = [input.rpcData.baseReserve, input.rpcData.quoteReserve, input.rpcData.status.toNumber()]
     const mintIn = input.side === 'buy' ? modifiedPoolInfo.mintB : modifiedPoolInfo.mintA
     const mintOut = input.side === 'sell' ? modifiedPoolInfo.mintA : modifiedPoolInfo.mintB
-
-    const out = raydium.liquidity.computeAmountOut({
+    let out: any;
+  try{
+    out = raydium.liquidity.computeAmountOut({
       poolInfo: {
         ...modifiedPoolInfo,
         baseReserve,
@@ -116,6 +117,11 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       slippage: input.slippage, // range: 1 ~ 0.0001, means 100% ~ 0.01%
 
     })
+  }catch(e){
+    console.log('error', e)
+    throw new Error('Failed transaction')
+  }
+
     // console.log('amountIn', input.amountIn)
     console.log('out', out)
     
@@ -129,6 +135,9 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       computeBudgetConfig: {
         microLamports: input.customPriorityFee * 1e9,
       }
+    }).catch((e) => {
+      console.log('error', e)
+      throw new Error('Failed transaction')
     })
   
     const solAmount = input.side == 'buy' ? new BigNumber(input.amountIn) : new BigNumber(out.minAmountOut.toNumber());
