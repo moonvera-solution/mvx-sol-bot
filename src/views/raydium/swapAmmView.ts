@@ -39,7 +39,7 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
   
   const { poolKeys, rpcData, poolInfo } = await getAmmV4PoolKeys(ctx);
 
-  console.log("poolKeys:", poolKeys); 
+  // console.log("poolKeys:", poolKeys); 
   const LpAddress = poolKeys.mintLp.address;
   const [baseReserve, quoteReserve, status] = [
     rpcData.baseReserve,
@@ -102,6 +102,7 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
       new PublicKey(pos.baseMint).equals(tokenAddress)
     );
   }
+  console.log("specificPosition:", specificPosition);
   let initialInUSD = 0;
   let initialInSOL = 0;
   let valueInUSD: any;
@@ -112,6 +113,7 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
   if (specificPosition && specificPosition.amountOut) {
     valueInUSD = specificPosition.amountOut - shitBalance.userTokenBalance * Math.pow(10, baseDecimals) <  5 ? shitBalance.userTokenBalance * Number(tokenPriceUSD): "N/A";
     valueInSOL = specificPosition.amountOut - shitBalance.userTokenBalance * Math.pow(10, baseDecimals) < 5 ? Number(shitBalance.userTokenBalance * Number(tokenPriceSOL)): "N/A";
+    console.log("valueInSOL:", valueInSOL);
     initialInSOL = Number(specificPosition.amountIn) / 1e9;
     initialInUSD = initialInSOL * Number(solPrice);
     profitPercentage = valueInSOL != "N/A" ? ((Number(valueInSOL) - Number(specificPosition.amountIn) / 1e9) / (Number(specificPosition.amountIn) / 1e9)) * 100 : "N/A";

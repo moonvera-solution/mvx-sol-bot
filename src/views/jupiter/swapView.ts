@@ -103,6 +103,7 @@ export async function jupiterSwap(ctx: any) {
       }
 
       if (tradeType == 'buy') {
+        console.log('extractAmount:', extractAmount)
         saveUserPosition(
           userWallet.publicKey.toString(), {
           baseMint: tokenOut,
@@ -223,6 +224,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
 
       const lastRouteHop_5 = Number(jupPriceImpact_5.outAmount)
       const jupTokenValue: any = Object.values(jupTokenRate.data);
+      console.log('jupTokenRate:', jupTokenRate)
       let jupTokenPrice = 0;
       
 

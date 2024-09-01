@@ -12,6 +12,9 @@ import { InputFile } from 'grammy';
 import { raydium_amm_swap_v4 } from '../../../service/dex/raydium/amm/ammv4';
 import { AmmRpcData, AmmV4Keys, ApiV3PoolInfoStandardItem } from '@raydium-io/raydium-sdk-v2';
 import { token } from '@metaplex-foundation/js';
+import { UserPositions } from '../../../db';
+import { saveUserPosition } from '../positions';
+
 const fs = require('fs');
 
 export async function handle_radyum_swap(
@@ -38,8 +41,9 @@ export async function handle_radyum_swap(
     let userTokenBalance = Number(userTokenBalanceAndDetails.userTokenBalance);
     let tokenDecimal = Number(ctx.session.AmmPoolKeys.mintA.decimals);
     let _symbol = tokenMeta.tokenData.symbol;
+    console.log('_symbol:: ', _symbol); 
     let _name = tokenMeta.tokenData.name;
- 
+    console.log('_name:: ', _name);
     /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
     /*                         BUY                                */
     /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
@@ -58,10 +62,6 @@ export async function handle_radyum_swap(
       /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
     } else if (side == 'sell') {
 
-      // balance and fees are in SOL dont change to lamports
-      if (userSolBalance < ctx.session.customPriorityFee) {
-        await ctx.api.sendMessage(ctx.session.chatId, `🔴 Insufficient balance for transaction fees.`); return;
-      }
       // amountIn is in percentage to sell = 50%, 30% etc 
       const amountToSell = Math.floor((amountIn/ 100) * userTokenBalance * Math.pow(10, tokenDecimal));
       console.log("amountToSell:: ",amountToSell);
@@ -101,35 +101,81 @@ export async function handle_radyum_swap(
       wallet: Keypair.fromSecretKey(bs58.decode(String(userWallet.secretKey))),
     }).then(async (txids) => {
       if (!txids) return;
-      console.log("txids:: ", txids);
-      let extractAmount = await getSwapAmountOut(connection, txids);
-      let confirmedMsg, solAmount, tokenAmount;
-    
-      let solFromSell = new BigNumber(0);
 
-      if (extractAmount > 0) {
-        solFromSell = new BigNumber(extractAmount);
-        solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
-        tokenAmount = amountIn / Math.pow(10, userTokenBalanceAndDetails.decimals);
-        side == 'sell' ?
-          confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${(amountIn/Math.pow(10,tokenDecimal)).toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`
-          : confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${Number(extractAmount / Math.pow(10, tokenDecimal)).toFixed(3)} <b>${_symbol}</b> for ${(amountIn / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
-      } else {
-        confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
+      const config = {
+        searchTransactionHistory: true
+      };
+      const sigStatus = await connection.getSignatureStatus(txids, config)
+      if (sigStatus?.value?.err) {
+        await ctx.api.sendMessage(ctx.session.chatId, `❌ ${side.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+        return;
+      }
+      // console.log("txids:: ", txids);
+      let extractAmount = await getSwapAmountOut(connection, txids);
+      let tokenAmount, confirmedMsg;
+      let solFromSell = 0;
+      // const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
+      
+      // console.log('tokenMetada:: ', tokenMeta);
+      const amountFormatted = Number(extractAmount / Math.pow(10, tokenMeta.tokenData.mint.decimals)).toFixed(4);
+      // console.log('amountFormatted:: ', amountFormatted); 
+      side == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
+      confirmedMsg = `✅ <b>${side.toUpperCase()} tx confirmed</b> ${side == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${amountIn/1e9} SOL</b>` : `You sold <b>${amountIn / Math.pow(10, tokenMeta.tokenData.mint.decimals)}</b> <b>${_symbol}</b> and received <b>${(solFromSell / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
+
+      let oldPositionSol: number = 0;
+      let oldPositionToken: number = 0;
+
+      const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
+
+      if (userPosition) {
+        const existingPositionIndex = userPosition.positions.findIndex(
+          position => position.baseMint === (side ? tokenOut.toString() : tokenIn.toString())
+        );
+        // console.log('existingPositionIndex', existingPositionIndex);
+        if (userPosition.positions[existingPositionIndex]) {
+          oldPositionSol = userPosition.positions[existingPositionIndex].amountIn
+          oldPositionToken = userPosition.positions[existingPositionIndex].amountOut!
+        }
       }
 
-      console.log('amountIn:: ', amountIn);
-      updatePositions(
-        userWallet,
-        side,
-        'ray_swap', // tradeType
-        ctx.session.AmmPoolKeys.mintB.address,
-        ctx.session.AmmPoolKeys.mintA.address,
-        _name,
-        _symbol,
-        amountIn,
-        extractAmount,
-      );
+      if (side == 'buy') {
+        // console.log('extractAmount:', extractAmount)
+        saveUserPosition(
+          userWallet.publicKey.toString(), {
+          baseMint: tokenOut,
+          name: _name,
+          symbol: _symbol,
+          tradeType: `ray_swap`,
+          amountIn: oldPositionSol ? oldPositionSol + (amountIn) : (amountIn),
+          amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
+        });
+      } else if (side == 'sell') {
+        let newAmountIn, newAmountOut;
+
+        if (Number(amountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
+          newAmountIn = 0;
+          newAmountOut = 0;
+        } else {
+          newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
+          newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
+        }
+
+        if (newAmountIn <= 0 || newAmountOut <= 0) {
+          await UserPositions.updateOne({ walletId: userWallet.publicKey.toString() }, { $pull: { positions: { baseMint: tokenIn } } });
+          ctx.session.positionIndex = 0;
+
+        } else {
+          saveUserPosition(
+            userWallet.publicKey.toString(), {
+            baseMint: tokenIn,
+            name: _name,
+            symbol: _symbol,
+            tradeType: `ray_swap`,
+            amountIn: newAmountIn,
+            amountOut: newAmountOut,
+          });
+        }
+      }
 
       await ctx.api.sendMessage(ctx.session.chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
       if(side == 'sell' && ctx.session.pnlcard){

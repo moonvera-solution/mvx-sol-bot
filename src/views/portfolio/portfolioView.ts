@@ -17,7 +17,7 @@ import bs58 from 'bs58';
 
 export async function display_all_positions(ctx: any, isRefresh: boolean) {
   const { publicKey: userWallet } = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex] || {};
-  if (!userWallet) return ctx.api.sendMessage(ctx.chat.id, "Wallet not found.", { parse_mode: 'HTML' });
+  if (!userWallet) return ctx.api.sendMessage(ctx.chat.id, "Positions error", { parse_mode: 'HTML' });
   const userPosition = await UserPositions.find(
     {
 

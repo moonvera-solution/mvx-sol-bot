@@ -1428,7 +1428,7 @@ bot.on("callback_query", async (ctx: any) => {
           await handleSettings(ctx);
           await refreshWallets(ctx);
         } else {
-          await ctx.api.sendMessage(chatId, "Error: Portfolio not found.");
+          await ctx.api.sendMessage(chatId, "wallet not found.");
         }
 
         break;
@@ -1444,7 +1444,7 @@ bot.on("callback_query", async (ctx: any) => {
           await handleSettings(ctx);
           await refreshWallets(ctx);
         } else {
-          await ctx.api.sendMessage(chatId, "Error: Portfolio not found.");
+          await ctx.api.sendMessage(chatId, "wallet not found.");
         }
         break;
       case "refresh_wallet":
