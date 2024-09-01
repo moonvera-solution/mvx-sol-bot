@@ -135,8 +135,8 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       fixedSide: 'in',
       inputMint: mintIn.address,   
       config: {
-//        inputUseSolBalance: true, // default: true, if you want to use existed wsol token account to pay token in, pass false
-  //      outputUseSolBalance: true, // default: true, if you want to use existed wsol token account to receive token out, pass false
+        inputUseSolBalance:  input.side === 'buy' ? true : false, // default: true, if you want to use existed wsol token account to pay token in, pass false
+        outputUseSolBalance:  input.side === 'buy' ? false : true, // default: true, if you want to use existed wsol token account to receive token out, pass false
         associatedOnly: true, // default: true, if you want to use ata only, pass true
       }, 
       computeBudgetConfig: {
@@ -162,7 +162,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       const tx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, input.wallet, (await connection.getLatestBlockhash()).blockhash));
       tx.sign([input.wallet]);
 
-      // await getOrCreateATA(input.wallet, new PublicKey(modifiedPoolInfo.mintA.address), connection);
+      await getOrCreateATA(input.wallet, new PublicKey(modifiedPoolInfo.mintA.address), connection);
 
       txId = await optimizedSendAndConfirmTransaction(
         tx, connection, (await connection.getLatestBlockhash()).blockhash, 50
@@ -186,21 +186,21 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
     }
 
 
-  //   export async function getOrCreateATA(wallet: Keypair, token: PublicKey, connection: Connection) {
-  //     let ata: PublicKey | null = null
-  //     // Check if the associated token account exists
-  //     const associatedTokenAddress = await getAssociatedTokenAddress(
-  //         new PublicKey(token),
-  //         wallet.publicKey
-  //     );
+    export async function getOrCreateATA(wallet: Keypair, token: PublicKey, connection: Connection) {
+      let ata: PublicKey | null = null
+      // Check if the associated token account exists
+      const associatedTokenAddress = await getAssociatedTokenAddress(
+          new PublicKey(token),
+          wallet.publicKey
+      );
   
-  //     // Check if the account exists
-  //     const accountInfo = await connection.getAccountInfo(associatedTokenAddress, 'confirmed');
-  //     if (!accountInfo) {
-  //         // Create the associated token account if it doesn't exist
-  //         ata = await createAssociatedTokenAccount(connection, wallet, new PublicKey(token), wallet.publicKey, {commitment: 'confirmed'});
-  //         ata && console.log('Created ATA', ata.toBase58());
-  //     }
-  //     ata && console.log('Created ATA', ata.toBase58());
-  //     return ata;
-  // }
+      // Check if the account exists
+      const accountInfo = await connection.getAccountInfo(associatedTokenAddress, 'confirmed');
+      if (!accountInfo) {
+          // Create the associated token account if it doesn't exist
+          ata = await createAssociatedTokenAccount(connection, wallet, new PublicKey(token), wallet.publicKey, {commitment: 'confirmed'});
+          ata && console.log('Created ATA', ata.toBase58());
+      }
+      ata && console.log('Created ATA', ata.toBase58());
+      return ata;
+  }
