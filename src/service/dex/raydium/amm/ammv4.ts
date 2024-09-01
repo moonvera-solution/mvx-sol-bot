@@ -48,6 +48,8 @@ import { initSdk } from "../cpmm";
 import { AmmRpcData, AmmV4Keys, ApiV3PoolInfoStandardItem } from "@raydium-io/raydium-sdk-v2";
 import BN from "bn.js";
 import bs58 from "bs58";
+// import { createAssociatedTokenAccount, getAssociatedTokenAddress } from "@solana/spl-token";
+const { createAssociatedTokenAccount, getAssociatedTokenAddress} = require('@solana/spl-token');
 
 // import { NATIVE_MINT } from '@solana/spl-token'
 type refObject = { referralWallet: string, referralCommision: number };
@@ -131,10 +133,16 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       amountIn: new BN(input.amountIn),
       amountOut: out.minAmountOut, // out.amountOut means amount 'without' slippage
       fixedSide: 'in',
-      inputMint: mintIn.address,    
+      inputMint: mintIn.address,   
+      config: {
+        inputUseSolBalance: true, // default: true, if you want to use existed wsol token account to pay token in, pass false
+        outputUseSolBalance: true, // default: true, if you want to use existed wsol token account to receive token out, pass false
+        associatedOnly: true, // default: true, if you want to use ata only, pass true
+      }, 
       computeBudgetConfig: {
         microLamports: input.customPriorityFee * 1e9,
       }
+
     }).catch((e) => {
       console.log('error', e)
       throw new Error('Failed transaction')
@@ -144,16 +152,23 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
 
     // console.log('solAmount', solAmount)
     let txId: any = '';
+
+
+    
     if (transaction instanceof Transaction) {
-  
+      console.log('transaction frpm tx here')
       transaction.instructions.push(...addMvxFeesInx(input.wallet, solAmount));
-      addMvxFeesInx(input.wallet, solAmount);
+      // addMvxFeesInx(input.wallet, solAmount);
       const tx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, input.wallet, (await connection.getLatestBlockhash()).blockhash));
       tx.sign([input.wallet]);
+
+      // await getOrCreateATA(input.wallet, new PublicKey(modifiedPoolInfo.mintA.address), connection);
+
       txId = await optimizedSendAndConfirmTransaction(
         tx, connection, (await connection.getLatestBlockhash()).blockhash, 50
       );
     } else if (transaction instanceof VersionedTransaction) {
+      console.log('transaction from versioned tx here')
       const addressLookupTableAccounts = await Promise.all(
         transaction.message.addressTableLookups.map(async (lookup) => {
           return new AddressLookupTableAccount({
@@ -169,3 +184,23 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
     return txId;
   
     }
+
+
+  //   export async function getOrCreateATA(wallet: Keypair, token: PublicKey, connection: Connection) {
+  //     let ata: PublicKey | null = null
+  //     // Check if the associated token account exists
+  //     const associatedTokenAddress = await getAssociatedTokenAddress(
+  //         new PublicKey(token),
+  //         wallet.publicKey
+  //     );
+  
+  //     // Check if the account exists
+  //     const accountInfo = await connection.getAccountInfo(associatedTokenAddress, 'confirmed');
+  //     if (!accountInfo) {
+  //         // Create the associated token account if it doesn't exist
+  //         ata = await createAssociatedTokenAccount(connection, wallet, new PublicKey(token), wallet.publicKey, {commitment: 'confirmed'});
+  //         ata && console.log('Created ATA', ata.toBase58());
+  //     }
+  //     ata && console.log('Created ATA', ata.toBase58());
+  //     return ata;
+  // }

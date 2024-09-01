@@ -579,64 +579,64 @@ export function isValidBase58(str: any) {
     return base58Regex.test(str);
 }
 
-export async function waitForConfirmation(ctx: any, txid: string): Promise<boolean> {
-    let isConfirmed = false;
-    const maxAttempts = 300;
-    let attempts = 0;
-    try {
-        while (!isConfirmed && attempts < maxAttempts) {
-            attempts++;
-            const connection = CONNECTION;
-            console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
-            const config = {
-                searchTransactionHistory: true
-            };
-            const sigStatus = await connection.getSignatureStatus(txid, config)
-            console.log("sigStatus", sigStatus.value?.err)
-            console.log("sigConfrms", sigStatus.value?.confirmations)
-            if (sigStatus.value && sigStatus.value?.err == null && sigStatus.value?.confirmations && sigStatus.value?.confirmationStatus === 'confirmed') {
-                console.log('Transaction is confirmed.');
-                isConfirmed = true;
-            }
-        }
-        return isConfirmed;
-    } catch (error: any) {
-        console.error('Error waiting for confirmation:', error.message);
-        return false;
+// export async function waitForConfirmation(ctx: any, txid: string): Promise<boolean> {
+//     let isConfirmed = false;
+//     const maxAttempts = 300;
+//     let attempts = 0;
+//     try {
+//         while (!isConfirmed && attempts < maxAttempts) {
+//             attempts++;
+//             const connection = CONNECTION;
+//             console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
+//             const config = {
+//                 searchTransactionHistory: true
+//             };
+//             const sigStatus = await connection.getSignatureStatus(txid, config)
+//             console.log("sigStatus", sigStatus.value?.err)
+//             console.log("sigConfrms", sigStatus.value?.confirmations)
+//             if (sigStatus.value && sigStatus.value?.err == null && sigStatus.value?.confirmations && sigStatus.value?.confirmationStatus === 'confirmed') {
+//                 console.log('Transaction is confirmed.');
+//                 isConfirmed = true;
+//             }
+//         }
+//         return isConfirmed;
+//     } catch (error: any) {
+//         console.error('Error waiting for confirmation:', error.message);
+//         return false;
 
-    }
-}
-export async function waitForConfirmationPump(ctx: any, txid: string): Promise<boolean> {
-    let isConfirmed = false;
-    const maxAttempts = 300;
-    let attempts = 0;
-    try {
-        while (!isConfirmed && attempts < maxAttempts) {
-            attempts++;
-            const connection = CONNECTION;
-            console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
-            const config = {
-                searchTransactionHistory: true
-            };
-            const sigStatus = await connection.getSignatureStatus(txid, config)
-            console.log("sigStatus", sigStatus.value?.err)
-            console.log("sigConfrms", sigStatus.value?.confirmations)
-            if (sigStatus.value && sigStatus.value?.err == null && sigStatus.value?.confirmations && sigStatus.value?.confirmationStatus === 'confirmed') {
-                console.log('Transaction is confirmed.');
-                isConfirmed = true;
-            } else if (sigStatus.value?.err) {
-                await ctx.api.sendMessage(ctx.chat.id, `❌ Transaction failed!.`);
-                console.log('Transaction pump failed:', sigStatus.value?.err);
-                return false;
-            }
-        }
-        return isConfirmed;
-    } catch (error: any) {
-        console.error('Error waiting for confirmation:', error.message);
-        return false;
+//     }
+// }
+// export async function waitForConfirmationPump(ctx: any, txid: string): Promise<boolean> {
+//     let isConfirmed = false;
+//     const maxAttempts = 300;
+//     let attempts = 0;
+//     try {
+//         while (!isConfirmed && attempts < maxAttempts) {
+//             attempts++;
+//             const connection = CONNECTION;
+//             console.log(`Attempt ${attempts}/${maxAttempts} to confirm transaction`);
+//             const config = {
+//                 searchTransactionHistory: true
+//             };
+//             const sigStatus = await connection.getSignatureStatus(txid, config)
+//             console.log("sigStatus", sigStatus.value?.err)
+//             console.log("sigConfrms", sigStatus.value?.confirmations)
+//             if (sigStatus.value && sigStatus.value?.err == null && sigStatus.value?.confirmations && sigStatus.value?.confirmationStatus === 'confirmed') {
+//                 console.log('Transaction is confirmed.');
+//                 isConfirmed = true;
+//             } else if (sigStatus.value?.err) {
+//                 await ctx.api.sendMessage(ctx.chat.id, `❌ Transaction failed!.`);
+//                 console.log('Transaction pump failed:', sigStatus.value?.err);
+//                 return false;
+//             }
+//         }
+//         return isConfirmed;
+//     } catch (error: any) {
+//         console.error('Error waiting for confirmation:', error.message);
+//         return false;
 
-    }
-}
+//     }
+// }
 
 export function getPriorityFeeLabel(fee: number): string {
     let priorityFeeLabel;
@@ -865,7 +865,7 @@ export async function optimizedSendAndConfirmTransaction(
         } // end loop
 
     } catch (error:any) {
-        console.error(`${new Date().toISOString()} Error: ${error.message}`);
+        console.error(`${new Date().toISOString()} optimized Error: ${error.message}`);
         throw new Error(`❌ Transaction failed!`)
     }
 

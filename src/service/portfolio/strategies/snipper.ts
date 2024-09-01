@@ -12,7 +12,7 @@ const log = (k: any, v: any) => console.log(k, v);
 import base58 from 'bs58';
 import { getRayPoolKeys, formatAmmKeysById } from "../../dex/raydium/utils/formatAmmKeysById";
 import { getTokenMetadata } from "../../feeds";
-import { waitForConfirmation, getSolBalance } from '../../util';
+import {  getSolBalance } from '../../util';
 import { Referrals, UserPositions } from "../../../db/mongo/schema";
 import { initSdk } from "../../dex/raydium/cpmm";
 import { display_jupSwapDetails } from '../../../views/jupiter/swapView';
