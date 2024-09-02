@@ -208,7 +208,9 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       const accountInfo = await connection.getAccountInfo(associatedTokenAddress, 'confirmed');
       // console.log('accountInfo', accountInfo)
       if (accountInfo) {
-        await createAssociatedTokenAccount(connection, wallet, new PublicKey(token), wallet.publicKey);      }
+        await createAssociatedTokenAccount(connection, wallet, new PublicKey(token), wallet.publicKey);     
+        isAta = true;
+     }
       console.log('isAta', isAta)
       return isAta;
   }
