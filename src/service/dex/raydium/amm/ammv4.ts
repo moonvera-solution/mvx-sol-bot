@@ -126,7 +126,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
 
     // console.log('amountIn', input.amountIn)
     console.log('out', out)
-    await getOrCreateATA(input.wallet, new PublicKey(modifiedPoolInfo.mintA.address), connection)
+    // await getOrCreateATA(input.wallet, new PublicKey(modifiedPoolInfo.mintA.address), connection)
     const { transaction } = await raydium.liquidity.swap({
       poolInfo,
       poolKeys,
@@ -136,7 +136,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       inputMint: mintIn.address,   
       config: {
         inputUseSolBalance:  input.side === 'buy' ? true : false, // default: true, if you want to use existed wsol token account to pay token in, pass false
-        outputUseSolBalance:  input.side === 'buy' ? false : true, // default: true, if you want to use existed wsol token account to receive token out, pass false
+        outputUseSolBalance:   true, // default: true, if you want to use existed wsol token account to receive token out, pass false
         associatedOnly: false, // default: true, if you want to use ata only, pass true
       }, 
       computeBudgetConfig: {
