@@ -29,7 +29,7 @@ export async function handle_radyum_swap(
   try {
     let userSolBalance = await getSolBalance(userWallet.publicKey, connection);
     let tokenIn: any, outputToken: any;
-    console.log('ammPoolKeys:: ', ctx.session.AmmPoolKeys);
+    // console.log('ammPoolKeys:: ', ctx.session.AmmPoolKeys);
     const tokenOut = ctx.session.AmmPoolKeys.mintA.address
 
     const AmmPoolId = ctx.session.AmmPoolKeys.id;
@@ -124,9 +124,9 @@ export async function handle_radyum_swap(
 
       let oldPositionSol: number = 0;
       let oldPositionToken: number = 0;
-
+      UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
       const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
-
+   
       if (userPosition) {
         const existingPositionIndex = userPosition.positions.findIndex(
           position => position.baseMint === (side ? tokenOut.toString() : tokenIn.toString())

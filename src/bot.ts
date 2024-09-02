@@ -294,7 +294,7 @@ bot.command("start", async (ctx: any) => {
           { text: "⏳ Open Orders", callback_data: "display_open_orders" }],
           [
             { text: "ℹ️ Help", callback_data: "help" },
-            { text: "Refer Friends", callback_data: "refer_friends" },
+            // { text: "Refer Friends", callback_data: "refer_friends" },
           ],
           [{ text: "Positions", callback_data: "display_all_positions" }],
           [{text: "🪪 Generate PnL Card", callback_data: "display_pnlcard"},{ text: "🔄 Refresh", callback_data: "refresh_start" }],

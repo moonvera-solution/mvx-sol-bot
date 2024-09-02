@@ -18,9 +18,8 @@ export interface UserPosition {
 }
 // NEVER PASS CTX TO BACKEND FUNCTIONS
 export async function saveUserPosition( walletId:string, newPosition:Position) {
-
     try {
-        const userPosition = await UserPositions.findOne({ walletId:walletId });
+        const userPosition = await UserPositions.findOne({ walletId: walletId });
         if (userPosition) {
             const existingPositionIndex = userPosition.positions.findIndex(
                 position => position.baseMint === newPosition.baseMint.toString()

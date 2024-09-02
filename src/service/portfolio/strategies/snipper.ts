@@ -18,6 +18,7 @@ import { initSdk } from "../../dex/raydium/cpmm";
 import { display_jupSwapDetails } from '../../../views/jupiter/swapView';
 import BN from 'bn.js'
 import bs58 from 'bs58';
+import { getOrCreateATA } from '../../../service/dex/raydium/amm/ammv4';
 
 export async function snipperON(ctx: any, amount: string) {
     try {
@@ -171,13 +172,22 @@ console.log("poolId --c>", poolId);
 
     let { transaction } = await raydium.cpmm.swap({
         poolInfo,
-        poolKeys,
-        swapResult,
-        slippage: ctx.session.snipeSlippage* 100 / 10_000,
-        baseIn,
-        computeBudgetConfig: {
-          microLamports: ctx.session.customPriorityFee * 1e9,
-        }
+    poolKeys,
+    payer: userWallet.publicKey,
+    baseIn,
+    fixedOut: false,
+    slippage: ctx.session.latestSlippage * 100 / 10_000,
+    swapResult,
+    inputAmount: new BN(0),
+    config: {
+      checkCreateATAOwner: true,
+      associatedOnly: true,
+    },
+    
+    computeBudgetConfig: {
+      microLamports: ctx.session.customPriorityFee * 1e9,
+      
+    }
       });
 
     const solAmount =  new BigNumber(swapResult.sourceAmountSwapped.toNumber());
@@ -247,44 +257,34 @@ async function _getAmmSwapTx(ctx: any, poolKeys: any, userWallet: Keypair, amoun
         // range: 1 ~ 0.0001, means 100% ~ 0.01%
   
       })
-    
+      const useAta =  await getOrCreateATA(userWallet, new PublicKey(modifiedPoolInfo.mintA.address), connection)
 
       const { transaction } = await raydium.liquidity.swap({
         poolInfo,
         poolKeys,
         amountIn: new BN(Number(amountIn)),
-        amountOut: out.minAmountOut, // out.amountOut means amount 'without' slippage
+        amountOut: out.minAmountOut, 
+        inputMint: mintIn.address,   // out.amountOut means amount 'without' slippage
         fixedSide: 'in',
-        inputMint: mintIn.address,    
+        config: {
+            associatedOnly: useAta ? false : true ,
+            inputUseSolBalance: true,
+            outputUseSolBalance: true,
+          }, 
           computeBudgetConfig: {
           microLamports: ctx.session.customPriorityFee * 1e9,
         }
       })
 
-    const bot_fee = new BigNumber(BigNumber(Number(out.minAmountOut)).multipliedBy(MVXBOT_FEES).toFixed(0)).toNumber();
-    // const cut_bot_fee = (bot_fee - referralAmmount);
 
-    let mvxFeeInx: any = null;
-    // let referralInx: any = null;
-    let minimumBalanceNeeded = 0;
-    minimumBalanceNeeded += amountIn.toNumber()
 
-    // innerTransactions[0].instructions.push(mvxFeeInx);
-    minimumBalanceNeeded += bot_fee;
-
-    const userSolBalance = await getSolBalance(userWallet.publicKey, connection);
-
-    if ((userSolBalance * 1e9) < minimumBalanceNeeded) {
-        await ctx.api.sendMessage(chatId, `🔴 Insufficient balance for Turbo Snipping. Your balance is ${userSolBalance} SOL.`);
-        return null;
-    }
 
     let txV: any = ''; 
     let solAmount = new BigNumber(amountIn) 
     if (transaction instanceof Transaction) {
   
         transaction.instructions.push(...addMvxFeesInx(userWallet, solAmount));
-        addMvxFeesInx(userWallet, solAmount);
+        // addMvxFeesInx(userWallet, solAmount);
         txV = new VersionedTransaction(wrapLegacyTx(transaction.instructions, userWallet, (await connection.getLatestBlockhash()).blockhash));
         txV.sign([userWallet]);
       
@@ -381,6 +381,7 @@ export async function startSnippeSimulation(
                 }
 
                 // ------- check user balanace in DB --------
+                UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
                 const userPosition = await UserPositions.findOne({ walletId: userWallet.publicKey.toString() });
 
                 let oldPositionSol: number = 0;

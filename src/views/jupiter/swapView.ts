@@ -84,6 +84,7 @@ export async function jupiterSwap(ctx: any) {
       const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
       tradeType == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
       confirmedMsg = `✅ <b>${tradeType.toUpperCase()} tx confirmed</b> ${tradeType == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${ctx.session.jupSwap_amount} SOL</b>` : `You sold <b>${amountToSell / Math.pow(10, userTokenBalanceAndDetails.decimals)}</b> <b>${_symbol}</b> and received <b>${(solFromSell / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txSig}">View Details</a>.`;
+      UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
       const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
       let oldPositionSol: number = 0;
       let oldPositionToken: number = 0;

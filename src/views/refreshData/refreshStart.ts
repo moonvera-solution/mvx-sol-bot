@@ -35,37 +35,55 @@ export async function handleRefreshStart(ctx: any) {
 
     // Update the welcome message with the new SOL price
     const welcomeMessage =
-      `<b>✨ DRIBs✨</b>\n` +
-      `| <a href="https://www.dribs.io">Website</a> | <a href="https://x.com/dribs_sol"> X </a> | \n\n` +
-      `Start by choosing a wallet or import one using the "Import Wallet" button.\n` +
-      `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
-      `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInUSD.toFixed(4))}</b> USD\n\n` +
-      `<i>  - 📣 Limit Order is available</i>\n\n` +
-      `<b> Markets </b>\n`+
-      `<i>  - Jupiter  </i>\n`+
-      `<i>  - Raydium AMM/CPMM </i>\n`+
-      `<i>  - Pump fun </i>\n\n`+
-      `<i>  - 📢  Dribs Market Maker Bot is available now! 🤖💼
-        For more information or to get started, please contact us directly </i>\n`;
+    `<b>✨ DRIBs ✨</b>\n` +
+    `| <a href="https://www.dribs.io">Website</a> | <a href="https://x.com/dribs_sol"> X </a> |\n\n` +
+    // `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
+    `Start by choosing a wallet or import one using the "Import Wallet" button.\n` +
+    // `We're always working to bring you new features - stay tuned!\n\n` +
+    `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
+    `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInUSD.toFixed(4))}</b> USD\n\n` +
+    // `⚠️ We recommend exporting your private key and keeping it on paper. ⚠️ \n` +
+    `<i>  - 📣 Limit Order is available</i>\n\n` +
+    `<b> Markets </b>\n`+
+    `<i>  - Jupiter  </i>\n`+
+    `<i>  - Raydium AMM/CPMM </i>\n`+
+    `<i>  - Pump fun </i>\n\n`+
+    `<i>  - 📢  Dribs Market Maker Bot is available now! 🤖💼
+      For more information or to get started, please contact us directly </i>\n` ;
+    
 
- // Define the inline keyboard options
- const options: any = {
+
+
+  // Set the options for th e inline keyboard with social links
+  const options: any = {
     reply_markup: JSON.stringify({
-        inline_keyboard: [
-            [
-                { text: 'Tg official channel', url: 'https://t.me/DRIBs_official' },
-            ],
-            [{ text: '⬇️ Import Wallet', callback_data: 'import_wallet' }, { text: '💼 Wallets & Settings⚙️', callback_data: 'show_wallets' }],
-            [{ text: "☑️ Rug Check", callback_data: "rug_check" }],
-            [{ text: "💱 Trade", callback_data: "jupiter_swap" },{ text: "🎯 Turbo Snipe", callback_data: "snipe" }],
-            [{ text: "⌚️ Set Limit Orders", callback_data: "limitOrders" },
-                { text: "⏳ Open Orders", callback_data: "display_open_orders" }],            [{ text: 'ℹ️ Help', callback_data: 'help' }, { text: 'Refer Friends', callback_data: 'refer_friends' }],
-            [{ text: 'Positions', callback_data: 'display_all_positions' }],
-            [{text: "🪪 Generate PnL Card", callback_data: "display_pnlcard"},{ text: "🔄 Refresh", callback_data: "refresh_start" }],
-           
+      inline_keyboard: [
+        [
+            { text: 'Tg official channel', url: 'https://t.me/DRIBs_official' },
         ],
+        [
+          { text: "⬇️ Import Wallet", callback_data: "import_wallet" },
+          { text: "💼 Wallets & Settings⚙️", callback_data: "show_wallets" },
+        ],
+        [{ text: "☑️ Rug Check", callback_data: "rug_check" }],
+        [
+          { text: "💱 Trade", callback_data: "jupiter_swap" },
+          { text: "🎯 Turbo Snipe", callback_data: "snipe" },
+        ],
+        [{ text: "⌚️ Set Limit Orders", callback_data: "limitOrders" },
+        { text: "⏳ Open Orders", callback_data: "display_open_orders" }],
+        [
+          { text: "ℹ️ Help", callback_data: "help" },
+          // { text: "Refer Friends", callback_data: "refer_friends" },
+        ],
+        [{ text: "Positions", callback_data: "display_all_positions" }],
+        [{text: "🪪 Generate PnL Card", callback_data: "display_pnlcard"},{ text: "🔄 Refresh", callback_data: "refresh_start" }],
+      ],
     }),
-    parse_mode: 'HTML'
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
+
+  
 };
     // Edit the existing message with the updated information and the inline keyboard
  

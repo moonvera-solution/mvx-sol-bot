@@ -264,7 +264,7 @@ export async function display_limitOrder_token_details(ctx: any, isRefresh: bool
       getSolBalance(publicKeyString, connection),
       fetch(`https://price.jup.ag/v6/price?ids=${tokenAddress}&vsToken=So11111111111111111111111111111111111111112`).then((response) => response.json()),
       getUserTokenBalanceAndDetails(new PublicKey(publicKeyString), tokenAddress, connection),
-      UserPositions.find({ positionChatId: chatId, walletId: publicKeyString }, { positions: { $slice: -7 } }),
+      UserPositions.find({  walletId: publicKeyString }, { positions: { $slice: -7 } }),
       fetch(`${rpcUrl}/jupiter/quote?inputMint=${SOL_ADDRESS}&outputMint=${tokenAddress}&amount=${'5000000000'}&slippageBps=${1}`).then((response) => response.json()),
       fetch(`https://price.jup.ag/v6/price?ids=SOL`).then((response) => response.json()),
       fetch(swapUrl).then(res => res.json())

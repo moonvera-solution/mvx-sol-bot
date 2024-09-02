@@ -64,8 +64,8 @@ const ReferralSchema = new Schema<REFERRAL_TYPE>({
 
 });
 const UserPositionSchema = new Schema<USERPOSITION_TYPE>({
-  positionChatId: { type: Number, unique: false },
-  walletId: { type: String, unique: true },
+  // positionChatId: { type: Number, unique: true, required: false },
+  walletId: { type: String, unique: true, required: true },
   positions: [
     {
       baseMint: { type: String, required: true },
@@ -139,7 +139,7 @@ const UserSessions = new Schema({
   },
   cpmm_amountIn: Number,
   cpmm_side: String,
-  cpmmPoolId: String,
+  cpmmPoolId: {},
   cpmmPoolInfo: {},
   latestCommand: String,
   previousCommand: String,

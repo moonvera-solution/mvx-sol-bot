@@ -13,7 +13,7 @@ import BigNumber from 'bignumber.js';
 import { saveUserPosition } from '../../service/portfolio/positions';
 import { createTradeImage } from "../util/image";
 import { InputFile } from "grammy";
-import { M } from "@raydium-io/raydium-sdk-v2/lib/raydium-b84847b9";
+// import { M } from "@raydium-io/raydium-sdk-v2/lib/raydium-b84847b9";
 const fs = require('fs');
 
 export async function ray_cpmm_swap(ctx: any) {
@@ -74,6 +74,7 @@ export async function ray_cpmm_swap(ctx: any) {
       const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
       tradeType == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
       confirmedMsg = `✅ <b>${tradeType.toUpperCase()} tx confirmed</b> ${tradeType == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${amountIn / 1e9} SOL</b>` : `You sold <b>${Number(amountToSell / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(3)}</b> <b>${_symbol}</b> and received <b>${(ctx.session.CpmmSolExtracted / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txid}">View Details</a>.`;
+      UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
       const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
       let oldPositionSol: number = 0;
       let oldPositionToken: number = 0;

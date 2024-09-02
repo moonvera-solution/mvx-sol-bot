@@ -1,7 +1,7 @@
 import { SecretsManagerClient, GetSecretValueCommand, } from "@aws-sdk/client-secrets-manager";
 import dotenv from 'dotenv'; dotenv.config();
 const isProd = process.env.NODE_ENV == 'PROD';
-import { console.log } from "../../../error/logger";
+// import { console.log } from "../../../error/logger";
 
 
 export async function _loadEnvVars(ctx: any) {

@@ -1,5 +1,5 @@
 import { AmmV4Keys, AmmV5Keys } from '@raydium-io/raydium-sdk-v2';
-import { aN, bo } from '@raydium-io/raydium-sdk-v2/lib/api-33b5ab27';
+// import { aN, bo } from '@raydium-io/raydium-sdk-v2/lib/api-33b5ab27';
 import { PublicKey } from '@solana/web3.js';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import dotenv from "dotenv";
@@ -40,7 +40,7 @@ export interface ISESSION_DATA {
   CpmmSolExtracted: number;
   cpmm_amountIn: number;
   cpmm_side: string;
-  cpmmPoolId: string;
+  cpmmPoolId: any;
   cpmmPoolInfo: any;
   chatId: number;
   portfolio: PORTFOLIO_TYPE,
@@ -156,7 +156,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   CpmmSolExtracted: 0,
   cpmm_amountIn: 0,
   cpmm_side: '',
-  cpmmPoolId: '',
+  cpmmPoolId: {},
   cpmmPoolInfo: {},
   swaptypeDex: '',
   ammAddress: '',
@@ -256,7 +256,7 @@ export type REFERRAL_TYPE = {
 };
 
 export type USERPOSITION_TYPE = {
-  positionChatId: number;
+  // positionChatId: number;
   walletId: string;
   positions: [
     {

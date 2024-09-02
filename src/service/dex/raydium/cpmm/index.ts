@@ -24,7 +24,7 @@ let raydium: Raydium | undefined;
 
 export async function initSdk(wallet: Keypair, connection: Connection) {
   if (raydium) return raydium
-  console.log("--c>, ", wallet.publicKey.toBase58());
+  // console.log("--c>, ", wallet.publicKey.toBase58());
   raydium = await Raydium.load({
     owner: wallet,
     connection,
@@ -70,16 +70,25 @@ export async function raydium_cpmm_swap(
 
     poolInfo.config.tradeFeeRate = 0
     poolInfo.feeRate = 0
-  console.log('poolInfo:>>>><<>>>>> ', poolInfo);
+  // console.log('poolInfo:>>>><<>>>>> ', poolInfo);
   // range: 1 ~ 0.0001, means 100% ~ 0.01%e
   let { transaction } = await raydium.cpmm.swap({
     poolInfo,
     poolKeys,
-    swapResult,
-    slippage: slippage * 100 / 10_000,
+    payer: wallet.publicKey,
     baseIn,
+    fixedOut: false,
+    slippage: slippage * 100 / 10_000,
+    swapResult,
+    inputAmount: new BN(inputAmount),
+    config: {
+      checkCreateATAOwner: true,
+      associatedOnly: true,
+    },
+    
     computeBudgetConfig: {
       microLamports: ctx.session.customPriorityFee * 1e9,
+      
     }
   }).catch((e) => {
     console.log('error', e)
@@ -96,7 +105,6 @@ export async function raydium_cpmm_swap(
   if (transaction instanceof Transaction) {
 
     transaction.instructions.push(...addMvxFeesInx(wallet, solAmount));
-    addMvxFeesInx(wallet, solAmount);
     const tx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, wallet, (await connection.getLatestBlockhash()).blockhash));
     tx.sign([wallet]);
     txSig = await optimizedSendAndConfirmTransaction(
@@ -111,11 +119,7 @@ export async function raydium_cpmm_swap(
         })
       }));
     var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
-
- 
-      message.instructions.push(...addMvxFeesInx(wallet, solAmount));
-      addMvxFeesInx(wallet, solAmount);
-
+    message.instructions.push(...addMvxFeesInx(wallet, solAmount));
     txSig = await optimizedSendAndConfirmTransaction(
       new VersionedTransaction(transaction.message), connection, (await connection.getLatestBlockhash()).blockhash, 50
     );

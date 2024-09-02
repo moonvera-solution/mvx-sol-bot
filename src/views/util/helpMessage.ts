@@ -11,8 +11,6 @@ export async function sendHelpMessage(ctx: any) {
 
 <i>To start trading, simply paste the token address, birdeye link or pumpfun link and DRIBs bot will handle the rest.</i>
 
-<i>💸 Referral Program</i>
-<b>Exclusive Early Access:</b> We're introducing a limited availability referral program. Invite your friends to join the DRIBs bot and gain % of the transaction fees.
 
 <b>Future Rewards:</b> To show our appreciation for our loyal DRIBs users, we're planning special rewards in the future.
 

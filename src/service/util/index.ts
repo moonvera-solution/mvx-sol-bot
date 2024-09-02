@@ -817,9 +817,9 @@ export async function optimizedSendAndConfirmTransaction(
 
     try {
         // Simulating the transaction
-        const simulationResult = await connection.simulateTransaction(tx, { commitment: "processed" });
-        console.log("optimizedSendAndConfirmTransaction simulationResult", simulationResult.value.logs)
-        if (simulationResult.value.err) await catchSimulationErrors(simulationResult);
+        const simulationResult = await connection.simulateTransaction(tx, { commitment: "processed" }).catch((e) => console.error("Error on optimizedSendAndConfirmTransaction", e.message));   
+       await catchSimulationErrors(simulationResult);
+        console.log("simulationResult", (simulationResult))
 
         const signatureRaw: any = tx.signatures[0];
         txSignature = bs58.encode(signatureRaw);

@@ -78,7 +78,8 @@ export async function swap_pump_fun(ctx: any) {
 
 
       // ------- check user balanace in DB --------
-      const userPosition = await UserPositions.findOne({ positionChatId: chatId, walletId: userWallet.publicKey.toString() });
+      UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
+      const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
       // console.log("userPosition", userPosition);
 
       let oldPositionSol: number = 0;
@@ -190,7 +191,7 @@ export async function display_pumpFun(ctx: any, isRefresh: boolean) {
         getSwapDetails(token, solAddress, 1, 0),
         getSolBalance(publicKeyString, connection),
         getUserTokenBalanceAndDetails(new PublicKey(publicKeyString), token, connection),
-        UserPositions.find({ positionChatId: chatId, walletId: publicKeyString }, { positions: { $slice: -7 } }),
+        UserPositions.find({  walletId: publicKeyString }, { positions: { $slice: -7 } }),
         fetch(
           `https://price.jup.ag/v6/price?ids=SOL`
         ).then((response) => response.json()),      
