@@ -162,7 +162,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       const tx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, input.wallet, (await connection.getLatestBlockhash()).blockhash));
       tx.sign([input.wallet]);
 
-      await getOrCreateATA(input.wallet, new PublicKey(modifiedPoolInfo.mintA.address), connection);
+      // await getOrCreateATA(input.wallet, new PublicKey(modifiedPoolInfo.mintA.address), connection);
 
       txId = await optimizedSendAndConfirmTransaction(
         tx, connection, (await connection.getLatestBlockhash()).blockhash, 50
