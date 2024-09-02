@@ -127,7 +127,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
     // console.log('amountIn', input.amountIn)
     console.log('out', out)
     
-    const { transaction } = await raydium.liquidity.swap({
+    const { execute } = await raydium.liquidity.swap({
       poolInfo,
       poolKeys,
       amountIn: new BN(input.amountIn),
@@ -151,46 +151,47 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
     const solAmount = input.side == 'buy' ? new BigNumber(input.amountIn) : new BigNumber(out.minAmountOut.toNumber());
 
     // console.log('solAmount', solAmount)
-    let txId: any = '';
+    // let txId: any = '';
 
-
-    
-    if (transaction instanceof Transaction) {
-      console.log('transaction frpm tx here')
-      // transaction.instructions.push(...addMvxFeesInx(input.wallet, solAmount));
-      const blockhash = await connection.getLatestBlockhash();
-      const vTxx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, input.wallet, blockhash.blockhash));
-
-      const addressLookupTableAccounts = await Promise.all(
-          vTxx.message.addressTableLookups.map(async (lookup) => {
-              return new AddressLookupTableAccount({
-                  key: lookup.accountKey,
-                  state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data)),
-              })
-          }));
-
-      var message = TransactionMessage.decompile(vTxx.message, { addressLookupTableAccounts: addressLookupTableAccounts })
-      vTxx.message = message.compileToV0Message(addressLookupTableAccounts);
-      vTxx.sign([input.wallet]);
-
-      txId = await optimizedSendAndConfirmTransaction(
-        vTxx, connection, (await connection.getLatestBlockhash()).blockhash, 50
-      );
-    } else if (transaction instanceof VersionedTransaction) {
-      console.log('transaction from versioned tx here')
-      const addressLookupTableAccounts = await Promise.all(
-        transaction.message.addressTableLookups.map(async (lookup) => {
-          return new AddressLookupTableAccount({
-            key: lookup.accountKey,
-            state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data)),
-          })
-        }));
-      var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
-      txId = await optimizedSendAndConfirmTransaction(
-        new VersionedTransaction(transaction.message), connection, (await connection.getLatestBlockhash()).blockhash, 50
-      );
-    }
+    const {txId} = await execute({ sendAndConfirm: true })
+    console.log('txv', txId)
     return txId;
+    // if (transaction instanceof Transaction) {
+    //   console.log('transaction frpm tx here')
+    //   transaction.instructions.push(...addMvxFeesInx(input.wallet, solAmount));
+    //   const blockhash = await connection.getLatestBlockhash();
+    //   const vTxx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, input.wallet, blockhash.blockhash));
+
+    //   const addressLookupTableAccounts = await Promise.all(
+    //       vTxx.message.addressTableLookups.map(async (lookup) => {
+    //           return new AddressLookupTableAccount({
+    //               key: lookup.accountKey,
+    //               state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data)),
+    //           })
+    //       }));
+
+    //   var message = TransactionMessage.decompile(vTxx.message, { addressLookupTableAccounts: addressLookupTableAccounts })
+    //   vTxx.message = message.compileToV0Message(addressLookupTableAccounts);
+    //   vTxx.sign([input.wallet]);
+
+    //   txId = await optimizedSendAndConfirmTransaction(
+    //     vTxx, connection, (await connection.getLatestBlockhash()).blockhash, 50
+    //   );
+    // } else if (transaction instanceof VersionedTransaction) {
+    //   console.log('transaction from versioned tx here')
+    //   const addressLookupTableAccounts = await Promise.all(
+    //     transaction.message.addressTableLookups.map(async (lookup) => {
+    //       return new AddressLookupTableAccount({
+    //         key: lookup.accountKey,
+    //         state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data)),
+    //       })
+    //     }));
+    //   var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
+    //   txId = await optimizedSendAndConfirmTransaction(
+    //     new VersionedTransaction(transaction.message), connection, (await connection.getLatestBlockhash()).blockhash, 50
+    //   );
+    // }
+    // return txId;
   
     }
 
