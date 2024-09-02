@@ -157,7 +157,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
     
     if (transaction instanceof Transaction) {
       console.log('transaction frpm tx here')
-      transaction.instructions.push(...addMvxFeesInx(input.wallet, solAmount));
+      // transaction.instructions.push(...addMvxFeesInx(input.wallet, solAmount));
       const blockhash = await connection.getLatestBlockhash();
       const vTxx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, input.wallet, blockhash.blockhash));
 
