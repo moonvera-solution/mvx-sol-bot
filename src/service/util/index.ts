@@ -6,10 +6,14 @@ import {
     TokenAccount,
     LiquidityPoolKeys, Liquidity, TokenAmount, Token, Percent, publicKey
 } from '@raydium-io/raydium-sdk';
+const getSplTokenFunctions = async () => {
+    const { createAssociatedTokenAccount, getAssociatedTokenAddress } = await import("@solana/spl-token");
+    return { createAssociatedTokenAccount, getAssociatedTokenAddress };
+  };
 import {CONNECTION} from '../../config';
 import { UserPositions,Referrals } from '../../db/mongo/schema';
 import { saveUserPosition } from '../../service/portfolio/positions';
-
+import { MultisigLayout ,AccountLayout} from './loadKeys';
 import {
     Connection,
     Keypair,
@@ -24,7 +28,7 @@ import {
     TransactionInstruction,
     Commitment,
     SystemProgram,
-    MessageV0,
+    MessageV0,AccountInfo,ConfirmOptions
 } from '@solana/web3.js';
 
 import {
@@ -1007,4 +1011,335 @@ export function getTargetDate(msg: any): Date | null {
         console.error('Error getting target date:', error.message);
         return null;
     }
+}
+
+
+export async function getOrCreateAssociatedTokenAccount(
+    connection: Connection,
+    payer: Signer,
+    mint: PublicKey,
+    owner: PublicKey,
+    allowOwnerOffCurve = true,
+    commitment?: Commitment,
+    confirmOptions?: ConfirmOptions,
+    programId = TOKEN_PROGRAM_ID,
+    associatedTokenProgramId = ASSOCIATED_TOKEN_PROGRAM_ID
+): Promise<Account> {
+    const { createAssociatedTokenAccount, getAssociatedTokenAddress } = await getSplTokenFunctions();
+
+    const associatedToken = await getAssociatedTokenAddress(
+        mint,
+        owner,
+        allowOwnerOffCurve,
+        programId,
+        associatedTokenProgramId
+    );
+
+    // This is the optimal logic, considering TX fee, client-side computation, RPC roundtrips and guaranteed idempotent.
+    // Sadly we can't do this atomically.
+    let account: Account;
+    try {
+        account = await getAccount(connection, associatedToken, commitment, programId);
+    } catch (error: unknown) {
+        // TokenAccountNotFoundError can be possible if the associated address has already received some lamports,
+        // becoming a system account. Assuming program derived addressing is safe, this is the only case for the
+        // TokenInvalidAccountOwnerError in this code path.
+        if (error instanceof TokenAccountNotFoundError || error instanceof TokenInvalidAccountOwnerError) {
+            // As this isn't atomic, it's possible others can create associated accounts meanwhile.
+            try {
+                const transaction = new Transaction().add(
+                    createAssociatedTokenAccountInstruction(
+                        payer.publicKey,
+                        associatedToken,
+                        owner,
+                        mint,
+                        programId,
+                        associatedTokenProgramId
+                    )
+                );
+
+                await sendAndConfirmTransaction(connection, transaction, [payer], confirmOptions);
+            } catch (error: unknown) {
+                // Ignore all errors; for now there is no API-compatible way to selectively ignore the expected
+                // instruction error if the associated account exists already.
+            }
+
+            // Now this should always succeed
+            account = await getAccount(connection, associatedToken, commitment, programId);
+        } else {
+            throw error;
+        }
+    }
+
+    if (!account.mint.equals(mint)) throw new TokenInvalidMintError();
+    if (!account.owner.equals(owner)) throw new TokenInvalidOwnerError();
+
+    return account;
+}
+
+
+export const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+
+/**
+ * Construct a CreateAssociatedTokenAccount instruction
+ *
+ * @param payer                    Payer of the initialization fees
+ * @param associatedToken          New associated token account
+ * @param owner                    Owner of the new account
+ * @param mint                     Token mint account
+ * @param programId                SPL Token program account
+ * @param associatedTokenProgramId SPL Associated Token program account
+ *
+ * @return Instruction to add to a transaction
+ */
+export function createAssociatedTokenAccountInstruction(
+    payer: PublicKey,
+    associatedToken: PublicKey,
+    owner: PublicKey,
+    mint: PublicKey,
+    programId = TOKEN_PROGRAM_ID,
+    associatedTokenProgramId = ASSOCIATED_TOKEN_PROGRAM_ID
+): TransactionInstruction {
+    return buildAssociatedTokenAccountInstruction(
+        payer,
+        associatedToken,
+        owner,
+        mint,
+        Buffer.alloc(0),
+        programId,
+        associatedTokenProgramId
+    );
+}
+
+/**
+ * Construct a CreateAssociatedTokenAccountIdempotent instruction
+ *
+ * @param payer                    Payer of the initialization fees
+ * @param associatedToken          New associated token account
+ * @param owner                    Owner of the new account
+ * @param mint                     Token mint account
+ * @param programId                SPL Token program account
+ * @param associatedTokenProgramId SPL Associated Token program account
+ *
+ * @return Instruction to add to a transaction
+ */
+export function createAssociatedTokenAccountIdempotentInstruction(
+    payer: PublicKey,
+    associatedToken: PublicKey,
+    owner: PublicKey,
+    mint: PublicKey,
+    programId = TOKEN_PROGRAM_ID,
+    associatedTokenProgramId = ASSOCIATED_TOKEN_PROGRAM_ID
+): TransactionInstruction {
+    return buildAssociatedTokenAccountInstruction(
+        payer,
+        associatedToken,
+        owner,
+        mint,
+        Buffer.from([1]),
+        programId,
+        associatedTokenProgramId
+    );
+}
+
+function buildAssociatedTokenAccountInstruction(
+    payer: PublicKey,
+    associatedToken: PublicKey,
+    owner: PublicKey,
+    mint: PublicKey,
+    instructionData: Buffer,
+    programId = TOKEN_PROGRAM_ID,
+    associatedTokenProgramId = ASSOCIATED_TOKEN_PROGRAM_ID
+): TransactionInstruction {
+    const keys = [
+        { pubkey: payer, isSigner: true, isWritable: true },
+        { pubkey: associatedToken, isSigner: false, isWritable: true },
+        { pubkey: owner, isSigner: false, isWritable: false },
+        { pubkey: mint, isSigner: false, isWritable: false },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+        { pubkey: programId, isSigner: false, isWritable: false },
+    ];
+
+    return new TransactionInstruction({
+        keys,
+        programId: associatedTokenProgramId,
+        data: instructionData,
+    });
+}
+export abstract class TokenError extends Error {
+    constructor(message?: string) {
+        super(message);
+    }
+}
+
+export class TokenAccountNotFoundError extends TokenError {
+    name = 'TokenAccountNotFoundError';
+}
+
+
+/** Thrown if a program state account is not owned by the expected token program */
+export class TokenInvalidAccountOwnerError extends TokenError {
+    name = 'TokenInvalidAccountOwnerError';
+}
+
+/** Thrown if the mint of a token account doesn't match the expected mint */
+export class TokenInvalidMintError extends TokenError {
+    name = 'TokenInvalidMintError';
+}
+
+/** Thrown if the owner of a token account doesn't match the expected owner */
+export class TokenInvalidOwnerError extends TokenError {
+    name = 'TokenInvalidOwnerError';
+}
+export interface Account {
+    /** Address of the account */
+    address: PublicKey;
+    /** Mint associated with the account */
+    mint: PublicKey;
+    /** Owner of the account */
+    owner: PublicKey;
+    /** Number of tokens the account holds */
+    amount: bigint;
+    /** Authority that can transfer tokens from the account */
+    delegate: PublicKey | null;
+    /** Number of tokens the delegate is authorized to transfer */
+    delegatedAmount: bigint;
+    /** True if the account is initialized */
+    isInitialized: boolean;
+    /** True if the account is frozen */
+    isFrozen: boolean;
+    /** True if the account is a native token account */
+    isNative: boolean;
+    /**
+     * If the account is a native token account, it must be rent-exempt. The rent-exempt reserve is the amount that must
+     * remain in the balance until the account is closed.
+     */
+    rentExemptReserve: bigint | null;
+    /** Optional authority to close the account */
+    closeAuthority: PublicKey | null;
+    tlvData: Buffer;
+}
+
+
+
+/** Byte length of a token account */
+export const ACCOUNT_SIZE = AccountLayout.span;
+
+/** Token account state as stored by the program */
+export enum AccountState {
+    Uninitialized = 0,
+    Initialized = 1,
+    Frozen = 2,
+}
+export enum AccountType {
+    Uninitialized,
+    Mint,
+    Account,
+}
+
+/** Information about a multisig */
+export interface Multisig {
+    /** Address of the multisig */
+    address: PublicKey;
+    /** Number of signers required */
+    m: number;
+    /** Number of possible signers, corresponds to the number of `signers` that are valid */
+    n: number;
+    /** Is this mint initialized */
+    isInitialized: boolean;
+    /** Full set of signers, of which `n` are valid */
+    signer1: PublicKey;
+    signer2: PublicKey;
+    signer3: PublicKey;
+    signer4: PublicKey;
+    signer5: PublicKey;
+    signer6: PublicKey;
+    signer7: PublicKey;
+    signer8: PublicKey;
+    signer9: PublicKey;
+    signer10: PublicKey;
+    signer11: PublicKey;
+}
+
+
+export const ACCOUNT_TYPE_SIZE = 1;
+
+export interface RawAccount {
+    mint: PublicKey;
+    owner: PublicKey;
+    amount: bigint;
+    delegateOption: 1 | 0;
+    delegate: PublicKey;
+    state: AccountState;
+    isNativeOption: 1 | 0;
+    isNative: bigint;
+    delegatedAmount: bigint;
+    closeAuthorityOption: 1 | 0;
+    closeAuthority: PublicKey;
+}
+
+/** Byte length of a multisig */
+export const MULTISIG_SIZE = MultisigLayout.span;
+/**
+ * Unpack a token account
+ * import { ACCOUNT_TYPE_SIZE, AccountType } from '../extensions/accountType.js';
+
+ *
+ * @param address   Token account
+ * @param info      Token account data
+ * @param programId SPL Token program account
+ *
+ * @return Unpacked token account
+ */
+export function unpackAccount(
+    address: PublicKey,
+    info: AccountInfo<Buffer> | null,
+    programId = TOKEN_PROGRAM_ID
+): Account {
+    if (!info) throw new TokenAccountNotFoundError();
+    if (!info.owner.equals(programId)) throw new TokenInvalidAccountOwnerError();
+    if (info.data.length < ACCOUNT_SIZE) throw new Error('TokenInvalidAccountSizeError');
+
+    const rawAccount = AccountLayout.decode(info.data.slice(0, ACCOUNT_SIZE));
+    let tlvData = Buffer.alloc(0);
+    if (info.data.length > ACCOUNT_SIZE) {
+        if (info.data.length === MULTISIG_SIZE) throw new Error('TokenInvalidAccountSizeError');
+        if (info.data[ACCOUNT_SIZE] != AccountType.Account) throw new Error('TokenInvalidAccountError');
+        tlvData = info.data.slice(ACCOUNT_SIZE + ACCOUNT_TYPE_SIZE);
+    }
+
+    return {
+        address,
+        mint: rawAccount.mint,
+        owner: rawAccount.owner,
+        amount: rawAccount.amount,
+        delegate: rawAccount.delegateOption ? rawAccount.delegate : null,
+        delegatedAmount: rawAccount.delegatedAmount,
+        isInitialized: rawAccount.state !== AccountState.Uninitialized,
+        isFrozen: rawAccount.state === AccountState.Frozen,
+        isNative: !!rawAccount.isNativeOption,
+        rentExemptReserve: rawAccount.isNativeOption ? rawAccount.isNative : null,
+        closeAuthority: rawAccount.closeAuthorityOption ? rawAccount.closeAuthority : null,
+        tlvData,
+    };
+}
+
+/**
+ * Retrieve information about a token account
+ *
+ * @param connection Connection to use
+ * @param address    Token account
+ * @param commitment Desired level of commitment for querying the state
+ * @param programId  SPL Token program account
+ *
+ * @return Token account information
+ */
+export async function getAccount(
+    connection: Connection,
+    address: PublicKey,
+    commitment?: Commitment,
+    programId = TOKEN_PROGRAM_ID
+): Promise<Account> {
+    const info = await connection.getAccountInfo(address, commitment);
+    return unpackAccount(address, info, programId);
 }

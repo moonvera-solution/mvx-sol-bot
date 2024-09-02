@@ -41,7 +41,7 @@ import {
   optimizedSendAndConfirmTransaction,
   wrapLegacyTx,
   add_mvx_and_ref_inx_fees,
-  addMvxFeesInx
+  addMvxFeesInx,getOrCreateAssociatedTokenAccount
 } from "../../../util";
 // import { S } from "@raydium-io/raydium-sdk-v2/lib/api-33b5ab27";
 import { initSdk } from "../cpmm";
@@ -127,8 +127,14 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
 
     // console.log('amountIn', input.amountIn)
     // console.log('out', out)
-    const useAta =  await getOrCreateATA(input.wallet, new PublicKey(modifiedPoolInfo.mintA.address), connection)
-    const { transaction } = await raydium.liquidity.swap({
+    await getOrCreateAssociatedTokenAccount(
+      connection,
+      input.wallet,
+      new PublicKey(mintIn.address),
+      input.wallet.publicKey
+  );
+
+  const { transaction } = await raydium.liquidity.swap({
       poolInfo,
       poolKeys,
       amountIn: new BN(input.amountIn),
@@ -136,7 +142,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       inputMint: mintIn.address,   
       fixedSide: 'in',
       config: {
-        associatedOnly: useAta ? false : true,
+        associatedOnly:false,
         inputUseSolBalance: true,
         outputUseSolBalance: true,
       }, 
@@ -146,7 +152,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
 
     }).catch((e) => {
       console.log('error', e)
-      throw new Error('Failed transaction')
+      throw new Error(`Failed transaction: ${e}`)
     })
     // console.log('transaction', transaction)
     const solAmount = input.side == 'buy' ? new BigNumber(input.amountIn) : new BigNumber(out.minAmountOut.toNumber());
@@ -194,25 +200,3 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
     return txId;
   
     }
-
-
-    export async function getOrCreateATA(wallet: Keypair, token: PublicKey, connection: Connection) {
-      let isAta:boolean = false;
-      // Check if the associated token account exists
-      const associatedTokenAddress = await getAssociatedTokenAddress(
-          new PublicKey(token),
-          wallet.publicKey
-      );
-  
-      // Check if the account exists
-      const accountInfo = await connection.getAccountInfo(associatedTokenAddress, 'confirmed');
-      // console.log('accountInfo', accountInfo)
-      if (accountInfo) {
-        await createAssociatedTokenAccount(connection, wallet, new PublicKey(token), wallet.publicKey);      }
-      console.log('isAta', isAta)
-      return isAta;
-  }
-
-  
-
-  
