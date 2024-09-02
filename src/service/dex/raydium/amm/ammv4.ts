@@ -147,7 +147,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       console.log('error', e)
       throw new Error('Failed transaction')
     })
-  
+    console.log('transaction', transaction)
     const solAmount = input.side == 'buy' ? new BigNumber(input.amountIn) : new BigNumber(out.minAmountOut.toNumber());
 
     // console.log('solAmount', solAmount)
@@ -213,3 +213,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
       ata && console.log('Created ATA', ata.toBase58());
       return ata;
   }
+
+  
+
+  
