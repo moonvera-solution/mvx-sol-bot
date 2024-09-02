@@ -126,7 +126,7 @@ export async function raydium_amm_swap_v4(input: TxInputInfo): Promise<string | 
 
     // console.log('amountIn', input.amountIn)
     console.log('out', out)
-    
+    await getOrCreateATA(input.wallet, new PublicKey(modifiedPoolInfo.mintA.address), connection)
     const { transaction } = await raydium.liquidity.swap({
       poolInfo,
       poolKeys,
