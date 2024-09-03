@@ -82,9 +82,10 @@ export async function getAmmV4PoolKeys(ctx: any) {
   const userSecretKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey;
 
   const raydium = await initSdk(
-    Keypair.fromSecretKey(bs58.decode(String(userSecretKey))),
+  
     connection
   );
+  raydium.setOwner(Keypair.fromSecretKey(bs58.decode(userSecretKey)));
   // console.log('ctx.session.activeTradingPoolId:', ctx.session.activeTradingPoolId);
   const data = await raydium.liquidity.getPoolInfoFromRpc({poolId: ctx.session.activeTradingPoolId});
   const rpcData = data.poolRpcData;

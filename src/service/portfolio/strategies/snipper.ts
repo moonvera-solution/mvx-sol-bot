@@ -18,7 +18,7 @@ import { initSdk } from "../../dex/raydium/cpmm";
 import { display_jupSwapDetails } from '../../../views/jupiter/swapView';
 import BN from 'bn.js'
 import bs58 from 'bs58';
-import { getOrCreateATA } from '../../../service/dex/raydium/amm/ammv4';
+// import { getOrCreateATA } from '../../../service/dex/raydium/amm/ammv4';
 
 export async function snipperON(ctx: any, amount: string) {
     try {
@@ -131,7 +131,9 @@ async function _getCpmmSwapTx(ctx: any, tradeSide: 'buy' | 'sell', poolKeys: any
     const chatId = ctx.chat.id;
     const connection = CONNECTION;
     // console.log("userWallet --c>", userWallet.publicKey.toBase58());
-    const raydium = await initSdk(userWallet, connection);
+    const raydium = await initSdk( connection);
+    raydium.setOwner(userWallet)
+
     const poolId = ctx.session.cpmmPoolInfo.id;
 console.log("poolId --c>", poolId);
     const [data,rpcData] = await Promise.all([
@@ -227,7 +229,8 @@ async function _getAmmSwapTx(ctx: any, poolKeys: any, userWallet: Keypair, amoun
     const connection = CONNECTION;
     // const walletTokenAccounts = await _getWalletTokenAccount(connection, userWallet.publicKey);
     // const wallettoUse = Keypair.fromSecretKey(bs58.decode(String(userWallet.secretKey)));
-    const raydium = await initSdk(userWallet, connection)
+    const raydium = await initSdk( connection)
+    raydium.setOwner(userWallet)
 
     let poolInfo: ApiV3PoolInfoStandardItem   = ctx.session.AmmPoolInfo
     const modifiedPoolInfo = { ...poolInfo };
@@ -257,7 +260,6 @@ async function _getAmmSwapTx(ctx: any, poolKeys: any, userWallet: Keypair, amoun
         // range: 1 ~ 0.0001, means 100% ~ 0.01%
   
       })
-      const useAta =  await getOrCreateATA(userWallet, new PublicKey(modifiedPoolInfo.mintA.address), connection)
 
       const { transaction } = await raydium.liquidity.swap({
         poolInfo,
@@ -267,14 +269,17 @@ async function _getAmmSwapTx(ctx: any, poolKeys: any, userWallet: Keypair, amoun
         inputMint: mintIn.address,   // out.amountOut means amount 'without' slippage
         fixedSide: 'in',
         config: {
-            associatedOnly: useAta ? false : true ,
+            associatedOnly:  true ,
             inputUseSolBalance: true,
             outputUseSolBalance: true,
           }, 
           computeBudgetConfig: {
           microLamports: ctx.session.customPriorityFee * 1e9,
         }
-      })
+      }).catch((e) => {
+        console.log("swap error --c>", e);
+        throw new Error(`🔴 Swap failed! Please try again.`);
+      });
 
 
 
@@ -282,7 +287,6 @@ async function _getAmmSwapTx(ctx: any, poolKeys: any, userWallet: Keypair, amoun
     let txV: any = ''; 
     let solAmount = new BigNumber(amountIn) 
     if (transaction instanceof Transaction) {
-  
         transaction.instructions.push(...addMvxFeesInx(userWallet, solAmount));
         // addMvxFeesInx(userWallet, solAmount);
         txV = new VersionedTransaction(wrapLegacyTx(transaction.instructions, userWallet, (await connection.getLatestBlockhash()).blockhash));
@@ -349,11 +353,11 @@ export async function startSnippeSimulation(
             snipeStatus = ctx.session.snipeStatus;
             // console.log('snipeStatus here', snipeStatus);
             simulationResult = await connection.simulateTransaction(txV!, { replaceRecentBlockhash: true, commitment: 'processed' });
-            console.log("simulationResult", simulationResult );
+            // console.log("simulationResult", simulationResult );
             const BALANCE_ERROR = /Transfer: insufficient lamports/;
             const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
             if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
-                console.log(simulationResult.value.logs)
+                // console.log(simulationResult.value.logs)
                 console.log("SIM EERROR --c>", JSON.parse(JSON.stringify(simulationResult.value)));
                 ctx.api.sendMessage(chatId, `🔴 Insufficient balance for transaction.`);
                 return;

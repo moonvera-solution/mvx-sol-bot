@@ -212,8 +212,6 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         fetch(`https://price.jup.ag/v6/price?ids=SOL`).then((response) => response.json()),
         fetch(swapUrl).then(res => res.json())
       ]);
-      // console.log('quoteResponse:', quoteResponse)
-      console.log('userPosition:', userPosition)
 
       const {
         
@@ -227,9 +225,10 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const jupTokenValue: any = Object.values(jupTokenRate.data);
       console.log('jupTokenRate:', jupTokenRate)
       let jupTokenPrice = 0;
-      
-
-      if (jupTokenValue[0] && jupTokenValue[0].price && quoteResponse?.error_code !== 'TOKEN_NOT_TRADABLE') {
+       
+      console.log('quoteResponse?.error_code:', quoteResponse?.error_code)
+      console.log('quoteResponse:', quoteResponse) 
+      if (jupTokenValue[0] && jupTokenValue[0].price && (quoteResponse?.error_code !== 'TOKEN_NOT_TRADABLE') ) {
    
         jupTokenPrice = jupTokenValue[0].price;
         console.log('jupToken')

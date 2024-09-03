@@ -22,11 +22,10 @@ export const txVersion = TxVersion.V0;
 
 let raydium: Raydium | undefined;
 
-export async function initSdk(wallet: Keypair, connection: Connection) {
+export async function initSdk( connection: Connection) {
   if (raydium) return raydium
   // console.log("--c>, ", wallet.publicKey.toBase58());
   raydium = await Raydium.load({
-    owner: wallet,
     connection,
     cluster: 'mainnet',
     disableFeatureCheck: true,
@@ -46,7 +45,9 @@ export async function raydium_cpmm_swap(
   ctx: any
 ): Promise<string | null> {
   let poolKeys: CpmmKeys | undefined
-  const raydium = await initSdk(wallet, connection);
+  const raydium = await initSdk( connection);
+  raydium.setOwner(wallet)
+
   const [data,rpcData] = await Promise.all([
    raydium.cpmm.getPoolInfoFromRpc(poolId ),
    raydium.cpmm.getRpcPoolInfo(poolId, true)
@@ -183,7 +184,8 @@ export const fetchTokenAccountData = async (wallet: Keypair, connection: Connect
 
 
 export async function getpoolDataCpmm(wallet: Keypair, poolID: any, connection: any): Promise<CpmmKeys> {
-  const raydium = await initSdk(wallet, connection);
+  const raydium = await initSdk( connection);
+  raydium.setOwner(wallet)
   if (!poolID) {
     console.error('Pool Cpmm not found')
     throw new Error('Cpmm pool not found')

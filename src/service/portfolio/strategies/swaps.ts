@@ -10,7 +10,7 @@ import { display_jupSwapDetails } from '../../../views/jupiter/swapView';
 import { createTradeImage } from '../../../views/util/image';
 import { InputFile } from 'grammy';
 import { raydium_amm_swap_v4 } from '../../../service/dex/raydium/amm/ammv4';
-import { AmmRpcData, AmmV4Keys, ApiV3PoolInfoStandardItem } from '@raydium-io/raydium-sdk-v2';
+import { AmmRpcData, AmmV4Keys, AmmV5Keys, ApiV3PoolInfoStandardItem } from '@raydium-io/raydium-sdk-v2';
 import { token } from '@metaplex-foundation/js';
 import { UserPositions } from '../../../db';
 import { saveUserPosition } from '../positions';
@@ -77,7 +77,7 @@ export async function handle_radyum_swap(
     /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
     /*                         SWAP                               */
     /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
-    const ammPoolKeys: AmmV4Keys | undefined =    ctx.session.AmmPoolKeys;
+    const ammPoolKeys: AmmV4Keys | AmmV5Keys =    ctx.session.AmmPoolKeys;
     const rpcData: AmmRpcData = ctx.session.AmmRpcData;
     const ammPoolInfo: ApiV3PoolInfoStandardItem = ctx.session.AmmPoolInfo;
     // const inputTokenAmount = new TokenAmount(tokenIn!, new BigNumber(amountIn).toFixed());
@@ -139,7 +139,7 @@ export async function handle_radyum_swap(
       }
 
       if (side == 'buy') {
-        // console.log('extractAmount:', extractAmount)
+        console.log('extractAmount:', extractAmount)
         saveUserPosition(
           userWallet.publicKey.toString(), {
           baseMint: tokenOut,
