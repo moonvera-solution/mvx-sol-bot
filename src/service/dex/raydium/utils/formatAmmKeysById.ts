@@ -66,7 +66,7 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
       if (AmmV4Keys) {
         ctx.session.isCpmmPool = false;
         console.log("AmmV4Keys here");
-        // console.log("AmmV4Keys:", AmmV4Keys);
+       ctx.session.activeTradingPool= AmmV4Keys;
         return AmmV4Keys.id;
       }
     }

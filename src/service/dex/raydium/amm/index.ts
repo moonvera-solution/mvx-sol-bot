@@ -1,11 +1,10 @@
 
 import assert from "assert";
-import { AMM_V4, AMM_STABLE, DEVNET_PROGRAM_ID, TxVersion } from '@raydium-io/raydium-sdk-v2'
-
 import {
   _100,
   jsonInfo2PoolKeys,
   Liquidity,
+  LiquidityPoolInfo,
   LiquidityPoolKeys,
   Percent,
   Token,
@@ -20,8 +19,7 @@ import {
   SendOptions,
   VersionedTransaction,
   TransactionMessage,
-  AddressLookupTableAccount,
-  Transaction
+  AddressLookupTableAccount
 } from "@solana/web3.js";
 import {
   Keypair,
@@ -30,7 +28,6 @@ import {
 import {
   makeTxVersion,
   MVXBOT_FEES,
-  SOL_ADDRESS,
   WALLET_MVX
 } from "../../../../config";
 import { formatAmmKeysById } from "../utils/formatAmmKeysById";
@@ -44,10 +41,10 @@ import {
   addMvxFeesInx
 } from "../../../util";
 // import { S } from "@raydium-io/raydium-sdk-v2/lib/api-33b5ab27";
-import { initSdk } from "../cpmm";
-import { AmmRpcData, AmmV4Keys, ApiV3PoolInfoStandardItem } from "@raydium-io/raydium-sdk-v2";
+import { Raydium } from "@raydium-io/raydium-sdk-v2";
+import { initSdk } from "./AmmPoolData";
 import BN from "bn.js";
-// import { NATIVE_MINT } from '@solana/spl-token'
+
 type refObject = { referralWallet: string, referralCommision: number };
 
 export type TxInputInfo = {
@@ -64,26 +61,48 @@ export type TxInputInfo = {
 };
 
 export async function raydium_amm_swap(input: TxInputInfo): Promise<string | null> {
-  console.log('going ray')
   const connection = input.connection;
+  console.log('input:: ', input.targetPool);
   const targetPoolInfo = await formatAmmKeysById(input.targetPool, connection);
+
   assert(targetPoolInfo, "cannot find the target pool");
   const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys;
+  console.log('poolKeys:: hereeee ');
   let minSwapAmountBalance: number = 0;
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                       QUOTE SWAP                           */
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-xwxwwx»-»-»-»-»*/
 
+
+  const raydium = await initSdk( connection)
+  raydium.setOwner(input.wallet)
+
+  const data = await raydium.liquidity.getPoolInfoFromRpc({poolId: input.targetPool});
+  const rpcData = data.poolRpcData;
+  const poolInfo = data.poolInfo;
+  const [baseReserve, quoteReserve, status,baseDecimals, quoteDecimal, lpSupply ] = [rpcData.baseReserve, rpcData.quoteReserve, rpcData.status.toNumber(), rpcData.baseDecimal, rpcData.quoteDecimal, poolInfo.lpAmount, poolInfo.openTime ];
+  
+  const poolUsing: LiquidityPoolInfo = {
+    status: new BN(status), // Assuming status is being converted to BN
+    baseDecimals: Number(baseDecimals), // Already a number
+    quoteDecimals: Number(quoteDecimal), // Already a number
+    lpDecimals: 9, // Assuming a standard value for lpDecimals, adjust if necessary
+    baseReserve: new BN(baseReserve), // Convert baseReserve to BN
+    quoteReserve: new BN(quoteReserve), // Convert quoteReserve to BN
+    lpSupply: new BN(lpSupply), // Convert lpSupply to BN
+    startTime: new BN(poolInfo.openTime) // Assuming poolInfo.openTime is the start time in a format that can be converted to BN
+  };
+ 
+  
     const { amountOut, minAmountOut } = Liquidity.computeAmountOut({
       poolKeys: poolKeys,
-      poolInfo: await Liquidity.fetchInfo({ connection, poolKeys }),
+      poolInfo: poolUsing,
       amountIn: input.inputTokenAmount,
       currencyOut: input.outputToken,
       slippage: input.slippage,
     });
 
-
-  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-« -«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                      MAKE RAYIDUM INX                      */
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
   const { innerTransactions } = await Liquidity.makeSwapInstructionSimple({
@@ -92,49 +111,27 @@ export async function raydium_amm_swap(input: TxInputInfo): Promise<string | nul
     userKeys: {
       tokenAccounts: (await getWalletTokenAccount(connection, new PublicKey(input.wallet.publicKey))),
       owner: input.wallet.publicKey,
+      payer: input.wallet.publicKey,
     },
     amountIn: input.inputTokenAmount,
     amountOut: minAmountOut,
     fixedSide: "in",
-    makeTxVersion
-  });
-  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
-  /*                      REFERRAL AMOUNT                      */
-  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
-  // In case of having a referral
-  // const referralFee = input.referralCommision / 100;
- 
-  // if (referralFee > 0) {
-  //   innerTransactions[0].instructions.push(
-  //     ...add_mvx_and_ref_inx_fees(
-  //       input.wallet,
-  //       new PublicKey(input.generatorWallet).toBase58(),
-  //       input.side === "sell" ? new BigNumber(amountOut.raw.toNumber() ): new BigNumber(input.inputTokenAmount.raw.toNumber()),
-  //       input.referralCommision
-  //     ));
-  // } else {
-  //   let feeAmt = Number.isInteger(amountOut.raw.toNumber()) ? amountOut.raw.toNumber() : Math.ceil(Number.parseFloat(amountOut.raw.toNumber().toFixed(2)));
-  //   console.log("feeAmt:: ", feeAmt);
-  //   innerTransactions[0].instructions.push(
-  //     ...addMvxFeesInx(
-  //       input.wallet,
-  //       input.side === "sell" ? new BigNumber(feeAmt) : new BigNumber(input.inputTokenAmount.raw.toNumber())
-  //     )
-  //   );
-  // }
+    config: {
+      bypassAssociatedCheck: false,
+      checkCreateATAOwner: true,
+    },
+    makeTxVersion,
+  })
   let feeAmt = Number.isInteger(amountOut.raw.toNumber()) ? amountOut.raw.toNumber() : Math.ceil(Number.parseFloat(amountOut.raw.toNumber().toFixed(2)));
-  console.log("feeAmt:: ", feeAmt);
+  // console.log("feeAmt:: ", feeAmt);
   innerTransactions[0].instructions.push(
     ...addMvxFeesInx(
       input.wallet,
       input.side === "sell" ? new BigNumber(feeAmt) : new BigNumber(input.inputTokenAmount.raw.toNumber())
     )
   );
-  // console.log("input.customPriorityFee:: ", input.customPriorityFee);
   let maxPriorityFee = Math.ceil(Number.parseFloat(String(input.customPriorityFee)) * 1e9);
-  console.log("maxPriorityFee:: ", maxPriorityFee);
   innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee }));
-  // console.log("referralFee:: ", referralFee);
 
   const vTxx = new VersionedTransaction(wrapLegacyTx(innerTransactions[0].instructions, input.wallet, (await connection.getLatestBlockhash()).blockhash));
   const addressLookupTableAccounts = await Promise.all(
@@ -147,14 +144,14 @@ export async function raydium_amm_swap(input: TxInputInfo): Promise<string | nul
 
   var message = TransactionMessage.decompile(vTxx.message, { addressLookupTableAccounts: addressLookupTableAccounts })
   vTxx.message = message.compileToV0Message(addressLookupTableAccounts);
+  vTxx.message.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
   vTxx.sign([input.wallet]);
-  console.log('is sending transaction!!!!!!!!');
+
   return await optimizedSendAndConfirmTransaction(
     vTxx,
     connection,
-    (await connection.getLatestBlockhash()).blockhash,
+    vTxx.message.recentBlockhash,
     50 // RETRY INTERVAL
   )
-  return null;
-}
 
+}

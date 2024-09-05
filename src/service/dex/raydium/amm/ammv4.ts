@@ -44,9 +44,7 @@ import { initSdk, txVersion } from "../cpmm";
 import { AmmRpcData, AmmV4Keys, ApiV3PoolInfoStandardItem } from "@raydium-io/raydium-sdk-v2";
 import BN from "bn.js";
 import bs58 from "bs58";
-import { use } from "chai";
-import {TOKEN_PROGRAM_ID,ASSOCIATED_TOKEN_PROGRAM_ID} from './associatedTokenAccount'
-import { createAssociatedTokenAccountIdempotentInstruction } from './associatedTokenAccount'
+import { use } from "chai"
 import { SOL } from "@metaplex-foundation/js";
 import { get } from "axios";
 import { connect } from "http2";

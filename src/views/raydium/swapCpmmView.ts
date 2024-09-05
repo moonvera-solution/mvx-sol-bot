@@ -13,6 +13,7 @@ import BigNumber from 'bignumber.js';
 import { saveUserPosition } from '../../service/portfolio/positions';
 import { createTradeImage } from "../util/image";
 import { InputFile } from "grammy";
+import { display_jupSwapDetails } from "../jupiter/swapView";
 // import { M } from "@raydium-io/raydium-sdk-v2/lib/raydium-b84847b9";
 const fs = require('fs');
 
@@ -137,7 +138,7 @@ export async function ray_cpmm_swap(ctx: any) {
       }
       if (tradeType == 'buy') {
         ctx.session.latestCommand = 'jupiter_swap';
-        await display_cpmm_raydium_details(ctx, false);
+        await display_jupSwapDetails(ctx, false);
       }
     } else {
       await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
