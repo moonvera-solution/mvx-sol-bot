@@ -150,7 +150,7 @@ export async function swap_pump_fun(ctx: any) {
       }
     });
   } catch (e:any) {
-    await ctx.api.sendMessage(ctx.chat.id, `❌ Error: ${e.message}`);
+    await ctx.api.sendMessage(ctx.chat.id, `❌ Swap failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
     console.error(e);
   }
 }

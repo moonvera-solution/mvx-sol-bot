@@ -510,6 +510,7 @@ bot.on("message", async (ctx) => {
       }
       case "rug_check": {
         if (msgTxt) {
+          try{
           if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {
             const isTOken = await checkAccountType(ctx, msgTxt);
             if (!isTOken) {
@@ -525,12 +526,16 @@ bot.on("message", async (ctx) => {
           } else {
             ctx.api.sendMessage(chatId, "Invalid address");
           }
+        } catch (error: any) {
+          ctx.api.sendMessage(chatId, "Invalid address");
+        }
         }
         break;
       }
 
       case "jupiter_swap": {
         if (msgTxt) {
+          try{
           if (
             !ctx.session.jupSwap_token ||
             (msgTxt && PublicKey.isOnCurve(msgTxt)) ||
@@ -550,6 +555,9 @@ bot.on("message", async (ctx) => {
           } else {
             ctx.api.sendMessage(chatId, "Invalid address");
           }
+        } catch (error: any) {
+          ctx.api.sendMessage(chatId, "Invalid address");
+        }
         }
         break;
       }
@@ -979,6 +987,7 @@ bot.on("message", async (ctx) => {
             ctx.api.sendMessage(chatId, "Invalid address");
           }
         } catch (error: any) {
+          ctx.api.sendMessage(chatId, "Invalid address");
           console.error("Error in 'snipe' command:", error.message);
         }
         break;
@@ -1047,6 +1056,7 @@ bot.on("message", async (ctx) => {
         console.log("limitOrders here");
  
           if(msgTxt){
+            try{
           if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {
             const isTOken = await checkAccountType(ctx, msgTxt);
             if (!isTOken) {
@@ -1060,6 +1070,9 @@ bot.on("message", async (ctx) => {
           await display_limitOrder_token_details(ctx, false);
           break;
           }
+        } catch (error: any) {
+          ctx.api.sendMessage(chatId, "Invalid address");
+        }
         }
         break;
       }
