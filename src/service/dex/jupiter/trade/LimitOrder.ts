@@ -223,7 +223,7 @@ export async function calculateOrderSellAmount(inputToken: string, inAmount: str
     let currentRate = quoteResponse.outAmount;
     let expectedAmountOut = Number(targetPrice) >= tokenPriceSOL ? Number(targetPrice) /tokenPriceSOL  * currentRate: tokenPriceSOL / Number(targetPrice) * currentRate   ; 
     ctx.session.expectedAmountOut = expectedAmountOut;
-    console.log('expectedAmountOut', expectedAmountOut);
+    // console.log('expectedAmountOut', expectedAmountOut);
   return expectedAmountOut;
 }
 

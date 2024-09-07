@@ -55,7 +55,7 @@ export async function snipperON(ctx: any, amount: string) {
             if (!poolKeys && ctx.session.snipeStatus) {
                 console.log('Snipe lookup on.');
                 poolKeys = await getRayPoolKeys(ctx, snipeToken);
-                console.log('poolKeysRayyy:::::', poolKeys);
+                // console.log('poolKeysRayyy:::::', poolKeys);
                 console.log('snipe status: ', ctx.session.snipeStatus);
             } else if (poolKeys) {
 

@@ -22,6 +22,10 @@ export async function handle_radyum_swap(
     const chatId = ctx.chat.id;
   const connection = CONNECTION;
   const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+  // if(!userWallet){
+  //   await ctx.api.sendMessage(chatId, 'Bot got updated. Please /start again');
+  //   return;
+  // }
   const tokenOut = ctx.session.AmmPoolKeys.mintA.address;
   try {
     let userSolBalance = await getSolBalance(userWallet.publicKey, connection);

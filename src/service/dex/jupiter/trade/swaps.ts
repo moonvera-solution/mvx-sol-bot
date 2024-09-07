@@ -34,7 +34,6 @@ export async function jupiter_inx_swap(
   amountIn:number,
   slippage:number,
   priorityFeeLevel:number,
-  refObject:refObject
 ) : Promise<string | null>{
   const feeAccount = null;
   let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}${feeAccount ? '&platformFeeBps=08' : ''}`.trim();

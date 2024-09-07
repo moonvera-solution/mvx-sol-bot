@@ -256,7 +256,7 @@ export type REFERRAL_TYPE = {
 };
 
 export type USERPOSITION_TYPE = {
-  // positionChatId: number;
+  positionChatId: number;
   walletId: string;
   positions: [
     {

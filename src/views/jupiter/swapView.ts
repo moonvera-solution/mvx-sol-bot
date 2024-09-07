@@ -26,19 +26,32 @@ export async function jupiterSwap(ctx: any) {
   const chatId = ctx.chat.id;
   const connection = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
   const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
+
   const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
-  const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
+  console.log('activeWalletIndexIdx:', activeWalletIndexIdx)
+  console.log('ctx.session.portfolio', ctx.session.portfolio)
+  // if(!ctx.session.portfolio.wallets[activeWalletIndexIdx]){
+  //   await ctx.api.sendMessage(chatId, `Bot got updated, please press /start to continue.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+  //   return;
+  // }
+  // if(ctx.session.portfolio.wallets[activeWalletIndexIdx] && ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey == undefined){
+  //   await ctx.api.sendMessage(chatId, `Bot got updated, please press /start to continue.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+  //   return;
+  // }
+  const payerKeypair =  Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
+
+
   const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
   const isBuySide = ctx.session.jupSwap_side == "buy";
   const tokenIn = isBuySide ? SOL_ADDRESS : ctx.session.jupSwap_token;
   const tokenOut = isBuySide ? ctx.session.jupSwap_token : SOL_ADDRESS;
-  console.log('tokenOut',tokenOut)
+  // console.log('tokenOut',tokenOut)
   const userTokenBalanceAndDetails = isBuySide ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
 
   const amountToSell = Math.floor((ctx.session.jupSwap_amount / 100) * userTokenBalanceAndDetails.userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals));
   const amountIn = isBuySide ? ctx.session.jupSwap_amount * 1e9 : amountToSell;
-  const refObject = { referralWallet: new PublicKey(ctx.session.generatorWallet).toBase58(), referralCommision: ctx.session.referralCommision };
-  console.log('refObject:', refObject)
+  // const refObject = { referralWallet: new PublicKey(ctx.session.generatorWallet).toBase58(), referralCommision: ctx.session.referralCommision };
+  // console.log('refObject:', refObject)
   const userSolBalance = (await getSolBalance(userWallet.publicKey, connection) * 1e9);
 
   const minBalance = (amountIn + (amountIn * MVXBOT_FEES.toNumber()) + (ctx.session.customPriorityFee * 1e9));
@@ -63,7 +76,6 @@ export async function jupiterSwap(ctx: any) {
     amountIn,
     (ctx.session.latestSlippage * 100),
     (ctx.session.customPriorityFee * 1e9), // here is it for jupiter its allways the default set by users
-    refObject
   ).then(async (txSig: any) => {
     if (!txSig) return;
     const tradeType = isBuySide ? 'buy' : 'sell';
@@ -181,6 +193,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const selectedWallet = ctx.session.portfolio.activeWalletIndex;
       userWallet = ctx.session.portfolio.wallets[selectedWallet];
     }
+    // console.log('selectedWallet:', userWallet)
     const publicKeyString: any = userWallet.publicKey;
     // console.log('rpcUrl:', rpcUrl)
     if (token) {
@@ -219,15 +232,10 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         dextoolsURL,
         dexscreenerURL,
       } = tokenMetadataResult;
-    
 
-      const lastRouteHop_5 = Number(jupPriceImpact_5.outAmount)
       const jupTokenValue: any = Object.values(jupTokenRate.data);
-      console.log('jupTokenRate:', jupTokenRate)
       let jupTokenPrice = 0;
-       
-      console.log('quoteResponse?.error_code:', quoteResponse?.error_code)
-      console.log('quoteResponse:', quoteResponse) 
+
       if (jupTokenValue[0] && jupTokenValue[0].price && (quoteResponse?.error_code !== 'TOKEN_NOT_TRADABLE') ) {
    
         jupTokenPrice = jupTokenValue[0].price;
@@ -236,7 +244,6 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined || quoteResponse?.error_code === 'TOKEN_NOT_TRADABLE') {
         console.log('raydium')
         ctx.session.activeTradingPoolId = await getRayPoolKeys(ctx, token);
-        // console.log('activeTradingPoolId:', ctx.session.activeTradingPoolId)
         if (!ctx.session.isCpmmPool) {
           console.log('raydium AMM active')
           await display_raydium_details(ctx, false);
@@ -296,7 +303,6 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       // console.log('token:', token)  
       if (userPosition[0] && userPosition[0].positions && userPosition[0].positions != undefined) {
         specificPosition = userPosition[0].positions.find((pos: any) => (pos.baseMint) === (token));
-
       }
       let initialInUSD = 0;
       let initialInSOL = 0;
@@ -314,18 +320,13 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
         profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
       }
-      console.log('profitPercentage:', profitPercentage)
       ctx.session.userProfit = profitPercentage
-      const tokenToReceive_5 = ((lastRouteHop_5) / Math.pow(10, userTokenDetails.decimals))
       const freezable = birdeyeData?.response2.data.freezeable ? "⚠️ Be careful: This token is freezable." : "✅ Not freezable.";
-      // const priceImpact_5 = 1 + ((newPrice - tokenPriceSOL) / tokenPriceSOL) * 100;
       let messageText = `<b>------ ${tokenData.name}(${tokenData.symbol}) ------</b> | 📄 CA: <code>${token}</code> <a href="copy:${token}">🅲</a>\n` +
         `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
         `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
         `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
-
         `<b>LP Burnt:</b> ${islpBurnt} | <b>Freezable:</b> ${freezable} \n\n` +   
- 
         `---<code>Token Details</code>---\n` +
         `Market Cap: <b>${Mcap}</b> USD\n` +
         `Price:  <b>${tokenPriceSOL.toFixed(9)} SOL</b> | <b>${(tokenPriceUSD).toFixed(9)} USD</b> \n\n` +
@@ -345,10 +346,6 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
             [{ text: ' 🔂 Refresh ', callback_data: 'refresh_Jupiter_swap' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
             [{ text: `Buy (X SOL)`, callback_data: 'buy_X_JUP' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_JUP' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_JUP' }],
             [{ text: `Sell X %`, callback_data: 'sell_X_JUP' }, { text: 'Sell 50%  ', callback_data: 'sell_50_JUP' }, { text: 'Sell 100%  ', callback_data: 'sell_100_JUP' }],
-            // [{ text: '📈 Priority fees', callback_data: '_' }],
-            // [
-            //   { text: `Low ${priority_Level === 5000 ? '✅' : ''}`, callback_data: 'priority_low' },
-            //   { text: `Medium ${priority_Level === 7500 ? '✅' : ''}`, callback_data: 'priority_medium' }, { text: `High ${priority_Level === 10000 ? '✅' : ''}`, callback_data: 'priority_high' },{ text: `Custom ${priority_custom === true ? '✅' : ''}`, callback_data: 'priority_custom' }],
             [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
             [{ text: 'Close', callback_data: 'closing' }]
           ]

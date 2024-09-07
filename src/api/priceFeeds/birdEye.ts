@@ -84,6 +84,6 @@ export async function getSolanaDetails() {
 }
 
 
-getTokenDataFromBirdEyePositions('ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82', 'BufhUw6vTmPB5ytaAWfHb6xUCUdVqHGZn9eQenSJmgmP').then((data) => {
-    console.log(data);
-});;
+// getTokenDataFromBirdEyePositions('ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82', 'BufhUw6vTmPB5ytaAWfHb6xUCUdVqHGZn9eQenSJmgmP').then((data) => {
+//     console.log(data);
+// });;

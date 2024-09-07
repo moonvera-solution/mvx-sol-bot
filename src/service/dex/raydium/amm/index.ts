@@ -62,12 +62,12 @@ export type TxInputInfo = {
 
 export async function raydium_amm_swap(input: TxInputInfo): Promise<string | null> {
   const connection = input.connection;
-  console.log('input:: ', input.targetPool);
+  // console.log('input:: ', input.targetPool);
   const targetPoolInfo = await formatAmmKeysById(input.targetPool, connection);
 
   assert(targetPoolInfo, "cannot find the target pool");
   const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys;
-  console.log('poolKeys:: hereeee ');
+  // console.log('poolKeys:: hereeee ');
   let minSwapAmountBalance: number = 0;
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                       QUOTE SWAP                           */

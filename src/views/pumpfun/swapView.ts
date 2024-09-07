@@ -32,8 +32,8 @@ export async function swap_pump_fun(ctx: any) {
     const userSolBalance = await getSolBalance(userWallet.publicKey, connection);
     const amountIn = tradeSide == 'buy' ? ctx.session.pump_amountIn : amountToSell;
 
-    console.log('amountIn:', amountIn);
-    console.log('tx.session.pump_amountIn:', ctx.session.pump_amountIn);
+    // console.log('amountIn:', amountIn);
+    // console.log('tx.session.pump_amountIn:', ctx.session.pump_amountIn);
     if (tradeSide == 'buy' && userSolBalance < ctx.session.pump_amountIn) {
       await ctx.api.sendMessage(chatId, `❌ Insufficient SOL balance.`);
       return;

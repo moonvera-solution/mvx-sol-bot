@@ -136,7 +136,7 @@ async function _validateSession(ctx: any) {
     const restoredSession = await UserSession.findOne({ chatId: ctx.chat.id });
     if (restoredSession) {
       // NOTE: update db manually, if schema changes! avoid stopping the bot
-      // ctx.session = JSON.parse(JSON.stringify(restoredSession));
+      ctx.session = JSON.parse(JSON.stringify(restoredSession));
       console.log("Session restored.");
 
     }
@@ -149,6 +149,7 @@ async function _validateSession(ctx: any) {
 bot.command("start", async (ctx: any) => {
   await _validateSession(ctx);
   backupSession = ctx.session;
+  // console.log("ctx.session", backupSession);
   // console.log("ctx.session.generatorWallet", ctx.session.generatorWallet);
   // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
   try {
@@ -326,14 +327,22 @@ bot.command("start", async (ctx: any) => {
 });
 
 bot.command("help", async (ctx) => {
+  const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+  if(!userWallet){
+    await ctx.api.sendMessage(ctx.chat.id, 'Bot got updated. Please /start again');
+    return;
+  }
   await sendHelpMessage(ctx);
   ctx.session.latestCommand = "jupiter_swap";
 });
 
 bot.command("positions", async (ctx) => {
-  await _validateSession(ctx);
-  backupSession = ctx.session;
 
+  const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+  if(!userWallet){
+    await ctx.api.sendMessage(ctx.chat.id, 'Bot got updated. Please /start again');
+    return;
+  }
   try {
     // await ctx.api.sendMessage(ctx.chat.id, `Loading your positions...`);
     await display_all_positions(ctx, false);
@@ -343,7 +352,11 @@ bot.command("positions", async (ctx) => {
 });
 
 bot.command("rugchecking", async (ctx) => {
-  await _validateSession(ctx);
+  const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+  if(!userWallet){
+    await ctx.api.sendMessage(ctx.chat.id, 'Bot got updated. Please /start again');
+    return;
+  }
 
   try {
     await ctx.api.sendMessage(
@@ -357,8 +370,11 @@ bot.command("rugchecking", async (ctx) => {
 });
 
 bot.command("trade", async (ctx) => {
-  await _validateSession(ctx);
-  backupSession = ctx.session;
+  const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+  if(!userWallet){
+    await ctx.api.sendMessage(ctx.chat.id, 'Bot got updated. Please /start again');
+    return;
+  }
   try {
    
  
@@ -370,8 +386,11 @@ bot.command("trade", async (ctx) => {
   }
 });
 bot.command("snipe", async (ctx) => {
-  await _validateSession(ctx);
-  backupSession = ctx.session;
+  const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+  if(!userWallet){
+    await ctx.api.sendMessage(ctx.chat.id, 'Bot got updated. Please /start again');
+    return;
+  }
   try {
     const chatId = ctx.chat.id;
     ctx.session.snipeStatus = true;
@@ -386,6 +405,11 @@ bot.command("snipe", async (ctx) => {
   }
 });
 bot.command("limitorders", async (ctx) => {
+  const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+  if(!userWallet){
+    await ctx.api.sendMessage(ctx.chat.id, 'Bot got updated. Please /start again');
+    return;
+  }
   try{
     ctx.session.latestCommand = "limitOrders";
     await ctx.api.sendMessage(ctx.chat.id, "Enter token address to set limit order.");
@@ -397,8 +421,12 @@ bot.command("limitorders", async (ctx) => {
 
 });
 bot.command("settings", async (ctx) => {
-  await _validateSession(ctx);
-  backupSession = ctx.session;
+  const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+  if(!userWallet){
+    await ctx.api.sendMessage(ctx.chat.id, 'Bot got updated. Please /start again');
+    return;
+  }
+
   try {
     await handleSettings(ctx);
   } catch (error: any) {
@@ -450,8 +478,11 @@ const commandNumbers = [
 ];
 
 bot.on("message", async (ctx) => {
-  await _validateSession(ctx);
-  backupSession = ctx.session;
+  const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+  if(!userWallet){
+    await ctx.api.sendMessage(ctx.chat.id, 'Bot got updated. Please /start again');
+    return;
+  }
   const chatId = ctx.chat.id;
   try {
     ctx.session.portfolio.chatId = chatId;
@@ -536,15 +567,19 @@ bot.on("message", async (ctx) => {
       case "jupiter_swap": {
         if (msgTxt) {
           try{
+            console.log('now here ::::')
           if (
             !ctx.session.jupSwap_token ||
             (msgTxt && PublicKey.isOnCurve(msgTxt)) ||
-            (msgTxt && !PublicKey.isOnCurve(msgTxt))
+            (msgTxt && !PublicKey.isOnCurve(msgTxt)) 
           ) {
+            console.log('now here for check ::::')
             const isToken = msgTxt
               ? await checkAccountType(ctx, msgTxt)
               : await checkAccountType(ctx, ctx.session.jupSwap_token);
+              console.log('isToken', isToken) 
             if (!isToken) {
+              console.log('now here for check :::: 2022')
               ctx.api.sendMessage(chatId, "Invalid address");
               return;
             }
@@ -968,8 +1003,8 @@ bot.on("message", async (ctx) => {
               ctx.session.snipeToken = new PublicKey(msgTxt);
               await display_snipe_amm_options(ctx, false, msgTxt);
             } else {
-              console.log('ctx.session.isCpmmPool', ctx.session.isCpmmPool); 
-               console.log("cpmmKeys here", ctx.session.cpmmPoolInfo);
+              // console.log('ctx.session.isCpmmPool', ctx.session.isCpmmPool); 
+              //  console.log("cpmmKeys here", ctx.session.cpmmPoolInfo);
 
                 ctx.session.snipeToken = ctx.session.cpmmPoolInfo.mintA.address == SOL_ADDRESS ? ctx.session.cpmmPoolInfo.mintB.address : ctx.session.cpmmPoolInfo.mintA.address;
 
@@ -1216,8 +1251,11 @@ bot.on("message", async (ctx) => {
 /*                      BOT ON CALLBACK                       */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 bot.on("callback_query", async (ctx: any) => {
-  await _validateSession(ctx);
-  backupSession = ctx.session;
+  const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+  if(!userWallet){
+    await ctx.api.sendMessage(ctx.chat.id, 'Bot got updated. Please /start again');
+    return;
+  }
   const chatId = ctx.chat.id;
   try {
     ctx.session.portfolio.chatId = chatId;
@@ -2066,12 +2104,21 @@ async function checkAccountType(ctx: any, address: any) {
   const connection = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
   const publicKey = new PublicKey(address);
   const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+  const TOKEN_2022_PROGRAM_ID = new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
 
   try {
     const accountInfo = await connection.getAccountInfo(publicKey);
     if (accountInfo) {
-      return accountInfo.owner.equals(TOKEN_PROGRAM_ID);
-    } else {
+      const isRegularSPL = accountInfo.owner.equals(TOKEN_PROGRAM_ID);
+      const is2022SPL = accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID);
+      if (isRegularSPL || is2022SPL) {
+        return true;
+      } else {
+        return false;
+      }
+   
+    } 
+    else {
       console.log("Account not found");
       return false;
     }

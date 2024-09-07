@@ -116,7 +116,7 @@ export async function submit_limitOrder_sell(ctx: any) {
 export async function review_limitOrder_details(ctx: any, isRefresh: boolean) {
   const timeTxt = ctx.session.limitOrders_time ? new Date(ctx.session.limitOrders_time).toLocaleString() : "NA";
   const baseMint = ctx.session.limitOrders_token.toBase58();
-  console.log('baseMint',baseMint);
+  // console.log('baseMint',baseMint);
   const tokenAddress = new PublicKey(baseMint);
   const[tokenMetadataResult,expectedAmountOut, birdeyeData,jupTokenRate, solJup] = await Promise.all([
     getTokenMetadata(ctx, tokenAddress.toBase58()),
@@ -126,7 +126,7 @@ export async function review_limitOrder_details(ctx: any, isRefresh: boolean) {
     fetch(`https://price.jup.ag/v6/price?ids=SOL`).then((response) => response.json()),
   ]);
   
-  console.log('jupTokenRate',jupTokenRate.data);
+  // console.log('jupTokenRate',jupTokenRate.data);
   let currentJupPrice = jupTokenRate.data.price;
 
   const birdeyeURL = `https://birdeye.so/token/${baseMint}?chain=solana`;
@@ -275,7 +275,7 @@ export async function display_limitOrder_token_details(ctx: any, isRefresh: bool
       dexscreenerURL,
     } = tokenMetadataResult;
     const jupTokenValue: any = Object.values(jupTokenRate.data);
-    console.log('jupTokenValue',jupTokenValue);
+    // console.log('jupTokenValue',jupTokenValue);
     let jupTokenPrice = 0;
     if(quoteResponse?.errorCode === 'TOKEN_NOT_TRADABLE' || jupTokenValue.length == 0){  
       await ctx.api.sendMessage(chatId, `🔴 <b>Sorry you cannot sert a limit order for this token at the moment, try later.</b> `, { parse_mode: "HTML" });
@@ -529,10 +529,10 @@ export async function cancel_orders(ctx: any, tokenKey: string) {
 export async function cancel_all_orders(ctx: any) {
   const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
   const connection = CONNECTION;
-  console.log('wallet:', wallet.publicKey);
+  // console.log('wallet:', wallet.publicKey);
   const orders: OrderHistoryItem[] = await fetchOpenOrders( wallet);
   let orderKeys = orders.map((order) => order.publicKey);
-  console.log('orders:', orders);
+  // console.log('orders:', orders);
   const chatId = ctx.chat.id;
   await ctx.api.sendMessage(chatId, '🟢  Cancelling all orders, please wait for confirmation.', { parse_mode: "HTML" });
   cancelBatchOrder(connection, wallet, orderKeys  as PublicKey[],ctx).then(async(txSig: any) => {

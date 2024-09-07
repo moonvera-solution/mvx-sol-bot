@@ -91,7 +91,9 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
       birdeyeData.response.data.price != null // This checks for both null and undefined
       ? birdeyeData.response.data.price
       : (Number(quoteReserve) / Number(baseReserve) / Math.pow(10, quoteDecimals - baseDecimals)) * solPrice;
-  const tokenPriceSOL = birdeyeData ? tokenPriceUSD / solPrice : Number(baseReserve) / Math.pow(10, quoteDecimals - baseDecimals);
+  
+    console.log('tokenPriceUSD:', (Number(quoteReserve) / Number(baseReserve) / Math.pow(10, quoteDecimals - baseDecimals)) );
+      const tokenPriceSOL = birdeyeData ? tokenPriceUSD / solPrice : Number(baseReserve) / Math.pow(10, quoteDecimals - baseDecimals);
   let specificPosition;
   if (
     userPosition[0] &&

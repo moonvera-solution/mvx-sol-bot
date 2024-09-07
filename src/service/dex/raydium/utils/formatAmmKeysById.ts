@@ -54,7 +54,7 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
     });
  
     if (isCpmmPool) {
-      console.log('isCpmmPool:', isCpmmPool);
+      console.log('isCpmmPool in fomatAmmkeys fetch:');
       cpmmKeys = keys ;
       // console.log("cpmmKeys here", cpmmKeys);
       // ctx.session.poolTime = Number(cpmmKeys.openTime);
@@ -67,6 +67,7 @@ export async function getRayPoolKeys(ctx: any, shitcoin: string) {
         ctx.session.isCpmmPool = false;
         console.log("AmmV4Keys here");
        ctx.session.activeTradingPool= AmmV4Keys;
+       console.log('AmmV4Keys', AmmV4Keys.id);
         return AmmV4Keys.id;
       }
     }

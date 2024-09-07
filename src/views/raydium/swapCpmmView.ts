@@ -23,6 +23,8 @@ export async function ray_cpmm_swap(ctx: any) {
   const connection = new Connection(TRITON_RPC_URL);
   // const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
   const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
+  console.log('activeWalletIndexIdx', activeWalletIndexIdx);
+  console.log('ctx.session.portfolio.wallets[activeWalletIndexIdx]', ctx.session.portfolio.wallets[activeWalletIndexIdx]);
   const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
   const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
   const isBuySide = ctx.session.cpmm_side == "buy";

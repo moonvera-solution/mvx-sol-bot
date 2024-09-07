@@ -25,7 +25,7 @@ export async function handleSettings(ctx: any) {
             await ctx.api.sendMessage(chatId, "No wallet found. Please create a wallet first.");
             return;
         }
-        console.log('ctx.customPriorityFee', ctx.session.customPriorityFee)
+        // console.log('ctx.customPriorityFee', ctx.session.customPriorityFee)
         // Create a message with the wallet information
         const walletInfoMessage = `Your Wallet:  ` +
             `<code>${publicKeyString}</code>\n` +
