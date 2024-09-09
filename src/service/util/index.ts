@@ -44,6 +44,7 @@ import path from "path";
 import BigNumber from 'bignumber.js';
 import { Instruction } from '@coral-xyz/anchor';
 import { Key } from 'readline';
+import { error } from 'console';
 
 export async function sendTx(
     connection: Connection,
@@ -804,11 +805,12 @@ export function wrapLegacyTx(txInxs: TransactionInstruction[], payerKeypair: Key
 }
 
 export async function optimizedSendAndConfirmTransaction(
+
     tx: VersionedTransaction,
     connection: Connection,
     blockhash: any,
     txRetryInterval: number
-): Promise<string | null> {
+): Promise<string | null > {
     console.log(`optimizedSendAndConfirmTransaction...`);
 
     let txSignature;
@@ -818,8 +820,10 @@ export async function optimizedSendAndConfirmTransaction(
     try {
         // Simulating the transaction
         const simulationResult = await connection.simulateTransaction(tx, { commitment: "confirmed" }).catch((e) => console.error("Error on optimizedSendAndConfirmTransaction", e.message));   
-        await catchSimulationErrors(simulationResult);
-        console.log("simulationResult", (simulationResult))
+        
+        await catchSimulationErrors( simulationResult);
+
+       
 
         const signatureRaw: any = tx.signatures[0];
         txSignature = bs58.encode(signatureRaw);
@@ -845,6 +849,7 @@ export async function optimizedSendAndConfirmTransaction(
 
         // retry while loop
         while (!confirmedTx) {
+        
             confirmedTx = await Promise.race([
                 confirmTransactionPromise,
                 new Promise((resolve) =>
@@ -854,7 +859,7 @@ export async function optimizedSendAndConfirmTransaction(
                 ),
             ]);
 
-            console.log("confirmedTx:", confirmedTx);
+            // console.log("confirmedTx:", confirmedTx);
 
             // confirmed => break loop
             if (confirmedTx) { console.log(`Tx ${txId} confirmed ,${txRetryInterval * txSendAttempts}`, confirmedTx); break; }
@@ -864,36 +869,37 @@ export async function optimizedSendAndConfirmTransaction(
 
         } // end loop
 
-    } catch (error:any) {
-        console.error(`${new Date().toISOString()} optimized Error: ${error.message}`);
-        throw new Error(`❌ Transaction failed!`)
-    }
+  
 
-    if (!confirmedTx) {
-        console.log(`${new Date().toISOString()} Transaction failed`);
-        throw new Error(`Transaction not confirmed,busy network, try again.`)
-    }
+  
     // loop ends, no error, transaction confirmed return link
     console.log(`${new Date().toISOString()} Transaction successful`);
     console.log(`${new Date().toISOString()} Explorer URL: https://solscan.io/tx/${txSignature}`);
 
     return txSignature;
+} catch (error:any) {
+    console.error(`${new Date().toISOString()} optimized Error: ${error.message}`);
+    
+    throw new Error(`❌ Transaction failed! ${error.message}`)
+}
 }
 
-export async function catchSimulationErrors(simulationResult: any) {
+export async function catchSimulationErrors( simulationResult: any){
     const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
     const SLIPPAGE_ERROR_ANCHOR = /SlippageToleranceExceeded/;
     
-    // console.log("simulationResult", simulationResult.value.logs)
-    // console.log("simulationResult", simulationResult.value.err)
+    console.log("simulationResult is it catching!!! ")
+    console.log("simulationResult", simulationResult.value.err)
 
     if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg)) ||
     simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR_ANCHOR.test(logMsg))) {
-    throw new Error(`🔴 Slippage error, try increasing your slippage %.`);
+ 
+    throw new Error (`🔴 Slippage error, try increasing your slippage %.`);
     }
     
     const BALANCE_ERROR = /Transfer: insufficient lamports/;
     if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
+        
         throw new Error(`🔴 Insufficient balance for transaction.`);
     }
     const FEES_ERROR = 'InsufficientFundsForFee';

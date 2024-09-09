@@ -12,7 +12,7 @@ const TX_RETRY_INTERVAL = 50;
  * @param passing connection b4 SOL_TRACKER_SWAP_PARAMS 
  * @returns Arrays of tx ids, false if fails
  */
-export async function pump_fun_swap(connection: Connection, {
+export async function pump_fun_swap(ctx: any,connection: Connection, {
     side,
     from,
     to,

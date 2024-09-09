@@ -49,7 +49,7 @@ export async function submit_limitOrder(ctx: any) {
       const tradeType = isBuySide ? 'buy' : 'sell';
       const sigStatus = await connection.getSignatureStatus(txSig, config)
       if (sigStatus?.value?.err) {
-        await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+        await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again.`, { parse_mode: 'HTML', disable_web_page_preview: true });
         return;
       }
 
@@ -98,7 +98,7 @@ export async function submit_limitOrder_sell(ctx: any) {
 
       const sigStatus = await connection.getSignatureStatus(txSig, config)
       if (sigStatus?.value?.err) {
-        await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+        await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again.`, { parse_mode: 'HTML', disable_web_page_preview: true });
         return;
       }
 

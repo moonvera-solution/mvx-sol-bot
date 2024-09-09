@@ -48,6 +48,7 @@ import BN from "bn.js";
 type refObject = { referralWallet: string, referralCommision: number };
 
 export type TxInputInfo = {
+
   connection: Connection;
   side: "buy" | "sell";
   generatorWallet: PublicKey;
@@ -60,7 +61,10 @@ export type TxInputInfo = {
   wallet: Keypair;
 };
 
-export async function raydium_amm_swap(input: TxInputInfo): Promise<string | null> {
+export async function raydium_amm_swap(ctx: any, input: TxInputInfo): Promise<string | null> {
+  try{
+
+
   const connection = input.connection;
   // console.log('input:: ', input.targetPool);
   const targetPoolInfo = await formatAmmKeysById(input.targetPool, connection);
@@ -148,10 +152,15 @@ export async function raydium_amm_swap(input: TxInputInfo): Promise<string | nul
   vTxx.sign([input.wallet]);
 
   return await optimizedSendAndConfirmTransaction(
+
     vTxx,
     connection,
     vTxx.message.recentBlockhash,
     50 // RETRY INTERVAL
   )
-
+}catch(e: any){
+  console.log(e);
+  ctx.api.sendMessage(ctx.session.chatId, `${e.message}`);
+return null;
+}
 }

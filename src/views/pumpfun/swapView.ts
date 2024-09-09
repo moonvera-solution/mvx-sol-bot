@@ -45,7 +45,7 @@ export async function swap_pump_fun(ctx: any) {
     await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
     
   
-    await pump_fun_swap(connection, {
+    await pump_fun_swap(ctx,connection, {
       side: tradeSide,
       from: tokenIn,
       to: tokenOut,
@@ -150,7 +150,7 @@ export async function swap_pump_fun(ctx: any) {
       }
     });
   } catch (e:any) {
-    await ctx.api.sendMessage(ctx.chat.id, `❌ Swap failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+    await ctx.api.sendMessage(ctx.chat.id, `❌ Swap failed. Please try again.`, { parse_mode: 'HTML', disable_web_page_preview: true });
     console.error(e);
   }
 }

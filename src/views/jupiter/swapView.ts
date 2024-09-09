@@ -68,6 +68,7 @@ export async function jupiterSwap(ctx: any) {
   await ctx.api.sendMessage(chatId, `🟢 <b>Transaction ${ctx.session.jupSwap_side.toUpperCase()}:</b> Processing... \n Please wait for confirmation.`, { parse_mode: 'HTML', disable_web_page_preview: true });
 
   jupiter_inx_swap(
+    ctx,
     connection,
     rpcUrl,
     payerKeypair,
@@ -86,7 +87,7 @@ export async function jupiterSwap(ctx: any) {
       };
       const sigStatus = await connection.getSignatureStatus(txSig, config)
       if (sigStatus?.value?.err) {
-        await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+        await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again.`, { parse_mode: 'HTML', disable_web_page_preview: true });
         return;
       }
       let tokenAmount, confirmedMsg;
@@ -169,7 +170,7 @@ export async function jupiterSwap(ctx: any) {
       }
 
     } else {
-      await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+      await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again.`, { parse_mode: 'HTML', disable_web_page_preview: true });
     }
   }).catch(async (error: any) => {
     await ctx.api.sendMessage(chatId, error.message, { parse_mode: 'HTML', disable_web_page_preview: true });

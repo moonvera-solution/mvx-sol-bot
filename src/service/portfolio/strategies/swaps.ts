@@ -77,7 +77,8 @@ export async function handle_radyum_swap(
     let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing...\n Please wait for confirmation.`
     await ctx.api.sendMessage(ctx.session.chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
   
-    raydium_amm_swap({
+    raydium_amm_swap( ctx,
+      {
       connection,
       side,
       generatorWallet,
@@ -95,7 +96,7 @@ export async function handle_radyum_swap(
       };
       const sigStatus = await connection.getSignatureStatus(txids, config)
       if (sigStatus?.value?.err) {
-        await ctx.api.sendMessage(chatId, `❌ ${side.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+        await ctx.api.sendMessage(chatId, `❌ ${side.toUpperCase()} tx failed. Please try again.`, { parse_mode: 'HTML', disable_web_page_preview: true });
         return;
       }
       console.log("txids:: ", txids);

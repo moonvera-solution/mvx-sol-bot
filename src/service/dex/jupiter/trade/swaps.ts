@@ -26,6 +26,7 @@ type REFERRAL_INFO = {
 type refObject = { referralWallet: string, referralCommision: number };
 
 export async function jupiter_inx_swap(
+  ctx: any,
   connection:Connection,
   rpcUrl:string,
   wallet:Keypair,
@@ -35,14 +36,13 @@ export async function jupiter_inx_swap(
   slippage:number,
   priorityFeeLevel:number,
 ) : Promise<string | null>{
+  try{
   const feeAccount = null;
   let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}${feeAccount ? '&platformFeeBps=08' : ''}`.trim();
   let quoteResponse : any = await fetch(swapUrl).then(res => res.json());
   console.log("quoteResponse:: ",quoteResponse);
 
-  if(quoteResponse.error){
-    
-  }
+
   // TODO add priority fee
   // const lastRouteHop = quoteResponse.data.routePlan[quoteResponse.data.routePlan.length - 1].swapInfo.ammKey;
   
@@ -61,7 +61,7 @@ export async function jupiter_inx_swap(
   // console.log("instructions:: ",instructions);
   if (instructions.error) {
     console.error("Failed to get swap instructions: " + instructions.error);
-    throw new Error("Transaction failed, please try again later");
+    throw new Error("Transaction failed, please try again");
   }
 
   const {
@@ -140,7 +140,12 @@ export async function jupiter_inx_swap(
     blockhash,
     TX_RETRY_INTERVAL
   );
-  
+} catch (error:any) {
+  console.log(error);
+  ctx.api.sendMessage(ctx.session.chatId, `${error.message}`);
+
+  return null;
+}
 }
 
 

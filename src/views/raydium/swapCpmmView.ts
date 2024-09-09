@@ -67,7 +67,7 @@ export async function ray_cpmm_swap(ctx: any) {
       };
       const sigStatus = await connection.getSignatureStatus(txid, config)
       if (sigStatus?.value?.err) {
-        await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+        await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again.`, { parse_mode: 'HTML', disable_web_page_preview: true });
         return;
       }
       let tokenAmount, confirmedMsg;
@@ -143,7 +143,7 @@ export async function ray_cpmm_swap(ctx: any) {
         await display_jupSwapDetails(ctx, false);
       }
     } else {
-      await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+      await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again.`, { parse_mode: 'HTML', disable_web_page_preview: true });
     }
   }).catch(async (error: any) => {
     await ctx.api.sendMessage(chatId, error.message, { parse_mode: 'HTML', disable_web_page_preview: true });
