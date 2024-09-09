@@ -165,6 +165,7 @@ const UserSessions = new Schema({
   ispriorityCustomFee: Boolean,
   customPriorityFee: Number,
   positionIndex: Number,
+  userProfit: Number,
   allowedReferral: String,
   pump_amountIn: Number,
   pump_side: String,
