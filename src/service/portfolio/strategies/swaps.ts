@@ -40,10 +40,10 @@ export async function handle_radyum_swap(
     if (side == 'buy') {
       amountIn = amountIn * Math.pow(10, 9); // lamports
 
-      if ((userSolBalance * 1e9) < (amountIn + (amountIn * MVXBOT_FEES.toNumber()) + (ctx.session.customPriorityFee * 1e9))) {
-        await ctx.api.sendMessage(ctx.session.chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
-        return;
-      }
+      // if ((userSolBalance * 1e9) < (amountIn + (amountIn * MVXBOT_FEES.toNumber()) + (ctx.session.customPriorityFee * 1e9))) {
+      //   await ctx.api.sendMessage(ctx.session.chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
+      //   return;
+      // }
       tokenIn = DEFAULT_TOKEN.WSOL;
       outputToken = MEME_COIN;
 
@@ -90,6 +90,14 @@ export async function handle_radyum_swap(
       wallet: Keypair.fromSecretKey(bs58.decode(String(userWallet.secretKey))),
     }).then(async (txids) => {
       if (!txids) return;
+      const config = {
+        searchTransactionHistory: true
+      };
+      const sigStatus = await connection.getSignatureStatus(txids, config)
+      if (sigStatus?.value?.err) {
+        await ctx.api.sendMessage(chatId, `❌ ${side.toUpperCase()} tx failed. Please try again later.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+        return;
+      }
       console.log("txids:: ", txids);
       let extractAmount = await getSwapAmountOut(connection, txids);
       console.log("extractAmount:: ", extractAmount);
@@ -103,9 +111,7 @@ export async function handle_radyum_swap(
         side == 'sell' ?
           confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`
           : confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4)} <b>${_symbol}</b> for ${(amountIn / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
-      } else {
-        confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> Your transaction has been successfully confirmed. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
-      }
+      } 
 
       UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
       const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
