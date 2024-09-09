@@ -299,6 +299,7 @@ bot.command("start", async (ctx: any) => {
           ],
           [{ text: "Positions", callback_data: "display_all_positions" }],
           [{text: "🪪 Generate PnL Card", callback_data: "display_pnlcard"},{ text: "🔄 Refresh", callback_data: "refresh_start" }],
+          [{ text: "📈 Live chart 📉", url: 't.me/dribs_app_bot/dribs' }],
         ],
       }),
       parse_mode: "HTML",

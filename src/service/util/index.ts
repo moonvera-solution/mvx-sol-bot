@@ -890,7 +890,7 @@ export async function catchSimulationErrors( simulationResult: any){
     const SLIPPAGE_TOLERANCE = /Slippage tolerance exceeded"/;
     
     console.log("simulationResult is it catching!!! ")
-    console.log("simulationResult", simulationResult.value.err)
+    // console.log("simulationResult", simulationResult.value.err)
 
     if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg)) ||
     simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR_ANCHOR.test(logMsg)) || simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_TOLERANCE.test(logMsg))) {
