@@ -1299,9 +1299,9 @@ bot.on("callback_query", async (ctx: any) => {
       const sellPercentage = parts[1]; // '25', '50', '75', or '100'
       const positionIndex = parts[2]; // Position index
       if (ctx.session.swaptypeDex == "ray_swap") {
-        console.log('ctx.session.positionPool[positionIndex]', ctx.session.positionPool[positionIndex]);
+        // console.log('ctx.session.positionPool[positionIndex]', ctx.session.positionPool[positionIndex]);
         const isOnJup = await verify_position_dex(ctx,ctx.session.positionPool[positionIndex])
-        console.log('isOnJup', isOnJup);
+        // console.log('isOnJup', isOnJup);
         if(isOnJup){
           ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
           ctx.session.jupSwap_amount = sellPercentage;

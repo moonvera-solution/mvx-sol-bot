@@ -243,13 +243,13 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
 
       const jupTokenValue: any = Object.values(jupTokenRate.data);
       let jupTokenPrice = 0;
-
-      if (jupTokenValue[0] && jupTokenValue[0].price && (quoteResponse?.error_code !== 'TOKEN_NOT_TRADABLE') ) {
+      // console.log('quoteResponse?.error_code:', quoteResponse)
+      if (jupTokenValue[0] && jupTokenValue[0].price && (quoteResponse?.errorCode !== 'TOKEN_NOT_TRADABLE' && quoteResponse?.errorCode !== 'COULD_NOT_FIND_ANY_ROUTE' ) ) {
    
         jupTokenPrice = jupTokenValue[0].price;
         console.log('jupToken')
         //if not on jupiter check if token is on raydium 
-      } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined || quoteResponse?.error_code === 'TOKEN_NOT_TRADABLE') {
+      } else if (!jupTokenValue[0] || jupTokenValue[0].price == undefined || quoteResponse?.errorCode === 'TOKEN_NOT_TRADABLE' || quoteResponse?.errorCode === 'COULD_NOT_FIND_ANY_ROUTE') {
         console.log('raydium')
         ctx.session.activeTradingPoolId = await getRayPoolKeys(ctx, token);
         if (!ctx.session.isCpmmPool) {
