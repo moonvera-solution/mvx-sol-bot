@@ -151,7 +151,7 @@ async function _validateSession(ctx: any) {
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 bot.command("start", async (ctx: any) => {
  
-  await _validateSession(ctx);
+  // await _validateSession(ctx);
   backupSession = ctx.session;
   // console.log("ctx.session.generatorWallet", ctx.session.generatorWallet);
   // console.log('ctx.session.referralCommision', ctx.session.referralCommision);

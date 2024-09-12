@@ -7,7 +7,9 @@ export async function set_auto_buy(ctx: any ) {
         ctx.session.latestCommand = "jupiter_swap";
         return;
     }
+    if (ctx.session.autobuy_amount > 0 || ctx.session.autobuy_amount != undefined) {
     ctx.session.autoBuyActive = true;
+}
     await handleRereshWallet(ctx);
     await ctx.api.sendMessage(ctx.session.chatId, `🟢 Auto Buy is enabled`);
     ctx.session.latestCommand = "auto_buy_active";
