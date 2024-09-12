@@ -355,6 +355,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
             [{ text: `Buy (X SOL)`, callback_data: 'buy_X_JUP' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_JUP' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_JUP' }],
             [{ text: `Sell X %`, callback_data: 'sell_X_JUP' }, { text: 'Sell 50%  ', callback_data: 'sell_50_JUP' }, { text: 'Sell 100%  ', callback_data: 'sell_100_JUP' }],
             [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
+            [{ text: `📈 (${tokenData.symbol}) Live chart 📉`, url: `https://t.me/dribs_app_bot/dribs?startapp=${token}` }],
             [{ text: 'Close', callback_data: 'closing' }]
           ]
         }

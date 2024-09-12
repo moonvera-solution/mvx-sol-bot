@@ -315,6 +315,7 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
           [{ text: `Sell X %`, callback_data: 'sell_X_CPMM' }, { text: 'Sell 50%  ', callback_data: 'sell_50_CPMM' }, { text: 'Sell 100%  ', callback_data: 'sell_100_CPMM' }],
 
           [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
+          [{ text: `📈 (${tokenData.symbol}) Live chart 📉`, url: `https://t.me/dribs_app_bot/dribs?startapp=${tokenAddress}` }],
           [{ text: 'Cancel', callback_data: 'closing' }]
         ]
       },

@@ -205,6 +205,8 @@ export async function display_raydium_details(ctx: any, isRefresh: boolean) {
               callback_data: "set_customPriority",
             },
           ],
+          [{ text: `📈 (${tokenData.symbol}) Live chart 📉`, url: `https://t.me/dribs_app_bot/dribs?startapp=${tokenAddress}` }],
+
           [{ text: "Cancel", callback_data: "closing" }],
         ],
       },

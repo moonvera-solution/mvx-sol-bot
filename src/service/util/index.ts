@@ -886,6 +886,7 @@ export async function optimizedSendAndConfirmTransaction(
 
 export async function catchSimulationErrors( simulationResult: any){
     const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
+    const SLIPPAGE_ERROR2 = /Program Error: "Instruction #3 Failed - custom program error: exceeds desired slippage limit"/
     const SLIPPAGE_ERROR_ANCHOR = /Program Error: "Instruction #5 Failed - custom program error: Slippage tolerance exceeded"/;
     const SLIPPAGE_TOLERANCE = /Slippage tolerance exceeded/;
     const SLIPPAGE_REQUIRED = /Error: slippage: Too much SOL required to buy the given amount of tokens/;
@@ -896,7 +897,8 @@ export async function catchSimulationErrors( simulationResult: any){
     if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg)) ||
     simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR_ANCHOR.test(logMsg)) || 
     simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_TOLERANCE.test(logMsg)) || 
-    simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_REQUIRED.test(logMsg))) {
+    simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_REQUIRED.test(logMsg)) ||
+    simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR2.test(logMsg))) {
  
     throw new Error (`🔴 Slippage error, try increasing your slippage %.`);
     }
