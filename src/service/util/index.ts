@@ -886,14 +886,17 @@ export async function optimizedSendAndConfirmTransaction(
 
 export async function catchSimulationErrors( simulationResult: any){
     const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
-    const SLIPPAGE_ERROR_ANCHOR = /SlippageToleranceExceeded/;
-    const SLIPPAGE_TOLERANCE = /Slippage tolerance exceeded"/;
+    const SLIPPAGE_ERROR_ANCHOR = /Program Error: "Instruction #5 Failed - custom program error: Slippage tolerance exceeded"/;
+    const SLIPPAGE_TOLERANCE = /Slippage tolerance exceeded/;
+    const SLIPPAGE_REQUIRED = /Error: slippage: Too much SOL required to buy the given amount of tokens/;
     
     console.log("simulationResult is it catching!!! ")
     // console.log("simulationResult", simulationResult.value.err)
 
     if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg)) ||
-    simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR_ANCHOR.test(logMsg)) || simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_TOLERANCE.test(logMsg))) {
+    simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR_ANCHOR.test(logMsg)) || 
+    simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_TOLERANCE.test(logMsg)) || 
+    simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_REQUIRED.test(logMsg))) {
  
     throw new Error (`🔴 Slippage error, try increasing your slippage %.`);
     }

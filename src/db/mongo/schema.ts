@@ -137,6 +137,7 @@ const UserSessions = new Schema({
       lookupTableAccount: String,
     }
   },
+  autobuy_amount: Number,
   cpmm_amountIn: Number,
   cpmm_side: String,
   cpmmPoolId: {},
@@ -193,7 +194,8 @@ const UserSessions = new Schema({
       lpSupply: String,
       startTime: String
     }
-  }
+  },
+  autoBuyActive: Boolean,
 });
 
 export const UserSession = mongoose.model("UserSession", UserSessions);

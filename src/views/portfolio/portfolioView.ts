@@ -29,7 +29,10 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
   );
 
   if (!userPosition.length || !userPosition[0].positions.length) {
+    if(!ctx.session.autoBuyActive){
     ctx.session.latestCommand = 'jupiter_swap';
+    }
+
     return ctx.api.sendMessage(ctx.chat.id, "No active positions.", { parse_mode: 'HTML' });
   }
   const connection = CONNECTION;
@@ -204,7 +207,9 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
   );
   const connection = CONNECTION;
   if (!userPosition[0] || userPosition[0].positions.length === 0) {
+    if(!ctx.session.autoBuyActive){
     ctx.session.latestCommand = 'jupiter_swap';
+    }
     await ctx.api.sendMessage(ctx.chat.id, "No active positions.", { parse_mode: 'HTML' });
     return;
   }
@@ -389,6 +394,8 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
     profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
 
   }
+  ctx.session.userProfit = profitPercentage
+
   // const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
 
   const netWorth = birdeyeData
@@ -438,9 +445,9 @@ export async function handleWallets(ctx: any) {
   const portfolioIndexWallet = await Portfolios.findOne({ chatId: chatId });
   let selectedWalletIndex: number;
   if(portfolioIndexWallet ){
-   selectedWalletIndex = portfolioIndexWallet.activeWalletIndex; // Index of the currently selected wallet
+   selectedWalletIndex = portfolioIndexWallet.activeWalletIndex; 
   }else{
-   selectedWalletIndex = ctx.session.portfolio.activeWalletIndex; // Index of the currently selected wallet
+   selectedWalletIndex = ctx.session.portfolio.activeWalletIndex; 
   }
   const connection = CONNECTION;
 

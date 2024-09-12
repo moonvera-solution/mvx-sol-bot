@@ -27,6 +27,7 @@ export async function swap_pump_fun(ctx: any) {
     const tokenOut = tradeSide == 'buy' ? ctx.session.pumpToken : SOL_ADDRESS;
     const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
     const userTokenBalanceAndDetails = tradeSide == 'buy' ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
+    
     const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
     const amountToSell = (ctx.session.pump_amountIn / 100) * userTokenBalanceAndDetails.userTokenBalance;
     const userSolBalance = await getSolBalance(userWallet.publicKey, connection);
@@ -105,8 +106,10 @@ export async function swap_pump_fun(ctx: any) {
           amountIn: oldPositionSol ? oldPositionSol + ctx.session.pump_amountIn * 1e9 : ctx.session.pump_amountIn * 1e9,
           amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
         });
-        ctx.session.latestCommand = 'jupiter_swap'
-       await display_pumpFun(ctx, false);
+        if(!ctx.session.autoBuyActive){
+          ctx.session.latestCommand = 'jupiter_swap';
+          await display_pumpFun(ctx, false);
+        }
       } else {
         let newAmountIn, newAmountOut;
 
@@ -133,20 +136,26 @@ export async function swap_pump_fun(ctx: any) {
             amountOut: newAmountOut,
           });
         }
+        if(!ctx.session.autoBuyActive){
         ctx.session.latestCommand = 'jupiter_swap'
+        }
       }
-      if(tradeSide == 'sell' && ctx.session.pnlcard){
+      if(tradeSide == 'sell' && ctx.session.pnlcard ){
+        const userShitbalance =  tradeSide == 'buy' ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
+        if(userShitbalance.userTokenBalance == 0){
       await createTradeImage(_symbol,tokenIn, ctx.session.userProfit).then((buffer) => {
         // Save the image buffer to a file
         fs.writeFileSync('trade.png', buffer);
         console.log('Image created successfully');
       });
       await ctx.replyWithPhoto(new InputFile('trade.png' ));
+    }
 
     }
       if (tradeSide == 'buy') {
+        if(!ctx.session.autoBuyActive){
         ctx.session.latestCommand = 'jupiter_swap'
-        // await display_pumpFun(ctx, false);
+        }
       }
     });
   } catch (e:any) {

@@ -184,6 +184,7 @@ export const fetchTokenAccountData = async (wallet: Keypair, connection: Connect
 
 
 export async function getpoolDataCpmm(wallet: Keypair, poolID: any, connection: any): Promise<CpmmKeys> {
+  console.log('we are fetching cpmm')
   const raydium = await initSdk( connection);
   raydium.setOwner(wallet)
   if (!poolID) {
@@ -191,7 +192,7 @@ export async function getpoolDataCpmm(wallet: Keypair, poolID: any, connection: 
     throw new Error('Cpmm pool not found')
   }
   const cpmmPoolKeys = await raydium.cpmm.getCpmmPoolKeys(poolID)
-
+  
 
   return cpmmPoolKeys;
 }

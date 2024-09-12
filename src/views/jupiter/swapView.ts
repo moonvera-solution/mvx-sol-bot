@@ -47,18 +47,17 @@ export async function jupiterSwap(ctx: any) {
   const tokenOut = isBuySide ? ctx.session.jupSwap_token : SOL_ADDRESS;
   // console.log('tokenOut',tokenOut)
   const userTokenBalanceAndDetails = isBuySide ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
-
+  console.log('userTokenBalanceAndDetails::::::', userTokenBalanceAndDetails)
   const amountToSell = Math.floor((ctx.session.jupSwap_amount / 100) * userTokenBalanceAndDetails.userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals));
   const amountIn = isBuySide ? ctx.session.jupSwap_amount * 1e9 : amountToSell;
   // const refObject = { referralWallet: new PublicKey(ctx.session.generatorWallet).toBase58(), referralCommision: ctx.session.referralCommision };
   // console.log('refObject:', refObject)
-  const userSolBalance = (await getSolBalance(userWallet.publicKey, connection) * 1e9);
 
   const minBalance = (amountIn + (amountIn * MVXBOT_FEES.toNumber()) + (ctx.session.customPriorityFee * 1e9));
-  if (isBuySide && minBalance > userSolBalance) {
-    await ctx.api.sendMessage(chatId, `❌ You do not have enough SOL to buy ${userTokenBalanceAndDetails.userTokenSymbol}.`, { parse_mode: 'HTML', disable_web_page_preview: true });
-    return;
-  }
+  // if (isBuySide && minBalance > userSolBalance) {
+  //   await ctx.api.sendMessage(chatId, `❌ You do not have enough SOL to buy ${userTokenBalanceAndDetails.userTokenSymbol}.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+  //   return;
+  // }
 
   if (!isBuySide && amountToSell <= 0) {
     await ctx.api.sendMessage(chatId, `❌ You do not have enough ${userTokenBalanceAndDetails.userTokenSymbol} to sell.`, { parse_mode: 'HTML', disable_web_page_preview: true });
@@ -153,10 +152,17 @@ export async function jupiterSwap(ctx: any) {
             amountOut: newAmountOut,
           });
         }
+        if(!ctx.session.autoBuyActive){
         ctx.session.latestCommand = 'jupiter_swap'
+        }
       }
       await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
-      if(tradeType == 'sell' && ctx.session.pnlcard){
+
+      if(tradeType == 'sell' && ctx.session.pnlcard ){
+        const userShitbalance =   isBuySide ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
+
+        if(userShitbalance.userTokenBalance == 0){
+
         await createTradeImage(_symbol, tokenIn, ctx.session.userProfit).then((buffer) => {
           // Save the image buffer to a file
           fs.writeFileSync('trade.png', buffer);
@@ -164,7 +170,8 @@ export async function jupiterSwap(ctx: any) {
         });
         await ctx.replyWithPhoto(new InputFile('trade.png' ));
       }
-      if (tradeType == 'buy') {
+      }
+      if (tradeType == 'buy' && !ctx.session.autoBuyActive) {
         ctx.session.latestCommand = 'jupiter_swap';
         await display_jupSwapDetails(ctx, false);
       }
@@ -321,7 +328,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
         profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
       }
-      ctx.session.userProfit = profitPercentage
+      ctx.session.userProfit = Number(profitPercentage)
       const freezable = birdeyeData?.response2.data.freezeable ? "⚠️ Be careful: This token is freezable." : "✅ Not freezable.";
       let messageText = `<b>------ ${tokenData.name}(${tokenData.symbol}) ------</b> | 📄 CA: <code>${token}</code> <a href="copy:${token}">🅲</a>\n` +
         `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +

@@ -64,6 +64,10 @@ export interface ISESSION_DATA {
   recipientAddress: PublicKey;
   solAmount: number;
   awaitingWalletAddress: boolean;
+  autoBuyActive: boolean;
+  autoBuy_token: string;
+  mevActive: boolean;
+  autobuy_amount: number;
   generatorWallet: PublicKey;
   referralCommision: number;
   poolTime: number;
@@ -152,6 +156,10 @@ export const DefaultSessionData: ISESSION_DATA = {
   positionToken: '',
   pnlcard: false,
   userProfit: 0,
+  autoBuyActive: false,
+  autoBuy_token: '',
+  mevActive: false,
+  autobuy_amount: 0.01,
   expectedAmountOut_order: 0,
   CpmmSolExtracted: 0,
   cpmm_amountIn: 0,

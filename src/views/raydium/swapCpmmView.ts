@@ -126,21 +126,28 @@ export async function ray_cpmm_swap(ctx: any) {
             amountOut: newAmountOut,
           });
         }
+        if(!ctx.session.autoBuyActive){
         ctx.session.latestCommand = 'jupiter_swap'
+        }
       }
       await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
       if(tradeType == 'sell' && ctx.session.pnlcard){
+        const userShitbalance = isBuySide ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
+        if(userShitbalance.userTokenBalance == 0){
         await createTradeImage(_symbol, tokenIn, ctx.session.userProfit).then((buffer) => {
           // Save the image buffer to a file
-          
           fs.writeFileSync('trade.png', buffer);
           console.log('Image created successfully');
         });
         await ctx.replyWithPhoto(new InputFile('trade.png' ));
       }
+    }
       if (tradeType == 'buy') {
+       if (!ctx.session.autoBuyActive) {
         ctx.session.latestCommand = 'jupiter_swap';
         await display_jupSwapDetails(ctx, false);
+        }
+      
       }
     } else {
       await ctx.api.sendMessage(chatId, `❌ ${tradeType.toUpperCase()} tx failed. Please try again.`, { parse_mode: 'HTML', disable_web_page_preview: true });

@@ -38,6 +38,7 @@ export async function jupiter_inx_swap(
 ) : Promise<string | null>{
   try{
   const feeAccount = null;
+  console.log ('slippage:: ',slippage); 
   let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}${feeAccount ? '&platformFeeBps=08' : ''}`.trim();
   let quoteResponse : any = await fetch(swapUrl).then(res => res.json());
   console.log("quoteResponse:: ",quoteResponse);

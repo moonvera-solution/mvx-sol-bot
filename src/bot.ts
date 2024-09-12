@@ -72,6 +72,8 @@ import { review_limitOrder_details_sell, submit_limitOrder_sell } from "./views/
 import { handleCloseInputUser } from "./views/util/commons";
 import { display_snipe_amm_options, display_snipe_cpmm_options } from "./views/raydium/snipeView";
 import { verify_position_dex } from "./views/util/verifySwapDex";
+import { set_auto_buy, stop_auto_buy } from "./service/autobuy/autobuySettings";
+import { handle_autoBuy } from "./service/autobuy/autobuy";
 // import { review_limitOrder_details_sell } from "./views/jupiter/limitOrderView";
 // import { br } from "@raydium-io/raydium-sdk-v2/lib/type-9fe71e3c";
 const express = require("express");
@@ -110,6 +112,7 @@ const botToken = process.env.TELEGRAM_BOT_TOKEN!;
 const port = process.env.PORT || 80;
 let backupSession: ISESSION_DATA;
 
+
 if (isProd) {
   const webhookUrl = "https://drib.ngrok.app";
   const url = `${webhookUrl}/${botToken}`;
@@ -147,13 +150,14 @@ async function _validateSession(ctx: any) {
 /*                      BOT START                             */
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 bot.command("start", async (ctx: any) => {
+ 
   await _validateSession(ctx);
   backupSession = ctx.session;
-  // console.log("ctx.session", backupSession);
   // console.log("ctx.session.generatorWallet", ctx.session.generatorWallet);
   // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
   try {
     if (backupSession) {
+      // console.log("ctx.session", ctx.session);
       await UserSession.findOneAndUpdate(
         { chatId: backupSession.chatId },
         backupSession,
@@ -170,59 +174,8 @@ bot.command("start", async (ctx: any) => {
     const chatId = ctx.chat.id;
     ctx.session.chatId = chatId;
     const portfolio: PORTFOLIO_TYPE = await getPortfolio(chatId); // returns portfolio from db if true
-    // let isNewUser = false;
     const connection = CONNECTION;
-    // let referralCode = null;
-    // Check if there's additional text with the /start command
-    // if (ctx.message.text.includes(" ")) {
-    //   referralCode = ctx.message.text.split(" ")[1];
-    // }
-    // if user already exists
-    // if (portfolio == DefaultPortfolioData) {
-    //   // User is new
-    //   isNewUser = true;
-    // }
-    // // const userName = ctx.message.from.username;
-
-    // const user = await AllowedReferrals.find({ tgUserName: userName });
-    // if (user[0] != undefined) {
-    //   ctx.session.allowedReferral = user[0].tgUserName;
-    // }
-    // // console.log("referralCode:", referralCode);
-    // if (referralCode || ctx.session.allowedReferral) {
-    //   const referralRecord = await Referrals.findOne({
-    //     referralCode: referralCode,
-    //   });
-    //   console.log("referralRecord:", referralRecord);
-    //  referralRecord ? ctx.session.generatorWallet = (referralRecord.generatorWallet): null;
-    //   if (referralRecord ) {
-    //     if (!referralRecord.referredUsers.includes(chatId)) {
-    //       // Add the user's chatId to the referredUsers array
-    //       referralRecord.referredUsers.push(chatId);
-    //       // Increment the referral count
-    //       referralRecord.numberOfReferrals! += 1;
-    //       await referralRecord.save();
-    //       ctx.session.generatorWallet = new PublicKey(
-    //         referralRecord.generatorWallet
-    //       );
-    //       ctx.session.referralCommision = referralRecord.commissionPercentage;
-    //       console.log('ctx.session.referralCommision', ctx.session.referralCommision);
-    //       // ctx.session.referralEarnings = referralRecord.earnings;
-    //       // Optional: Notify the user that they have been referred successfully
-    //       await ctx.reply("Welcome! You have been referred successfully.");
-    //     } else {
-    //       ctx.session.generatorWallet = referralRecord.generatorWallet;
-    //       ctx.session.referralCommision = referralRecord.commissionPercentage;
-    //     }
-    //   }
-    // } else if (isNewUser) {
-    //   // New user without a referral code
-    //   await ctx.api.sendMessage(
-    //     chatId,
-    //     "Welcome to DRIBs bot. Please start the bot using a referral link."
-    //   );
-    //   return;
-    // }
+    
     //-------Start bot with wallet---------------------------
     ctx.session.latestCommand = "start";
     let userWallet: Keypair | null = null;
@@ -309,7 +262,11 @@ bot.command("start", async (ctx: any) => {
     // Send the message with the inline keyboard
     ctx.api.sendMessage(chatId, ` ${welcomeMessage}`, options);
     ctx.session.portfolio = await getPortfolio(chatId);
+    if(!ctx.session.autoBuyActive){
     ctx.session.latestCommand = "jupiter_swap";
+    } else {
+      ctx.session.latestCommand = "auto_buy_active";
+    }
 
     /*
         const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
@@ -473,6 +430,9 @@ const commandNumbers = [
   'submit_limit_order',
   'set_limit_order_time',
   'review_limitOrder_details',
+  "set_autobuy_amount",
+  'auto_buy_active',
+  // 'display_single_position',
 
 
   // 'jupiter_swap',
@@ -485,10 +445,34 @@ bot.on("message", async (ctx) => {
     return;
   }
   const chatId = ctx.chat.id;
+  console.log('latestCommand', ctx.session.latestCommand);
   try {
     ctx.session.portfolio.chatId = chatId;
     const latestCommand = ctx.session.latestCommand;
     const msgTxt = ctx.update.message.text;
+
+    if(ctx.session.autoBuyActive){
+      console.log('going auto buy in single positon')
+     if (msgTxt) {
+      try{
+      if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {
+        const isTOken = await checkAccountType(ctx, msgTxt);
+        if (!isTOken) {
+          ctx.api.sendMessage(chatId, "Invalid address");
+          return;
+        }
+        ctx.session.autoBuy_token = msgTxt;
+        await handle_autoBuy(ctx);
+        return;
+      } 
+    } catch (error: any) {
+      ctx.api.sendMessage(chatId, "Invalid address");
+    }
+    }
+
+  }
+
+
     if (msgTxt && !commandNumbers.includes(latestCommand)) {
       const pumpRegex = /https:\/\/(www\.)?pump\.fun\/([A-Za-z0-9]+)/;
       const birdEyeRegex =
@@ -524,6 +508,15 @@ bot.on("message", async (ctx) => {
       case "set_slippage": {
         ctx.session.latestSlippage = Number(msgTxt);
         await display_jupSwapDetails(ctx, false);
+        break;
+      }
+      case "set_autobuy_amount": {
+        ctx.session.autobuy_amount = Number(msgTxt);
+        if(ctx.session.autobuy_amount == 0){
+          ctx.session.autoBuyActive = false;
+        }
+        await handleSettings(ctx);
+        ctx.session.latestCommand = "jupiter_swap";
         break;
       }
       case "set_snipe_slippage": {
@@ -564,23 +557,49 @@ bot.on("message", async (ctx) => {
         }
         break;
       }
+      case  'auto_buy_active':{
+        if (msgTxt) {
+          try{
+          if (
+            !ctx.session.autoBuy_token ||
+            (msgTxt && PublicKey.isOnCurve(msgTxt)) ||
+            (msgTxt && !PublicKey.isOnCurve(msgTxt)) 
+          ) {
+            const isToken = msgTxt
+              ? await checkAccountType(ctx, msgTxt)
+              : await checkAccountType(ctx, ctx.session.autoBuy_token);
+              console.log('isToken', isToken) 
+            if (!isToken) {
+              ctx.api.sendMessage(chatId, "Invalid address");
+              return;
+            }
+            ctx.session.latestCommand = "auto_buy_active";
+            ctx.session.autoBuy_token = msgTxt;
 
+            await handle_autoBuy(ctx);
+          } else {
+            ctx.api.sendMessage(chatId, "Invalid address");
+          }
+        } catch (error: any) {
+          ctx.api.sendMessage(chatId, "Invalid address");
+        }
+        }
+        break;
+      }
       case "jupiter_swap": {
         if (msgTxt) {
           try{
-            console.log('now here ::::')
           if (
             !ctx.session.jupSwap_token ||
             (msgTxt && PublicKey.isOnCurve(msgTxt)) ||
             (msgTxt && !PublicKey.isOnCurve(msgTxt)) 
           ) {
-            console.log('now here for check ::::')
             const isToken = msgTxt
               ? await checkAccountType(ctx, msgTxt)
               : await checkAccountType(ctx, ctx.session.jupSwap_token);
               console.log('isToken', isToken) 
             if (!isToken) {
-              console.log('now here for check :::: 2022')
+         
               ctx.api.sendMessage(chatId, "Invalid address");
               return;
             }
@@ -797,6 +816,7 @@ bot.on("message", async (ctx) => {
               }
           }
       // just to solve the position refresh problem temporarly
+  
       case "buy_X_SOL_IN_POSITION":
         ctx.session.latestCommand = "display_single_position";
         if (msgTxt) {
@@ -1529,6 +1549,16 @@ bot.on("callback_query", async (ctx: any) => {
       case "delete_wallet":
         await resetWallet(ctx);
         break;
+      case "Auto_buy":{
+        ctx.session.latestCommand = "Auto_buy";
+        if(!ctx.session.autoBuyActive){
+          await set_auto_buy(ctx);
+        } else {
+          await stop_auto_buy(ctx);
+        }
+       
+        break;
+      }
       case "refresh_snipe":
         if(ctx.session.isCpmmPool){
           await display_snipe_cpmm_options(ctx, true, ctx.session.snipeToken);
@@ -1640,6 +1670,11 @@ bot.on("callback_query", async (ctx: any) => {
       case "set_slippage": {
         ctx.session.latestCommand = "set_slippage";
         ctx.api.sendMessage(chatId, "Please enter slippage % amount");
+        break;
+      }
+      case "set_autobuy_amount": {
+        ctx.session.latestCommand = "set_autobuy_amount";
+        ctx.api.sendMessage(chatId, "Please enter the amount of SOL to buy");
         break;
       }
       case "set_snipe_slippage": {
@@ -1950,58 +1985,8 @@ bot.on("callback_query", async (ctx: any) => {
         await display_single_position(ctx, false);
         break;
       }
-      case "priority_low": {
-        ctx.session.priorityFees = PriotitizationFeeLevels.LOW;
-        ctx.session.ispriorityCustomFee = false;
-        if (ctx.session.latestCommand === "snipe") {
-          await display_snipe_amm_options(ctx, true);
-        } else if (ctx.session.latestCommand === "display_single_position") {
-          await display_single_position(ctx, true);
-
-        } else if (ctx.session.latestCommand === "pump_fun") {
-          await display_pumpFun(ctx, true);
-        } else if (ctx.session.latestCommand === "jupiter_swap") {
-          await display_jupSwapDetails(ctx, true);
-        } else {
-          await display_raydium_details(ctx, true);
-        }
-        break;
-      }
-      case "priority_medium": {
-        ctx.session.priorityFees = PriotitizationFeeLevels.MEDIUM;
-        ctx.session.ispriorityCustomFee = false;
-        if (ctx.session.latestCommand === "snipe") {
-          await display_snipe_amm_options(ctx, true);
-        } else if (ctx.session.latestCommand === "display_single_position") {
-          await display_single_position(ctx, true);
-
-        } else if (ctx.session.latestCommand === "pump_fun") {
-          await display_pumpFun(ctx, true);
-        } else if (ctx.session.latestCommand === "jupiter_swap") {
-          await display_jupSwapDetails(ctx, true);
-        } else {
-          await display_raydium_details(ctx, true);
-        }
-        break;
-      }
-      case "priority_high": {
-        console.log("HIGH ");
-        ctx.session.priorityFees = PriotitizationFeeLevels.HIGH;
-        ctx.session.ispriorityCustomFee = false;
-        if (ctx.session.latestCommand === "snipe") {
-          await display_snipe_amm_options(ctx, true);
-        } else if (ctx.session.latestCommand === "display_single_position") {
-          await display_single_position(ctx, true);
-
-        } else if (ctx.session.latestCommand === "pump_fun") {
-          await display_pumpFun(ctx, true);
-        } else if (ctx.session.latestCommand === "jupiter_swap") {
-          await display_jupSwapDetails(ctx, true);
-        } else {
-          await display_raydium_details(ctx, true);
-        }
-        break;
-      }
+   
+      
       case "priority_custom": {
         ctx.session.ispriorityCustomFee = true;
         if (ctx.session.latestCommand === "snipe") {

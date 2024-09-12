@@ -164,23 +164,30 @@ export async function handle_radyum_swap(
             amountOut: newAmountOut,
           });
         }
+        if(!ctx.session.autoBuyActive){
         ctx.session.latestCommand = 'jupiter_swap'
+        }
       }
 
       await ctx.api.sendMessage(ctx.session.chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
       if(side == 'sell' && ctx.session.pnlcard){
+        const shitBalance = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection);
+        if (shitBalance.userTokenBalance == 0) {
         await createTradeImage(_symbol, tokenIn, ctx.session.userProfit).then((buffer) => {
-          // Save the image buffer to a file
+          console.log('ctx.session.userProfit',ctx.session.userProfit)
           
           fs.writeFileSync('trade.png', buffer);
           console.log('Image created successfully');
         });
         await ctx.replyWithPhoto(new InputFile('trade.png' ));
       }
+    }
       if (side == 'buy') {
+        if(!ctx.session.autoBuyActive){
         ctx.session.latestCommand = 'jupiter_swap';
         ctx.session.jupSwap_token = poolKeys.mintA.address;
         await display_jupSwapDetails(ctx, false);
+        }
       }
 
     }

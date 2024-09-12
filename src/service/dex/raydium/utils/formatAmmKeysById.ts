@@ -184,7 +184,7 @@ async function _getRayPoolKeys({
       },
     ],
   });
-
+  // console.log("accounts:", accounts);
   if (accounts.length < 1 && quoteMint.toBase58() == t2) {
     baseMint = new PublicKey(t2);
     quoteMint = new PublicKey(t1);
@@ -208,11 +208,11 @@ async function _getRayPoolKeys({
       ],
     });
   }
+  // console.log("accountsCsss:", accounts);
   if (accounts.length < 1) {
     const RAYDIUM_CPMM = new PublicKey(
       "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
     );
-
     isCpmmPool = true;
     accounts = await connection.getProgramAccounts(RAYDIUM_CPMM, {
       commitment,
@@ -232,6 +232,7 @@ async function _getRayPoolKeys({
         },
       ],
     });
+    // console.log('1stcpmmtry:', accounts);
     //The Cpmm might be reversed at some points
     if(accounts.length < 1){
       accounts = await connection.getProgramAccounts(RAYDIUM_CPMM, {
@@ -258,14 +259,14 @@ async function _getRayPoolKeys({
 
   const ammId = accounts && accounts[0] && accounts[0].pubkey;
   let keys: any;
-
+  // console.log("ammId:", ammId);
   // ammid exists and keys still null
   while (ammId && keys == undefined) {
     keys = isCpmmPool
       ? await getpoolDataCpmm(userWallet, ammId.toString(), connection)
       : await formatAmmKeysById(ammId.toString(), connection);
   }
-
+  // console.log(keys);
   return { isCpmmPool, keys };
 }
 
