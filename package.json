@@ -15,7 +15,6 @@
     "@grammyjs/menu": "^1.2.1",
     "@grammyjs/storage-mongodb": "^2.4.1",
     "@jup-ag/limit-order-sdk": "^0.1.10",
-    "@mercurial-finance/vault-sdk": "^2.2.0",
     "@metaplex-foundation/js": "^0.19.5",
     "@metaplex-foundation/mpl-token-metadata": "^2.11.1",
     "@ngrok/ngrok": "^1.2.0",
