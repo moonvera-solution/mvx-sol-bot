@@ -173,9 +173,11 @@ export async function handle_radyum_swap(
       if(side == 'sell' && ctx.session.pnlcard){
         const shitBalance = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection);
         if (shitBalance.userTokenBalance == 0) {
-        await createTradeImage(_symbol, tokenIn, ctx.session.userProfit).then((buffer) => {
+          const tokenforRay = ctx.session.AmmPoolKeys.mintA.address;
+          console.log('tokenforRay',tokenforRay)
+        await createTradeImage(_symbol, tokenforRay, ctx.session.userProfit).then((buffer) => {
           console.log('ctx.session.userProfit',ctx.session.userProfit)
-          
+          console.log('tokenIn',tokenIn)
           fs.writeFileSync('trade.png', buffer);
           console.log('Image created successfully');
         });
