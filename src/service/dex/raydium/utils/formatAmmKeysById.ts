@@ -162,6 +162,7 @@ async function _getRayPoolKeys({
 }> {
   const commitment = "processed";
   const AMMV4 = new PublicKey("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8");
+  const Meteora = new PublicKey("Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB");
   let baseMint = new PublicKey(t1);
   let quoteMint = new PublicKey(t2);
   let isCpmmPool = false;

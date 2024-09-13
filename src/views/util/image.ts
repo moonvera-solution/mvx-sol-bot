@@ -3,6 +3,9 @@ const QRCode = require('qr-image');
 const fs = require('fs');
 
 export async function createTradeImage(tokenName: any, contract: any,  profit: number ) {
+  try{
+
+
   const width = 1300;
   const height = 1000;
   const canvas = createCanvas(width, height);
@@ -157,6 +160,9 @@ export async function createTradeImage(tokenName: any, contract: any,  profit: n
 
   // Get the image as a buffer
   return canvas.toBuffer('image/png');
+} catch (error: any) {
+  console.error('Error creating PNL IMAGE:', error.message);
+}
 }
 
 // createTradeImage(

@@ -209,7 +209,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       // check if the token is tradable on jupiter
       const feeAccount = null;
       let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${SOL_ADDRESS}&outputMint=${token}&amount=${1}&slippageBps=${ctx.session.latestSlippage}${feeAccount ? '&platformFeeBps=08' : ''}`.trim();
-      
+      const optionsBird = {method: 'GET', headers: {'X-API-KEY': '2036bb1a097a4414a86ba8e3a8bdafbf'}};
       const [
         shitBalance,
         birdeyeData,
@@ -220,7 +220,9 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         userPosition,
         jupPriceImpact_5,
         jupSolPrice,
-        quoteResponse
+        quoteResponse,
+        tokenMarketData
+
       ] = await Promise.all([
         getuserShitBalance(publicKeyString,token, connection),
         getTokenDataFromBirdEyePositions(token, publicKeyString),
@@ -231,9 +233,23 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         UserPositions.find({ walletId: publicKeyString }, { positions: { $slice: -7 } }),
         fetch(`${rpcUrl}/jupiter/quote?inputMint=${SOL_ADDRESS}&outputMint=${token}&amount=${'5000000000'}&slippageBps=${1}`).then((response) => response.json()),
         fetch(`https://price.jup.ag/v6/price?ids=SOL`).then((response) => response.json()),
-        fetch(swapUrl).then(res => res.json())
-      ]);
+        fetch(swapUrl).then(res => res.json()),
+        fetch(`https://public-api.birdeye.so/defi/v2/markets?address=${token}&sort_by=liquidity&sort_type=desc`,optionsBird).then(response => response.json()),
 
+      ]);
+      // console.log('tokenMarketData:', tokenMarketData.data.items[0])
+      const items = tokenMarketData.data.items;
+      const exists = items.map((item: any) => ({
+        address: item.address,
+        hasMeteora: item.source.includes('Meteora')
+      }));
+      let onMeteora = false;
+    if(exists.length > 0){
+      const meteora = exists.find((item: any) => item.hasMeteora === true);
+      if(meteora){
+        onMeteora = true;
+      }
+    }
       const {
         
         birdeyeURL,
@@ -243,9 +259,9 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
 
       const jupTokenValue: any = Object.values(jupTokenRate.data);
       let jupTokenPrice = 0;
-      // console.log('quoteResponse?.error_code:', quoteResponse)
-      if (jupTokenValue[0] && jupTokenValue[0].price && (quoteResponse?.errorCode !== 'TOKEN_NOT_TRADABLE' && quoteResponse?.errorCode !== 'COULD_NOT_FIND_ANY_ROUTE' ) ) {
-   
+      // console.log('tokenMetadataResult:', tokenMetadataResult)
+      if (jupTokenValue[0] && jupTokenValue[0].price && (quoteResponse?.errorCode !== 'TOKEN_NOT_TRADABLE' && quoteResponse?.errorCode !== 'COULD_NOT_FIND_ANY_ROUTE' ) || 
+      jupTokenValue[0] && jupTokenValue[0].price && (quoteResponse?.errorCode !== 'TOKEN_NOT_TRADABLE' && onMeteora === true)) {
         jupTokenPrice = jupTokenValue[0].price;
         console.log('jupToken')
         //if not on jupiter check if token is on raydium 
@@ -328,6 +344,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
         profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
       }
+      
       ctx.session.userProfit = Number(profitPercentage)
       const freezable = birdeyeData?.response2.data.freezeable ? "⚠️ Be careful: This token is freezable." : "✅ Not freezable.";
       let messageText = `<b>------ ${tokenData.name}(${tokenData.symbol}) ------</b> | 📄 CA: <code>${token}</code> <a href="copy:${token}">🅲</a>\n` +
