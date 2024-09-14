@@ -113,26 +113,26 @@ const port = process.env.PORT || 80;
 let backupSession: ISESSION_DATA;
 
 
-// if (isProd) {
-//   const webhookUrl = "https://drib.ngrok.app";
-//   const url = `${webhookUrl}/${botToken}`;
-//   // Create the HTTP server and define request handling logic
-//   app.use(express.json()); // for parsing application/json
-//   app.post(`/${botToken}`, webhookCallback(bot, "express"));
-//   app.use(`/${botToken}`, webhookCallback(bot, "express"));
-//   app.get("/", (req: any, res: any) => {
-//     res.send("Hello from ngrok server!");
-//   });
-//   app.listen(port, async () => {
-//     console.log(`Server is running on port ${port}`);
-//     await bot.api
-//       .setWebhook(url)
-//       .then(() => console.log("Webhook set successfully"))
-//       .catch((err) => console.error("Error setting webhook:", err));
-//   });
-// } else {
+if (isProd) {
+  const webhookUrl = "https://drib.ngrok.app";
+  const url = `${webhookUrl}/${botToken}`;
+  // Create the HTTP server and define request handling logic
+  app.use(express.json()); // for parsing application/json
+  app.post(`/${botToken}`, webhookCallback(bot, "express"));
+  app.use(`/${botToken}`, webhookCallback(bot, "express"));
+  app.get("/", (req: any, res: any) => {
+    res.send("Hello from ngrok server!");
+  });
+  app.listen(port, async () => {
+    console.log(`Server is running on port ${port}`);
+    await bot.api
+      .setWebhook(url)
+      .then(() => console.log("Webhook set successfully"))
+      .catch((err) => console.error("Error setting webhook:", err));
+  });
+} else {
   bot.start();
-// }
+}
 
 async function _validateSession(ctx: any) {
   if (JSON.parse(JSON.stringify(ctx.session)).chatId == 0) {
