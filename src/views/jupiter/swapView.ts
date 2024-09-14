@@ -221,7 +221,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         jupPriceImpact_5,
         jupSolPrice,
         quoteResponse,
-        tokenMarketData
+        
 
       ] = await Promise.all([
         getuserShitBalance(publicKeyString,token, connection),
@@ -234,11 +234,9 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         fetch(`${rpcUrl}/jupiter/quote?inputMint=${SOL_ADDRESS}&outputMint=${token}&amount=${'5000000000'}&slippageBps=${1}`).then((response) => response.json()),
         fetch(`https://price.jup.ag/v6/price?ids=SOL`).then((response) => response.json()),
         fetch(swapUrl).then(res => res.json()),
-        fetch(`https://public-api.birdeye.so/defi/v2/markets?address=${token}&sort_by=liquidity&sort_type=desc`,optionsBird).then(response => response.json()),
-
       ]);
       // console.log('tokenMarketData:', tokenMarketData.data.items[0])
-      const items = tokenMarketData.data.items;
+      const items = birdeyeData?.marketDex.data.items;
       const exists = items.map((item: any) => ({
         address: item.address,
         hasMeteora: item.source.includes('Meteora')
@@ -344,7 +342,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
         profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
       }
-      
+
       ctx.session.userProfit = Number(profitPercentage)
       const freezable = birdeyeData?.response2.data.freezeable ? "⚠️ Be careful: This token is freezable." : "✅ Not freezable.";
       let messageText = `<b>------ ${tokenData.name}(${tokenData.symbol}) ------</b> | 📄 CA: <code>${token}</code> <a href="copy:${token}">🅲</a>\n` +

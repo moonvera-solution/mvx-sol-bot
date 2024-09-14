@@ -244,7 +244,7 @@ export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean)
     valueInSOL = (specificPosition.amountOut - (userTokenDetails.userTokenBalance * Math.pow(10, decimals))) < 5 ? Number(((userTokenDetails.userTokenBalance)) * Number(tokenPriceSOL)) : 'N/A';
     initialInSOL = Number(specificPosition.amountIn) / 1e9;
     initialInUSD = initialInSOL * Number(solPrice);
-    profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(specificPosition.amountIn) / 1e9)) / (Number(specificPosition.amountIn) / 1e9) * 100 : 'N/A';
+    profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(specificPosition.amountIn ) / 1e9)) / (Number(specificPosition.amountIn) / 1e9) * 100 : 'N/A';
     profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
     profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
   }

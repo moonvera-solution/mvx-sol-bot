@@ -10,7 +10,6 @@ export async function getTokenDataFromBirdEye(tokenAddress: String, userWallet: 
         const solanDetails = 'https://public-api.birdeye.so/defi/price?address=So11111111111111111111111111111111111111112';
         const walletTokenBalance = `https://public-api.birdeye.so/v1/wallet/token_balance?wallet=${userWallet}&token_address=${tokenAddress}`;
 
-
         const options = {
             method: 'GET',
             headers: {
@@ -23,7 +22,7 @@ export async function getTokenDataFromBirdEye(tokenAddress: String, userWallet: 
             fetch(url, options).then(res => res.json()),
             fetch(url2, options).then(res => res.json()),
             fetch(solanDetails, options).then(res => res.json()),
-            fetch(walletTokenBalance, options).then(res => res.json())
+            fetch(walletTokenBalance, options).then(res => res.json()),
         ]);  
 
 
@@ -42,6 +41,7 @@ export async function getTokenDataFromBirdEyePositions(tokenAddress: string, use
         const solanDetails = 'https://public-api.birdeye.so/defi/price?address=So11111111111111111111111111111111111111112';
         const walletTokenBalance = `https://public-api.birdeye.so/v1/wallet/token_balance?wallet=BufhUw6vTmPB5ytaAWfHb6xUCUdVqHGZn9eQenSJmgmP&token_address=${tokenAddress}`;
         const birdeyeTokenPosition = `https://public-api.birdeye.so/v1/wallet/token_list?wallet=${userWallet}`;
+        const MarketData = `https://public-api.birdeye.so/defi/v2/markets?address=${tokenAddress}&sort_by=liquidity&sort_type=desc`;
 
         const options = {
             method: 'GET',
@@ -51,15 +51,16 @@ export async function getTokenDataFromBirdEyePositions(tokenAddress: string, use
             }
         };
 
-        const [response, response2, solanaPrice, walletTokenPosition, birdeyePosition] = await Promise.all([
+        const [response, response2, solanaPrice, walletTokenPosition, birdeyePosition, marketDex] = await Promise.all([
             fetch(url, options).then(res => res.json()),
             fetch(url2, options).then(res => res.json()),
             fetch(solanDetails, options).then(res => res.json()),
             fetch(walletTokenBalance, options).then(res => res.json()),
-            fetch(birdeyeTokenPosition, options).then(res => res.json())
+            fetch(birdeyeTokenPosition, options).then(res => res.json()),
+            fetch(MarketData, options).then(res => res.json())
         ]);
 
-        return { response, response2, solanaPrice, walletTokenPosition, birdeyePosition };
+        return { response, response2, solanaPrice, walletTokenPosition, birdeyePosition, marketDex }; // Adjust this based on the actual response structure
     } catch (error: any) {
         console.error(error.message);
         return null;
