@@ -391,7 +391,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
     console.log('valueInUSD', valueInUSD);
     valueInSOL = (pos.amountOut - (userShitbalance.userTokenBalance * Math.pow(10, baseDecimals))) < 5 ? Number(((userShitbalance.userTokenBalance)) * Number(tokenPriceSOL)) : 'N/A';
     console.log('valueInSOL', valueInSOL);
-    profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(pos.amountIn  ) / 1e9)) / (Number(pos.amountIn) / 1e9) * 100 : 'N/A';
+    profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(pos.amountIn) / 1e9)) / (Number(pos.amountIn) / 1e9) * 100 : 'N/A';
     console.log('profitPercentage', profitPercentage);
     profitInUSD = valueInUSD != 'N/A' ? Number(Number(userShitbalance.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
     profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
