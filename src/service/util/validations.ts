@@ -1,8 +1,7 @@
-import { Connection } from "@solana/web3.js";
 import { CONNECTION } from "../../config";
 import { getSolBalance } from ".";
 import { getUserTokenBalanceAndDetails } from "../feeds";
-import { PublicKey } from "@metaplex-foundation/js";
+import { PublicKey } from "@solana/web3.js";
 
 
 export async function isString(ctx: any, data: any) {

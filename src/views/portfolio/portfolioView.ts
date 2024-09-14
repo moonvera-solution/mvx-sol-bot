@@ -1,7 +1,6 @@
 
 import { UserPositions } from '../../db';
-import { PublicKey, token } from '@metaplex-foundation/js';
-import { TOKEN_PROGRAM_ID } from '@raydium-io/raydium-sdk';
+import { PublicKey } from '@solana/web3.js';
 import { getTokenDataFromBirdEyePositions } from "../../api/priceFeeds/birdEye";
 import { Portfolios } from '../../db';
 import { formatNumberToKOrM, getSolBalance } from '../../service/util';

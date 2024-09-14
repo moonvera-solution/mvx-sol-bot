@@ -888,7 +888,7 @@ export async function catchSimulationErrors( simulationResult: any){
     const SLIPPAGE_ERROR = /Error: exceeds desired slippage limit/;
     const SLIPPAGE_ERROR2 = /Program Error: "Instruction #3 Failed - custom program error: exceeds desired slippage limit"/
     const SLIPPAGE_ERROR_ANCHOR = /Program Error: "Instruction #5 Failed - custom program error: Slippage tolerance exceeded"/;
-    const SLIPPAGE_TOLERANCE = /Slippage tolerance exceeded/;
+    const SLIPPAGE_TOLERANCE = /Program Error: "Instruction #2 Failed - custom program error: slippage: Too much SOL required to buy the given amount of tokens"/;
     const SLIPPAGE_REQUIRED = /Error: slippage: Too much SOL required to buy the given amount of tokens/;
     
     console.log("simulationResult is it catching!!! ")

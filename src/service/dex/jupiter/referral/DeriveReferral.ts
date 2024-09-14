@@ -1,6 +1,6 @@
 import  bs58 from 'bs58';
 import { ReferralProvider } from "@jup-ag/referral-sdk";
-import { PublicKey } from "@metaplex-foundation/js";
+import { PublicKey } from "@solana/web3.js";
 import {Connection,Keypair,sendAndConfirmTransaction,} from "@solana/web3.js";
 import dotenv from 'dotenv'; dotenv.config();
 /**

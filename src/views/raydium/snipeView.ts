@@ -1,15 +1,11 @@
-import { PublicKey } from '@metaplex-foundation/js';
+import { PublicKey } from '@solana/web3.js';
 import { getTokenMetadata, getuserShitBalance, getUserTokenBalanceAndDetails } from '../../service/feeds';
 import { getPoolToken_details, quoteToken } from './../util/dataCalculation';
 import { formatNumberToKOrM, getSolBalance } from '../../service/util';
-import { RAYDIUM_POOL_TYPE } from '../../service/util/types';
 import { CONNECTION, SOL_ADDRESS } from '../../config';
-import { Connection } from '@solana/web3.js';
-import { runAllFees } from '../util/getPriority';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import { UserPositions } from '../../db';
 import { getTokenDataFromBirdEye, getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
-import BigNumber from 'bignumber.js';
 import { getAmmV4PoolKeys } from '../../service/dex/raydium/utils/formatAmmKeysById';
 
 export async function display_snipe_amm_options(ctx: any, isRefresh: boolean, msgTxt?: string) {

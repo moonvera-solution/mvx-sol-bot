@@ -1,4 +1,4 @@
-import { ApiV3PoolInfoStandardItemCpmm, CurveCalculator, CREATE_CPMM_POOL_PROGRAM, DEV_CREATE_CPMM_POOL_PROGRAM, CpmmPoolInfoLayout, CpmmConfigInfoInterface } from '@raydium-io/raydium-sdk-v2';
+import {  CurveCalculator, CREATE_CPMM_POOL_PROGRAM, DEV_CREATE_CPMM_POOL_PROGRAM, CpmmPoolInfoLayout, CpmmConfigInfoInterface } from '@raydium-io/raydium-sdk-v2';
 import { Raydium, TxVersion, parseTokenAccountResp, CpmmKeys } from '@raydium-io/raydium-sdk-v2'
 import { optimizedSendAndConfirmTransaction, wrapLegacyTx, add_mvx_and_ref_inx_fees, addMvxFeesInx } from '../../../util';
 import { Connection, Keypair, PublicKey, VersionedTransaction, Transaction, TransactionMessage, AddressLookupTableAccount } from '@solana/web3.js'
@@ -6,9 +6,7 @@ import BigNumber from 'bignumber.js';
 import dotenv from 'dotenv'; dotenv.config();
 import bs58 from 'bs58'
 import BN from 'bn.js'
-import { TransactionInstruction } from '@solana/web3.js';
-import { SOL } from '@metaplex-foundation/js';
-import { rpc } from '@coral-xyz/anchor/dist/cjs/utils';
+
 import { SOL_ADDRESS } from '../../../../config';
 
 

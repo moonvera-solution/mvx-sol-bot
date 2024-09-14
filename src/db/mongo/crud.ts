@@ -3,7 +3,7 @@ import {
   Portfolios, Referrals
 } from './schema';
 import dotenv from 'dotenv'; dotenv.config();
-import { PublicKey } from "@metaplex-foundation/js";
+import { PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
 import { SecretsManagerClient, GetSecretValueCommand, } from "@aws-sdk/client-secrets-manager";
 const user = encodeURIComponent(process.env.DB_USER!);

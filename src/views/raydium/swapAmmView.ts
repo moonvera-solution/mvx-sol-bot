@@ -1,4 +1,4 @@
-import { PublicKey } from "@metaplex-foundation/js";
+import { PublicKey } from "@solana/web3.js";
 import {
   getLiquityFromOwner,
   getTokenMetadata,
@@ -8,7 +8,6 @@ import {
 import { getPoolToken_details, quoteToken } from "../util/dataCalculation";
 import { CONNECTION } from "../../config";
 import { formatNumberToKOrM, getSolBalance } from "../../service/util";
-import { RAYDIUM_POOL_TYPE } from "../../service/util/types";
 import { Connection, Keypair } from "@solana/web3.js";
 export const DEFAULT_PUBLIC_KEY = new PublicKey(
   "11111111111111111111111111111111"

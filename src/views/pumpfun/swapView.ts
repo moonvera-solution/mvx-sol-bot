@@ -1,8 +1,8 @@
-import { amount, PublicKey } from '@metaplex-foundation/js';
+import {  PublicKey } from '@solana/web3.js';
 import { getTokenMetadata, getuserShitBalance, getUserTokenBalanceAndDetails } from '../../service/feeds';
 
 import { formatNumberToKOrM, getSolBalance, getSwapAmountOutPump, updatePositions } from '../../service/util';
-import { Keypair, Connection } from '@solana/web3.js';
+import { Keypair } from '@solana/web3.js';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import { getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
 import { getSwapDetails, pump_fun_swap } from '../../service/dex/pumpfun';

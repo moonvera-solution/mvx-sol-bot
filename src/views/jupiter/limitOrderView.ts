@@ -1,4 +1,4 @@
-import { PublicKey } from "@metaplex-foundation/js";
+import { PublicKey } from "@solana/web3.js";
 import {
   getTokenMetadata,
   getuserShitBalance,
@@ -9,7 +9,7 @@ import { formatNumberToKOrM, getSolBalance, optimizedSendAndConfirmTransaction }
 import { Keypair, Connection } from "@solana/web3.js";
 import { UserPositions } from "../../db";
 import { getTokenDataFromBirdEyePositions } from "../../api/priceFeeds/birdEye";
-import { LimitOrderProvider, ownerFilter, OrderHistoryItem, TradeHistoryItem, BatchCancelOrderParams } from "@jup-ag/limit-order-sdk";
+import {  OrderHistoryItem, TradeHistoryItem, BatchCancelOrderParams } from "@jup-ag/limit-order-sdk";
 import { jupiter_limit_order, cancelOrder, cancelBatchOrder, CalculateLimitOrderAmountout, fetchOpenOrders, calculateOrderSellAmount } from "../../../src/service/dex/jupiter/trade/LimitOrder";
 import { SOL_ADDRESS } from "../../config";
 import bs58 from 'bs58';
