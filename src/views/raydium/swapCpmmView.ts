@@ -21,37 +21,27 @@ export async function ray_cpmm_swap(ctx: any) {
   const chatId = ctx.chat.id;
   const TRITON_RPC_URL = 'https://moonvera-ams.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'
   const connection = new Connection(TRITON_RPC_URL);
-  // const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
   const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
-  console.log('activeWalletIndexIdx', activeWalletIndexIdx);
-  console.log('ctx.session.portfolio.wallets[activeWalletIndexIdx]', ctx.session.portfolio.wallets[activeWalletIndexIdx]);
   const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
   const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
-  const isBuySide = ctx.session.cpmm_side == "buy";
+  const isBuySide =   ctx.session.cpmm_side == "buy";
   const tokenIn = isBuySide ? SOL_ADDRESS : ctx.session.jupSwap_token;
   const tokenOut = isBuySide ? ctx.session.jupSwap_token : SOL_ADDRESS;
   const userTokenBalanceAndDetails = isBuySide ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
-  const amountToSell = Math.floor((ctx.session.cpmm_amountIn / 100) * userTokenBalanceAndDetails.userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals));
-  const amountIn = isBuySide ? ctx.session.cpmm_amountIn * 1e9 : amountToSell;
-  // const refObject = { referralWallet: ctx.session.referralWallet, referralCommision: ctx.session.referralCommision };
-  const userSolBalance = (await getSolBalance(userWallet.publicKey, connection) * 1e9);
+  const amountToSell = Math.floor(( ctx.session.cpmm_amountIn  / 100) * userTokenBalanceAndDetails.userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals));
+  const amountIn = isBuySide ?  ctx.session.cpmm_amountIn  * 1e9 : amountToSell;
 
-  const minBalance = (amountIn + (amountIn * MVXBOT_FEES.toNumber()) + (ctx.session.customPriorityFee * 1e9));
-  if (isBuySide && minBalance > userSolBalance) {
-    await ctx.api.sendMessage(chatId, `❌ You do not have enough SOL to buy ${userTokenBalanceAndDetails.userTokenSymbol}.`, { parse_mode: 'HTML', disable_web_page_preview: true });
-    return;
-  }
+ 
   if (!isBuySide && amountToSell <= 0) {
     await ctx.api.sendMessage(chatId, `❌ You do not have enough ${userTokenBalanceAndDetails.userTokenSymbol} to sell.`, { parse_mode: 'HTML', disable_web_page_preview: true });
     return;
   }
-
-  await ctx.api.sendMessage(chatId, `🟢 <b>Transaction ${ctx.session.cpmm_side.toUpperCase()}:</b> Processing... \n Please wait for confirmation.`, { parse_mode: 'HTML', disable_web_page_preview: true });
+  await ctx.api.sendMessage(chatId, `🟢 <b>Transaction ${  ctx.session.cpmm_side.toUpperCase()}:</b> Processing... \n Please wait for confirmation.`, { parse_mode: 'HTML', disable_web_page_preview: true });
   console.log('slippage', ctx.session.latestSlippage);
   raydium_cpmm_swap(
     connection,
     payerKeypair,
-    ctx.session.cpmm_side,
+      ctx.session.cpmm_side,
     ctx.session.cpmmPoolId.id,
     amountIn,
     (ctx.session.latestSlippage + 10),
@@ -61,7 +51,6 @@ export async function ray_cpmm_swap(ctx: any) {
     if (!txid) return;
     const tradeType = isBuySide ? 'buy' : 'sell';
     if (txid) {
-
       const config = {
         searchTransactionHistory: true
       };
@@ -77,8 +66,13 @@ export async function ray_cpmm_swap(ctx: any) {
       const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
       tradeType == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
       confirmedMsg = `✅ <b>${tradeType.toUpperCase()} tx confirmed</b> ${tradeType == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${amountIn / 1e9} SOL</b>` : `You sold <b>${Number(amountToSell / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(3)}</b> <b>${_symbol}</b> and received <b>${(ctx.session.CpmmSolExtracted / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txid}">View Details</a>.`;
-      UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
-      const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
+      UserPositions.collection.listIndexes().toArray().then((indexes: any) => {
+        if (indexes.some((index: any) => index.name === 'positionChatId_1')) {
+          console.log('Index already exists');
+          UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
+        }
+      });     
+       const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
       let oldPositionSol: number = 0;
       let oldPositionToken: number = 0;
       if (userPosition) {
@@ -98,7 +92,7 @@ export async function ray_cpmm_swap(ctx: any) {
           name: userTokenBalanceAndDetails.userTokenName,
           symbol: _symbol,
           tradeType: `cpmm_swap`,
-          amountIn: oldPositionSol ? oldPositionSol + (ctx.session.cpmm_amountIn * 1e9) : (ctx.session.cpmm_amountIn * 1e9),
+          amountIn: oldPositionSol ? oldPositionSol + ( ctx.session.cpmm_amountIn  * 1e9) : ( ctx.session.cpmm_amountIn  * 1e9),
           amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
 
         });
@@ -157,179 +151,4 @@ export async function ray_cpmm_swap(ctx: any) {
   });
 }
 
-export async function display_cpmm_raydium_details(ctx: any, isRefresh: boolean) {
-  console.log('we are on cpmm raydium details')
-
-  let priority_Level = ctx.session.priorityFees;
-  const priority_custom = ctx.session.ispriorityCustomFee;
-  if (priority_custom === true) {
-    priority_Level = 0;
-  }
-  const connection = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
-
-  // console.log("cpmmPoolKey-c>",cpmmPoolKey);
-
-
-  // console.log('ctx.session.cpmmPoolInfo', ctx.session.cpmmPoolInfo);
-  const chatId = ctx.chat.id;
-  const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
-  const userPublicKey = ctx.session.portfolio.wallets[activeWalletIndexIdx].publicKey;
-  const tokenAddress = ctx.session.cpmmPoolInfo.mintA.address == SOL_ADDRESS ? new PublicKey(ctx.session.cpmmPoolInfo.mintB.address): new PublicKey(ctx.session.cpmmPoolInfo.mintA.address);
-  // console.log('cpmmPoolInfo', ctx.session.cpmmPoolInfo);
-  const [
-    shitBalance,
-    birdeyeData,
-    tokenMetadataResult,
-    balanceInSOL,
-    userPosition,
-    userTokenDetails,
-    jupSolPrice,
-    jupTokenRate
-
-  ] = await Promise.all([
-    getuserShitBalance(userPublicKey, tokenAddress, connection),
-    getTokenDataFromBirdEyePositions(tokenAddress.toString(), userPublicKey),
-    getTokenMetadata(ctx, tokenAddress.toBase58()),
-    getSolBalance(userPublicKey, connection),
-    UserPositions.find({ walletId: userPublicKey }, { positions: { $slice: -7 } }),
-    getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
-    fetch(
-      `https://price.jup.ag/v6/price?ids=SOL`
-    ).then((response) => response.json()),
-    fetch(`https://price.jup.ag/v6/price?ids=${tokenAddress.toBase58()}&vsToken=So11111111111111111111111111111111111111112`).then((response) => response.json()),
-
-  ]);
-  const jupTokenValue: any = Object.values(jupTokenRate.data);
-  // console.log('jupTokenValue', jupTokenValue);
-  let jupTokenPrice = 0
-  if(jupTokenValue[0] && jupTokenValue[0].price) {
-    jupTokenPrice = jupTokenValue[0].price;
-
-  }
-  
-  // console.log('jupTokenPrice', jupTokenPrice);
-  const cpmmSupply = new BigNumber(tokenMetadataResult.tokenData.mint.supply.basisPoints)
-  // console.log('cpmmSupply', cpmmSupply);
-
-  const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : Number(jupSolPrice.data.SOL.price);
-  // console.log('cpmmPrice', priceCpmm * solPrice);
-
-  const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
-  const tokenSupply = Number(cpmmSupply) / Math.pow(10, decimals);
-  // console.log('tokenSupply', tokenSupply);
-  const tokenPriceUSD = birdeyeData
-    && birdeyeData.response
-    && birdeyeData.response.data
-    && birdeyeData.response.data.price != null  // This checks for both null and undefined
-    ? birdeyeData.response.data.price
-    : Number(jupTokenPrice) * Number(solPrice);
-
-  // console.log('tokenPriceUSD', tokenPriceUSD);
-  const tokenPriceSOL = birdeyeData ? (tokenPriceUSD / solPrice) : Number(jupTokenPrice);
-
-  let specificPosition;
-  if (userPosition[0] && userPosition[0].positions && userPosition[0].positions != undefined) {
-    specificPosition = userPosition[0].positions.find((pos: any) => new PublicKey(pos.baseMint).equals(tokenAddress));
-
-  }
-  let initialInUSD = 0;
-  let initialInSOL = 0;
-  let valueInUSD: any;
-  let valueInSOL: any;
-  let profitPercentage;
-  let profitInUSD;
-  let profitInSol;
-  if (specificPosition && specificPosition.amountOut) {
-    valueInUSD = (specificPosition.amountOut - (userTokenDetails.userTokenBalance * Math.pow(10, decimals))) < 5 ? userTokenDetails.userTokenBalance * Number(tokenPriceUSD) : 'N/A';
-    valueInSOL = (specificPosition.amountOut - (userTokenDetails.userTokenBalance * Math.pow(10, decimals))) < 5 ? Number(((userTokenDetails.userTokenBalance)) * Number(tokenPriceSOL)) : 'N/A';
-    initialInSOL = Number(specificPosition.amountIn) / 1e9;
-    initialInUSD = initialInSOL * Number(solPrice);
-    profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(specificPosition.amountIn) / 1e9)) / (Number(specificPosition.amountIn) / 1e9) * 100 : 'N/A';
-    profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : 'N/A';
-    profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
-  }
-  ctx.session.userProfit = profitPercentage
-
-  const {
-    birdeyeURL,
-    dextoolsURL,
-    dexscreenerURL,
-    tokenData,
-  } = tokenMetadataResult;
-  const baseSupply = birdeyeData
-    && birdeyeData.response
-    && birdeyeData.response.data
-    && birdeyeData.response.data.supply != null  // This checks for both null and undefined
-    ? birdeyeData.response.data.supply
-    : tokenSupply;
-  const mcap = baseSupply * tokenPriceUSD;
-  const netWorth = birdeyeData
-    && birdeyeData.birdeyePosition
-    && birdeyeData.birdeyePosition.data
-    && birdeyeData.birdeyePosition.data.totalUsd
-    ? birdeyeData.birdeyePosition.data.totalUsd : NaN;
-  const lpAddress = new PublicKey(ctx.session.cpmmPoolInfo.mintLp.address);
-  const netWorthSol = netWorth / solPrice;
-  const creatorAddress = birdeyeData && birdeyeData.response2.data.creatorAddress!= null ? birdeyeData.response2.data.creatorAddress : tokenData.updateAuthorityAddress.toBase58();
-  const lpSupplyOwner = await getLiquityFromOwner(new PublicKey(creatorAddress), lpAddress, connection);
-  const lpSupply = lpSupplyOwner.userTokenBalance;
-  const islpBurnt = lpSupply > 0 ? "❌ No" : "✅ Yes";
-  const freezable = birdeyeData?.response2.data.freezeable ? "⚠️ Be careful: This token is freezable." : "✅ Not freezable.";
-
-  try {
-
-    const formattedmac = await formatNumberToKOrM(mcap) ?? "NA";
-
-    // const priceImpact = tokenInfo.priceImpact.toFixed(2);
-    const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
-    // Construct the message
-    let options: any;
-    let messageText: any;
-
-
-    messageText = `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
-      `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
-      `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +
-      `<a href="${dexscreenerURL}">🔍 Dexscreener</a>\n\n` +
-      `<b>LP Burnt:</b> ${islpBurnt} | <b>Freezable:</b> ${freezable} \n\n` +   
-      `<b>------ Token Details ------</b>\n` +
-      `Market Cap: <b>${formattedmac} USD</b>\n` +
-      `Token Price: <b> ${tokenPriceUSD.toFixed(9)} USD</b> | <b> ${tokenPriceSOL.toFixed(9)} SOL</b> \n\n` +
-      `---<code>Trade Position</code>---\n` +
-      `Initial : <b>${(initialInSOL).toFixed(4)} SOL</b> | <b>${(initialInUSD.toFixed(4))} USD</b>\n` +
-      `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n` +
-      `Token Balance: <b>${shitBalance.userTokenBalance.toFixed(4)} $${userTokenSymbol} </b> | <b>${((shitBalance.userTokenBalance) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((shitBalance.userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n` +
-      // `Price Impact (5.0 SOL) : <b>${priceImpact}%</b> \n\n` +
-      // `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
-      `Wallet Balance: <b>${balanceInSOL.toFixed(3)} SOL</b> | <b>${balanceInUSD} USD</b>\n ` +
-      `Net Worth: <b>${netWorthSol.toFixed(4)}</b> SOL | <b>${netWorth.toFixed(4)}</b> USD\n`;
-
-    // Define buy mode inline keyboard
-    options = {
-      parse_mode: 'HTML',
-      disable_web_page_preview: true,
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: ' 🔂 Refresh ', callback_data: 'refresh_cpmm_trade' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
-          [{ text: 'Buy (X SOL)', callback_data: 'buy_X_CPMM' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_CPMM' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_CPMM' }],
-          [{ text: `Sell X %`, callback_data: 'sell_X_CPMM' }, { text: 'Sell 50%  ', callback_data: 'sell_50_CPMM' }, { text: 'Sell 100%  ', callback_data: 'sell_100_CPMM' }],
-
-          [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
-          [{ text: `📈 (${tokenData.symbol}) Live chart 📉`, url: `https://t.me/dribs_app_bot/dribs?startapp=${tokenAddress}` }],
-          [{ text: 'Cancel', callback_data: 'closing' }]
-        ]
-      },
-    };
-
-
-    if (isRefresh) {
-      await ctx.editMessageText(messageText, options);
-    } else {
-      await ctx.api.sendMessage(chatId, messageText, options);
-    }
-  } catch (error: any) {
-    console.error('Error in display_token_details:', error);
-    console.error('Error in getTokenMetadata:', error.message);
-  }
-
-}       
+   

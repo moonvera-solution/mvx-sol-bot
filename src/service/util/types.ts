@@ -1,5 +1,6 @@
 
 // import { aN, bo } from '@raydium-io/raydium-sdk-v2/lib/api-33b5ab27';
+import { N } from '@raydium-io/raydium-sdk-v2/lib/api-8d4cc174';
 import { PublicKey } from '@solana/web3.js';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import dotenv from "dotenv";
@@ -35,7 +36,7 @@ export interface ISESSION_DATA {
   AmmRpcData: any;
   AmmPoolInfo: any;
   pnlcard: boolean;
-  userProfit : number;
+  userProfit : number ;
   expectedAmountOut_order: number;
   CpmmSolExtracted: number;
   cpmm_amountIn: number;
@@ -92,6 +93,9 @@ export interface ISESSION_DATA {
   limitOrders_price: number,
   limitOrders_time: number,
   orderPercentPrice: boolean,
+  MEV_protection: boolean,
+  key_buy_option_1: Number,
+  key_buy_option_2: Number,
   poolSchedule: {
     status: String,
     baseDecimals: Number,
@@ -149,6 +153,9 @@ export const DefaultSessionData: ISESSION_DATA = {
     positions: [],
     activeWalletIndex: 0
   },
+  key_buy_option_1: 0.5,
+  key_buy_option_2: 1,
+  MEV_protection: false,
   AmmPoolKeys: {},
   AmmRpcData: {},
   AmmPoolInfo: {},

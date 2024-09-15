@@ -163,20 +163,20 @@ export async function getRayCpmmPoolKeys({ t1, t2, connection }: { t1: string, t
   return poolId;
 }
 
-export const fetchTokenAccountData = async (wallet: Keypair, connection: Connection) => {
-  const solAccountResp = await connection.getAccountInfo(wallet.publicKey)
-  const tokenAccountResp = await connection.getTokenAccountsByOwner(wallet.publicKey, { programId: TOKEN_PROGRAM_ID })
-  const token2022Req = await connection.getTokenAccountsByOwner(wallet.publicKey, { programId: TOKEN_2022_PROGRAM_ID })
-  const tokenAccountData = parseTokenAccountResp({
-    owner: wallet.publicKey,
-    solAccountResp,
-    tokenAccountResp: {
-      context: tokenAccountResp.context,
-      value: [...tokenAccountResp.value, ...token2022Req.value],
-    },
-  })
-  return tokenAccountData;
-}
+// export const fetchTokenAccountData = async (wallet: Keypair, connection: Connection) => {
+//   const solAccountResp = await connection.getAccountInfo(wallet.publicKey)
+//   const tokenAccountResp = await connection.getTokenAccountsByOwner(wallet.publicKey, { programId: TOKEN_PROGRAM_ID })
+//   const token2022Req = await connection.getTokenAccountsByOwner(wallet.publicKey, { programId: TOKEN_2022_PROGRAM_ID })
+//   const tokenAccountData = parseTokenAccountResp({
+//     owner: wallet.publicKey,
+//     solAccountResp,
+//     tokenAccountResp: {
+//       context: tokenAccountResp.context,
+//       value: [...tokenAccountResp.value, ...token2022Req.value],
+//     },
+//   })
+//   return tokenAccountData;
+// }
 
 //  getRayCpmmPoolKeys({t1:'5X1F16T5MRiAu4qPaFAaNA1oPx9VQzkpV5SzQcHsNUS9', t2:'So11111111111111111111111111111111111111112', connection:new Connection('https://moonvera-ams.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41')})
 

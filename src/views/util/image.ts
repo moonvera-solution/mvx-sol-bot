@@ -165,14 +165,3 @@ export async function createTradeImage(tokenName: any, contract: any,  profit: n
 }
 }
 
-// createTradeImage(
-//   'DRIBS',
-//   1000,
-//   'https://dribs.io'
-// ).then((buffer) => {
-//   // Save the image buffer to a file
-//   fs.writeFileSync('trade.png', buffer);
-//   console.log('Image created successfully');
-// }).catch((err) => {
-//   console.error('Error creating image:', err);
-// });

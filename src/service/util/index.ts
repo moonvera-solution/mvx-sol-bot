@@ -904,7 +904,9 @@ export async function catchSimulationErrors( simulationResult: any){
     }
     
     const BALANCE_ERROR = /Transfer: insufficient lamports/;
-    if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg))) {
+    const BALANCE_ERROR2 = /Program Error: "Instruction #5 Failed - custom program error: insufficient funds"/;
+    if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg)) ||
+    simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR2.test(logMsg))) {
         
         throw new Error(`🔴 Insufficient balance for transaction.`);
     }

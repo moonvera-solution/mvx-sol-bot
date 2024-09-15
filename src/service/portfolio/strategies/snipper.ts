@@ -385,8 +385,12 @@ export async function startSnippeSimulation(
                 }
 
                 // ------- check user balanace in DB --------
-                UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
-                const userPosition = await UserPositions.findOne({ walletId: userWallet.publicKey.toString() });
+                UserPositions.collection.listIndexes().toArray().then((indexes: any) => {
+                    if (indexes.some((index: any) => index.name === 'positionChatId_1')) {
+                      console.log('Index already exists');
+                      UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
+                    }
+                  });                const userPosition = await UserPositions.findOne({ walletId: userWallet.publicKey.toString() });
 
                 let oldPositionSol: number = 0;
                 let oldPositionToken: number = 0;

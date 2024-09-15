@@ -11,8 +11,6 @@ import {
   sendHelpMessage,
   handleCloseKeyboard,
   handleRefreshStart,
-  quoteToken,
-  // quoteTokenquoteToken,
   setCustomPriority,
   display_all_positions,
   display_single_position,
@@ -21,10 +19,9 @@ import {
   handleRereshWallet,
   handleWallets,
   display_jupSwapDetails,
-  display_pumpFun,
-  display_raydium_details,
-  display_cpmm_raydium_details,
-  // display_snipe_options,
+  
+ 
+
   swap_pump_fun,
   jupiterSwap,
   display_limitOrder_token_details,
@@ -64,7 +61,7 @@ import {
   AllowedReferrals,
   UserSession,
 } from "./db/mongo/schema";
-import { PriotitizationFeeLevels } from "../src/service/fees/priorityFees";
+import {getWalletNetWorth} from "../src/api/priceFeeds/birdEye";
 import { hasEnoughSol } from "./service/util/validations";
 import { ray_cpmm_swap } from "./views/raydium/swapCpmmView";
 import { getTokenMetadata, getuserShitBalance } from "./service/feeds";
@@ -74,6 +71,8 @@ import { display_snipe_amm_options, display_snipe_cpmm_options } from "./views/r
 import { verify_position_dex } from "./views/util/verifySwapDex";
 import { set_auto_buy, stop_auto_buy } from "./service/autobuy/autobuySettings";
 import { handle_autoBuy } from "./service/autobuy/autobuy";
+import { handle_buy_swap_routing, handle_sell_swap_routing } from "./service/routing/swaprouting";
+import { set_MEV_protection, stop_MEV_protection } from "./service/MEV/mevProtection";
 // import { review_limitOrder_details_sell } from "./views/jupiter/limitOrderView";
 // import { br } from "@raydium-io/raydium-sdk-v2/lib/type-9fe71e3c";
 const express = require("express");
@@ -151,7 +150,7 @@ async function _validateSession(ctx: any) {
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 bot.command("start", async (ctx: any) => {
  
-  await _validateSession(ctx);
+  // await _validateSession(ctx);
   backupSession = ctx.session;
   // console.log("ctx.session.generatorWallet", ctx.session.generatorWallet);
   // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
@@ -194,34 +193,31 @@ bot.command("start", async (ctx: any) => {
       : ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].publicKey;
 
     // Retrieve the current SOL details
-    const [balanceInSOL, details, jupSolPrice] = await Promise.all([
+    const [balanceInSOL,jupSolPrice, networth] = await Promise.all([
       getSolBalance(publicKeyString, connection),
-      getSolanaDetails(), fetch(`https://price.jup.ag/v6/price?ids=SOL`).then((response) => response.json()),
-    ]);
-
+      fetch(
+          `https://price.jup.ag/v6/price?ids=SOL`
+        ).then((response) => response.json()),
+        getWalletNetWorth(publicKeyString as string).catch((error) => { console.error("Error fetching net worth: ", error); return null; })
+  ]);  
     // Fetch SOL balance
     if (balanceInSOL === null) {
       await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
       return;
     }
-    const balanceInUSD = details ? balanceInSOL * details : balanceInSOL * Number(jupSolPrice.data.SOL.price);
-
-    // Combine the welcome message, SOL price message, and instruction to create a wallet
-
-    const welcomeMessage =
+    const balanceInUSD = balanceInSOL * Number(jupSolPrice.data.SOL.price);
+    let networkmessage = '';
+    if(networth){
+      networkmessage =  `Net Worth: <b>${(Number(networth) /Number(jupSolPrice.data.SOL.price) ).toFixed(4)}</b> SOL | <b>${(Number(networth).toFixed(4))}</b> USD\n\n` ;
+    }
+    const welcomeMessage = 
       `<b>✨ DRIBs ✨</b>\n` +
       `| <a href="https://www.dribs.io">Website</a> | <a href="https://x.com/dribs_sol"> X </a> |\n\n` +
       // `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
       `Start by choosing a wallet or import one using the "Import Wallet" button.\n` +
-      // `We're always working to bring you new features - stay tuned!\n\n` +
       `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
       `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInUSD.toFixed(4))}</b> USD\n\n` +
-      // `⚠️ We recommend exporting your private key and keeping it on paper. ⚠️ \n` +
-      `<i>  - 📣 Limit Order is available</i>\n\n` +
-      `<b> Markets </b>\n`+
-      `<i>  - Jupiter  </i>\n`+
-      `<i>  - Raydium AMM/CPMM </i>\n`+
-      `<i>  - Pump fun </i>\n\n`+
+      `${networkmessage}` +
       `<i>  - 📢  Dribs Market Maker Bot is available now! 🤖💼
         For more information or to get started, please contact us directly </i>\n` ;
       
@@ -267,14 +263,6 @@ bot.command("start", async (ctx: any) => {
     } else {
       ctx.session.latestCommand = "auto_buy_active";
     }
-
-    /*
-        const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
-        console.log('wallet:', wallet.publicKey);
-        ctx.session.orders = await getOpenOrders(connection, wallet);
-        ctx.session.isOrdersLoaded = true;
-        console.log('ctx.session.orders', ctx.session.orders);
-    */
   } catch (error: any) {
     if (error instanceof GrammyError || error instanceof HttpError || error instanceof Error || error instanceof TypeError || error instanceof RangeError) {
       console.error("Callback query failed due to timeout or invalid ID.", error);
@@ -402,19 +390,14 @@ const commandNumbers = [
   "sell_X_JUP",
   "set_slippage",
   "set_snipe_slippage",
-  "buy_0.5_JUP",
+  "buy_key_one_JUP",
   "sell_0.5_JUP",
-  "buy_1_JUP",
-  "sell_1_JUP",
+  "buy_key_two_JUP",
   "ask_for_sol_amount",
   "send_sol",
-  "buy_X_PUMP",
-  "sell_X_PUMP",
   "sell_0.5_PUMP",
   "sell_1_PUMP",
   "set_customPriority",
-  "buy_X_RAY",
-  "sell_X_RAY",
   "buy_0.5_RAY",
   "sell_0.5_RAY",
   "buy_1_RAY",
@@ -432,6 +415,8 @@ const commandNumbers = [
   'review_limitOrder_details',
   "set_autobuy_amount",
   'auto_buy_active',
+  'set_key_one',
+  'set_key_two',
   // 'display_single_position',
 
 
@@ -505,6 +490,28 @@ bot.on("message", async (ctx) => {
       }
     }
     switch (latestCommand) {
+      case "set_key_one": {
+        if (msgTxt) {
+        const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
+        if (isNumeric) {
+        ctx.session.key_buy_option_1 = Number(msgTxt);
+        } else {
+          ctx.api.sendMessage(chatId, "🔴 Invalid amount")
+        }
+      }
+        break;
+      }
+      case "set_key_two": {
+        if (msgTxt) {
+          const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
+          if (isNumeric) {
+          ctx.session.key_buy_option_2 = Number(msgTxt);
+          } else {
+            ctx.api.sendMessage(chatId, "🔴 Invalid amount")
+          }
+        }
+        break;
+      }
       case "set_slippage": {
         ctx.session.latestSlippage = Number(msgTxt);
         await display_jupSwapDetails(ctx, false);
@@ -568,7 +575,7 @@ bot.on("message", async (ctx) => {
             const isToken = msgTxt
               ? await checkAccountType(ctx, msgTxt)
               : await checkAccountType(ctx, ctx.session.autoBuy_token);
-              console.log('isToken', isToken) 
+              // console.log('isToken', isToken) 
             if (!isToken) {
               ctx.api.sendMessage(chatId, "Invalid address");
               return;
@@ -617,28 +624,6 @@ bot.on("message", async (ctx) => {
         break;
       }
 
-      case "buy_X_PUMP": {
-        ctx.session.latestCommand = "buy_X_PUMP";
-        if (msgTxt) {
-
-          const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
-
-          if (isNumeric) {
-            const amt = Number(msgTxt);
-            if (!isNaN(amt)) {
-              ctx.session.pump_amountIn = amt;
-              ctx.session.pump_side = "buy";
-              await swap_pump_fun(ctx);
-              break;
-            } else {
-              return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
-            }
-          } else {
-            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
-          }
-        }
-        break;
-      }
       case "buy_X_JUP": {
         ctx.session.latestCommand = "buy_X_JUP";
         if (msgTxt) {
@@ -653,7 +638,7 @@ bot.on("message", async (ctx) => {
               // console.log("ctx.session.pump_amountIn", ctx.session.pump_amountIn);
               ctx.session.jupSwap_amount = amt;
               ctx.session.jupSwap_side = "buy";
-              await jupiterSwap(ctx);
+              await handle_buy_swap_routing(ctx);
               break;
             } else {
               return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
@@ -662,27 +647,6 @@ bot.on("message", async (ctx) => {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
 
-        }
-        break;
-      }
-      case "sell_X_PUMP": {
-        ctx.session.latestCommand = "sell_X_PUMP";
-        if (msgTxt) {
-          const amt = msgTxt.includes(".")
-            ? Number.parseFloat(msgTxt)
-            : Number.parseInt(msgTxt);
-          if (!isNaN(amt) && amt >= 0 && amt <= 100) {
-            // console.log('ctx.session.pump_amountIn', ctx.session.pump_amountIn)
-            ctx.session.pump_amountIn = amt;
-            ctx.session.pump_side = "sell";
-            await swap_pump_fun(ctx);
-            break;
-          } else {
-            return await ctx.api.sendMessage(
-              chatId,
-              "🔴 Invalid amount. Please enter a number between 0 and 100 to represent the percentage."
-            );
-          }
         }
         break;
       }
@@ -696,7 +660,7 @@ bot.on("message", async (ctx) => {
           if (!isNaN(amt) && amt >= 0 && amt <= 100) {
             ctx.session.jupSwap_amount = amt;
             ctx.session.jupSwap_side = "sell";
-            await jupiterSwap(ctx);
+            await handle_sell_swap_routing(ctx);
             break;
           } else {
             return await ctx.api.sendMessage(
@@ -708,113 +672,7 @@ bot.on("message", async (ctx) => {
         break;
       }
 
-      case "buy_X_RAY":
-        console.log("buy_X_RAY here");
-        ctx.session.latestCommand = "buy_X_RAY";
-        if (msgTxt) {
-          const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
 
-          const amt = Number(msgTxt);
-          if(isNumeric){
-          if (!isNaN(amt)) {
-            await handle_radyum_swap(
-              ctx,
-              "buy",
-              Number(amt)
-            );
-            break;
-          
-          } else {
-            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
-            break;  
-          }
-        } else {
-          return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
-        }
-        
-      }
-
-      case "buy_X_CPMM":
-          console.log("buy_X_CPMM here");
-          ctx.session.latestCommand = "buy_X_CPMM";
-          if (msgTxt) {
-            const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
-
-            if (isNumeric) {
-              const amt = Number(msgTxt);
-            if (!isNaN(amt)) {
-              ctx.session.cpmm_amountIn = amt;
-              ctx.session.cpmm_side = "buy";
-              await ray_cpmm_swap(
-                ctx
-              );
-              break;
-            } else {
-              return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
-            }
-          } else {
-            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
-          }
-        }
-          case "sell_X_CPMM": {
-            console.log("sell_X_CPMM here");
-
-            ctx.session.latestCommand = "sell_X_CPMM";
-            if (msgTxt) {
-              const amt = msgTxt.includes(".")
-                ? Number.parseFloat(msgTxt)
-                : Number.parseInt(msgTxt);
-              if (!isNaN(amt) && amt >= 0 && amt <= 100) {
-                ctx.session.cpmm_amountIn = amt;
-                ctx.session.cpmm_side = "sell";
-                await ray_cpmm_swap(ctx);
-                break;
-              } else {
-                return await ctx.api.sendMessage(
-                  chatId,
-                  "🔴 Invalid amount. Please enter a number between 0 and 100 to represent the percentage."
-                );
-              }
-            }
-            break;
-          }
-         
-        case "buy_0.5_CPMM":
-            console.log("buy_0.5_CPMM here");
-            ctx.session.latestCommand = "buy_X_CPMM";
-            if (msgTxt) {
-              const amt = msgTxt.includes(".")
-                ? Number.parseFloat(msgTxt)
-                : Number.parseInt(msgTxt);
-              if (!isNaN(amt)) {
-                ctx.session.cpmm_amountIn = 0.5;
-                ctx.session.cpmm_side = "buy";
-                await ray_cpmm_swap(
-                  ctx
-                );
-                break;
-              } else {
-                return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
-              }
-          }
-          case "buy_1_CPMM":
-            console.log("buy_1_CPMM here");
-            ctx.session.latestCommand = "buy_1_CPMM";
-            if (msgTxt) {
-              const amt = msgTxt.includes(".")
-                ? Number.parseFloat(msgTxt)
-                : Number.parseInt(msgTxt);
-              if (!isNaN(amt)) {
-                ctx.session.cpmm_amountIn = 1;
-                ctx.session.cpmm_side = "buy";
-                await ray_cpmm_swap(
-                  ctx
-                );
-                break;
-              } else {
-                return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
-              }
-          }
       // just to solve the position refresh problem temporarly
   
       case "buy_X_SOL_IN_POSITION":
@@ -906,24 +764,7 @@ bot.on("message", async (ctx) => {
             return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
           }
         }
-      case "sell_X_RAY":
-        ctx.session.latestCommand = "sell_X_RAY";
-        if (msgTxt) {
-          const amt = msgTxt.includes(".")
-            ? Number.parseFloat(msgTxt)
-            : Number.parseInt(msgTxt);
-          if (!isNaN(amt)) {
-            await handle_radyum_swap(
-              ctx,
-              "sell",
-              Number(msgTxt)
-            );
-            break;
-          } else {
-            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
-          }
-        }
-        break;
+  
       case "snipe_X_SOL": {
         ctx.session.latestCommand = "snipe_X_SOL";
         if (msgTxt) {
@@ -1397,17 +1238,28 @@ bot.on("callback_query", async (ctx: any) => {
 
     switch (data) {
 
-      // case 'set_limit_order_price':{
-      //   await ctx.api.sendMessage(chatId, "Enter the token target price (in SOL)");
-      //   ctx.session.latestCommand = "set_limit_order_price";
-      //   break;
-      // }
-      // case 'set_percentage_order':{
-      //   ctx.session.orderPercentPrice = true;
-      //   await ctx.api.sendMessage(chatId, "Enter the percentage (+/-) from the current price");
-      //   ctx.session.latestCommand = "set_limit_order_price";
-      //   break;
-      // }
+      case "keyboard_custom": {
+        const options: any = {
+          reply_markup: JSON.stringify({
+            inline_keyboard: [
+              [{ text: `✏ Left buy ${ctx.session.key_buy_option_1} SOL`, callback_data: "set_key_one" }, { text: `✏ Right buy ${ctx.session.key_buy_option_2} SOL`, callback_data: "set_key_two" }],      
+            ],
+          }),
+          parse_mode: "HTML",
+        };
+        await ctx.api.sendMessage(chatId,'Please set your buy buttons', options )
+        break;
+      }
+      case "set_key_one": {
+        ctx.session.latestCommand = "set_key_one";
+        await ctx.api.sendMessage(chatId, "Please enter the amount of SOL for the left button");
+        break;
+      }
+      case "set_key_two": {
+        ctx.session.latestCommand = "set_key_two";
+        await ctx.api.sendMessage(chatId, "Please enter the amount of SOL for the right button");
+        break;
+      }
       case "refer_friends": {
         const chatId = ctx.chat.id;
         const username = ctx.update.callback_query.from.username; //ctx.from.username;
@@ -1480,9 +1332,7 @@ bot.on("callback_query", async (ctx: any) => {
         await display_rugCheck(ctx, isRefresh);
         break;
 
-      case "refresh_pump_fun":
-        await display_pumpFun(ctx, true);
-        break;
+     
 
       case "refresh_Jupiter_swap":
         await display_jupSwapDetails(ctx, true);
@@ -1537,12 +1387,7 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.latestCommand = "refresh_single_orders";
         await display_single_order(ctx, true);
         break;
-      case "refresh_trade":
-        await display_raydium_details(ctx, true);
-        break;
-      case "refresh_cpmm_trade":
-        await display_cpmm_raydium_details(ctx, true);
-        break;
+ 
       case "delete_wallet":
         await resetWallet(ctx);
         break;
@@ -1554,6 +1399,15 @@ bot.on("callback_query", async (ctx: any) => {
           await stop_auto_buy(ctx);
         }
        
+        break;
+      }
+      case "MEV_protection": {
+        ctx.session.latestCommand = "MEV_protection";
+        if (!ctx.session.MEV_protection) {
+          await set_MEV_protection(ctx);
+        } else {
+          await stop_MEV_protection(ctx);
+        }
         break;
       }
       case "refresh_snipe":
@@ -1684,48 +1538,7 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.api.sendMessage(chatId, "Please paste the recipient's wallet address.");
         break;
       }
-      case "buy_X_PUMP": {
-        ctx.session.latestCommand = "buy_X_PUMP";
-        const options: any = {
-          reply_markup: JSON.stringify({
-            inline_keyboard: [
-              [{ text: "Cancel", callback_data: "delete_input" }],      
-            ],
-          }),
-          parse_mode: "HTML",
-        };
-        ctx.api.sendMessage(chatId, "Please enter SOL amount", options);
-        break;
-      }
-      case "buy_0.5_PUMP": {
-        ctx.session.pump_amountIn = 0.5;
-        ctx.session.pump_side = "buy";
-        await swap_pump_fun(ctx);
-        break;
-      }
-      case "buy_1_PUMP": {
-        ctx.session.pump_amountIn = 1;
-        ctx.session.pump_side = "buy";
-        await swap_pump_fun(ctx);
-        break;
-      }
-      case "sell_X_PUMP": {
-        ctx.session.latestCommand = "sell_X_PUMP";
-        ctx.api.sendMessage(chatId, "Please enter x percentage to sell (eg. 25 for 25%)");
-        break;
-      }
-      case "sell_50_PUMP": {
-        ctx.session.pump_amountIn = 50;
-        ctx.session.pump_side = "sell";
-        await swap_pump_fun(ctx);
-        break;
-      }
-      case "sell_100_PUMP": {
-        ctx.session.pump_amountIn = 100;
-        ctx.session.pump_side = "sell";
-        await swap_pump_fun(ctx);
-        break;
-      }
+
       case "buy_X_JUP": {
         ctx.session.latestCommand = "buy_X_JUP";
         const options: any = {
@@ -1739,19 +1552,18 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.api.sendMessage(chatId, "Please enter SOL amount", options);
         break;
       }
-      case "buy_0.5_JUP": {
-        ctx.session.latestCommand = "buy_0.5_JUP";
-        ctx.session.jupSwap_amount = 0.5;
+      case "buy_key_one_JUP": {
+        ctx.session.latestCommand = "buy_key_one_JUP";
+        ctx.session.jupSwap_amount = ctx.session.key_buy_option_1;
         ctx.session.jupSwap_side = "buy";
-        await jupiterSwap(ctx);
+        await handle_buy_swap_routing(ctx);
         break;
       }
-
-      case "buy_1_JUP": {
-        ctx.session.latestCommand = "buy_1_JUP";
-        ctx.session.jupSwap_amount = 1;
+      case "buy_key_two_JUP": {
+        ctx.session.latestCommand = "buy_key_two_JUP";
+        ctx.session.jupSwap_amount = ctx.session.key_buy_option_2;
         ctx.session.jupSwap_side = "buy";
-        await jupiterSwap(ctx);
+        await handle_buy_swap_routing(ctx);
         break;
       }
       case "sell_X_JUP": {
@@ -1774,128 +1586,17 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.latestCommand = "sell_50_JUP";
         ctx.session.jupSwap_amount = 50;
         ctx.session.jupSwap_side = "sell";
-        await jupiterSwap(ctx);
+        await handle_sell_swap_routing(ctx);
         break;
       }
-
-
       case "sell_100_JUP": {
         ctx.session.latestCommand = "sell_100_JUP";
         ctx.session.jupSwap_amount = 100;
         ctx.session.jupSwap_side = "sell";
-        await jupiterSwap(ctx);
+        await handle_sell_swap_routing(ctx);
         break;
       }
 
-      case 'sell_100_CPMM':{
-        ctx.session.latestCommand = "sell_100_CPMM";
-        ctx.session.cpmm_amountIn = 100;
-        ctx.session.cpmm_side = "sell";
-        await ray_cpmm_swap(ctx);
-        break;
-      }
-      case 'sell_50_CPMM':{
-        ctx.session.latestCommand = "sell_50_CPMM";
-        ctx.session.cpmm_amountIn = 50;
-        ctx.session.cpmm_side = "sell";
-        await ray_cpmm_swap(ctx);
-        break;
-      }
-      case "buy_0.5_RAY": {
-        ctx.session.latestCommand = "buy_0.5_RAY";
-        await handle_radyum_swap(
-          ctx,
-          "buy",
-          0.5  
-        );
-        break;
-      }
-      case "buy_1_RAY": {
-        ctx.session.latestCommand = "buy_1_RAY";
-        await handle_radyum_swap(
-          ctx,
-
-          "buy",
-          1
-        );
-        break;
-      }
-      case "buy_X_RAY": {
-        ctx.session.latestCommand = "buy_X_RAY";
-        const options: any = {
-          reply_markup: JSON.stringify({
-            inline_keyboard: [
-              [{ text: "Cancel", callback_data: "delete_input" }],      
-            ],
-          }),
-          parse_mode: "HTML",
-        };
-        ctx.api.sendMessage(chatId, "Please enter SOL amount", options);
-        break;
-      }
-      case "buy_X_CPMM": {
-        ctx.session.latestCommand = "buy_X_CPMM";
-        const options: any = {
-          reply_markup: JSON.stringify({
-            inline_keyboard: [
-              [{ text: "Cancel", callback_data: "delete_input" }],      
-            ],
-          }),
-          parse_mode: "HTML",
-        };
-        ctx.api.sendMessage(chatId, "Please enter SOL amount", options);
-        break;
-      }
-
-      case "sell_50_RAY": {
-        ctx.session.latestCommand = "sell_50_RAY";
-        await handle_radyum_swap(
-          ctx,
-          "sell",
-          50
-        );
-        break;
-      }
-
-      case "sell_100_RAY": {
-        ctx.session.latestCommand = "sell_100_RAY";
-        await handle_radyum_swap(
-          ctx,
-          "sell",
-          100
-        );
-        break;
-      }
-      case "sell_X_RAY": {
-        ctx.session.latestCommand = "sell_X_RAY";
-        const options: any = {
-          reply_markup: JSON.stringify({
-            inline_keyboard: [
-              [{ text: "Cancel", callback_data: "delete_input" }],      
-            ],
-          }),
-          parse_mode: "HTML",
-        };
-        ctx.api.sendMessage(chatId, "Please enter amount to sell.", options);
-        break;
-      }
-
-      case "sell_X_CPMM": {
-        ctx.session.latestCommand = "sell_X_CPMM";
-        const options: any = {
-          reply_markup: JSON.stringify({
-            inline_keyboard: [
-              [{ text: "Cancel", callback_data: "delete_input" }],      
-            ],
-          }),
-          parse_mode: "HTML",
-        };
-        ctx.api.sendMessage(
-          chatId,
-          "Please enter x percentage to sell (eg. 25 for 25%)", options
-        );
-        break;
-      }
 
       case "snipe_0.5_SOL": {
         ctx.session.snipeStatus = true;
@@ -1990,13 +1691,9 @@ bot.on("callback_query", async (ctx: any) => {
           await display_snipe_amm_options(ctx, true);
         } else if (ctx.session.latestCommand === "display_single_position") {
           await display_single_position(ctx, true);
-        } else if (ctx.session.latestCommand === "pump_fun") {
-          await display_pumpFun(ctx, true);
         } else if (ctx.session.latestCommand === "jupiter_swap") {
           await display_jupSwapDetails(ctx, true);
-        } else {
-          await display_raydium_details(ctx, true);
-        }
+        } 
         break;
       }
       case "set_customPriority": {

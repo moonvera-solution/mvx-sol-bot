@@ -48,7 +48,7 @@ export async function refreshWallets(ctx: any){
         },
         parse_mode: 'HTML'
     };
-    await ctx.editMessageText("Please select a wallet to configure slippage & sending SOL:", options);
+    await ctx.editMessageText("Please select a wallet to set your Settings, customize your keyboard, configure slippage & sending SOL:", options);
 }
 
 export async function handleRereshWallet(ctx: any){
@@ -87,7 +87,7 @@ export async function handleRereshWallet(ctx: any){
         `Balance: ` +
         `<b>${balanceInSOL.toFixed(3)}</b> SOL | <b>${balanceInUSD.toFixed(2)}</b> USD\n`;
         const autobuy_button = ctx.session.autoBuyActive ? '✅ Auto buy' : '❌ Auto buy';
-
+        const MEV_protection_button = ctx.session.MEV_protection ? '✅ MEV protection' : '❌ MEV protection';
     // Inline keyboard options
     const options: any = {
         reply_markup: JSON.stringify({
@@ -95,8 +95,8 @@ export async function handleRereshWallet(ctx: any){
                 [{ text: 'Get Private Key', callback_data: 'get_private_key' }],
                 [{ text: `✏ Slippage (${ctx.session.latestSlippage}%)`, callback_data: 'set_slippage' },{ text: `✏ Priority Fee (${ctx.session.customPriorityFee} SOL)`, callback_data: 'set_customPriority' } ],
                 [{ text: `${autobuy_button}`, callback_data: 'Auto_buy' }, { text: `Amount ${ctx.session.autobuy_amount} SOL`, callback_data: 'set_autobuy_amount' }],
-                // [{ text: 'MEV protection', callback_data: 'MEV_protection' }, { text: '💻 Customize keyboard', callback_data: 'keyboard_custom' }],
-                [{ text: '🔂 Refresh', callback_data: 'refresh_wallet' }, { text: 'Reset Wallet', callback_data: 'confirm_reset_wallet' }],
+                [{ text: `${MEV_protection_button}`, callback_data: 'MEV_protection' }, { text: '💻 Customize keyboard', callback_data: 'keyboard_custom' }],
+                [{ text: '🔂 Refresh', callback_data: 'refresh_wallet' }, { text: 'Change Wallet', callback_data: 'confirm_reset_wallet' }],
                 [{ text: '↗️ Send SOL', callback_data: 'send_sol' }],
                 [{ text: 'Close', callback_data: 'closing' }]
             ]

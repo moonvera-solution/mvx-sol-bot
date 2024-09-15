@@ -3,6 +3,7 @@ import { TOKEN_PROGRAM_ID, Token as RayddiumToken, publicKey } from '@raydium-io
 import { PublicKey,Connection } from '@solana/web3.js';
 import {CONNECTION} from '../../config';
 import { Metaplex } from "@metaplex-foundation/js";
+import { ParsedAccountData } from "@solana/web3.js";
 
 export async function getTokenMetadata(ctx: any, tokenAddress: string): Promise<any> {
     const chatId = ctx.chat.id;
@@ -85,20 +86,23 @@ export async function getuserShitBalance(userWallet: PublicKey, tokenAddress: Pu
     try {
         const mintAddress = (tokenAddress instanceof PublicKey) ? tokenAddress : new PublicKey(tokenAddress);
         const walletPublicKey = (userWallet instanceof PublicKey) ? userWallet : new PublicKey(userWallet);
-        // const accountChange = await connection.getTokenAccountBalance(new PublicKey('FvVDc6gZmYho6DLLuJ3ptHS6rxb797Cxf1insiUnu2BL'),'processed');
-        // console.log("accountChange",accountChange);
-        let tokenAccountInfo = await connection.getParsedTokenAccountsByOwner(walletPublicKey, {
+        let [tokenDataSet, tokenAccountInfo] = await Promise.all([
+            connection.getParsedAccountInfo(mintAddress),
+            connection.getParsedTokenAccountsByOwner(walletPublicKey, {
             mint: mintAddress,
             programId: TOKEN_PROGRAM_ID
-        }, 'processed');
+        }, 'processed')]);
+        let dataSet = tokenDataSet.value && tokenDataSet.value.data as ParsedAccountData;
         userBalance = tokenAccountInfo.value[0] && tokenAccountInfo.value[0].account.data.parsed.info.tokenAmount.uiAmount;
         let userBalanceTest:number = userBalance ? userBalance : 0;
         return {
             userTokenBalance: userBalanceTest,
-          
+            decimals: dataSet?.parsed.info.decimals,
+            shitSupply: dataSet?.parsed.info.supply,
         }
-    
     } catch (error) {
         console.error("Error in getUserTokenBalanceAndDetails: ", error);
     }
 }
+
+

@@ -13,6 +13,7 @@ import BigNumber from 'bignumber.js';
 import { saveUserPosition } from '../../service/portfolio/positions';
 import { createTradeImage } from '../util/image';
 import { InputFile } from 'grammy';
+import { display_jupSwapDetails } from '../jupiter/swapView';
 const fs = require('fs');
 
 
@@ -77,9 +78,13 @@ export async function swap_pump_fun(ctx: any) {
       confirmedMsg = `✅ <b>${tradeSide.toUpperCase()} tx confirmed</b> ${tradeSide == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${ctx.session.pump_amountIn} SOL</b>` : `You sold <b>${amountToSell}</b> <b>${_symbol}</b> and received <b>${(solFromSell / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txSigs}">View Details</a>.`;
       await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
 
-
       // ------- check user balanace in DB --------
-      UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
+      UserPositions.collection.listIndexes().toArray().then((indexes: any) => {
+        if (indexes.some((index: any) => index.name === 'positionChatId_1')) {
+          console.log('Index already exists');
+          UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
+        }
+      });
       const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
       // console.log("userPosition", userPosition);
 
@@ -108,7 +113,7 @@ export async function swap_pump_fun(ctx: any) {
         });
         if(!ctx.session.autoBuyActive){
           ctx.session.latestCommand = 'jupiter_swap';
-          await display_pumpFun(ctx, false);
+          await display_jupSwapDetails(ctx, false);
         }
       } else {
         let newAmountIn, newAmountOut;
@@ -164,133 +169,4 @@ export async function swap_pump_fun(ctx: any) {
   }
 }
 
-export async function display_pumpFun(ctx: any, isRefresh: boolean) {
-  console.log('display_pumpFun');
-  try {
-    const chatId = ctx.chat.id;
-    const session = ctx.session;
-    const solAddress = 'So11111111111111111111111111111111111111112'
-    const token = session.pumpToken instanceof PublicKey ? session.pumpToken.toBase58() : session.pumpToken;
-    let priority_Level = ctx.session.priorityFees;
-    const priority_custom = ctx.session.ispriorityCustomFee;
-    if (priority_custom === true) {
-      priority_Level = 0;
-    }
 
-    let userWallet: any;
-    if (ctx.session.portfolio) {
-      const selectedWallet = ctx.session.portfolio.activeWalletIndex;
-      userWallet = ctx.session.portfolio.wallets[selectedWallet];
-    }
-    const publicKeyString: any = userWallet.publicKey;
-    if (token) {
-      const connection = CONNECTION;
-      const [
-        birdeyeData,
-        tokenMetadataResult,
-        swapRates,
-        getSolBalanceData,
-        userTokenDetails,
-        userPosition,
-        jupSolPrice,
-        shitBalance,
-      ] = await Promise.all([
-        getTokenDataFromBirdEyePositions(token, publicKeyString),
-        getTokenMetadata(ctx, token),
-        getSwapDetails(token, solAddress, 1, 0),
-        getSolBalance(publicKeyString, connection),
-        getUserTokenBalanceAndDetails(new PublicKey(publicKeyString), token, connection),
-        UserPositions.find({  walletId: publicKeyString }, { positions: { $slice: -7 } }),
-        fetch(
-          `https://price.jup.ag/v6/price?ids=SOL`
-        ).then((response) => response.json()),      
-        getuserShitBalance(publicKeyString, token, connection),
-      ]);
-
-      // const mediumpriorityFees = (AllpriorityFees.result2);
-      // const highpriorityFees = (AllpriorityFees.result3);
-      // const maxpriorityFees = (AllpriorityFees.result4);
-
-      const {
-        tokenData,
-      } = tokenMetadataResult;
-
-      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value :  Number(jupSolPrice.data.SOL.price);
-      const baseDecimals = tokenData.mint.decimals;
-      const totalSupply = new BigNumber(tokenData.mint.supply.basisPoints);
-      const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(swapRates)) * solPrice);
-      const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
-      const netWorth = birdeyeData
-        && birdeyeData.birdeyePosition
-        && birdeyeData.birdeyePosition.data
-        // && birdeyeData.birdeyePosition.data.data
-        && birdeyeData.birdeyePosition.data.totalUsd
-        ? birdeyeData.birdeyePosition.data.totalUsd : NaN;
-
-      const netWorthSol = netWorth / solPrice;
-      let specificPosition;
-      // console.log('token:', token)  
-      if (userPosition[0] && userPosition[0].positions && userPosition[0].positions != undefined) {
-        specificPosition = userPosition[0].positions.find((pos: any) => (pos.baseMint) === (token));
-
-      }
-      let initialInUSD = 0;
-      let initialInSOL = 0;
-      let valueInUSD: any;
-      let valueInSOL: any;
-      let profitPercentage;
-      let profitInUSD;
-      let profitInSol;
-      if (specificPosition && specificPosition.amountOut) {
-        valueInUSD = (specificPosition.amountOut - (userTokenDetails.userTokenBalance * Math.pow(10, baseDecimals))) < 5 ? userTokenDetails.userTokenBalance * Number(swapRates * solPrice) : 'N/A';
-        valueInSOL = (specificPosition.amountOut - (userTokenDetails.userTokenBalance * Math.pow(10, baseDecimals))) < 5 ? Number(((userTokenDetails.userTokenBalance)) * Number(swapRates)) : 'N/A';
-        initialInSOL = Number(specificPosition.amountIn) / 1e9;
-        initialInUSD = initialInSOL * Number(solPrice);
-        profitPercentage = valueInSOL != 'N/A' ? (Number(valueInSOL) - (Number(specificPosition.amountIn + 25000) / 1e9)) / (Number(specificPosition.amountIn) / 1e9) * 100 : 'N/A';
-        profitInUSD = valueInUSD != 'N/A' ? Number(Number(userTokenDetails.userTokenBalance) * Number(swapRates * solPrice)) - initialInUSD : 'N/A';
-        profitInSol = valueInSOL != 'N/A' ? (valueInSOL - initialInSOL).toFixed(4) : 'N/A';
-      }
-      console.log('profitPercentage:', profitPercentage);
-      ctx.session.userProfit = profitPercentage
-
-
-      let messageText = `<b>------ ${tokenData.name}(${tokenData.symbol}) ------</b>\n` +
-        `Contract: <code>${token}</code>\n` +
-        `Market Cap: <b>${Mcap}</b> USD\n` +
-        `Price:  <b>${new BigNumber(swapRates).toFixed(9)} SOL</b> | <b>${new BigNumber(swapRates * solPrice).toFixed(9)} USD</b>\n\n` +
-        `---<code>Trade Position</code>---\n` +
-        `Initial : <b>${(initialInSOL).toFixed(4)} SOL</b> | <b>${(initialInUSD.toFixed(4))} USD</b>\n` +
-        `Profit: ${profitInSol != 'N/A' ? Number(profitInSol).toFixed(4) : 'N/A'} <b>SOL</b> | ${profitInUSD != 'N/A' ? Number(profitInUSD).toFixed(4) : 'N/A'} <b>USD</b> | ${profitPercentage != 'N/A' ? Number(profitPercentage).toFixed(2) : 'N/A'}%\n` +
-        `Token Balance: <b>${shitBalance.userTokenBalance.toFixed(4)}</b> ${tokenData.symbol} | <b>${((shitBalance.userTokenBalance.toFixed(4)) * Number(swapRates * solPrice)).toFixed(3)} USD </b> |  <b>${((shitBalance.userTokenBalance) * Number(swapRates)).toFixed(4)} SOL </b> \n\n` +
-        // `--<code>Priority fees</code>--\n Low: ${(Number(mediumpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n Medium: ${(Number(highpriorityFees) / 1e9).toFixed(7)} <b>SOL</b>\n High: ${(Number(maxpriorityFees) / 1e9).toFixed(7)} <b>SOL</b> \n\n` +
-        `Wallet balance: <b>${getSolBalanceData.toFixed(4)}</b> SOL | <b>${(getSolBalanceData * solPrice).toFixed(4)}</b> USD\n` +
-        `Net Worth: <b>${netWorthSol.toFixed(4)}</b> SOL | <b>${netWorth.toFixed(4)}</b> USD\n`;
-
-      let options: any;
-      options = {
-        parse_mode: 'HTML',
-        disable_web_page_preview: true,
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: ' 🔂 Refresh ', callback_data: 'refresh_pump_fun' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
-            [{ text: `Buy X  (SOL)`, callback_data: 'buy_X_PUMP' }, { text: 'Buy (0.5 SOL)', callback_data: 'buy_0.5_PUMP' }, { text: 'Buy (1 SOL)', callback_data: 'buy_1_PUMP' }],
-            [{ text: `Sell X %`, callback_data: 'sell_X_PUMP' }, { text: 'Sell 50%  ', callback_data: 'sell_50_PUMP' }, { text: 'Sell 100%  ', callback_data: 'sell_100_PUMP' }],
-            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: `set_slippage` }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
-            [{ text: `📈 (${tokenData.symbol}) Live chart 📉`, url: `https://t.me/dribs_app_bot/dribs?startapp=${token}` }],
-            [{ text: 'Close', callback_data: 'closing' }]
-          ]
-        }
-      };
-      if (isRefresh) {
-        await ctx.editMessageText(messageText, options);
-      } else {
-        await ctx.api.sendMessage(chatId, messageText, options);
-      }
-    } else {
-      ctx.api.sendMessage(chatId, "Token not found. Please try again.");
-    }
-
-  } catch (e) {
-    console.log(e);
-  }
-}

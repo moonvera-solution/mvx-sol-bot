@@ -15,7 +15,6 @@ const fs = require('fs');
 
 export async function handle_radyum_swap(
   ctx: any, 
-
   side: 'buy' | 'sell', 
   amountIn: any
 ) {
@@ -114,8 +113,12 @@ export async function handle_radyum_swap(
           : confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4)} <b>${_symbol}</b> for ${(amountIn / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
       } 
 
-      UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
-      const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
+      UserPositions.collection.listIndexes().toArray().then((indexes: any) => {
+        if (indexes.some((index: any) => index.name === 'positionChatId_1')) {
+          console.log('Index already exists');
+          UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
+        }
+      });      const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
       let oldPositionSol: number = 0;
       let oldPositionToken: number = 0;
       if (userPosition) {

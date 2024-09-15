@@ -19,18 +19,18 @@ export async function verify_position_dex(ctx: any, token: string) {
     fetch(`https://public-api.birdeye.so/defi/v2/markets?address=${token}&sort_by=liquidity&sort_type=desc`,optionsBird).then(response => response.json()),
 
   ]);
-  const items = tokenMarketData.data.items;
+  const items = tokenMarketData?.data?.items;
   const exists = items.map((item: any) => ({
     address: item.address,
     hasMeteora: item.source.includes('Meteora')
   }));
   let onMeteora = false;
-if(exists.length > 0){
-  const meteora = exists.find((item: any) => item.hasMeteora === true);
-  if(meteora){
-    onMeteora = true;
+  if(exists.length > 0){
+    const meteora = exists.find((item: any) => item.hasMeteora === true);
+    if(meteora){
+      onMeteora = true;
+    }
   }
-}
   const jupTokenValue: any = Object.values(jupTokenRate.data);
   let isOnJupiter = false;
   console.log("quoteResponse", quoteResponse);

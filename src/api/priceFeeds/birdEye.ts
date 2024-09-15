@@ -84,7 +84,35 @@ export async function getSolanaDetails() {
     }
 }
 
+export async function memeTokenPrice(wallet: any) {
+    try {
+        const options = {
+            method: 'GET',
+            headers: {
+                "x-chain": "solana",
+                'X-API-KEY': `${process.env.BIRD_EYE_API_KEY}`
+            }
+        };
+        const response = await fetch(`https://public-api.birdeye.so/defi/price?address=${wallet}`, options).then((response) => response.json());
+    
+        return response.data.value;
+    } catch (error:any) {
+        console.error('Error fetching Solana details:', error.message);
+        return null;
+    }
 
-// getTokenDataFromBirdEyePositions('ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82', 'BufhUw6vTmPB5ytaAWfHb6xUCUdVqHGZn9eQenSJmgmP').then((data) => {
-//     console.log(data);
-// });;
+}
+
+export async function getWalletNetWorth(wallet: string) {
+    const options = {
+        method: 'GET',
+        headers: {
+            "x-chain": "solana",
+            'X-API-KEY': `f134abedf1c44496b3554ffc610b47f4`
+        }
+    };
+    const response = await fetch(`https://public-api.birdeye.so/v1/wallet/token_list?wallet=${wallet}`, options).then(res => res.json());
+
+    return response.data.totalUsd
+}
+

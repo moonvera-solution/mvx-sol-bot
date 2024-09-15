@@ -494,6 +494,6 @@ export async function handleWallets(ctx: any) {
       parse_mode: 'HTML'
   };
 
-  await ctx.api.sendMessage(chatId,"Please select a wallet to configure slippage & sending SOL:", options);
+  await ctx.api.sendMessage(chatId,"Please select a wallet to set your Settings, customize your keyboard, configure slippage & sending SOL:", options);
 
 }

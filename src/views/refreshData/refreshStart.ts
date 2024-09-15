@@ -1,6 +1,7 @@
 import { getSolBalance } from '../../service/util';
 import { getSolanaDetails,  } from '../../api';
 import { CONNECTION } from '../../config';
+import { getWalletNetWorth } from '../../api/priceFeeds/birdEye';
 
 export async function handleRefreshStart(ctx: any) {
     const chatId = ctx.chat.id;
@@ -16,13 +17,13 @@ export async function handleRefreshStart(ctx: any) {
         // console.log('userWallet', userWallet)
         const publicKeyString: any = userWallet.publicKey; // The user's public key
         // Fetch SOL balance
-        const [balanceInSOL, solanaDetails,jupSolPrice] = await Promise.all([
-            getSolBalance(publicKeyString, connection),
-            getSolanaDetails(),
-            fetch(
-                `https://price.jup.ag/v6/price?ids=SOL`
-              ).then((response) => response.json())
-        ]);  
+        const [balanceInSOL,jupSolPrice, networth] = await Promise.all([
+          getSolBalance(publicKeyString, connection),
+          fetch(
+              `https://price.jup.ag/v6/price?ids=SOL`
+            ).then((response) => response.json()),
+            getWalletNetWorth(publicKeyString as string).catch((error) => { console.error("Error fetching net worth: ", error); return null; })
+      ]);    
       
      // Retrieve wallet user and balance in SOL and USD 
  
@@ -31,25 +32,20 @@ export async function handleRefreshStart(ctx: any) {
          await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
          return;
      }
-     const balanceInUSD = solanaDetails ? balanceInSOL * solanaDetails: balanceInSOL * Number(jupSolPrice.data.SOL.price);
+     const balanceInUSD =  balanceInSOL * Number(jupSolPrice.data.SOL.price);
+     const  networkmessage = networth ? `Net Worth: <b>${(networth /Number(jupSolPrice.data.SOL.price) ).toFixed(4)}</b> SOL | <b>${(networth).toFixed(4)}</b> USD\n\n` : '';
 
     // Update the welcome message with the new SOL price
-    const welcomeMessage =
-    `<b>✨ DRIBs ✨</b>\n` +
-    `| <a href="https://www.dribs.io">Website</a> | <a href="https://x.com/dribs_sol"> X </a> |\n\n` +
-    // `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
-    `Start by choosing a wallet or import one using the "Import Wallet" button.\n` +
-    // `We're always working to bring you new features - stay tuned!\n\n` +
-    `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
-    `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInUSD.toFixed(4))}</b> USD\n\n` +
-    // `⚠️ We recommend exporting your private key and keeping it on paper. ⚠️ \n` +
-    `<i>  - 📣 Limit Order is available</i>\n\n` +
-    `<b> Markets </b>\n`+
-    `<i>  - Jupiter  </i>\n`+
-    `<i>  - Raydium AMM/CPMM </i>\n`+
-    `<i>  - Pump fun </i>\n\n`+
-    `<i>  - 📢  Dribs Market Maker Bot is available now! 🤖💼
-      For more information or to get started, please contact us directly </i>\n` ;
+    const welcomeMessage = 
+      `<b>✨ DRIBs ✨</b>\n` +
+      `| <a href="https://www.dribs.io">Website</a> | <a href="https://x.com/dribs_sol"> X </a> |\n\n` +
+      // `Begin by extracting your wallet's private key. Then, you're all set to start trading!\n` +
+      `Start by choosing a wallet or import one using the "Import Wallet" button.\n` +
+      `Your Wallet: <code><b>${publicKeyString}</b></code>\n` +
+      `Balance: <b>${balanceInSOL.toFixed(4)}</b> SOL | <b>${(balanceInUSD.toFixed(4))}</b> USD\n\n` +
+      `${networkmessage}` +
+      `<i>  - 📢  Dribs Market Maker Bot is available now! 🤖💼
+        For more information or to get started, please contact us directly </i>\n` ;
     
 
 
