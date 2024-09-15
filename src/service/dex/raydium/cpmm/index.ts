@@ -3,10 +3,9 @@ import { Raydium, TxVersion, parseTokenAccountResp, CpmmKeys } from '@raydium-io
 import { optimizedSendAndConfirmTransaction, wrapLegacyTx, add_mvx_and_ref_inx_fees, addMvxFeesInx } from '../../../util';
 import { Connection, Keypair, PublicKey, VersionedTransaction, Transaction, TransactionMessage, AddressLookupTableAccount } from '@solana/web3.js'
 import BigNumber from 'bignumber.js';
+import { sendJitoBundleRPC } from '../../../../service/jito';
 import dotenv from 'dotenv'; dotenv.config();
-import bs58 from 'bs58'
 import BN from 'bn.js'
-
 import { SOL_ADDRESS } from '../../../../config';
 
 
@@ -20,7 +19,7 @@ export const txVersion = TxVersion.V0;
 
 let raydium: Raydium | undefined;
 
-export async function initSdk( connection: Connection) {
+export async function initSdk(connection: Connection) {
   if (raydium) return raydium
   // console.log("--c>, ", wallet.publicKey.toBase58());
   raydium = await Raydium.load({
@@ -40,26 +39,28 @@ export async function raydium_cpmm_swap(
   inputAmount: number,
   slippage: number,
   refObj: { refWallet: string, referral: boolean, refCommission: number },
-  ctx: any
+  jitoObj: { useJito: boolean, jitoTip: number },
+  customPriorityFee: number
 ): Promise<string | null> {
+  console.log('raydium_cpmm_swap.......--c>: bkend');
   let poolKeys: CpmmKeys | undefined
-  const raydium = await initSdk( connection);
+  const raydium = await initSdk(connection);
   raydium.setOwner(wallet)
 
-  const [data,rpcData] = await Promise.all([
-   raydium.cpmm.getPoolInfoFromRpc(poolId ),
-   raydium.cpmm.getRpcPoolInfo(poolId, true)
+  const [data, rpcData] = await Promise.all([
+    raydium.cpmm.getPoolInfoFromRpc(poolId),
+    raydium.cpmm.getRpcPoolInfo(poolId, true)
   ])
   const poolInfo = data.poolInfo;
- 
+
   rpcData.configInfo!.tradeFeeRate = new BN(0);
-  const buyAddress =  poolInfo.mintA.address === SOL_ADDRESS ? poolInfo.mintA.address : poolInfo.mintB.address;
+  const buyAddress = poolInfo.mintA.address === SOL_ADDRESS ? poolInfo.mintA.address : poolInfo.mintB.address;
   const sellAddress = poolInfo.mintA.address === SOL_ADDRESS ? poolInfo.mintB.address : poolInfo.mintA.address;
 
   const inputMint = tradeSide == 'buy' ? buyAddress : sellAddress;
   const baseIn = inputMint === poolInfo.mintA.address;
   if (!isValidCpmm(poolInfo.programId)) throw new Error('target pool is not CPMM pool');
-  
+
   const swapResult = CurveCalculator.swap(
     new BN(inputAmount),
     baseIn ? rpcData.baseReserve : rpcData.quoteReserve,
@@ -67,8 +68,8 @@ export async function raydium_cpmm_swap(
     rpcData.configInfo!.tradeFeeRate
   )
 
-    poolInfo.config.tradeFeeRate = 0
-    poolInfo.feeRate = 0
+  poolInfo.config.tradeFeeRate = 0
+  poolInfo.feeRate = 0
   // console.log('poolInfo:>>>><<>>>>> ', poolInfo);
   // range: 1 ~ 0.0001, means 100% ~ 0.01%e
   let { transaction } = await raydium.cpmm.swap({
@@ -84,10 +85,10 @@ export async function raydium_cpmm_swap(
       checkCreateATAOwner: true,
       associatedOnly: true,
     },
-    
+
     computeBudgetConfig: {
-      microLamports: ctx.session.customPriorityFee * 1e9,
-      
+      microLamports: customPriorityFee * 1e9,
+
     }
   }).catch((e) => {
     console.log('error', e)
@@ -95,33 +96,31 @@ export async function raydium_cpmm_swap(
   });
 
   const solAmount = tradeSide == 'buy' ? new BigNumber(swapResult.sourceAmountSwapped.toNumber()) : new BigNumber(swapResult.destinationAmountSwapped.toNumber());
-  if (tradeSide == 'sell') {
-    ctx.session.CpmmSolExtracted = solAmount
-  }
-
 
   let txSig: any = '';
   if (transaction instanceof Transaction) {
-
     transaction.instructions.push(...addMvxFeesInx(wallet, solAmount));
     const tx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, wallet, (await connection.getLatestBlockhash()).blockhash));
     tx.sign([wallet]);
-    txSig = await optimizedSendAndConfirmTransaction(
-      tx, connection, (await connection.getLatestBlockhash()).blockhash, 50
-    );
+
+    if (jitoObj.useJito) {
+      txSig = await sendJitoBundleRPC(connection, wallet, jitoObj.jitoTip.toString(), transaction)
+    } else {
+      txSig = await optimizedSendAndConfirmTransaction(
+        tx, connection, (await connection.getLatestBlockhash()).blockhash, 50
+      );
+    }
+
   } else if (transaction instanceof VersionedTransaction) {
-    const addressLookupTableAccounts = await Promise.all(
-      transaction.message.addressTableLookups.map(async (lookup) => {
-        return new AddressLookupTableAccount({
-          key: lookup.accountKey,
-          state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data)),
-        })
-      }));
-    var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
-    message.instructions.push(...addMvxFeesInx(wallet, solAmount));
-    txSig = await optimizedSendAndConfirmTransaction(
-      new VersionedTransaction(transaction.message), connection, (await connection.getLatestBlockhash()).blockhash, 50
-    );
+
+    if (jitoObj.useJito) {
+      txSig = await sendJitoBundleRPC(connection, wallet, jitoObj.jitoTip.toString(), transaction)
+    } else {
+      console.log('NO.useJito: ');
+      txSig = await optimizedSendAndConfirmTransaction(
+        new VersionedTransaction(transaction.message), connection, (await connection.getLatestBlockhash()).blockhash, 50
+      );
+    }
   }
   return txSig;
 }
@@ -183,14 +182,14 @@ export const fetchTokenAccountData = async (wallet: Keypair, connection: Connect
 
 export async function getpoolDataCpmm(wallet: Keypair, poolID: any, connection: any): Promise<CpmmKeys> {
   console.log('we are fetching cpmm')
-  const raydium = await initSdk( connection);
+  const raydium = await initSdk(connection);
   raydium.setOwner(wallet)
   if (!poolID) {
     console.error('Pool Cpmm not found')
     throw new Error('Cpmm pool not found')
   }
   const cpmmPoolKeys = await raydium.cpmm.getCpmmPoolKeys(poolID)
-  
+
 
   return cpmmPoolKeys;
 }

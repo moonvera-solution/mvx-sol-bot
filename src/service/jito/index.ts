@@ -1,22 +1,12 @@
-import { geyserClient as jitoGeyserClient } from 'jito-ts';
-import { Bundle as JitoBundle } from 'jito-ts/dist/sdk/block-engine/types.js';
-import {
-    SearcherClient,
-    searcherClient as jitoSearcherClient,
-} from 'jito-ts/dist/sdk/block-engine/searcher.js';
+
+// import {SearcherClient} from 'jito-ts/dist/sdk/block-engine/searcher.js';
+import { _loopRPCpromise } from '../util';
+import dotenv from 'dotenv'; dotenv.config();
 import path from 'path';
-import {
-    Keypair,
-    PublicKey,
-    SystemProgram,
-    VersionedTransaction,
-    Connection,
-    TransactionMessage
-} from '@solana/web3.js';
+import { Keypair, PublicKey, SystemProgram, VersionedTransaction, TransactionMessage, Connection } from '@solana/web3.js';
 import bs58 from 'bs58';
 import { Transaction } from '@solana/web3.js';
 import { TransactionInstruction } from '@solana/web3.js';
-import { U } from '@raydium-io/raydium-sdk-v2/lib/raydium-7aa60140';
 
 /*
     Mainnet: https://mainnet.block-engine.jito.wtf
@@ -36,60 +26,69 @@ const TIP_ACCOUNTS = [
     "DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL",
     "3AVi9Tg9Uo68tJfuvoKvqKNWKkC5wPdSSdeBnizKZ6jT"].map((pubkey) => new PublicKey(pubkey));
 
-const getRandomTipAccount = () => TIP_ACCOUNTS[Math.floor(Math.random() * TIP_ACCOUNTS.length)];
+export const getRandomTipAccount = () => TIP_ACCOUNTS[Math.floor(Math.random() * TIP_ACCOUNTS.length)];
 
-const AUTH_KEYPAIR_PATH = path.join(process.cwd(), '.local/jito.json') //config.get('auth_keypair_path');
-const GEYSER_URL = "no access yet"//config.get('geyser_url');
-const GEYSER_ACCESS_TOKEN = "no access yet"// config.get('geyser_access_token');
-
-
-async function getBundleStatus(bundleId: string) {
+async function getBundleStatus(bundleId: string): Promise<any> {
     let endpoint = `https://amsterdam.mainnet.block-engine.jito.wtf/api/v1/bundles`;
-    
+
     let payload = {
         jsonrpc: "2.0",
         id: 1,
         method: "getInflightBundleStatuses",
         params: [[bundleId]]
     };
-
-    let res = await fetch(endpoint, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'application/json' }
-    });
-
+    let res = await fetch(endpoint, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'application/json' }});
     let json = await res.json();
     if (json.error) {
         throw new Error(json.error.message);
     }
 
-    // Print bundle ID
-    console.info("bundle status ",json.result);
-
+    return json.result;
 }
 
-export async function sendJitoBundleRPC(cnx: Connection, payerKeypair: Keypair, tip: string, tx: Transaction): Promise<string> {
+async function confirmBundleStatus(bundleId: string): Promise<any> {
+    return new Promise(async (resolve) => {
+        const bundleStatus = await getBundleStatus(bundleId);
+        console.log("bundleStatus::: ", bundleId, bundleStatus);
+        if (bundleStatus.value.length > 0 && bundleStatus.value[0].status == "Landed") {
+            resolve(bundleStatus);
+        }
+    });
+}
+
+export async function sendJitoBundleRPC(
+    cnx: Connection,
+    payerKeypair: Keypair,
+    tip: string,
+    tx: Transaction | VersionedTransaction
+): Promise<string> {
+
     let endpoint = 'https://amsterdam.mainnet.block-engine.jito.wtf/api/v1/bundles';
-    const vTxWithTip : TransactionInstruction = await jitoTippingInx(cnx, payerKeypair, tip);
-   
-    tx.add(vTxWithTip);
-    tx.recentBlockhash = (await cnx.getLatestBlockhash()).blockhash;
-    tx.sign(payerKeypair);
+    let txSig = '';
+    const vTxWithTip: TransactionInstruction = await jitoTippingInx(cnx, payerKeypair, tip);
+    const blockhash = (await cnx.getLatestBlockhash());
+    let swapTxResult = '';
+    
+    if (tx instanceof Transaction) {
+        tx.add(vTxWithTip);
+        tx.recentBlockhash = blockhash.blockhash;
+        tx.sign(payerKeypair);
+        const signatureRaw = tx.signatures[0].signature;
+        swapTxResult = bs58.encode(new Uint8Array(signatureRaw!));
+        txSig = bs58.encode(new Uint8Array(tx.serialize()));
+    } else if (tx instanceof VersionedTransaction) {
+        txSig = bs58.encode(new Uint8Array(tx.serialize()));
+        const signatureRaw: any = tx.signatures[0];
+        swapTxResult = bs58.encode(signatureRaw);
+    }
+    
+    console.log("swapTxResult::: ", swapTxResult);
 
     let payload = {
         jsonrpc: "2.0",
         id: 1,
         method: "sendBundle",
-        params: [
-            [
-                // bs58.encode(vTxWithTip.serialize()),
-                bs58.encode(new Uint8Array(tx.serialize()))
-            ],
-            {
-                "commitment": "finalized"
-            }
-        ]
+        params: [[txSig], { "commitment": "finalized" }]
     };
 
     let res = await fetch(endpoint, {
@@ -110,13 +109,16 @@ export async function sendJitoBundleRPC(cnx: Connection, payerKeypair: Keypair, 
     // -- Print bundle ID
     console.info("Bundle ID:", `https://explorer.jito.wtf/bundle/${json.result}`);
 
-    const bundleStatus = await getBundleStatus(json.result);
-    console.log("bundle status", bundleStatus);
+    let bundleStatus = await getBundleStatus(json.result);
+    while (bundleStatus.value[0].status != "Landed") {
+        bundleStatus = await getBundleStatus(json.result);
+        console.log("bundleStatus::: ", bundleStatus.value[0].status);
+    }
 
-    return bs58.encode(new Uint8Array(tx.signatures[0].signature!));
+    return swapTxResult;
 }
 
-async function jitoTippingInx(cnx: Connection, payerKeypair: Keypair, tip: string): Promise<TransactionInstruction> {
+export async function jitoTippingInx(cnx: Connection, payerKeypair: Keypair, tip: string): Promise<TransactionInstruction> {
     return SystemProgram.transfer({
         fromPubkey: payerKeypair.publicKey,
         toPubkey: new PublicKey(getRandomTipAccount()),
@@ -130,7 +132,7 @@ async function jitoTippingInx(cnx: Connection, payerKeypair: Keypair, tip: strin
 // );
 // const keypair = Keypair.fromSecretKey(decodedKey);
 
-const searcherClients: SearcherClient[] = [];
+// const searcherClients: SearcherClient[] = [];
 // console.log("keypair sign bundle",keypair.publicKey.toBase58());
 
 // for (const url of BLOCK_ENGINE_URLS) { only NY now

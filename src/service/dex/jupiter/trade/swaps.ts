@@ -1,17 +1,11 @@
 // // https://station.jup.ag/docs/apis/swap-api
 import dotenv from 'dotenv';
 dotenv.config();
-import { Keypair, Connection, AddressLookupTableAccount,TransactionInstruction,PublicKey, VersionedTransaction,Transaction, ComputeBudgetProgram,sendAndConfirmTransaction,TransactionMessage} from "@solana/web3.js";
-import bs58 from 'bs58';
-
-import {MVX_JUP_REFERRAL,JUP_REF_PROGRAM,SOL_ADDRESS} from '../../../../config';
-import { getMaxPrioritizationFeeByPercentile } from "../../../fees/priorityFees";
+import { Keypair, Connection, AddressLookupTableAccount,SystemProgram,TransactionInstruction,PublicKey, VersionedTransaction,TransactionMessage, VersionedMessage} from "@solana/web3.js";
+import {SOL_ADDRESS} from '../../../../config';
 import BigNumber from 'bignumber.js';
-import {optimizedSendAndConfirmTransaction,add_mvx_and_ref_inx_fees,addMvxFeesInx} from '../../../util';
-import axios from "axios";
-
-const COMMITMENT_LEVEL = "confirmed";
-const PRIORITY_FEE_LAMPORTS = 1;
+import {optimizedSendAndConfirmTransaction,addMvxFeesInx} from '../../../util';
+import {sendJitoBundleRPC,getRandomTipAccount} from '../../../jito';
 const TX_RETRY_INTERVAL = 5;
 
 type REFERRAL_INFO = {
@@ -35,118 +29,107 @@ export async function jupiter_inx_swap(
   amountIn:number,
   slippage:number,
   priorityFeeLevel:number,
+  useJito:boolean,
+  jitoTip:number
 ) : Promise<string | null>{
+  let strTx : string | null= '';
   try{
-  const feeAccount = null;
-  console.log ('slippage:: ',slippage); 
-  let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}${feeAccount ? '&platformFeeBps=08' : ''}`.trim();
-  let quoteResponse : any = await fetch(swapUrl).then(res => res.json());
-  console.log("quoteResponse:: ",quoteResponse);
 
+      let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}`.trim();
+      let quoteResponse : any = await fetch(swapUrl).then(res => res.json());
 
-  // TODO add priority fee
-  // const lastRouteHop = quoteResponse.data.routePlan[quoteResponse.data.routePlan.length - 1].swapInfo.ammKey;
-  
-  // quoteResponse = quoteResponse.data;
-  const solAmount = tokenIn === SOL_ADDRESS ? new BigNumber(quoteResponse.inAmount) : new BigNumber(quoteResponse.outAmount);
-  const instructions = await (
-    await fetch('https://quote-api.jup.ag/v6/swap-instructions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({quoteResponse,userPublicKey: wallet.publicKey.toBase58(), dynamicComputeUnitLimit: true, prioritizationFeeLamports: priorityFeeLevel
-      })
-    })
-  ).json();
-  // console.log("instructions:: ",instructions);
-  if (instructions.error) {
-    console.error("Failed to get swap instructions: " + instructions.error);
-    throw new Error("Transaction failed, please try again");
-  }
-
-  const {
-    computeBudgetInstructions, // The necessary instructions to setup the compute budget.
-    setupInstructions, // Setup missing ATA for the users.
-    swapInstruction: swapInstructionPayload, // The actual swap instruction.
-    cleanupInstruction, // Unwrap the SOL if `wrapAndUnwrapSol = true`.
-    addressLookupTableAddresses, // The lookup table addresses that you can use if you are using versioned transaction.
-  } = instructions;
-
-  const deserializeInstruction = (instruction:any) => {
-    return new TransactionInstruction({
-      programId: new PublicKey(instruction.programId),
-      keys: instruction.accounts.map((key:any) => ({
-        pubkey: new PublicKey(key.pubkey),
-        isSigner: key.isSigner,
-        isWritable: key.isWritable,
-      })),
-      data: Buffer.from(instruction.data, "base64"),
-    });
-  };
-
-  const getAddressLookupTableAccounts = async (
-    keys: string[]
-  ): Promise<AddressLookupTableAccount[]> => {
-    const addressLookupTableAccountInfos =
-      await connection.getMultipleAccountsInfo(
-        keys.map((key) => new PublicKey(key))
-      );
-
-    return addressLookupTableAccountInfos.reduce((acc, accountInfo, index) => {
-      const addressLookupTableAddress = keys[index];
-      if (accountInfo) {
-        const addressLookupTableAccount = new AddressLookupTableAccount({
-          key: new PublicKey(addressLookupTableAddress),
-          state: AddressLookupTableAccount.deserialize(accountInfo.data),
-        });
-        acc.push(addressLookupTableAccount);
+      const solAmount = tokenIn === SOL_ADDRESS ? new BigNumber(quoteResponse.inAmount) : new BigNumber(quoteResponse.outAmount);
+      const instructions = await (
+        await fetch('https://quote-api.jup.ag/v6/swap-instructions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({quoteResponse,userPublicKey: wallet.publicKey.toBase58(), dynamicComputeUnitLimit: true, prioritizationFeeLamports: priorityFeeLevel
+          })
+        })
+      ).json();
+      // console.log("instructions:: ",instructions);
+      if (instructions.error) {
+        console.error("Failed to get swap instructions: " + instructions.error);
+        throw new Error("Transaction failed, please try again");
       }
 
-      return acc;
-    }, new Array<AddressLookupTableAccount>());
-  };
+      const {
+        computeBudgetInstructions, // The necessary instructions to setup the compute budget.
+        setupInstructions, // Setup missing ATA for the users.
+        swapInstruction: swapInstructionPayload, // The actual swap instruction.
+        cleanupInstruction, // Unwrap the SOL if `wrapAndUnwrapSol = true`.
+        addressLookupTableAddresses, // The lookup table addresses that you can use if you are using versioned transaction.
+      } = instructions;
 
-  const addressLookupTableAccounts: AddressLookupTableAccount[] = [];
+      const deserializeInstruction = (instruction:any) => {
+        return new TransactionInstruction({
+          programId: new PublicKey(instruction.programId),
+          keys: instruction.accounts.map((key:any) => ({
+            pubkey: new PublicKey(key.pubkey),
+            isSigner: key.isSigner,
+            isWritable: key.isWritable,
+          })),
+          data: Buffer.from(instruction.data, "base64"),
+        });
+      };
 
-  addressLookupTableAccounts.push(
-    ...(await getAddressLookupTableAccounts(addressLookupTableAddresses))
-  );
+      const getAddressLookupTableAccounts = async (
+        keys: string[]
+      ): Promise<AddressLookupTableAccount[]> => {
+        const addressLookupTableAccountInfos = await connection.getMultipleAccountsInfo( keys.map((key) => new PublicKey(key)) );
+        return addressLookupTableAccountInfos.reduce((acc, accountInfo, index) => {
+          const addressLookupTableAddress = keys[index];
+          if (accountInfo) {
+            const addressLookupTableAccount = new AddressLookupTableAccount({
+              key: new PublicKey(addressLookupTableAddress),
+              state: AddressLookupTableAccount.deserialize(Uint8Array.from(accountInfo.data)),
+            });
+            acc.push(addressLookupTableAccount);
+          }
+          return acc;
+        }, new Array<AddressLookupTableAccount>());
+      };
 
-  const blockhash = (await connection.getLatestBlockhash()).blockhash;
+      const addressLookupTableAccounts: AddressLookupTableAccount[] = [];
+      addressLookupTableAccounts.push(...(await getAddressLookupTableAccounts(addressLookupTableAddresses)));
+      const blockhash = (await connection.getLatestBlockhash());
+      
+      console.log("solAmount::: ",solAmount.toFixed(0).toString());
 
-  
-  const txInxs = addMvxFeesInx(wallet, solAmount)
+      const txInxs = addMvxFeesInx(wallet, solAmount);
 
-
-  const messageV0 = new TransactionMessage({
-    payerKey: wallet.publicKey,
-    recentBlockhash: blockhash,
+      const messageV0 = new TransactionMessage({
+        payerKey: wallet.publicKey,
+        recentBlockhash: blockhash.blockhash,
     instructions: [
-      ...computeBudgetInstructions.map(deserializeInstruction),
-      ...txInxs,
-      ...setupInstructions.map(deserializeInstruction),
-      deserializeInstruction(swapInstructionPayload),
-      deserializeInstruction(cleanupInstruction),
-  
-    ],
-  }).compileToV0Message(addressLookupTableAccounts);
+          useJito ? SystemProgram.transfer({
+            fromPubkey: wallet.publicKey,
+            toPubkey: new PublicKey(getRandomTipAccount()),
+            lamports: BigInt(jitoTip),
+        }) : null,
+        ...computeBudgetInstructions.map(deserializeInstruction),
+        ...txInxs,
+        ...setupInstructions.map(deserializeInstruction),
+        deserializeInstruction(swapInstructionPayload),
+            deserializeInstruction(cleanupInstruction)
+        ],
+      }).compileToV0Message(addressLookupTableAccounts);
 
-  const transaction = new VersionedTransaction(messageV0);
-  transaction.sign([wallet]);
-
-  return await optimizedSendAndConfirmTransaction(
-    transaction,
-    connection,
-    blockhash,
-    TX_RETRY_INTERVAL
-  );
-} catch (error:any) {
-  console.log(error);
-  ctx.api.sendMessage(ctx.session.chatId, `${error.message}`);
-
-  return null;
-}
+      const transaction = new VersionedTransaction(messageV0);
+      transaction.sign([wallet]);
+      
+      if(useJito){
+        strTx = await sendJitoBundleRPC(connection,wallet,jitoTip.toString(),transaction);
+      }else{
+        strTx = await optimizedSendAndConfirmTransaction(transaction,connection,blockhash,TX_RETRY_INTERVAL);
+      }
+  } catch (error:any) {
+    console.log(error);
+    ctx.api.sendMessage(ctx.session.chatId, `${error.message}`);
+  }
+  return strTx;
 }
 
 

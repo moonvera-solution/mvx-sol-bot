@@ -47,7 +47,7 @@ export async function ray_cpmm_swap(ctx: any) {
   }
 
   await ctx.api.sendMessage(chatId, `🟢 <b>Transaction ${ctx.session.cpmm_side.toUpperCase()}:</b> Processing... \n Please wait for confirmation.`, { parse_mode: 'HTML', disable_web_page_preview: true });
-  console.log('slippage', ctx.session.latestSlippage);
+  
   raydium_cpmm_swap(
     connection,
     payerKeypair,
@@ -56,10 +56,13 @@ export async function ray_cpmm_swap(ctx: any) {
     amountIn,
     (ctx.session.latestSlippage + 10),
     { refWallet: ctx.session.referralWallet, referral: true, refCommission: ctx.session.referralCommision },
-    ctx
+    { useJito: ctx.session.useJito, jitoTip: ctx.session.jitoTip },
+    ctx.session.customPriorityFee 
   ).then(async (txid) => {
     if (!txid) return;
     const tradeType = isBuySide ? 'buy' : 'sell';
+    console.log('raydium_cpmm_swap.......--c>: fntend');
+
     if (txid) {
 
       const config = {
@@ -76,7 +79,7 @@ export async function ray_cpmm_swap(ctx: any) {
       let extractAmount = await getSwapAmountOutCpmm(connection, txid, tradeType)
       const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
       tradeType == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
-      confirmedMsg = `✅ <b>${tradeType.toUpperCase()} tx confirmed</b> ${tradeType == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${amountIn / 1e9} SOL</b>` : `You sold <b>${Number(amountToSell / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(3)}</b> <b>${_symbol}</b> and received <b>${(ctx.session.CpmmSolExtracted / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txid}">View Details</a>.`;
+      confirmedMsg = `✅ <b>${tradeType.toUpperCase()} tx confirmed</b> ${tradeType == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${amountIn / 1e9} SOL</b>` : `You sold <b>${Number(amountToSell / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(3)}</b> <b>${_symbol}</b> and received <b>${(solFromSell / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txid}">View Details</a>.`;
       UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
       const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
       let oldPositionSol: number = 0;
@@ -126,7 +129,7 @@ export async function ray_cpmm_swap(ctx: any) {
             amountOut: newAmountOut,
           });
         }
-        if(!ctx.session.autoBuyActive){
+        if(!ctx.session.autoBuy){
         ctx.session.latestCommand = 'jupiter_swap'
         }
       }
@@ -143,7 +146,7 @@ export async function ray_cpmm_swap(ctx: any) {
       }
     }
       if (tradeType == 'buy') {
-       if (!ctx.session.autoBuyActive) {
+       if (!ctx.session.autoBuy) {
         ctx.session.latestCommand = 'jupiter_swap';
         await display_jupSwapDetails(ctx, false);
         }

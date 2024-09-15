@@ -1,7 +1,7 @@
 import { Percent, TokenAmount, TOKEN_PROGRAM_ID, Token as RayddiumToken } from '@raydium-io/raydium-sdk';
 import { PublicKey, Keypair, Connection } from '@solana/web3.js';
-import {updatePositions, getSolBalance, updateReferralBalance, getSwapAmountOut } from '../../util';
-import { DEFAULT_TOKEN, MVXBOT_FEES,CONNECTION } from '../../../config';
+import { updatePositions, getSolBalance, updateReferralBalance, getSwapAmountOut } from '../../util';
+import { DEFAULT_TOKEN, MVXBOT_FEES, CONNECTION } from '../../../config';
 import { getUserTokenBalanceAndDetails } from '../../feeds';
 import { raydium_amm_swap } from '../../dex';
 import BigNumber from 'bignumber.js';
@@ -14,12 +14,12 @@ import { InputFile } from 'grammy';
 const fs = require('fs');
 
 export async function handle_radyum_swap(
-  ctx: any, 
+  ctx: any,
 
-  side: 'buy' | 'sell', 
+  side: 'buy' | 'sell',
   amountIn: any
 ) {
-    const chatId = ctx.chat.id;
+  const chatId = ctx.chat.id;
   const connection = CONNECTION;
   const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
   // if(!userWallet){
@@ -76,9 +76,8 @@ export async function handle_radyum_swap(
     console.log("customPriorityFee before swap:: ", customPriorityFee);
     let msg = `🟢 <b>Transaction ${side.toUpperCase()}:</b> Processing...\n Please wait for confirmation.`
     await ctx.api.sendMessage(ctx.session.chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
-  
-    raydium_amm_swap( ctx,
-      {
+
+    raydium_amm_swap(ctx, {
       connection,
       side,
       generatorWallet,
@@ -89,6 +88,8 @@ export async function handle_radyum_swap(
       slippage,
       customPriorityFee,
       wallet: Keypair.fromSecretKey(bs58.decode(String(userWallet.secretKey))),
+      useJito: ctx.session.useJito,
+      jitoTip: ctx.session.jitoTip
     }).then(async (txids) => {
       if (!txids) return;
       const config = {
@@ -112,15 +113,15 @@ export async function handle_radyum_swap(
         side == 'sell' ?
           confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`
           : confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4)} <b>${_symbol}</b> for ${(amountIn / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
-      } 
+      }
 
       UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
-      const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
+      const userPosition = await UserPositions.findOne({ walletId: userWallet.publicKey.toString() });
       let oldPositionSol: number = 0;
       let oldPositionToken: number = 0;
       if (userPosition) {
         const existingPositionIndex = userPosition.positions.findIndex(
-          position => position.baseMint === (side =='buy' ? tokenOut.toString() : tokenIn.toString())
+          position => position.baseMint === (side == 'buy' ? tokenOut.toString() : tokenIn.toString())
         );
         // console.log('existingPositionIndex', existingPositionIndex);
         if (userPosition.positions[existingPositionIndex]) {
@@ -164,36 +165,36 @@ export async function handle_radyum_swap(
             amountOut: newAmountOut,
           });
         }
-        if(!ctx.session.autoBuyActive){
-        ctx.session.latestCommand = 'jupiter_swap'
+        if (!ctx.session.autoBuy) {
+          ctx.session.latestCommand = 'jupiter_swap'
         }
       }
 
       await ctx.api.sendMessage(ctx.session.chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
-      if(side == 'sell' && ctx.session.pnlcard){
+      if (side == 'sell' && ctx.session.pnlcard) {
         const shitBalance = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection);
         if (shitBalance.userTokenBalance == 0) {
           const tokenforRay = ctx.session.AmmPoolKeys.mintA.address;
-          console.log('tokenforRay',tokenforRay)
-        await createTradeImage(_symbol, tokenforRay, ctx.session.userProfit).then((buffer) => {
-          console.log('ctx.session.userProfit',ctx.session.userProfit)
-          console.log('tokenIn',tokenIn)
-          fs.writeFileSync('trade.png', buffer);
-          console.log('Image created successfully');
-        });
-        await ctx.replyWithPhoto(new InputFile('trade.png' ));
+          console.log('tokenforRay', tokenforRay)
+          await createTradeImage(_symbol, tokenforRay, ctx.session.userProfit).then((buffer) => {
+            console.log('ctx.session.userProfit', ctx.session.userProfit)
+            console.log('tokenIn', tokenIn)
+            fs.writeFileSync('trade.png', buffer);
+            console.log('Image created successfully');
+          });
+          await ctx.replyWithPhoto(new InputFile('trade.png'));
+        }
       }
-    }
       if (side == 'buy') {
-        if(!ctx.session.autoBuyActive){
-        ctx.session.latestCommand = 'jupiter_swap';
-        ctx.session.jupSwap_token = poolKeys.mintA.address;
-        await display_jupSwapDetails(ctx, false);
+        if (!ctx.session.autoBuy) {
+          ctx.session.latestCommand = 'jupiter_swap';
+          ctx.session.jupSwap_token = poolKeys.mintA.address;
+          await display_jupSwapDetails(ctx, false);
         }
       }
 
     }
-  )
+    )
   } catch (e: any) {
     await ctx.api.sendMessage(ctx.session.chatId, `🔴 ${side.toUpperCase()} Transaction failed`);
     console.error("ERROR on handle_radyum_trade: ", e);

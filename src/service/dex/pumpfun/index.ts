@@ -2,8 +2,9 @@ import axios from 'axios';
 import dotenv from "dotenv"; dotenv.config();
 import SolanaTracker from "./solTrackerUtils";
 import { sendTx, add_mvx_and_ref_inx_fees, addMvxFeesInx, wrapLegacyTx, optimizedSendAndConfirmTransaction } from '../../../../src/service/util';
-import { Keypair, Connection, Transaction, AddressLookupTableAccount, VersionedTransaction, TransactionMessage } from '@solana/web3.js';
+import { Keypair, Connection, Transaction, VersionedTransaction, TransactionMessage } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
+import { sendJitoBundleRPC } from "../../jito";
 
 const TX_RETRY_INTERVAL = 50;
 
@@ -12,7 +13,7 @@ const TX_RETRY_INTERVAL = 50;
  * @param passing connection b4 SOL_TRACKER_SWAP_PARAMS 
  * @returns Arrays of tx ids, false if fails
  */
-export async function pump_fun_swap(ctx: any,connection: Connection, {
+export async function pump_fun_swap(cnx: Connection, {
     side,
     from,
     to,
@@ -22,6 +23,7 @@ export async function pump_fun_swap(ctx: any,connection: Connection, {
     referralWallet,
     referralCommision,
     priorityFee,
+    jitoObject: { useJito, jitoTip },
     forceLegacy,
 }: SOL_TRACKER_SWAP_PARAMS): Promise<string | null> {
     const params = new URLSearchParams({
@@ -31,9 +33,9 @@ export async function pump_fun_swap(ctx: any,connection: Connection, {
         priorityFee: Number.parseFloat(String(priorityFee)).toString(),
         forceLegacy: forceLegacy ? "true" : "false",
     });
-  
+
     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
-    const blockhash = await connection.getLatestBlockhash();
+    const blockhash = await cnx.getLatestBlockhash();
 
     // console.log(" ${process.env.SOL_TRACKER_API_URL}/swap:: ",`${process.env.SOL_TRACKER_API_URL}/swap`);
     const swapInx = await fetch(`${process.env.SOL_TRACKER_API_URL}/swap?${params.toString()}`, { headers }).then((response) => response.json());
@@ -43,77 +45,42 @@ export async function pump_fun_swap(ctx: any,connection: Connection, {
     const serializedTransactionBuffer = Buffer.from(swapResponse.txn, "base64");
     let solAmount: BigNumber = side == 'buy' ? new BigNumber(swapResponse.rate.amountIn) : new BigNumber(swapResponse.rate.amountOut);
     let hasReferral = referralWallet && referralCommision! > 0;
-    const mvxInxs = hasReferral ?
-    addMvxFeesInx(payerKeypair, solAmount.multipliedBy(1e9)):
-        // add_mvx_and_ref_inx_fees(payerKeypair, referralWallet!, solAmount.multipliedBy(1e9), referralCommision!) :
-        addMvxFeesInx(payerKeypair, solAmount.multipliedBy(1e9));
-        
+
+    const mvxInxs = addMvxFeesInx(payerKeypair, solAmount.multipliedBy(1e9));
+    // add_mvx_and_ref_inx_fees(payerKeypair, referralWallet!, solAmount.multipliedBy(1e9), referralCommision!):
+
     let txSig = null;
     if (swapResponse.isJupiter && !swapResponse.forceLegacy) {
-        const transaction = VersionedTransaction.deserialize(serializedTransactionBuffer); if (!transaction) return null;
         
-        const addressLookupTableAccounts = await Promise.all(
-            transaction.message.addressTableLookups.map(async (lookup) => {
-                return new AddressLookupTableAccount({
-                    key: lookup.accountKey,
-                    state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data)),
-                })
-            }));
+        const vTxx = VersionedTransaction.deserialize(new Uint8Array(serializedTransactionBuffer)); if (!vTxx) return null;
+        const message : TransactionMessage = TransactionMessage.decompile(vTxx.message);
+        const pumpInx: Transaction = new Transaction({ blockhash: blockhash.blockhash, lastValidBlockHeight: blockhash.lastValidBlockHeight }).add(...message.instructions);
+        pumpInx.sign(payerKeypair);
 
-        var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
-        message.instructions.push(...mvxInxs)
-        transaction.message = message.compileToV0Message(addressLookupTableAccounts);
-        transaction.sign([payerKeypair]);
-        
-        txSig =  await optimizedSendAndConfirmTransaction(
-            new VersionedTransaction(transaction.message),
-            connection, blockhash, TX_RETRY_INTERVAL
-        );
-        console.log("== JUP TX ==", txSig);
-        return txSig;
+        txSig = useJito ?
+            await sendJitoBundleRPC(cnx, payerKeypair, jitoTip, pumpInx) :
+            await optimizedSendAndConfirmTransaction(
+                new VersionedTransaction(wrapLegacyTx(pumpInx.instructions, payerKeypair, blockhash.blockhash)),
+                cnx, blockhash, TX_RETRY_INTERVAL
+            );
 
     } else {
 
-        let txx: Transaction = new Transaction({blockhash: blockhash.blockhash,lastValidBlockHeight:blockhash.lastValidBlockHeight});
-        let pumpInx = Transaction.from(serializedTransactionBuffer); if (!pumpInx) return null;
-        txx.add(pumpInx); // add pump inx
-        mvxInxs.forEach((inx: any) => txx.add(inx));  // add mvx, ref inx
-        const vTxx = new VersionedTransaction(wrapLegacyTx(txx.instructions, payerKeypair, blockhash.blockhash));
-
-        const addressLookupTableAccounts = await Promise.all(
-            vTxx.message.addressTableLookups.map(async (lookup) => {
-                return new AddressLookupTableAccount({
-                    key: lookup.accountKey,
-                    state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data)),
-                })
-            }));
-
-        var message = TransactionMessage.decompile(vTxx.message, { addressLookupTableAccounts: addressLookupTableAccounts })
-        vTxx.message = message.compileToV0Message(addressLookupTableAccounts);
-        vTxx.sign([payerKeypair]);
-
-        txSig = await optimizedSendAndConfirmTransaction(vTxx,connection, blockhash, TX_RETRY_INTERVAL);
-        console.log("== LEGACY TX ==", txSig);
+        let pumpInx: Transaction = Transaction.from(serializedTransactionBuffer); if (!pumpInx) return null;
+        if (useJito) {
+            console.log("sending jito bunddle....");
+            pumpInx.instructions.push(...mvxInxs);
+            txSig = await sendJitoBundleRPC(cnx, payerKeypair, jitoTip, pumpInx)
+        } else {
+            pumpInx.instructions.push(...mvxInxs);
+            const vtxx = new VersionedTransaction(wrapLegacyTx(pumpInx.instructions, payerKeypair, blockhash.blockhash));
+            vtxx.sign([payerKeypair]);
+            txSig = await optimizedSendAndConfirmTransaction(vtxx,cnx, blockhash, TX_RETRY_INTERVAL);
+        }
     }
     return txSig;
 }
 
-// export async function getSwapDetails(
-//     from: String,
-//     to: String,
-//     amount: Number,
-//     slippage: Number,
-// ) {
-//     const params = { from, to, amount, slippage };
-//     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
-//     try {
-//         const response = await axios.get(`${process.env.SOL_TRACKER_API_URL}/rate?`, { params, headers });
-//         console.log("rate response:", response.data);
-//         return response.data.currentPrice;
-//     } catch (error: any) {
-//         throw new Error(error);
-//     }
-// }
 export async function getSwapDetails(
     from: String,
     to: String,
@@ -123,10 +90,10 @@ export async function getSwapDetails(
     const params = { from, to, amount, slippage };
     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
     try {
-        const response = await fetch(`${process.env.SOL_TRACKER_API_URL}/rate?from=${params.from}&to=${params.to}&amount=1&slippage=${params.slippage}`, {  headers }).then((response) => response.json());
+        const response = await fetch(`${process.env.SOL_TRACKER_API_URL}/rate?from=${params.from}&to=${params.to}&amount=1&slippage=${params.slippage}`, { headers }).then((response) => response.json());
         return response.currentPrice;
     } catch (error: any) {
-       console.error(error);
+        console.error(error);
         throw new Error('Pumpfun swap failed');
     }
 }
@@ -186,7 +153,8 @@ export type SOL_TRACKER_SWAP_PARAMS = {
     referralWallet?: string | null,
     referralCommision?: number | null,
     priorityFee?: number | null,
-    forceLegacy?: boolean
+    forceLegacy?: boolean,
+    jitoObject: { useJito: boolean, jitoTip: string },
 }
 
 

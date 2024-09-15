@@ -32,8 +32,8 @@ export async function handleSettings(ctx: any) {
             `Balance: ` +
             `<b>${balanceInSOL.toFixed(3)}</b> SOL | <b>${balanceInUSD.toFixed(3)}</b> USD\n`;
         // console.log('autobuy_amount', ctx.session.autobuy_amount)   
-        console.log('autoBuyActive', ctx.session.autoBuyActive)
-        const autobuy_button = ctx.session.autoBuyActive && ctx.session.autobuy_amount > 0 ? '✅ Auto buy' : '❌ Auto buy';
+        console.log('autoBuy', ctx.session.autoBuy)
+        const autobuy_button = ctx.session.autoBuy && ctx.session.autobuy_amount > 0 ? '✅ Auto buy' : '❌ Auto buy';
         // Inline keyboard options
         const options: any = {
             reply_markup: JSON.stringify({

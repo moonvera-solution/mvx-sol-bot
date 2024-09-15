@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import { PublicKey } from '@solana/web3.js';
-import { PORTFOLIO_TYPE, ISESSION_DATA, RAYDIUM_POOL_TYPE, USERPOSITION_TYPE, REFERRAL_TYPE } from '../../service/util/types';
-
+import { PORTFOLIO_TYPE, IUSER_PROFILE_DATA, ISESSION_DATA, RAYDIUM_POOL_TYPE, USERPOSITION_TYPE, REFERRAL_TYPE } from '../../service/util/types';
 
 const Schema = mongoose.Schema;
 const WalletSchema = new Schema({
@@ -19,7 +18,6 @@ const UserPortfolioSchema = new Schema<PORTFOLIO_TYPE>({
       secretKey: String,
     },
   ],
-  positions: [],
   activeWalletIndex: { type: Number, default: 0 },
 });
 
@@ -61,10 +59,9 @@ const ReferralSchema = new Schema<REFERRAL_TYPE>({
   numberOfReferrals: { type: Number, default: 0 },
   commissionPercentage: { type: Number, required: true, default: 0 },
   referredUsers: [{ type: Number }]
-
 });
+
 const UserPositionSchema = new Schema<USERPOSITION_TYPE>({
-  // positionChatId: { type: Number, unique: true, required: false },
   walletId: { type: String, unique: true, required: true },
   positions: [
     {
@@ -82,17 +79,21 @@ const AllowedReferralsSchema = new Schema({
   tgUserName: { type: String, required: true }
 });
 
-export const UserPositions = mongoose.model<USERPOSITION_TYPE>(
-  "UserPositions",
-  UserPositionSchema
-);
 
-export const Referrals = mongoose.model<REFERRAL_TYPE>(
-  "Referrals",
-  ReferralSchema
-);
+const UserProfileDataSchema = new Schema<IUSER_PROFILE_DATA>({
+  chatId: { type: Number, unique: true },
+  portfolio: { type: Schema.Types.Mixed, default: null },
+  latestSlippage: { type: Number, required: false},
+  snipeSlippage: { type: Number, required: false},
+  ispriorityCustomFee: { type: Boolean, required: false},
+  customPriorityFee: { type: Number, required: false},
+  txPriorityFee: { type: Number, required: false},
+  userProfit: { type: Number, required: false},
+  autobuy: { type: Boolean, required: false},
+  mev: { type: Boolean, required: false},
+});
 
-const UserSessions = new Schema({
+const UserSessionsSchema = new Schema({
   chatId: { type: Number, unique: true },
   portfolio: {
     type: {
@@ -107,7 +108,7 @@ const UserSessions = new Schema({
       activeWalletIndex: { type: Number, default: 0 },
     }
   },
-  activeTradingPool:{
+  activeTradingPool: {
     type: {
       id: String,
       baseMint: String,
@@ -195,10 +196,15 @@ const UserSessions = new Schema({
       startTime: String
     }
   },
-  autoBuyActive: Boolean,
+  autobuy: { type: Boolean, required: false},
+  useJito: { type: Boolean, required: false},
+  jitoTip: { type: Number, required: false},
 });
 
-export const UserSession = mongoose.model("UserSession", UserSessions);
+export const UserProfileData = mongoose.model("UserProfileData", UserProfileDataSchema);
+export const UserSession = mongoose.model("UserSession", UserSessionsSchema);
 export const WalletKeys = mongoose.model("WalletKeys", WalletSchema);
 export const Portfolios = mongoose.model("Portfolios", UserPortfolioSchema);
 export const AllowedReferrals = mongoose.model("AllowedReferrals", AllowedReferralsSchema);
+export const UserPositions = mongoose.model<USERPOSITION_TYPE>("UserPositions",UserPositionSchema);
+export const Referrals = mongoose.model<REFERRAL_TYPE>("Referrals",ReferralSchema);

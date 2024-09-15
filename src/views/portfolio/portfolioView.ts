@@ -28,7 +28,7 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
   );
 
   if (!userPosition.length || !userPosition[0].positions.length) {
-    if(!ctx.session.autoBuyActive){
+    if(!ctx.session.autoBuy){
     ctx.session.latestCommand = 'jupiter_swap';
     }
 
@@ -206,7 +206,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
   );
   const connection = CONNECTION;
   if (!userPosition[0] || userPosition[0].positions.length === 0) {
-    if(!ctx.session.autoBuyActive){
+    if(!ctx.session.autoBuy){
     ctx.session.latestCommand = 'jupiter_swap';
     }
     await ctx.api.sendMessage(ctx.chat.id, "No active positions.", { parse_mode: 'HTML' });

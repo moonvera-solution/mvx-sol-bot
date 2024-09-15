@@ -8,7 +8,7 @@ export async function set_auto_buy(ctx: any ) {
         return;
     }
     if (ctx.session.autobuy_amount > 0 || ctx.session.autobuy_amount != undefined) {
-    ctx.session.autoBuyActive = true;
+    ctx.session.autoBuy = true;
 }
     await handleRereshWallet(ctx);
     await ctx.api.sendMessage(ctx.session.chatId, `🟢 Auto Buy is enabled`);
@@ -17,7 +17,7 @@ export async function set_auto_buy(ctx: any ) {
 }
 
 export async function stop_auto_buy(ctx: any ) {
-    ctx.session.autoBuyActive = false;
+    ctx.session.autoBuy = false;
     await handleRereshWallet(ctx);
     await ctx.api.sendMessage(ctx.session.chatId, `🔴 Auto Buy is disabled`);
     ctx.session.latestCommand = "jupiter_swap";

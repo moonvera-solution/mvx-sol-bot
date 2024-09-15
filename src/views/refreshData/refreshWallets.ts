@@ -86,7 +86,7 @@ export async function handleRereshWallet(ctx: any){
         `<code>${publicKeyString}</code>\n` +
         `Balance: ` +
         `<b>${balanceInSOL.toFixed(3)}</b> SOL | <b>${balanceInUSD.toFixed(2)}</b> USD\n`;
-        const autobuy_button = ctx.session.autoBuyActive ? '✅ Auto buy' : '❌ Auto buy';
+        const autobuy_button = ctx.session.autoBuy ? '✅ Auto buy' : '❌ Auto buy';
 
     // Inline keyboard options
     const options: any = {

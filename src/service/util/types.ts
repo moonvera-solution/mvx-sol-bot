@@ -1,4 +1,3 @@
-
 // import { aN, bo } from '@raydium-io/raydium-sdk-v2/lib/api-33b5ab27';
 import { PublicKey } from '@solana/web3.js';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
@@ -13,7 +12,6 @@ export type PORTFOLIO_TYPE = {
     publicKey: PublicKey | String,
     secretKey: PublicKey | String
   }>
-  positions: Array<any>,
   activeWalletIndex: number
 }
 
@@ -24,10 +22,33 @@ export const DefaultPortfolioData: PORTFOLIO_TYPE = {
     publicKey: DEFAULT_PUBLIC_KEY,
     secretKey: DEFAULT_PUBLIC_KEY
   }],
-  positions: [
-  ],
   activeWalletIndex: 0
+}
 
+export type USER_PROFILE_DATA = {
+  chatId: 0,
+  portfolio: PORTFOLIO_TYPE,
+  latestSlippage: 0,
+  snipeSlippage: 0,
+  ispriorityCustomFee: false,
+  customPriorityFee: 0,
+  txPriorityFee: 0,
+  userProfit: 0,
+  autobuy: false,
+  mev: false
+}
+
+export interface IUSER_PROFILE_DATA {
+  chatId: number,
+  portfolio: PORTFOLIO_TYPE,
+  latestSlippage: number
+  snipeSlippage: number;
+  ispriorityCustomFee: boolean;
+  customPriorityFee: number;
+  txPriorityFee: number,
+  userProfit: number;
+  autobuy: boolean;
+  mev: boolean;
 }
 
 export interface ISESSION_DATA {
@@ -35,7 +56,7 @@ export interface ISESSION_DATA {
   AmmRpcData: any;
   AmmPoolInfo: any;
   pnlcard: boolean;
-  userProfit : number;
+  userProfit: number;
   expectedAmountOut_order: number;
   CpmmSolExtracted: number;
   cpmm_amountIn: number;
@@ -51,7 +72,7 @@ export interface ISESSION_DATA {
   latestSlippage: number
   metadataMessageId: number;
   snipeToken: PublicKey;
-  cpmmSnipeToken :PublicKey;
+  cpmmSnipeToken: PublicKey;
   isCpmmPool: boolean;
   pumpToken: PublicKey;
   latestToken: PublicKey;
@@ -64,7 +85,7 @@ export interface ISESSION_DATA {
   recipientAddress: PublicKey;
   solAmount: number;
   awaitingWalletAddress: boolean;
-  autoBuyActive: boolean;
+  autoBuy: boolean;
   autoBuy_token: string;
   mevActive: boolean;
   autobuy_amount: number;
@@ -76,7 +97,7 @@ export interface ISESSION_DATA {
   ispriorityCustomFee: boolean;
   customPriorityFee: number;
   positionIndex: number;
-  allowedReferral:String, // tg Username
+  allowedReferral: String, // tg Username
   pump_amountIn: number,
   pump_side: string,
   pump_amountOut: number,
@@ -84,7 +105,7 @@ export interface ISESSION_DATA {
   jupSwap_token: string,
   jupSwap_side: string,
   jupSwap_amount: number,
-  jupSwap:{token:String,side:String,amount:number},
+  jupSwap: { token: String, side: String, amount: number },
   ammAddress: string,
   limitOrders_token: PublicKey,
   limitOrders_side: string,
@@ -104,6 +125,9 @@ export interface ISESSION_DATA {
   },
   positionToken: string,
   activeTradingPoolId: string
+  autobuy: boolean,
+  useJito: boolean,
+  jitoTip: number,
 }
 
 export const enum PriotitizationFeeLevels {
@@ -146,7 +170,6 @@ export const DefaultSessionData: ISESSION_DATA = {
   portfolio: {
     chatId: 0,
     wallets: [],
-    positions: [],
     activeWalletIndex: 0
   },
   AmmPoolKeys: {},
@@ -156,7 +179,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   positionToken: '',
   pnlcard: false,
   userProfit: 0,
-  autoBuyActive: false,
+  autoBuy: false,
   autoBuy_token: '',
   mevActive: false,
   autobuy_amount: 0.01,
@@ -202,7 +225,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   positionPool: [],
   // priorityFees: PriotitizationFeeLevels.LOW,
   positionIndex: 0,
-  allowedReferral:'', // tg Username
+  allowedReferral: '', // tg Username
   limitOrders_token: DEFAULT_PUBLIC_KEY,
   limitOrders_side: '',
   limitOrders_amount: 0,
@@ -210,7 +233,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   limitOrders_time: 0,
   orderPercentPrice: false,
   jupSwap_token: '',
-  jupSwap:{token:'',side:'',amount:0},
+  jupSwap: { token: '', side: '', amount: 0 },
   poolSchedule: {
     status: '',
     baseDecimals: 0,
@@ -221,6 +244,9 @@ export const DefaultSessionData: ISESSION_DATA = {
     lpSupply: '',
     startTime: ''
   },
+  autobuy: false,
+  useJito: true,
+  jitoTip: 1000, // min tip amt 0.0001 SOL
 }
 
 export type RAYDIUM_POOL_TYPE = {
