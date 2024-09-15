@@ -150,7 +150,7 @@ async function _validateSession(ctx: any) {
 /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 bot.command("start", async (ctx: any) => {
  
-  // await _validateSession(ctx);
+  await _validateSession(ctx);
   backupSession = ctx.session;
   // console.log("ctx.session.generatorWallet", ctx.session.generatorWallet);
   // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
@@ -490,11 +490,24 @@ bot.on("message", async (ctx) => {
       }
     }
     switch (latestCommand) {
+      case "set_MEV_protection_amount": {
+        if (msgTxt) {
+          const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
+          if (isNumeric && Number(msgTxt) > 0.000001) {
+            ctx.session.MEV_protection_amount = Number(msgTxt);
+            ctx.api.sendMessage(chatId, "✅ MEV protection amount is set to " + msgTxt + " SOL");
+          } else {
+            ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+          }
+        }
+        break;
+      }
       case "set_key_one": {
         if (msgTxt) {
         const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
         if (isNumeric) {
         ctx.session.key_buy_option_1 = Number(msgTxt);
+        ctx.api.sendMessage(chatId, "✅ Left button is set to " + msgTxt + " SOL");
         } else {
           ctx.api.sendMessage(chatId, "🔴 Invalid amount")
         }
@@ -506,6 +519,8 @@ bot.on("message", async (ctx) => {
           const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
           if (isNumeric) {
           ctx.session.key_buy_option_2 = Number(msgTxt);
+          ctx.api.sendMessage(chatId, "✅ Right button is set to " + msgTxt + " SOL");
+
           } else {
             ctx.api.sendMessage(chatId, "🔴 Invalid amount")
           }
@@ -1248,6 +1263,11 @@ bot.on("callback_query", async (ctx: any) => {
           parse_mode: "HTML",
         };
         await ctx.api.sendMessage(chatId,'Please set your buy buttons', options )
+        break;
+      }
+      case "set_MEV_protection_amount": {
+        ctx.session.latestCommand = "set_MEV_protection_amount";
+        await ctx.api.sendMessage(chatId, "Please enter the tip amount in SOL for MEV protection. (0.000001 SOL minimum)");
         break;
       }
       case "set_key_one": {

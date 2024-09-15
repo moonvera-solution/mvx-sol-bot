@@ -94,6 +94,7 @@ export interface ISESSION_DATA {
   limitOrders_time: number,
   orderPercentPrice: boolean,
   MEV_protection: boolean,
+  MEV_protection_amount: number,
   key_buy_option_1: Number,
   key_buy_option_2: Number,
   poolSchedule: {
@@ -156,6 +157,7 @@ export const DefaultSessionData: ISESSION_DATA = {
   key_buy_option_1: 0.5,
   key_buy_option_2: 1,
   MEV_protection: false,
+  MEV_protection_amount: 0.000001,
   AmmPoolKeys: {},
   AmmRpcData: {},
   AmmPoolInfo: {},
