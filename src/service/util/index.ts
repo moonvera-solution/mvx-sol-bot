@@ -804,8 +804,24 @@ export function wrapLegacyTx(txInxs: TransactionInstruction[], payerKeypair: Key
     }).compileToV0Message(lookupTable);
 }
 
-export async function optimizedSendAndConfirmTransaction(
 
+export async function _loopRPCpromise(promise: Promise<any>, retryInterval: number): Promise<any> {
+    let confirmedTx = undefined;
+    while (!confirmedTx) {
+        confirmedTx = await Promise.race([
+            promise,
+            new Promise((resolve) =>
+                setTimeout(() => {
+                    resolve(null);
+                }, retryInterval)
+            ),
+        ]);
+        console.info("confirmedTx: ", confirmedTx ? "true" : "false");
+    }
+}
+
+
+export async function optimizedSendAndConfirmTransaction(
     tx: VersionedTransaction,
     connection: Connection,
     blockhash: any,
@@ -822,8 +838,6 @@ export async function optimizedSendAndConfirmTransaction(
         const simulationResult = await connection.simulateTransaction(tx, { commitment: "confirmed" }).catch((e) => console.error("Error on optimizedSendAndConfirmTransaction", e.message));   
         
         await catchSimulationErrors( simulationResult);
-
-       
 
         const signatureRaw: any = tx.signatures[0];
         txSignature = bs58.encode(signatureRaw);

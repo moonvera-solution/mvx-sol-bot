@@ -177,8 +177,8 @@ const UserSessions = new Schema({
   jupSwap_amount: Number,
   key_buy_option_1: Number,
   key_buy_option_2: Number,
-  MEV_protection: Boolean,
-  MEV_protection_amount: Number,
+  mevProtection: Boolean,
+  mevProtectionAmount: Number,
   jupSwap: {
     type: {
       token: String,

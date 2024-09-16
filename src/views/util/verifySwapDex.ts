@@ -16,7 +16,9 @@ export async function verify_position_dex(ctx: any, token: string) {
       `https://price.jup.ag/v6/price?ids=${token}&vsToken=So11111111111111111111111111111111111111112`
     ).then((response) => response.json()),
     fetch(swapUrl).then((response) => response.json()),
-    fetch(`https://public-api.birdeye.so/defi/v2/markets?address=${token}&sort_by=liquidity&sort_type=desc`,optionsBird).then(response => response.json()),
+    fetch(`https://public-api.birdeye.so/defi/v2/markets?address=${token}&sort_by=liquidity&sort_type=desc`,optionsBird).then(response => response.json()).catch((error) => {
+      console.error('Error:', error);
+    }),
 
   ]);
   const items = tokenMarketData?.data?.items;

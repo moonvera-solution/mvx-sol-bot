@@ -67,7 +67,6 @@ export interface ISESSION_DATA {
   awaitingWalletAddress: boolean;
   autoBuyActive: boolean;
   autoBuy_token: string;
-  mevActive: boolean;
   autobuy_amount: number;
   generatorWallet: PublicKey;
   referralCommision: number;
@@ -93,8 +92,8 @@ export interface ISESSION_DATA {
   limitOrders_price: number,
   limitOrders_time: number,
   orderPercentPrice: boolean,
-  MEV_protection: boolean,
-  MEV_protection_amount: number,
+  mevProtection: boolean,
+  mevProtectionAmount: number,
   key_buy_option_1: Number,
   key_buy_option_2: Number,
   poolSchedule: {
@@ -156,8 +155,8 @@ export const DefaultSessionData: ISESSION_DATA = {
   },
   key_buy_option_1: 0.5,
   key_buy_option_2: 1,
-  MEV_protection: false,
-  MEV_protection_amount: 0.000001,
+  mevProtection: false,
+  mevProtectionAmount: 0.001,
   AmmPoolKeys: {},
   AmmRpcData: {},
   AmmPoolInfo: {},
@@ -167,7 +166,6 @@ export const DefaultSessionData: ISESSION_DATA = {
   userProfit: 0,
   autoBuyActive: false,
   autoBuy_token: '',
-  mevActive: false,
   autobuy_amount: 0.01,
   expectedAmountOut_order: 0,
   CpmmSolExtracted: 0,

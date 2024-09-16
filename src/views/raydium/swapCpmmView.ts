@@ -41,15 +41,17 @@ export async function ray_cpmm_swap(ctx: any) {
   raydium_cpmm_swap(
     connection,
     payerKeypair,
-      ctx.session.cpmm_side,
+    ctx.session.cpmm_side,
     ctx.session.cpmmPoolId.id,
     amountIn,
     (ctx.session.latestSlippage + 10),
-    { refWallet: ctx.session.referralWallet, referral: true, refCommission: ctx.session.referralCommision },
-    ctx
+   ctx
+
   ).then(async (txid) => {
     if (!txid) return;
     const tradeType = isBuySide ? 'buy' : 'sell';
+    console.log('raydium_cpmm_swap.......--c>: fntend');
+
     if (txid) {
       const config = {
         searchTransactionHistory: true
@@ -120,7 +122,7 @@ export async function ray_cpmm_swap(ctx: any) {
             amountOut: newAmountOut,
           });
         }
-        if(!ctx.session.autoBuyActive){
+        if(!ctx.session.autoBuy){
         ctx.session.latestCommand = 'jupiter_swap'
         }
       }
@@ -137,7 +139,7 @@ export async function ray_cpmm_swap(ctx: any) {
       }
     }
       if (tradeType == 'buy') {
-       if (!ctx.session.autoBuyActive) {
+       if (!ctx.session.autoBuy) {
         ctx.session.latestCommand = 'jupiter_swap';
         await display_jupSwapDetails(ctx, false);
         }

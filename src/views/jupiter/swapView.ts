@@ -58,6 +58,8 @@ export async function jupiterSwap(ctx: any) {
     amountIn,
     (ctx.session.latestSlippage * 100),
     (ctx.session.customPriorityFee * 1e9), // here is it for jupiter its allways the default set by users
+    ctx.session.mevProtection,
+    ctx.session.mevProtectionAmount * 1e9,
   ).then(async (txSig: any) => {
     if (!txSig) return;
     const tradeType = isBuySide ? 'buy' : 'sell';
@@ -138,7 +140,7 @@ export async function jupiterSwap(ctx: any) {
             amountOut: newAmountOut,
           });
         }
-        if(!ctx.session.autoBuyActive){
+        if(!ctx.session.autoBuy){
         ctx.session.latestCommand = 'jupiter_swap'
         }
       }
@@ -157,7 +159,7 @@ export async function jupiterSwap(ctx: any) {
         await ctx.replyWithPhoto(new InputFile('trade.png' ));
       }
       }
-      if (tradeType == 'buy' && !ctx.session.autoBuyActive) {
+      if (tradeType == 'buy' && !ctx.session.autoBuy) {
         ctx.session.latestCommand = 'jupiter_swap';
         await display_jupSwapDetails(ctx, false);
       }

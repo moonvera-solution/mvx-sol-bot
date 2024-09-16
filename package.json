@@ -42,7 +42,7 @@
     "grammy": "^1.21.1",
     "grammy-inline-menu": "^9.0.0",
     "install": "^0.13.0",
-    "jito-ts": "^3.0.0",
+    "jito-ts": "^3.0.1",
     "lodash": "^4.17.21",
     "mongodb": "^6.3.0",
     "mongoose": "^8.1.0",

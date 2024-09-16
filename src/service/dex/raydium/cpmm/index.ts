@@ -1,4 +1,4 @@
-import {  CurveCalculator, CREATE_CPMM_POOL_PROGRAM, DEV_CREATE_CPMM_POOL_PROGRAM, CpmmPoolInfoLayout, CpmmConfigInfoInterface } from '@raydium-io/raydium-sdk-v2';
+import {  CurveCalculator, CREATE_CPMM_POOL_PROGRAM, DEV_CREATE_CPMM_POOL_PROGRAM, CpmmPoolInfoLayout, CpmmConfigInfoInterface, InstructionType } from '@raydium-io/raydium-sdk-v2';
 import { Raydium, TxVersion, parseTokenAccountResp, CpmmKeys } from '@raydium-io/raydium-sdk-v2'
 import { optimizedSendAndConfirmTransaction, wrapLegacyTx, add_mvx_and_ref_inx_fees, addMvxFeesInx } from '../../../util';
 import { Connection, Keypair, PublicKey, VersionedTransaction, Transaction, TransactionMessage, AddressLookupTableAccount } from '@solana/web3.js'
@@ -8,6 +8,7 @@ import bs58 from 'bs58'
 import BN from 'bn.js'
 
 import { SOL_ADDRESS } from '../../../../config';
+import { sendJitoBundleRPC } from '../../jito';
 
 
 export const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
@@ -39,7 +40,6 @@ export async function raydium_cpmm_swap(
   poolId: string,
   inputAmount: number,
   slippage: number,
-  refObj: { refWallet: string, referral: boolean, refCommission: number },
   ctx: any
 ): Promise<string | null> {
   let poolKeys: CpmmKeys | undefined
@@ -71,7 +71,7 @@ export async function raydium_cpmm_swap(
     poolInfo.feeRate = 0
   // console.log('poolInfo:>>>><<>>>>> ', poolInfo);
   // range: 1 ~ 0.0001, means 100% ~ 0.01%e
-  let { transaction } = await raydium.cpmm.swap({
+  let { transaction, builder } = await raydium.cpmm.swap({
     poolInfo,
     poolKeys,
     payer: wallet.publicKey,
@@ -100,29 +100,22 @@ export async function raydium_cpmm_swap(
   }
 
 
-  let txSig: any = '';
-  if (transaction instanceof Transaction) {
 
+   let txSig: any = '';
+  if (transaction instanceof Transaction) {
+    // transaction.instructions.push(builder.addInstruction!);
     transaction.instructions.push(...addMvxFeesInx(wallet, solAmount));
     const tx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, wallet, (await connection.getLatestBlockhash()).blockhash));
     tx.sign([wallet]);
-    txSig = await optimizedSendAndConfirmTransaction(
-      tx, connection, (await connection.getLatestBlockhash()).blockhash, 50
-    );
-  } else if (transaction instanceof VersionedTransaction) {
-    const addressLookupTableAccounts = await Promise.all(
-      transaction.message.addressTableLookups.map(async (lookup) => {
-        return new AddressLookupTableAccount({
-          key: lookup.accountKey,
-          state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data)),
-        })
-      }));
-    var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
-    message.instructions.push(...addMvxFeesInx(wallet, solAmount));
-    txSig = await optimizedSendAndConfirmTransaction(
-      new VersionedTransaction(transaction.message), connection, (await connection.getLatestBlockhash()).blockhash, 50
-    );
-  }
+    if(ctx.session.mevProtection){
+      txSig = await sendJitoBundleRPC(connection, wallet, (ctx.session.mevProtectionAmount * 1e9).toString(), transaction)
+    }else{
+      txSig = await optimizedSendAndConfirmTransaction(
+        tx, connection, (await connection.getLatestBlockhash()).blockhash, 50
+      );
+    }
+  
+  } 
   return txSig;
 }
 

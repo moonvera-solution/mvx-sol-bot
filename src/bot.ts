@@ -72,7 +72,7 @@ import { verify_position_dex } from "./views/util/verifySwapDex";
 import { set_auto_buy, stop_auto_buy } from "./service/autobuy/autobuySettings";
 import { handle_autoBuy } from "./service/autobuy/autobuy";
 import { handle_buy_swap_routing, handle_sell_swap_routing } from "./service/routing/swaprouting";
-import { set_MEV_protection, stop_MEV_protection } from "./service/MEV/mevProtection";
+import { set_mevProtection, stop_mevProtection } from "./service/MEV/mevProtection";
 // import { review_limitOrder_details_sell } from "./views/jupiter/limitOrderView";
 // import { br } from "@raydium-io/raydium-sdk-v2/lib/type-9fe71e3c";
 const express = require("express");
@@ -493,8 +493,8 @@ bot.on("message", async (ctx) => {
       case "set_MEV_protection_amount": {
         if (msgTxt) {
           const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
-          if (isNumeric && Number(msgTxt) > 0.000001) {
-            ctx.session.MEV_protection_amount = Number(msgTxt);
+          if (isNumeric && Number(msgTxt) >= 0.000001) {
+            ctx.session.mevProtectionAmount = Number(msgTxt);
             ctx.api.sendMessage(chatId, "✅ MEV protection amount is set to " + msgTxt + " SOL");
           } else {
             ctx.api.sendMessage(chatId, "🔴 Invalid amount");
@@ -1418,15 +1418,14 @@ bot.on("callback_query", async (ctx: any) => {
         } else {
           await stop_auto_buy(ctx);
         }
-       
         break;
       }
       case "MEV_protection": {
         ctx.session.latestCommand = "MEV_protection";
-        if (!ctx.session.MEV_protection) {
-          await set_MEV_protection(ctx);
+        if (!ctx.session.mevProtection) {
+          await set_mevProtection(ctx);
         } else {
-          await stop_MEV_protection(ctx);
+          await stop_mevProtection(ctx);
         }
         break;
       }
@@ -1851,4 +1850,3 @@ process.on("SIGINT", async () => {
   }
   process.exit();
 });
-

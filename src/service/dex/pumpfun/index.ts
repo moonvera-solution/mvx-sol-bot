@@ -19,8 +19,6 @@ export async function pump_fun_swap(ctx: any,connection: Connection, {
     amount,
     slippage,
     payerKeypair,
-    referralWallet,
-    referralCommision,
     priorityFee,
     forceLegacy,
 }: SOL_TRACKER_SWAP_PARAMS): Promise<string | null> {
@@ -42,9 +40,7 @@ export async function pump_fun_swap(ctx: any,connection: Connection, {
     const swapResponse = swapInx;
     const serializedTransactionBuffer = Buffer.from(swapResponse.txn, "base64");
     let solAmount: BigNumber = side == 'buy' ? new BigNumber(swapResponse.rate.amountIn) : new BigNumber(swapResponse.rate.amountOut);
-    let hasReferral = referralWallet && referralCommision! > 0;
-    const mvxInxs = hasReferral ?
-    addMvxFeesInx(payerKeypair, solAmount.multipliedBy(1e9)):
+    const mvxInxs = 
         // add_mvx_and_ref_inx_fees(payerKeypair, referralWallet!, solAmount.multipliedBy(1e9), referralCommision!) :
         addMvxFeesInx(payerKeypair, solAmount.multipliedBy(1e9));
         
@@ -73,7 +69,7 @@ export async function pump_fun_swap(ctx: any,connection: Connection, {
         return txSig;
 
     } else {
-
+        console.log('pump going in here')
         let txx: Transaction = new Transaction({blockhash: blockhash.blockhash,lastValidBlockHeight:blockhash.lastValidBlockHeight});
         let pumpInx = Transaction.from(serializedTransactionBuffer); if (!pumpInx) return null;
         txx.add(pumpInx); // add pump inx
@@ -183,8 +179,6 @@ export type SOL_TRACKER_SWAP_PARAMS = {
     amount: string,
     slippage: string,
     payerKeypair: Keypair,
-    referralWallet?: string | null,
-    referralCommision?: number | null,
     priorityFee?: number | null,
     forceLegacy?: boolean
 }

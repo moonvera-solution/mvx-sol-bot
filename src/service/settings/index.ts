@@ -1,11 +1,8 @@
-
 import { getSolanaDetails } from '../../api';
 import { getSolBalance } from '../util';
 import {  CONNECTION } from '../../config';
 
-
 export async function handleSettings(ctx: any) {
-    // await RefreshAllWallets(ctx);
     const selectedWallet = ctx.session.portfolio.activeWalletIndex;
     const userWallet = ctx.session.portfolio.wallets[selectedWallet];
     const chatId = ctx.chat.id;
@@ -25,17 +22,15 @@ export async function handleSettings(ctx: any) {
             await ctx.api.sendMessage(chatId, "No wallet found. Please create a wallet first.");
             return;
         }
-        // console.log('ctx.customPriorityFee', ctx.session.customPriorityFee)
         // Create a message with the wallet information
         const walletInfoMessage = `Your Wallet:  ` +
             `<code>${publicKeyString}</code>\n` +
             `Balance: ` +
             `<b>${balanceInSOL.toFixed(3)}</b> SOL | <b>${balanceInUSD.toFixed(3)}</b> USD\n`;
         // console.log('autobuy_amount', ctx.session.autobuy_amount)   
-        console.log('autoBuyActive', ctx.session.autoBuyActive)
+        console.log('autobuy', ctx.session.autoBuyActive)
         const autobuy_button = ctx.session.autoBuyActive && ctx.session.autobuy_amount > 0 ? '✅ Auto buy' : '❌ Auto buy';
-        const MEV_protection_button = ctx.session.MEV_protection ? '✅ MEV protection' : '❌ MEV protection';
-
+        const mevProtection_button = ctx.session.mevProtection ? '✅ MEV protection' : '❌ MEV protection';
         // Inline keyboard options
         const options: any = {
             reply_markup: JSON.stringify({
@@ -43,7 +38,7 @@ export async function handleSettings(ctx: any) {
                     [{ text: 'Get Private Key', callback_data: 'get_private_key' }],
                     [{ text: `✏ Slippage (${ctx.session.latestSlippage}%)`, callback_data: 'set_slippage' },{ text: `✏ Priority Fee (${ctx.session.customPriorityFee} SOL)`, callback_data: 'set_customPriority' } ],
                     [{ text:   `${autobuy_button}`, callback_data: 'Auto_buy' }, { text: `Amount ${ctx.session.autobuy_amount} SOL`, callback_data: 'set_autobuy_amount' }],
-                    [{ text: `${MEV_protection_button}`, callback_data: 'MEV_protection' }, { text: `Tip ${ctx.session.MEV_protection_amount} SOL`, callback_data: 'set_MEV_protection_amount' }],
+                    [{ text: `${mevProtection_button}`, callback_data: 'MEV_protection' }, { text: `Tip ${ctx.session.mevProtectionAmount} SOL`, callback_data: 'set_MEV_protection_amount' }],
                     [{ text: '💻 Customize keyboard', callback_data: 'keyboard_custom' }],
                     [{ text: '🔂 Refresh', callback_data: 'refresh_wallet' }, { text: 'Change Wallet', callback_data: 'confirm_reset_wallet' }],
                     [{ text: '↗️ Send SOL', callback_data: 'send_sol' }],

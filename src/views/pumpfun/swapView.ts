@@ -54,8 +54,6 @@ export async function swap_pump_fun(ctx: any) {
       amount: finalAmountIn,
       slippage: ctx.session.latestSlippage,
       payerKeypair: payerKeypair,
-      referralWallet: new PublicKey(ctx.session.generatorWallet).toBase58(),
-      referralCommision: ctx.session.referralCommision,
       priorityFee: ctx.session.customPriorityFee,
       forceLegacy: true
     }).then(async (txSigs) => {
@@ -111,7 +109,7 @@ export async function swap_pump_fun(ctx: any) {
           amountIn: oldPositionSol ? oldPositionSol + ctx.session.pump_amountIn * 1e9 : ctx.session.pump_amountIn * 1e9,
           amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
         });
-        if(!ctx.session.autoBuyActive){
+        if(!ctx.session.autobuy){
           ctx.session.latestCommand = 'jupiter_swap';
           await display_jupSwapDetails(ctx, false);
         }
@@ -141,7 +139,7 @@ export async function swap_pump_fun(ctx: any) {
             amountOut: newAmountOut,
           });
         }
-        if(!ctx.session.autoBuyActive){
+        if(!ctx.session.autobuy){
         ctx.session.latestCommand = 'jupiter_swap'
         }
       }
@@ -158,7 +156,7 @@ export async function swap_pump_fun(ctx: any) {
 
     }
       if (tradeSide == 'buy') {
-        if(!ctx.session.autoBuyActive){
+        if(!ctx.session.autobuy){
         ctx.session.latestCommand = 'jupiter_swap'
         }
       }
@@ -168,5 +166,4 @@ export async function swap_pump_fun(ctx: any) {
     console.error(e);
   }
 }
-
 

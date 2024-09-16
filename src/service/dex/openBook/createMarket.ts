@@ -13,7 +13,7 @@ import {
     Wallet,
     getProvider,
 } from "@coral-xyz/anchor";
-import { searcherClient, getRandomTipAccount ,sendJitoBundleFromIx} from '../jito/index';
+import { searcherClient, getRandomTipAccount ,sendJitoBundleFromIx} from '../../jito/index';
 import { MintUtils } from "./mint_utils";
 import { OpenBookV2Client, OpenBookClientOptions } from "@openbook-dex/openbook-v2";
 import { sign } from "crypto";

@@ -5,7 +5,7 @@ import { formatNumberToKOrM, getSolBalance } from '../../service/util';
 import { CONNECTION, SOL_ADDRESS } from '../../config';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
 import { UserPositions } from '../../db';
-import { getTokenDataFromBirdEye, getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
+import { getSolanaDetails, getTokenDataFromBirdEye, getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
 import { getAmmV4PoolKeys } from '../../service/dex/raydium/utils/formatAmmKeysById';
 
 export async function display_snipe_amm_options(ctx: any, isRefresh: boolean, msgTxt?: string) {
@@ -71,8 +71,17 @@ export async function display_snipe_amm_options(ctx: any, isRefresh: boolean, ms
   
 
 
-      const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : Number(jupSolPrice.data.SOL.price);
+      let solPrice = 0; ;
 
+      if(jupSolPrice.data.SOL.price){
+        solPrice = Number(jupSolPrice.data.SOL.price);
+        console.log('solPrice from jup:')
+      } else {
+        await getSolanaDetails().then((data) => {
+          solPrice = data;
+        });
+        console.log('solPrice from birdeye:')
+      }
       const {
         birdeyeURL,
         dextoolsURL,
@@ -104,8 +113,6 @@ export async function display_snipe_amm_options(ctx: any, isRefresh: boolean, ms
 
       const tokenPriceSOL = birdeyeData ? tokenPriceUSD / solPrice : Number(baseReserve) / Math.pow(10, quoteDecimals - baseDecimals);
 
-      // const priceImpact = tokenInfo.priceImpact.toFixed(2);
-      // const priceImpact_1 = tokenInfo.priceImpact_1.toFixed(2);
 
 
       const balanceInUSD = (balanceInSOL * (solPrice)).toFixed(2);
@@ -135,9 +142,8 @@ export async function display_snipe_amm_options(ctx: any, isRefresh: boolean, ms
         reply_markup: {
           inline_keyboard: [
             [{ text: ' 🔂 Refresh ', callback_data: 'refresh_snipe' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
-            [{ text: `⛷️ Set snipe slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }],
             [{ text: '🎯 X SOL', callback_data: 'snipe_X_SOL' }, { text: '🎯 0.5 SOL', callback_data: 'snipe_0.5_SOL' }, { text: '🎯 1 SOL', callback_data: 'snipe_1_SOL' }],
-            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
+            [{ text: `⛷️ Set snipe slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
             [{ text: 'Cancel', callback_data: 'closing' }]
           ]
 
@@ -150,12 +156,10 @@ export async function display_snipe_amm_options(ctx: any, isRefresh: boolean, ms
         reply_markup: {
           inline_keyboard: [
             [{ text: ' 🔂 Refresh ', callback_data: 'refresh_snipe' }, { text: ' ⚙️ Settings ', callback_data: 'settings' }],
-            [{ text: `⛷️ Set snipe slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }],
             [{ text: '🎯 X SOL', callback_data: 'snipe_X_SOL' }, { text: '🎯 0.5 SOL', callback_data: 'snipe_0.5_SOL' }, { text: '🎯 1 SOL', callback_data: 'snipe_1_SOL' }],
-            [{ text: `⛷️ Set Slippage (${ctx.session.latestSlippage}%) 🖋️`, callback_data: 'set_slippage' }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
+            [{ text: `⛷️ Set snipe slippage (${ctx.session.snipeSlippage}%) 🖋️`, callback_data: 'set_snipe_slippage' }, { text: `Set priority ${ctx.session.customPriorityFee}`, callback_data: 'set_customPriority' }],
             [{ text: 'Cancel', callback_data: 'closing' }]
           ]
-
         },
       });
     }
