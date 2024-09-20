@@ -115,17 +115,25 @@ export async function handle_radyum_swap(
           console.log('Index already exists');
           UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
         }
-      });      const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
+      });      
+      const userPosition = await UserPositions.findOne({ walletId: userWallet.publicKey.toString() });
       let oldPositionSol: number = 0;
       let oldPositionToken: number = 0;
+      console.log('userPosition', userPosition)
+
       if (userPosition) {
+        console.log('tokenOut', tokenOut)
+        console.log('tokenIn', tokenIn)
         const existingPositionIndex = userPosition.positions.findIndex(
-          position => position.baseMint === (side == 'buy' ? tokenOut.toString() : tokenIn.toString())
+          position => position.baseMint === (side == 'buy' ? tokenOut.toString() : tokenIn.mint.toBase58())
         );
         // console.log('existingPositionIndex', existingPositionIndex);
         if (userPosition.positions[existingPositionIndex]) {
+          console.log('userPosition.positions[existingPositionIndex]', userPosition.positions[existingPositionIndex])
           oldPositionSol = userPosition.positions[existingPositionIndex].amountIn
           oldPositionToken = userPosition.positions[existingPositionIndex].amountOut!
+          console.log('oldPositionSol at first', oldPositionSol)
+          console.log('oldPositionToken at first', oldPositionToken)
         }
       }
       if (side == 'buy') {
@@ -142,13 +150,15 @@ export async function handle_radyum_swap(
       }
       else if (side == 'sell') {
         let newAmountIn, newAmountOut;
-
+     
         if (Number(amountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
           newAmountIn = 0;
           newAmountOut = 0;
         } else {
+
           newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
           newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
+
         }
         if (newAmountIn <= 0 || newAmountOut <= 0) {
           console.log('deleting here')

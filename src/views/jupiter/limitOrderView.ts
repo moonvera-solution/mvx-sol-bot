@@ -8,7 +8,7 @@ import {CONNECTION} from "../../config";
 import { formatNumberToKOrM, getSolBalance, optimizedSendAndConfirmTransaction } from "../../service/util";
 import { Keypair, Connection } from "@solana/web3.js";
 import { UserPositions } from "../../db";
-import { getTokenDataFromBirdEyePositions } from "../../api/priceFeeds/birdEye";
+import { getSolanaDetails, getTokenDataFromBirdEyePositions, memeTokenPrice } from "../../api/priceFeeds/birdEye";
 import {  OrderHistoryItem, TradeHistoryItem, BatchCancelOrderParams } from "@jup-ag/limit-order-sdk";
 import { jupiter_limit_order, cancelOrder, cancelBatchOrder, CalculateLimitOrderAmountout, fetchOpenOrders, calculateOrderSellAmount } from "../../../src/service/dex/jupiter/trade/LimitOrder";
 import { SOL_ADDRESS } from "../../config";
@@ -16,6 +16,8 @@ import bs58 from 'bs58';
 import BigNumber from "bignumber.js";
 
 export async function submit_limitOrder(ctx: any) {
+  try{
+
   const chatId = ctx.chat.id;
   const walletIdx = ctx.session.portfolio.activeWalletIndex;
   const wallet = ctx.session.portfolio.wallets[walletIdx];
@@ -61,7 +63,13 @@ export async function submit_limitOrder(ctx: any) {
     }
   });
 }
+catch (err) {
+  console.error(err);
+  console.log("Error limit order.");
+}
+}
 export async function submit_limitOrder_sell(ctx: any) {
+  try{
 
   const chatId = ctx.chat.id;
   const walletIdx = ctx.session.portfolio.activeWalletIndex;
@@ -111,36 +119,59 @@ export async function submit_limitOrder_sell(ctx: any) {
     }
    
   });
+} catch (err) {
+  console.error(err);
+  console.log("Error limit order sell.");
+}
 }
 
 export async function review_limitOrder_details(ctx: any, isRefresh: boolean) {
+  try{
+
   const timeTxt = ctx.session.limitOrders_time ? new Date(ctx.session.limitOrders_time).toLocaleString() : "NA";
   const baseMint = ctx.session.limitOrders_token.toBase58();
   // console.log('baseMint',baseMint);
   const tokenAddress = new PublicKey(baseMint);
-  const[tokenMetadataResult,expectedAmountOut, birdeyeData,jupTokenRate, solJup] = await Promise.all([
+  const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
+  let swapUrlSol = `${rpcUrl}/jupiter/quote?inputMint=${'So11111111111111111111111111111111111111112'}&outputMint=${'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}&amount=${1000000000}&slippageBps=${0}`.trim();
+
+  const[tokenMetadataResult,expectedAmountOut, jupTokenRate, jupSolPrice] = await Promise.all([
     getTokenMetadata(ctx, tokenAddress.toBase58()),
     CalculateLimitOrderAmountout(SOL_ADDRESS, ctx.session.limitOrders_amount, ctx.session.limitOrders_token, ctx.session.limitOrders_price, ctx),
-    getTokenDataFromBirdEyePositions(baseMint, ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].publicKey),
-    fetch(`https://price.jup.ag/v6/price?ids=${baseMint}&vsToken=So11111111111111111111111111111111111111112`).then((response) => response.json()),
-    fetch(`https://price.jup.ag/v6/price?ids=SOL`).then((response) => response.json()),
+    fetch( `https://api.jup.ag/price/v2?ids=${baseMint}&showExtraInfo=true`).then((response) => response.json()),
+    fetch(swapUrlSol).then(res => res.json())
   ]);
   
   // console.log('jupTokenRate',jupTokenRate.data);
-  let currentJupPrice = jupTokenRate.data.price;
+
 
   const birdeyeURL = `https://birdeye.so/token/${baseMint}?chain=solana`;
   const dextoolsURL = `https://www.dextools.io/app/solana/pair-explorer/${baseMint}`;
   const dexscreenerURL = `https://dexscreener.com/solana/${baseMint}`;
   const decimalsToken = tokenMetadataResult.tokenData.mint.decimals;
-  const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value :  Number(solJup.data.SOL.price);
-  const tokenPriceUSD = birdeyeData
-    && birdeyeData.response
-    && birdeyeData.response.data
-    && birdeyeData.response.data.price != null  // This checks for both null and undefined
-    ? birdeyeData.response.data.price 
-    : Number(currentJupPrice) *  Number(solPrice);  
-    const tokenPriceSOL = tokenPriceUSD / solPrice;
+  let solPrice = 0 ;
+      
+  if(jupSolPrice && jupSolPrice.outAmount){
+    solPrice = Number(jupSolPrice.outAmount / 1e6);
+  } else {
+    await getSolanaDetails().then((data) => {
+      solPrice = data;
+    });
+  }
+  const jupTokenValue: any = Object.values(jupTokenRate.data);
+  let jupTokenPrice = 0;
+
+  if (jupTokenValue[0] && jupTokenValue[0].price) {
+    jupTokenPrice = jupTokenValue[0].price ;
+    console.log('jupTokenPrice from jup:')
+  } else {
+    await memeTokenPrice(baseMint).then((data) => {
+      jupTokenPrice = data;
+    })
+    console.log('memeTokenPrice from birdeye:')
+  }
+  const tokenPriceUSD =  Number(jupTokenPrice) ;
+  const tokenPriceSOL = tokenPriceUSD / solPrice;
   let orderSummary =
     `📄 <b> Order Summary</b> \n\n` +
     `👁️ <a href="${birdeyeURL}">Birdeye View</a> | ` +
@@ -169,34 +200,54 @@ export async function review_limitOrder_details(ctx: any, isRefresh: boolean) {
   } else {
   await ctx.api.sendMessage(ctx.chat.id, orderSummary, options);
   }
+} catch (err) {
+  console.error(err);
+  console.log("Error limit order.");
+}
 }
 export async function review_limitOrder_details_sell(ctx: any, isRefresh: boolean) {
-  // console.log('review_limitOrder_details_sell');
+  try{
+
   const timeTxt = ctx.session.limitOrders_time ? new Date(ctx.session.limitOrders_time).toLocaleString() : "NA";
   const baseMint = ctx.session.limitOrders_token;
   const tokenAddress = new PublicKey(baseMint);
+  const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
+  let swapUrlSol = `${rpcUrl}/jupiter/quote?inputMint=${'So11111111111111111111111111111111111111112'}&outputMint=${'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}&amount=${1000000000}&slippageBps=${0}`.trim();
 
-  const[tokenMetadataResult,expectedAmountOut, birdeyeData,jupTokenRate, solJup] = await Promise.all([
+  const[tokenMetadataResult,expectedAmountOut,jupTokenRate, jupSolPrice] = await Promise.all([
     getTokenMetadata(ctx, tokenAddress.toBase58()),
     calculateOrderSellAmount(ctx.session.limitOrders_token.toBase58(), ctx.session.limitOrders_amount, SOL_ADDRESS, ctx.session.limitOrders_price,ctx),
-    getTokenDataFromBirdEyePositions(baseMint, ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].publicKey),
-    fetch(`https://price.jup.ag/v6/price?ids=${baseMint}&vsToken=So11111111111111111111111111111111111111112`).then((response) => response.json()),
-    fetch(`https://price.jup.ag/v6/price?ids=${baseMint}&vsToken=So11111111111111111111111111111111111111112`).then((response) => response.json())
+    fetch( `https://api.jup.ag/price/v2?ids=${baseMint}&showExtraInfo=true`).then((response) => response.json()),
+    fetch(swapUrlSol).then(res => res.json())
   ]);
-  let currentJupPrice = jupTokenRate.data[baseMint].price;
-
+  const jupTokenValue: any = Object.values(jupTokenRate.data);
+  let jupTokenPrice = 0;
   const birdeyeURL = `https://birdeye.so/token/${baseMint}?chain=solana`;
   const dextoolsURL = `https://www.dextools.io/app/solana/pair-explorer/${baseMint}`;
   const dexscreenerURL = `https://dexscreener.com/solana/${baseMint}`;
   const decimalsToken = tokenMetadataResult.tokenData.mint.decimals;
-  const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value :  Number(solJup.data.SOL.price);
-  const tokenPriceUSD = birdeyeData
-    && birdeyeData.response
-    && birdeyeData.response.data
-    && birdeyeData.response.data.price != null  // This checks for both null and undefined
-    ? birdeyeData.response.data.price 
-    : Number(currentJupPrice) *  Number(solPrice);  
-    const tokenPriceSOL = tokenPriceUSD / solPrice;
+  let solPrice = 0 ;
+  console.log('expectedAmountOut',expectedAmountOut);
+  if(jupSolPrice && jupSolPrice.outAmount){
+    solPrice = Number(jupSolPrice.outAmount / 1e6);
+    console.log('solPrice from jup:')
+  } else {
+    await getSolanaDetails().then((data) => {
+      solPrice = data;
+    });
+    console.log('solPrice from birdeye:')
+  }   
+   if (jupTokenValue[0] && jupTokenValue[0].price) {
+    jupTokenPrice = jupTokenValue[0].price ;
+    console.log('jupTokenPrice from jup:')
+  } else {
+    await memeTokenPrice(baseMint).then((data) => {
+      jupTokenPrice = data;
+    })
+    console.log('memeTokenPrice from birdeye:')
+  } 
+      const tokenPriceUSD =  Number(jupTokenPrice) ;
+      const tokenPriceSOL = tokenPriceUSD / solPrice;
     const SellingAmount = ctx.session.limitOrders_amount / Math.pow(10,decimalsToken);
     // console.log('tokendecimals',decimalsToken);
   let orderSummary =
@@ -227,6 +278,11 @@ export async function review_limitOrder_details_sell(ctx: any, isRefresh: boolea
   } else {
   await ctx.api.sendMessage(ctx.chat.id, orderSummary, options);
   }
+} catch (err) {
+  console.error(err);
+  console.log("Error limit order sell.");
+}
+
 }
 
 export async function display_limitOrder_token_details(ctx: any, isRefresh: boolean) {
@@ -245,28 +301,23 @@ export async function display_limitOrder_token_details(ctx: any, isRefresh: bool
   if(tokenAddress){
     const feeAccount = null;
     let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${SOL_ADDRESS}&outputMint=${tokenAddress}&amount=${1}&slippageBps=${ctx.session.latestSlippage}${feeAccount ? '&platformFeeBps=08' : ''}`.trim();
+    let swapUrlSol = `${rpcUrl}/jupiter/quote?inputMint=${'So11111111111111111111111111111111111111112'}&outputMint=${'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}&amount=${1000000000}&slippageBps=${0}`.trim();
 
     const [
       shitBalance,
-      birdeyeData,
       tokenMetadataResult,
       getSolBalanceData,
       jupTokenRate,
       userTokenDetails,
-      userPosition,
-      jupPriceImpact_5,
       jupSolPrice,
       quoteResponse
     ] = await Promise.all([
       getuserShitBalance(publicKeyString,tokenAddress, connection),
-      getTokenDataFromBirdEyePositions(tokenAddress, publicKeyString),
       getTokenMetadata(ctx, tokenAddress),
       getSolBalance(publicKeyString, connection),
-      fetch(`https://price.jup.ag/v6/price?ids=${tokenAddress}&vsToken=So11111111111111111111111111111111111111112`).then((response) => response.json()),
+      fetch( `https://api.jup.ag/price/v2?ids=${tokenAddress}&showExtraInfo=true`).then((response) => response.json()),
       getUserTokenBalanceAndDetails(new PublicKey(publicKeyString), tokenAddress, connection),
-      UserPositions.find({  walletId: publicKeyString }, { positions: { $slice: -7 } }),
-      fetch(`${rpcUrl}/jupiter/quote?inputMint=${SOL_ADDRESS}&outputMint=${tokenAddress}&amount=${'5000000000'}&slippageBps=${1}`).then((response) => response.json()),
-      fetch(`https://price.jup.ag/v6/price?ids=SOL`).then((response) => response.json()),
+      fetch(swapUrlSol).then(res => res.json()),
       fetch(swapUrl).then(res => res.json())
     ]);
     const {
@@ -289,28 +340,30 @@ export async function display_limitOrder_token_details(ctx: any, isRefresh: bool
     const {
       tokenData,
     } = tokenMetadataResult;
-    const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value :  Number(jupSolPrice.data.SOL.price);
-    const tokenPriceUSD = birdeyeData
-    && birdeyeData.response
-    && birdeyeData.response.data
-    // && birdeyeData.response.data.data
-    && birdeyeData.response.data.price != null  // This checks for both null and undefined
-    ? birdeyeData.response.data.price
-    : Number(jupTokenPrice) * Number(solPrice);  
+    let solPrice = 0 ;
+      
+    if(jupSolPrice && jupSolPrice.outAmount){
+      solPrice = Number(jupSolPrice.outAmount / 1e6);
+    } else {
+      await getSolanaDetails().then((data) => {
+        solPrice = data;
+      });
+    }    
+    // TOken price from jup
+    if (jupTokenValue[0] && jupTokenValue[0].price) {
+      jupTokenPrice = jupTokenValue[0].price ;
+    } else {
+      await memeTokenPrice(tokenAddress).then((data) => {
+        jupTokenPrice = data;
+      })
+    } 
 
-    const tokenPriceSOL = tokenPriceUSD / solPrice;
-    const baseDecimals = tokenData.mint.decimals;
+    const tokenPriceUSD =  Number(jupTokenPrice) ;
+    const tokenPriceSOL = tokenPriceUSD / solPrice;    const baseDecimals = tokenData.mint.decimals;
     const totalSupply = new BigNumber(tokenData.mint.supply.basisPoints);
     const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(tokenPriceUSD)));
     const { userTokenBalance, decimals, userTokenSymbol } = userTokenDetails;
-    const netWorth = birdeyeData
-    && birdeyeData.birdeyePosition
-    && birdeyeData.birdeyePosition.data
-    // && birdeyeData.birdeyePosition.data.data
-    && birdeyeData.birdeyePosition.data.totalUsd
-    ? birdeyeData.birdeyePosition.data.totalUsd : NaN;
 
-    const netWorthSol = netWorth / solPrice;
     let  messageText =
     `<b>${tokenMetadataResult.tokenData.name} (${tokenMetadataResult.tokenData.symbol})</b> | 📄 CA: <code>${tokenAddress}</code> <a href="copy:${tokenAddress}">🅲</a>\n` +
     `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
@@ -319,8 +372,7 @@ export async function display_limitOrder_token_details(ctx: any, isRefresh: bool
     `Market Cap: <b>${Mcap} USD</b>\n` +
     `Price:  <b>${tokenPriceSOL.toFixed(9)} SOL</b> | <b>${(tokenPriceUSD).toFixed(9)} USD</b> \n\n` +
     `Token Balance: <b>${shitBalance.userTokenBalance.toFixed(4)} $${userTokenSymbol} </b> | <b>${((shitBalance.userTokenBalance) * Number(tokenPriceUSD)).toFixed(3)} USD </b>| <b>${((shitBalance.userTokenBalance) * Number(tokenPriceSOL)).toFixed(4)} SOL </b> \n\n` +
-    `Wallet balance: <b>${getSolBalanceData.toFixed(4)}</b> SOL | <b>${(getSolBalanceData * Number(solPrice)).toFixed(4)}</b> USD\n` +
-    `Net Worth: <b>${netWorthSol.toFixed(4)}</b> SOL | <b>${netWorth.toFixed(4)}</b> USD\n\n` +
+    `Wallet balance: <b>${getSolBalanceData.toFixed(4)}</b> SOL | <b>${(getSolBalanceData * Number(solPrice)).toFixed(4)}</b> USD\n\n` +
 
     `<b>Limit Order Steps:</b>\n` +
     `1. Select order side buy or sell.\n` +
@@ -355,6 +407,8 @@ export async function display_limitOrder_token_details(ctx: any, isRefresh: bool
 }
 }
 export async function display_open_orders(ctx: any, isRefresh: boolean) {
+  try{
+
   const wallet: Keypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
   const orders = await fetchOpenOrders(wallet);
 
@@ -362,24 +416,50 @@ export async function display_open_orders(ctx: any, isRefresh: boolean) {
     await ctx.api.sendMessage(ctx.chat.id, 'You have no open orders at the moment.');
     return;
   }
+  const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
+  let swapUrlSol = `${rpcUrl}/jupiter/quote?inputMint=${'So11111111111111111111111111111111111111112'}&outputMint=${'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}&amount=${1000000000}&slippageBps=${0}`.trim();
 
   let messageText = '';
   for (const order of orders) {
     console.log('order',order);
     let TokenTocheck = order.account.inputMint === SOL_ADDRESS ? order.account.outputMint : order.account.inputMint;
-    console.log('TokenTocheck',TokenTocheck);
-    const [tokenMetadataResult, birdeyeData] = await  Promise.all([
+    const [tokenMetadataResult,  jupSolPrice,jupTokenRate ] = await  Promise.all([
     getTokenMetadata(ctx, TokenTocheck),
-    getTokenDataFromBirdEyePositions(TokenTocheck, wallet.publicKey.toBase58())
+    fetch(swapUrlSol).then(res => res.json()),
+    fetch( `https://api.jup.ag/price/v2?ids=${TokenTocheck}&showExtraInfo=true`).then((response) => response.json()),
+
+
     ]);
     const TokenDec = tokenMetadataResult.tokenData.mint.decimals;
 
     // const birdeyeData = await getTokenDataFromBirdEye(order.account.outputMint, wallet.publicKey.toBase58());
-    const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value : 0;
-    const tokenPriceSOL = birdeyeData ? new BigNumber(birdeyeData.response.data.price).div(solPrice).toFixed(9) : 0;
+    let solPrice = 0 ;
+      
+    if(jupSolPrice && jupSolPrice.outAmount){
+      solPrice = Number(jupSolPrice.outAmount / 1e6);
+      console.log('solPrice from jup:')
+    } else {
+      await getSolanaDetails().then((data) => {
+        solPrice = data;
+      });
+      console.log('solPrice from birdeye:')
+    }    
+    const jupTokenValue: any = Object.values(jupTokenRate.data);
+    let jupTokenPrice = 0;
+    if (jupTokenValue[0] && jupTokenValue[0].price) {
+      jupTokenPrice = jupTokenValue[0].price ;
+      console.log('jupTokenPrice from jup:')
+    } else {
+      await memeTokenPrice(TokenTocheck).then((data) => {
+        jupTokenPrice = data;
+      })
+      console.log('memeTokenPrice from birdeye:')
+    }
+    const tokenPriceUSD =  Number(jupTokenPrice) ;
+    const tokenPriceSOL = tokenPriceUSD / solPrice;   
     const expiryDate = order.account.expiredAt !== null ? new Date(order.account.expiredAt) : 'N/A';
-    const orderAmount = order.account.oriInAmount / 1e9;
-    const ExpectedTokenAmount = order.account.outAmount / Math.pow(10, TokenDec);
+    const orderAmount = order.account.inputMint === SOL_ADDRESS ? order.account.oriInAmount / 1e9 : order.account.oriInAmount / Math.pow(10, TokenDec);
+    const ExpectedTokenAmount = order.account.inputMint === SOL_ADDRESS ? order.account.outAmount / Math.pow(10, TokenDec) : order.account.outAmount / 1e9;
     const orderType = order.account.inputMint === SOL_ADDRESS ? 'Buy order' : 'Sell order';
     const symbolToUse = order.account.inputMint === SOL_ADDRESS ? 'SOL' : tokenMetadataResult.tokenData.symbol;
     let OutSymbol = order.account.outputMint === SOL_ADDRESS ? 'SOL' : tokenMetadataResult.tokenData.symbol;
@@ -389,7 +469,7 @@ export async function display_open_orders(ctx: any, isRefresh: boolean) {
       `Order type: ${orderType} \n` +
       `Order Amount: ${orderAmount} <b>${symbolToUse}</b> \n` +
       `Expected amount: ${ExpectedTokenAmount} <b>${OutSymbol}</b> \n` +
-      `Current Price: ${tokenPriceSOL} <b>${symbolToUse}</b> \n` +
+      `Current Price: ${tokenPriceSOL.toFixed(9)} <b>${symbolToUse}</b> \n` +
       `Expiration: ${expiryDate} \n\n`;
   }
 
@@ -415,10 +495,15 @@ export async function display_open_orders(ctx: any, isRefresh: boolean) {
     await ctx.api.sendMessage(ctx.chat.id, messageText, options);
   }
   ctx.session.isOrdersLoaded = false;
+} catch (e) {
+  console.log(e);
+}
 }
 
 
 export async function display_single_order(ctx: any, isRefresh: boolean) {
+  try{
+
   const wallet: Keypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
   
   let orders =  await fetchOpenOrders( wallet);
@@ -429,22 +514,39 @@ export async function display_single_order(ctx: any, isRefresh: boolean) {
     let order = orders[index];
     let messageText;
     let tokenAddress = order?.account.inputMint === SOL_ADDRESS ? order.account.outputMint : order.account.inputMint;
-    const[tokenMetadataResult, birdeyeData,jupTokenRate, solJup] = await Promise.all([
-      getTokenMetadata(ctx, tokenAddress),
-      getTokenDataFromBirdEyePositions(tokenAddress, ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].publicKey),
-      fetch(`https://price.jup.ag/v6/price?ids=${tokenAddress}&vsToken=So11111111111111111111111111111111111111112`).then((response) => response.json()),
-      fetch(`https://price.jup.ag/v6/price?ids=${tokenAddress}&vsToken=So11111111111111111111111111111111111111112`).then((response) => response.json())
-    ]);    
-    let currentJupPrice = jupTokenRate.data[tokenAddress].price;
+    const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
+    let swapUrlSol = `${rpcUrl}/jupiter/quote?inputMint=${'So11111111111111111111111111111111111111112'}&outputMint=${'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}&amount=${1000000000}&slippageBps=${0}`.trim();
 
-    const solPrice = birdeyeData ? birdeyeData.solanaPrice.data.value :  Number(solJup.data.SOL.price);
-    const tokenPriceUSD = birdeyeData
-    && birdeyeData.response
-    && birdeyeData.response.data
-    && birdeyeData.response.data.price != null  // This checks for both null and undefined
-    ? birdeyeData.response.data.price 
-    : Number(currentJupPrice) *  Number(solPrice);  
-    const tokenPriceSOL = tokenPriceUSD / solPrice;    
+    const[tokenMetadataResult,jupTokenRate, jupSolPrice] = await Promise.all([
+      getTokenMetadata(ctx, tokenAddress),
+      fetch( `https://api.jup.ag/price/v2?ids=${tokenAddress}&showExtraInfo=true`).then((response) => response.json()),
+      fetch(swapUrlSol).then(res => res.json())
+    ]);    
+    const jupTokenValue: any = Object.values(jupTokenRate.data);
+    let jupTokenPrice = 0;
+    let solPrice = 0 ;
+      
+    if(jupSolPrice && jupSolPrice.outAmount){
+      solPrice = Number(jupSolPrice.outAmount / 1e6);
+      console.log('solPrice from jup:')
+    } else {
+      await getSolanaDetails().then((data) => {
+        solPrice = data;
+      });
+      console.log('solPrice from birdeye:')
+    }   
+    if (jupTokenValue[0] && jupTokenValue[0].price) {
+      jupTokenPrice = jupTokenValue[0].price ;
+      console.log('jupTokenPrice from jup:')
+    } else {
+      await memeTokenPrice(tokenAddress).then((data) => {
+        jupTokenPrice = data;
+      })
+      console.log('memeTokenPrice from birdeye:')
+    }
+
+    const tokenPriceUSD =  Number(jupTokenPrice) ;
+    const tokenPriceSOL = tokenPriceUSD / solPrice;  
     const expiryDate = new Date(order.account.expiredAt?.toNumber());
     const expiry = order.account.expiredAt == null ? 'NO EXPIRY' : expiryDate.toLocaleString();
     let orderType = order.account.inputMint === 'So11111111111111111111111111111111111111112'? 'Buy order' : 'Sell order';
@@ -494,10 +596,15 @@ export async function display_single_order(ctx: any, isRefresh: boolean) {
   } else {
     await ctx.api.sendMessage(ctx.chat.id, 'your order list is empty.');
   }
-
+}
+catch(e){
+  console.log(e);
+}
 }
 
 export async function cancel_orders(ctx: any, tokenKey: string) {
+  try{
+
   await ctx.api.sendMessage(ctx.session.chatId, '🟢  Cancelling order, please wait for confirmation.', { parse_mode: "HTML" });
   const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
   console.log('limOrder tokenKey', tokenKey);
@@ -521,12 +628,17 @@ export async function cancel_orders(ctx: any, tokenKey: string) {
       }
     }
   });
-  
 
   return;
 }
+catch(e){
+  console.log(e);
+}
+}
 
 export async function cancel_all_orders(ctx: any) {
+  try{
+
   const wallet = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].secretKey));
   const connection = CONNECTION;
   // console.log('wallet:', wallet.publicKey);
@@ -551,7 +663,9 @@ export async function cancel_all_orders(ctx: any) {
       }
     }
   });
-  
+} catch(e){
+  console.log(e);
+}
 
 }
 

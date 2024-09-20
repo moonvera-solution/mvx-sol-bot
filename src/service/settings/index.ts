@@ -3,19 +3,37 @@ import { getSolBalance } from '../util';
 import {  CONNECTION } from '../../config';
 
 export async function handleSettings(ctx: any) {
+    try { 
     const selectedWallet = ctx.session.portfolio.activeWalletIndex;
     const userWallet = ctx.session.portfolio.wallets[selectedWallet];
     const chatId = ctx.chat.id;
     const publicKeyString: any = userWallet.publicKey; // The user's public key
+    const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
+    let swapUrlSol = `${rpcUrl}/jupiter/quote?inputMint=${'So11111111111111111111111111111111111111112'}&outputMint=${'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}&amount=${1000000000}&slippageBps=${0}`.trim();
+    
     // Fetch SOL balance
     const connection = CONNECTION;
-    const [balanceInSOL, solanaDetails] = await Promise.all([getSolBalance(publicKeyString, connection), getSolanaDetails()]);
-    try {
+    const [balanceInSOL, jupSolPrice] = await Promise.all([
+        getSolBalance(publicKeyString, connection), 
+        fetch(swapUrlSol).then(res => res.json()),
+    ]);
+   
         if (balanceInSOL === null) {
             await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
             return;
         }
-        const balanceInUSD = (balanceInSOL * (solanaDetails));
+        let solPrice = 0 ;
+      
+        if(jupSolPrice && jupSolPrice.outAmount){
+          solPrice = Number(jupSolPrice.outAmount / 1e6);
+          console.log('solPrice from jup:')
+        } else {
+          await getSolanaDetails().then((data) => {
+            solPrice = data;
+          });
+          console.log('solPrice from birdeye:')
+        }
+        const balanceInUSD = balanceInSOL * Number(solPrice);
 
         // Fetch the user's wallet data from the JSON file
         if (!userWallet || !userWallet.publicKey) {

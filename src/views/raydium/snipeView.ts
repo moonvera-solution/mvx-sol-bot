@@ -204,12 +204,12 @@ export async function display_snipe_cpmm_options(ctx: any, isRefresh: boolean, m
     
      const baseVault = ctx.session.cpmmPoolInfo.mintA.address == SOL_ADDRESS ? ctx.session.cpmmPoolInfo.vault.A : ctx.session.cpmmPoolInfo.vault.B;
      const quoteVault = ctx.session.cpmmPoolInfo.mintA.address == SOL_ADDRESS ? ctx.session.cpmmPoolInfo.vault.B : ctx.session.cpmmPoolInfo.vault.A;
-      const [
+    
+     const [
         shitBalance,
         birdeyeData,
         tokenMetadataResult,
         balanceInSOL,
-        userPosition,
         userTokenDetails,
         jupSolPrice,
         tokenInfo,
@@ -219,7 +219,6 @@ export async function display_snipe_cpmm_options(ctx: any, isRefresh: boolean, m
         getTokenDataFromBirdEyePositions(tokenAddress.toString(), userPublicKey),
         getTokenMetadata(ctx, tokenAddress.toBase58()),
         getSolBalance(userPublicKey, connection),
-        UserPositions.find({ walletId: userPublicKey }, { positions: { $slice: -7 } }),
         getUserTokenBalanceAndDetails(new PublicKey(userPublicKey), tokenAddress, connection),
         fetch(
           `https://price.jup.ag/v6/price?ids=SOL`

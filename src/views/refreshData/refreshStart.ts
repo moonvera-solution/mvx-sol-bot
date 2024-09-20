@@ -4,12 +4,13 @@ import { CONNECTION } from '../../config';
 import { getWalletNetWorth } from '../../api/priceFeeds/birdEye';
 
 export async function handleRefreshStart(ctx: any) {
+  try {
     const chatId = ctx.chat.id;
     const connection = CONNECTION;
     let solPriceMessage = '';
     let userWallet: any;
  
-    try {
+
         if(ctx.session.portfolio){
             const selectedWallet = ctx.session.portfolio.activeWalletIndex;
             userWallet = ctx.session.portfolio.wallets[selectedWallet];
@@ -17,24 +18,37 @@ export async function handleRefreshStart(ctx: any) {
         // console.log('userWallet', userWallet)
         const publicKeyString: any = userWallet.publicKey; // The user's public key
         // Fetch SOL balance
+        const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
+        let swapUrlSol = `${rpcUrl}/jupiter/quote?inputMint=${'So11111111111111111111111111111111111111112'}&outputMint=${'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}&amount=${1000000000}&slippageBps=${0}`.trim();
+    
         const [balanceInSOL,jupSolPrice, networth] = await Promise.all([
           getSolBalance(publicKeyString, connection),
-          fetch(
-              `https://price.jup.ag/v6/price?ids=SOL`
-            ).then((response) => response.json()),
+          fetch(swapUrlSol).then(res => res.json()),
             getWalletNetWorth(publicKeyString as string).catch((error) => { console.error("Error fetching net worth: ", error); return null; })
       ]);    
       
      // Retrieve wallet user and balance in SOL and USD 
- 
+     let solPrice = 0 ;
+      
+     if(jupSolPrice && jupSolPrice.outAmount){
+       solPrice = Number(jupSolPrice.outAmount / 1e6);
+       console.log('solPrice from jup:')
+     } else {
+       await getSolanaDetails().then((data) => {
+         solPrice = data;
+       });
+       console.log('solPrice from birdeye:')
+     }
 
      if (balanceInSOL === null) {
          await ctx.api.sendMessage(chatId, "Error fetching wallet balance.");
          return;
      }
-     const balanceInUSD =  balanceInSOL * Number(jupSolPrice.data.SOL.price);
-     const  networkmessage = networth ? `Net Worth: <b>${(networth /Number(jupSolPrice.data.SOL.price) ).toFixed(4)}</b> SOL | <b>${(networth).toFixed(4)}</b> USD\n\n` : '';
-
+     const balanceInUSD = balanceInSOL * Number(solPrice);
+     let networkmessage = '';
+     if(networth){
+       networkmessage =  `Net Worth: <b>${(Number(networth) /Number(solPrice)).toFixed(4)}</b> SOL | <b>${(Number(networth).toFixed(4))}</b> USD\n\n` ;
+     }
     // Update the welcome message with the new SOL price
     const welcomeMessage = 
       `<b>✨ DRIBs ✨</b>\n` +

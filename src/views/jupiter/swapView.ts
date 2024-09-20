@@ -178,6 +178,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
     const session = ctx.session;
     const token = session.jupSwap_token
     const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
+    let swapUrlSol = `${rpcUrl}/jupiter/quote?inputMint=${'So11111111111111111111111111111111111111112'}&outputMint=${'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}&amount=${1000000000}&slippageBps=${0}`.trim();
 
     let userWallet: any;
     if (ctx.session.portfolio) {
@@ -205,21 +206,20 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         getuserShitBalance(publicKeyString,token, connection),
         getTokenMetadata(ctx, token),
         getSolBalance(publicKeyString, connection),
-        fetch(`https://price.jup.ag/v6/price?ids=${token}&vsToken=So11111111111111111111111111111111111111112`).then((response) => response.json()),
-        UserPositions.find({ walletId: publicKeyString }, { positions: { $slice: -7 } }),
-        fetch(`https://price.jup.ag/v6/price?ids=SOL`).then((response) => response.json()),
+        fetch( `https://api.jup.ag/price/v2?ids=${token}&showExtraInfo=true`).then((response) => response.json()),
+        UserPositions.find({ walletId: publicKeyString }, { positions: { $slice: -15 } }),
+        fetch(swapUrlSol).then(res => res.json())
       ]);
 
       const jupTokenValue: any = Object.values(jupTokenRate.data);
       let jupTokenPrice = 0;
-   
       const {
         tokenData,
       } = tokenMetadataResult;
-      let solPrice = 0; ;
-
-      if(jupSolPrice.data.SOL.price){
-        solPrice = Number(jupSolPrice.data.SOL.price);
+      let solPrice = 0 ;
+      
+      if(jupSolPrice && jupSolPrice.outAmount){
+        solPrice = Number(jupSolPrice.outAmount / 1e6);
         console.log('solPrice from jup:')
       } else {
         await getSolanaDetails().then((data) => {
@@ -227,8 +227,9 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         });
         console.log('solPrice from birdeye:')
       }
+
       if (jupTokenValue[0] && jupTokenValue[0].price) {
-        jupTokenPrice = jupTokenValue[0].price * solPrice;
+        jupTokenPrice = jupTokenValue[0].price ;
         console.log('jupTokenPrice from jup:')
       } else {
         await memeTokenPrice(token).then((data) => {
@@ -243,7 +244,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const totalSupply = new BigNumber(shitBalance.shitSupply);
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(tokenPriceUSD)));
 
-
+      console.log('Mcap:', Mcap)
       let specificPosition;
   
       if (userPosition[0] && userPosition[0].positions && userPosition[0].positions != undefined) {
@@ -257,13 +258,13 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       let profitInUSD;
       let profitInSol;
       if (specificPosition && specificPosition.amountOut) {
-        valueInUSD = (specificPosition.amountOut - (shitBalance.userTokenBalance * Math.pow(10, baseDecimals))) < 5 ? shitBalance.userTokenBalance * Number(tokenPriceUSD) : NaN;
-        valueInSOL = (specificPosition.amountOut - (shitBalance.userTokenBalance * Math.pow(10, baseDecimals))) < 5 ? Number(((shitBalance.userTokenBalance)) * Number(tokenPriceSOL)) : NaN;
+        valueInUSD = specificPosition.amountOut ? (specificPosition.amountOut / Math.pow(10,baseDecimals)) * Number(tokenPriceUSD) : NaN;
+        valueInSOL = specificPosition.amountOut ? (specificPosition.amountOut / Math.pow(10,baseDecimals)) * Number(tokenPriceSOL) : NaN;
         initialInSOL = Number(specificPosition.amountIn) / 1e9;
         initialInUSD = initialInSOL * Number(solPrice);
         profitPercentage = valueInSOL ? (Number(valueInSOL) - (Number(specificPosition.amountIn) / 1e9)) / (Number(specificPosition.amountIn) / 1e9) * 100 : NaN;
-        profitInUSD = valueInUSD  ? Number(Number(shitBalance.userTokenBalance) * Number(tokenPriceUSD)) - initialInUSD : NaN;
-        profitInSol = valueInSOL  ? (valueInSOL - initialInSOL).toFixed(4) : NaN;
+        profitInUSD = valueInUSD  ? valueInUSD - initialInUSD : NaN;
+        profitInSol = valueInSOL  ? valueInSOL - initialInSOL : NaN;
       }
 
       ctx.session.userProfit = profitPercentage ? Number(profitPercentage) : 0;
@@ -304,7 +305,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         await ctx.api.sendMessage(chatId, messageText, options);
       }
     } else {
-      ctx.api.sendMessage(chatId, "Token not found. ");
+      ctx.api.sendMessage(chatId, "Token not found.");
     }
 
   } catch (e) {

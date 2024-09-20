@@ -40,8 +40,7 @@ export async function swap_pump_fun(ctx: any) {
       await ctx.api.sendMessage(chatId, `❌ Insufficient SOL balance.`);
       return;
     }
-    const finalAmountIn = tradeSide == 'buy' ? ctx.session.pump_amountIn : amountToSell;
-    if(Number(finalAmountIn) <= 0) throw new Error('Not enough token balance');
+    if(Number(amountIn) <= 0) throw new Error('Not enough token balance');
 
     let msg = `🟢 <b>Transaction ${tradeSide.toUpperCase()}:</b> Processing... Please wait for confirmation.`
     await ctx.api.sendMessage(chatId, msg, { parse_mode: 'HTML', disable_web_page_preview: true });
@@ -51,7 +50,7 @@ export async function swap_pump_fun(ctx: any) {
       side: tradeSide,
       from: tokenIn,
       to: tokenOut,
-      amount: finalAmountIn,
+      amount: amountIn,
       slippage: ctx.session.latestSlippage,
       payerKeypair: payerKeypair,
       priorityFee: ctx.session.customPriorityFee,
@@ -98,6 +97,7 @@ export async function swap_pump_fun(ctx: any) {
         }
       }
 
+
       if (tradeSide == 'buy') {
          saveUserPosition( // to display portfolio positions
      
@@ -119,11 +119,10 @@ export async function swap_pump_fun(ctx: any) {
         if (Number(amountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
           newAmountIn = 0;
           newAmountOut = 0;
-
         } else {
+    
           newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
-          newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
-      
+          newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn *(Math.pow(10,userTokenBalanceAndDetails.decimals))) : oldPositionToken;
         }
 
         if (newAmountIn <= 0 || newAmountOut <= 0) {

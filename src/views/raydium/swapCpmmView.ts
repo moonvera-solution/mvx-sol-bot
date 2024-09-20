@@ -1,26 +1,23 @@
 import { raydium_cpmm_swap } from "../../service/dex/raydium/cpmm/index";
 import { PublicKey } from '@solana/web3.js';
-import { getLiquityFromOwner, getTokenMetadata, getuserShitBalance, getUserTokenBalanceAndDetails } from '../../service/feeds';
+import {  getUserTokenBalanceAndDetails } from '../../service/feeds';
 import dotenv from "dotenv"; dotenv.config();
-import { formatNumberToKOrM, getSolBalance, getSwapAmountOutCpmm, getSwapAmountOutPump, updatePositions } from '../../service/util';
+import {  getSwapAmountOutCpmm} from '../../service/util';
 import { Keypair, Connection } from '@solana/web3.js';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
-import { getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
 import { UserPositions } from '../../db/mongo/schema';
-import { MVXBOT_FEES, SOL_ADDRESS } from '../../config';
+import {  SOL_ADDRESS } from '../../config';
 import bs58 from "bs58";
-import BigNumber from 'bignumber.js';
 import { saveUserPosition } from '../../service/portfolio/positions';
 import { createTradeImage } from "../util/image";
 import { InputFile } from "grammy";
 import { display_jupSwapDetails } from "../jupiter/swapView";
-// import { M } from "@raydium-io/raydium-sdk-v2/lib/raydium-b84847b9";
 const fs = require('fs');
 
 export async function ray_cpmm_swap(ctx: any) {
   const chatId = ctx.chat.id;
-  const TRITON_RPC_URL = 'https://moonvera-ams.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41'
-  const connection = new Connection(TRITON_RPC_URL);
+  const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`;
+  const connection = new Connection(rpcUrl);
   const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
   const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
   const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];

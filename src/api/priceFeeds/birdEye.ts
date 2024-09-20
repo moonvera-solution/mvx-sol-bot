@@ -84,7 +84,7 @@ export async function getSolanaDetails() {
     }
 }
 
-export async function memeTokenPrice(wallet: any) {
+export async function memeTokenPrice(token: any) {
     try {
         const options = {
             method: 'GET',
@@ -93,9 +93,8 @@ export async function memeTokenPrice(wallet: any) {
                 'X-API-KEY': `${process.env.BIRD_EYE_API_KEY}`
             }
         };
-        const response = await fetch(`https://public-api.birdeye.so/defi/price?address=${wallet}`, options).then((response) => response.json());
-    
-        return response.data.value;
+        const response = await fetch(`https://public-api.birdeye.so/defi/token_overview?address=${token}`, options).then((response) => response.json());
+        return response.data.price;
     } catch (error:any) {
         console.error('Error fetching Solana details:', error.message);
         return null;

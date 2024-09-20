@@ -70,7 +70,6 @@ export async function raydium_amm_swap(ctx: any, input: TxInputInfo): Promise<st
     assert(targetPoolInfo, "cannot find the target pool");
     const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys;
     // console.log('poolKeys:: hereeee ');
-    let minSwapAmountBalance: number = 0;
     /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
     /*                       QUOTE SWAP                           */
     /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-xwxwwx»-»-»-»-»*/

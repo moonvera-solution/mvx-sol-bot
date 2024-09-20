@@ -22,6 +22,8 @@ export async function pump_fun_swap(ctx: any,connection: Connection, {
     priorityFee,
     forceLegacy,
 }: SOL_TRACKER_SWAP_PARAMS): Promise<string | null> {
+    try{
+
     const params = new URLSearchParams({
         from, to, fromAmount: amount.toString(),
         slippage: slippage.toString(),
@@ -32,7 +34,6 @@ export async function pump_fun_swap(ctx: any,connection: Connection, {
   
     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
     const blockhash = await connection.getLatestBlockhash();
-
     // console.log(" ${process.env.SOL_TRACKER_API_URL}/swap:: ",`${process.env.SOL_TRACKER_API_URL}/swap`);
     const swapInx = await fetch(`${process.env.SOL_TRACKER_API_URL}/swap?${params.toString()}`, { headers }).then((response) => response.json());
     console.log("== SWAP INX ==", swapInx);
@@ -92,6 +93,11 @@ export async function pump_fun_swap(ctx: any,connection: Connection, {
         console.log("== LEGACY TX ==", txSig);
     }
     return txSig;
+} catch (e: any) {
+    console.log(e);
+    ctx.api.sendMessage(ctx.session.chatId, `${e.message}`);
+    return null;
+}
 }
 
 // export async function getSwapDetails(
