@@ -75,7 +75,7 @@ export async function handleRefreshStart(ctx: any) {
           { text: "⬇️ Import Wallet", callback_data: "import_wallet" },
           { text: "💼 Wallets & Settings⚙️", callback_data: "show_wallets" },
         ],
-        [{ text: "☑️ Rug Check", callback_data: "rug_check" }],
+        [{text: '📊 DCA', callback_data: "dca_jupiter"},{ text: "☑️ Rug Check", callback_data: "rug_check" }],
         [
           { text: "💱 Trade", callback_data: "jupiter_swap" },
           { text: "🎯 Turbo Snipe", callback_data: "snipe" },
@@ -86,8 +86,7 @@ export async function handleRefreshStart(ctx: any) {
           { text: "ℹ️ Help", callback_data: "help" },
           // { text: "Refer Friends", callback_data: "refer_friends" },
         ],
-        [{ text: "Positions", callback_data: "display_all_positions" }],
-        [{text: "🪪 Generate PnL Card", callback_data: "display_pnlcard"},{ text: "🔄 Refresh", callback_data: "refresh_start" }],
+        [{ text: "🔄 Refresh", callback_data: "refresh_start" },{ text: "Positions", callback_data: "display_all_positions" }],
         [{ text: "📈 Live chart 📉", url: 'https://t.me/dribs_app_bot/dribs' }],
       ],
     }),

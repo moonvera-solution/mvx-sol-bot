@@ -12,7 +12,7 @@ const TX_RETRY_INTERVAL = 50;
  * @param passing connection b4 SOL_TRACKER_SWAP_PARAMS 
  * @returns Arrays of tx ids, false if fails
  */
-export async function pump_fun_swap(ctx: any,connection: Connection, {
+export async function soltracker_swap(ctx: any,connection: Connection, {
     side,
     from,
     to,
@@ -31,19 +31,21 @@ export async function pump_fun_swap(ctx: any,connection: Connection, {
         priorityFee: Number.parseFloat(String(priorityFee)).toString(),
         forceLegacy: forceLegacy ? "true" : "false",
     });
-  
+    
     const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
     const blockhash = await connection.getLatestBlockhash();
     // console.log(" ${process.env.SOL_TRACKER_API_URL}/swap:: ",`${process.env.SOL_TRACKER_API_URL}/swap`);
     const swapInx = await fetch(`${process.env.SOL_TRACKER_API_URL}/swap?${params.toString()}`, { headers }).then((response) => response.json());
     console.log("== SWAP INX ==", swapInx);
     if (!swapInx) return null;
-    const swapResponse = swapInx;
+    let swapResponse = swapInx;
+    swapResponse.rate.fee = 0;
+    swapResponse.rate.platformFee = 0;
+    swapResponse.rate.platformFeeUI = 0;
+    console.log("== SWAP RESPONSE ==", swapResponse);
     const serializedTransactionBuffer = Buffer.from(swapResponse.txn, "base64");
     let solAmount: BigNumber = side == 'buy' ? new BigNumber(swapResponse.rate.amountIn) : new BigNumber(swapResponse.rate.amountOut);
-    const mvxInxs = 
-        // add_mvx_and_ref_inx_fees(payerKeypair, referralWallet!, solAmount.multipliedBy(1e9), referralCommision!) :
-        addMvxFeesInx(payerKeypair, solAmount.multipliedBy(1e9));
+    const mvxInxs = addMvxFeesInx(payerKeypair, solAmount.multipliedBy(1e9));
         
     let txSig = null;
     if (swapResponse.isJupiter && !swapResponse.forceLegacy) {
@@ -88,14 +90,13 @@ export async function pump_fun_swap(ctx: any,connection: Connection, {
         var message = TransactionMessage.decompile(vTxx.message, { addressLookupTableAccounts: addressLookupTableAccounts })
         vTxx.message = message.compileToV0Message(addressLookupTableAccounts);
         vTxx.sign([payerKeypair]);
-
         txSig = await optimizedSendAndConfirmTransaction(vTxx,connection, blockhash, TX_RETRY_INTERVAL);
         console.log("== LEGACY TX ==", txSig);
     }
     return txSig;
 } catch (e: any) {
     console.log(e);
-    ctx.api.sendMessage(ctx.session.chatId, `${e.message}`);
+    ctx.api.sendMessage(ctx.session.chatId, `❌ Transaction failed!`);
     return null;
 }
 }

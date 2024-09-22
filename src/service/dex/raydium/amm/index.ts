@@ -120,7 +120,11 @@ export async function raydium_amm_swap(ctx: any, input: TxInputInfo): Promise<st
         checkCreateATAOwner: true,
       },
       makeTxVersion,
-    })
+    }).catch((e: any) => {
+    console.error(e);
+    throw new Error('Failed transaction');
+    });
+
     let feeAmt = Number.isInteger(amountOut.raw.toNumber()) ? amountOut.raw.toNumber() : Math.ceil(Number.parseFloat(amountOut.raw.toNumber().toFixed(2)));
     innerTransactions[0].instructions.push(
       ...addMvxFeesInx(

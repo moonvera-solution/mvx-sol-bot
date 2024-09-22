@@ -1,4 +1,4 @@
-import {  CurveCalculator, CREATE_CPMM_POOL_PROGRAM, DEV_CREATE_CPMM_POOL_PROGRAM, CpmmPoolInfoLayout, CpmmConfigInfoInterface, InstructionType } from '@raydium-io/raydium-sdk-v2';
+import {  CurveCalculator, CREATE_CPMM_POOL_PROGRAM, DEV_CREATE_CPMM_POOL_PROGRAM, CpmmPoolInfoLayout, CpmmConfigInfoInterface, InstructionType, CpmmComputeData } from '@raydium-io/raydium-sdk-v2';
 import { Raydium, TxVersion, parseTokenAccountResp, CpmmKeys } from '@raydium-io/raydium-sdk-v2'
 import { optimizedSendAndConfirmTransaction, wrapLegacyTx, add_mvx_and_ref_inx_fees, addMvxFeesInx } from '../../../util';
 import { Connection, Keypair, PublicKey, VersionedTransaction, Transaction, TransactionMessage, AddressLookupTableAccount } from '@solana/web3.js'
@@ -9,6 +9,9 @@ import BN from 'bn.js'
 
 import { SOL_ADDRESS } from '../../../../config';
 import { sendJitoBundleRPC } from '../../jito';
+import { set } from 'mongoose';
+import { s } from '@raydium-io/raydium-sdk-v2/lib/api-8d4cc174';
+import { program } from '@coral-xyz/anchor/dist/cjs/native/system';
 
 
 export const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
@@ -65,13 +68,17 @@ export async function raydium_cpmm_swap(
     baseIn ? rpcData.baseReserve : rpcData.quoteReserve,
     baseIn ? rpcData.quoteReserve : rpcData.baseReserve,
     rpcData.configInfo!.tradeFeeRate
-  )
+  );
+
+
 
     poolInfo.config.tradeFeeRate = 0
-    poolInfo.feeRate = 0
+    poolInfo.feeRate = 0 
   // console.log('poolInfo:>>>><<>>>>> ', poolInfo);
   // range: 1 ~ 0.0001, means 100% ~ 0.01%e
-  let { transaction, builder } = await raydium.cpmm.swap({
+  
+  
+  let { transaction  } = await raydium.cpmm.swap({
     poolInfo,
     poolKeys,
     payer: wallet.publicKey,
@@ -99,11 +106,9 @@ export async function raydium_cpmm_swap(
     ctx.session.CpmmSolExtracted = solAmount
   }
 
-
-
    let txSig: any = '';
   if (transaction instanceof Transaction) {
-    // transaction.instructions.push(builder.addInstruction!);
+
     transaction.instructions.push(...addMvxFeesInx(wallet, solAmount));
     const tx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, wallet, (await connection.getLatestBlockhash()).blockhash));
     tx.sign([wallet]);
@@ -156,22 +161,6 @@ export async function getRayCpmmPoolKeys({ t1, t2, connection }: { t1: string, t
   return poolId;
 }
 
-// export const fetchTokenAccountData = async (wallet: Keypair, connection: Connection) => {
-//   const solAccountResp = await connection.getAccountInfo(wallet.publicKey)
-//   const tokenAccountResp = await connection.getTokenAccountsByOwner(wallet.publicKey, { programId: TOKEN_PROGRAM_ID })
-//   const token2022Req = await connection.getTokenAccountsByOwner(wallet.publicKey, { programId: TOKEN_2022_PROGRAM_ID })
-//   const tokenAccountData = parseTokenAccountResp({
-//     owner: wallet.publicKey,
-//     solAccountResp,
-//     tokenAccountResp: {
-//       context: tokenAccountResp.context,
-//       value: [...tokenAccountResp.value, ...token2022Req.value],
-//     },
-//   })
-//   return tokenAccountData;
-// }
-
-//  getRayCpmmPoolKeys({t1:'5X1F16T5MRiAu4qPaFAaNA1oPx9VQzkpV5SzQcHsNUS9', t2:'So11111111111111111111111111111111111111112', connection:new Connection('https://moonvera-ams.rpcpool.com/6eb499c8-2570-43ab-bad8-fdf1c63b2b41')})
 
 
 export async function getpoolDataCpmm(wallet: Keypair, poolID: any, connection: any): Promise<CpmmKeys> {

@@ -140,25 +140,24 @@ export async function jupiterSwap(ctx: any) {
             amountOut: newAmountOut,
           });
         }
+    
         if(!ctx.session.autoBuy){
         ctx.session.latestCommand = 'jupiter_swap'
         }
       }
       await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
 
-      if(tradeType == 'sell' && ctx.session.pnlcard ){
-        const userShitbalance =   isBuySide ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
-
-        if(userShitbalance.userTokenBalance == 0){
-
-        await createTradeImage(_symbol, tokenIn, ctx.session.userProfit).then((buffer) => {
-          // Save the image buffer to a file
-          fs.writeFileSync('trade.png', buffer);
-          console.log('Image created successfully');
-        });
-        await ctx.replyWithPhoto(new InputFile('trade.png' ));
-      }
-      }
+      // if(tradeType == 'sell' && ctx.session.pnlcard ){
+      //   const userShitbalance =   isBuySide ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
+      //   if(userShitbalance.userTokenBalance == 0){
+      //   await createTradeImage(_symbol, tokenIn, ctx.session.userProfit).then((buffer) => {
+      //     // Save the image buffer to a file
+      //     fs.writeFileSync('trade.png', buffer);
+      //     console.log('Image created successfully');
+      //   });
+      //   await ctx.replyWithPhoto(new InputFile('trade.png' ));
+      // }
+      // }
       if (tradeType == 'buy' && !ctx.session.autoBuy) {
         ctx.session.latestCommand = 'jupiter_swap';
         await display_jupSwapDetails(ctx, false);
@@ -193,26 +192,27 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const dexscreenerURL = `https://dexscreener.com/solana/${token}`;
       const connection = new Connection(rpcUrl);
       // check if the token is tradable on jupiter
+      const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
 
       const [
         shitBalance,
         tokenMetadataResult,
         getSolBalanceData,
-        jupTokenRate,
+        // jupTokenRate,
         userPosition,
         jupSolPrice,
+        solTrackerData
 
       ] = await Promise.all([
         getuserShitBalance(publicKeyString,token, connection),
         getTokenMetadata(ctx, token),
         getSolBalance(publicKeyString, connection),
-        fetch( `https://api.jup.ag/price/v2?ids=${token}&showExtraInfo=true`).then((response) => response.json()),
+        // fetch( `https://api.jup.ag/price/v2?ids=${token}&showExtraInfo=true`).then((response) => response.json()),
         UserPositions.find({ walletId: publicKeyString }, { positions: { $slice: -15 } }),
-        fetch(swapUrlSol).then(res => res.json())
+        fetch(swapUrlSol).then(res => res.json()),
+        fetch(`${process.env.SOL_TRACKER_API_URL}/rate?from=${token}&to=So11111111111111111111111111111111111111112&amount=1&slippage=0`, { headers }).then((response) => response.json())
       ]);
-
-      const jupTokenValue: any = Object.values(jupTokenRate.data);
-      let jupTokenPrice = 0;
+      let tokenPrice = 0;
       const {
         tokenData,
       } = tokenMetadataResult;
@@ -220,31 +220,26 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       
       if(jupSolPrice && jupSolPrice.outAmount){
         solPrice = Number(jupSolPrice.outAmount / 1e6);
-        console.log('solPrice from jup:')
       } else {
         await getSolanaDetails().then((data) => {
           solPrice = data;
         });
-        console.log('solPrice from birdeye:')
       }
-
-      if (jupTokenValue[0] && jupTokenValue[0].price) {
-        jupTokenPrice = jupTokenValue[0].price ;
-        console.log('jupTokenPrice from jup:')
+  
+      if (solTrackerData && solTrackerData.currentPrice) {
+        tokenPrice = solTrackerData.currentPrice * solPrice; ;
       } else {
         await memeTokenPrice(token).then((data) => {
-          jupTokenPrice = data;
+          tokenPrice = data;
         })
-        console.log('memeTokenPrice from birdeye:')
       }
-
-      const tokenPriceUSD =  Number(jupTokenPrice) ;
+      console.log('tokenPrice:', tokenPrice);
+      const tokenPriceUSD =  Number(tokenPrice) ;
       const tokenPriceSOL = tokenPriceUSD / solPrice;
       const baseDecimals = shitBalance?.decimals;
       const totalSupply = new BigNumber(shitBalance.shitSupply);
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(tokenPriceUSD)));
-
-      console.log('Mcap:', Mcap)
+      console.log('Mcap:', Mcap); 
       let specificPosition;
   
       if (userPosition[0] && userPosition[0].positions && userPosition[0].positions != undefined) {
@@ -267,8 +262,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         profitInSol = valueInSOL  ? valueInSOL - initialInSOL : NaN;
       }
 
-      ctx.session.userProfit = profitPercentage ? Number(profitPercentage) : 0;
-      // const freezable = birdeyeData?.response2.data.freezeable ? "⚠️ Be careful: This token is freezable." : "✅ Not freezable.";
+      // ctx.session.userProfit = profitPercentage ? Number(profitPercentage) : 0;
       let messageText = `<b>------ ${tokenData.name}(${tokenData.symbol}) ------</b> | 📄 CA: <code>${token}</code> <a href="copy:${token}">🅲</a>\n` +
         `<a href="${birdeyeURL}">👁️ Birdeye</a> | ` +
         `<a href="${dextoolsURL}">🛠 Dextools</a> | ` +

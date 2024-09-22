@@ -73,6 +73,7 @@ import { set_auto_buy, stop_auto_buy } from "./service/autobuy/autobuySettings";
 import { handle_autoBuy } from "./service/autobuy/autobuy";
 import { handle_buy_swap_routing, handle_sell_swap_routing } from "./service/routing/swaprouting";
 import { set_mevProtection, stop_mevProtection } from "./service/MEV/mevProtection";
+import { swap_cpmm_sell } from "./service/dex/raydium/cpmm/cpmmSell";
 // import { review_limitOrder_details_sell } from "./views/jupiter/limitOrderView";
 // import { br } from "@raydium-io/raydium-sdk-v2/lib/type-9fe71e3c";
 const express = require("express");
@@ -152,8 +153,7 @@ bot.command("start", async (ctx: any) => {
  
   await _validateSession(ctx);
   backupSession = ctx.session;
-  // console.log("ctx.session.generatorWallet", ctx.session.generatorWallet);
-  // console.log('ctx.session.referralCommision', ctx.session.referralCommision);
+
   try {
     if (backupSession) {
       // console.log("ctx.session", ctx.session);
@@ -210,12 +210,12 @@ bot.command("start", async (ctx: any) => {
       
     if(jupSolPrice && jupSolPrice.outAmount){
       solPrice = Number(jupSolPrice.outAmount / 1e6);
-      console.log('solPrice from jup:')
+      // console.log('solPrice from jup:')
     } else {
       await getSolanaDetails().then((data) => {
         solPrice = data;
       });
-      console.log('solPrice from birdeye:')
+      // console.log('solPrice from birdeye:')
     }
     const balanceInUSD = balanceInSOL * Number(solPrice);
     let networkmessage = '';
@@ -247,7 +247,7 @@ bot.command("start", async (ctx: any) => {
             { text: "⬇️ Import Wallet", callback_data: "import_wallet" },
             { text: "💼 Wallets & Settings⚙️", callback_data: "show_wallets" },
           ],
-          [{ text: "☑️ Rug Check", callback_data: "rug_check" }],
+          [{text: '📊 DCA', callback_data: "dca_jupiter"},{ text: "☑️ Rug Check", callback_data: "rug_check" }],
           [
             { text: "💱 Trade", callback_data: "jupiter_swap" },
             { text: "🎯 Turbo Snipe", callback_data: "snipe" },
@@ -258,8 +258,7 @@ bot.command("start", async (ctx: any) => {
             { text: "ℹ️ Help", callback_data: "help" },
             // { text: "Refer Friends", callback_data: "refer_friends" },
           ],
-          [{ text: "Positions", callback_data: "display_all_positions" }],
-          [{text: "🪪 Generate PnL Card", callback_data: "display_pnlcard"},{ text: "🔄 Refresh", callback_data: "refresh_start" }],
+          [{ text: "🔄 Refresh", callback_data: "refresh_start" },{ text: "Positions", callback_data: "display_all_positions" }],
           [{ text: "📈 Live chart 📉", url: 'https://t.me/dribs_app_bot/dribs' }],
         ],
       }),
@@ -937,7 +936,7 @@ bot.on("message", async (ctx) => {
 
           const recipientAddress = new PublicKey(walletAddress);
           const recipientWalletBalance = await getSolBalance(recipientAddress, CONNECTION);
-          console.log("recipientWalletBalance", recipientWalletBalance);
+          // console.log("recipientWalletBalance", recipientWalletBalance);
           const referralLink = await _generateReferralLink(
             ctx,
             recipientAddress
@@ -1051,7 +1050,7 @@ bot.on("message", async (ctx) => {
       case "set_limit_order_amount_buy": {
         // TODO: add checks for the amount
         if (msgTxt) {
-          console.log('msgTxt', msgTxt);
+          // console.log('msgTxt', msgTxt);
           const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
           const isTokenAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(msgTxt);
           if (isTokenAddress && !isNumeric) {
@@ -1215,7 +1214,8 @@ bot.on("callback_query", async (ctx: any) => {
         ctx.session.cpmmPoolId = poolKeys;
         ctx.session.cpmm_amountIn = sellPercentage;
         ctx.session.cpmm_side = "sell";
-        await ray_cpmm_swap(ctx);
+        ctx.session.jupSwap_token = new PublicKey(ctx.session.positionPool[positionIndex]);
+        await swap_cpmm_sell(ctx);
       } else {
         const poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
         if (poolKeys) {

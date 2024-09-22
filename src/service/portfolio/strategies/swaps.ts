@@ -11,6 +11,7 @@ import { createTradeImage } from "../../../views/util/image";
 import { UserPositions } from '../../../db';
 import { saveUserPosition } from '../positions';
 import { InputFile } from 'grammy';
+import { getSolanaDetails, memeTokenPrice } from '../../../api/priceFeeds/birdEye';
 const fs = require('fs');
 
 export async function handle_radyum_swap(
@@ -21,10 +22,6 @@ export async function handle_radyum_swap(
   const chatId = ctx.chat.id;
   const connection = CONNECTION;
   const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
-  // if(!userWallet){
-  //   await ctx.api.sendMessage(chatId, 'Bot got updated. Please /start again');
-  //   return;
-  // }
   const tokenOut = ctx.session.AmmPoolKeys.mintA.address;
   try {
     let tokenIn: any, outputToken: any;
@@ -36,12 +33,7 @@ export async function handle_radyum_swap(
     /*                         BUY                                */
     /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
     if (side == 'buy') {
-      amountIn = amountIn * Math.pow(10, 9); // lamports
-
-      // if ((userSolBalance * 1e9) < (amountIn + (amountIn * MVXBOT_FEES.toNumber()) + (ctx.session.customPriorityFee * 1e9))) {
-      //   await ctx.api.sendMessage(ctx.session.chatId, `🔴 Insufficient balance. Your balance is ${userSolBalance} SOL`);
-      //   return;
-      // }
+      amountIn = amountIn * Math.pow(10, 9); // lamports 
       tokenIn = DEFAULT_TOKEN.WSOL;
       outputToken = MEME_COIN;
 
@@ -95,16 +87,13 @@ export async function handle_radyum_swap(
         await ctx.api.sendMessage(chatId, `❌ ${side.toUpperCase()} tx failed. Please try again.`, { parse_mode: 'HTML', disable_web_page_preview: true });
         return;
       }
-      console.log("txids:: ", txids);
       let extractAmount = await getSwapAmountOut(connection, txids);
-      console.log("extractAmount:: ", extractAmount);
       let confirmedMsg, solAmount, tokenAmount, _symbol = userTokenBalanceAndDetails.userTokenSymbol;
       let solFromSell = new BigNumber(0);
       if (extractAmount > 0) {
         solFromSell = new BigNumber(extractAmount);
         solAmount = Number(extractAmount) / 1e9; // Convert amount to SOL
         tokenAmount = amountIn / Math.pow(10, userTokenBalanceAndDetails.decimals);
-        console.log('amountIn', amountIn);
         side == 'sell' ?
           confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You sold ${tokenAmount.toFixed(3)} <b>${_symbol}</b> for ${solAmount.toFixed(3)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`
           : confirmedMsg = `✅ <b>${side.toUpperCase()} tx Confirmed:</b> You bought ${Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4)} <b>${_symbol}</b> for ${(amountIn / 1e9).toFixed(4)} <b>SOL</b>. <a href="https://solscan.io/tx/${txids}">View Details</a>.`;
@@ -119,21 +108,17 @@ export async function handle_radyum_swap(
       const userPosition = await UserPositions.findOne({ walletId: userWallet.publicKey.toString() });
       let oldPositionSol: number = 0;
       let oldPositionToken: number = 0;
-      console.log('userPosition', userPosition)
 
       if (userPosition) {
-        console.log('tokenOut', tokenOut)
-        console.log('tokenIn', tokenIn)
+      
         const existingPositionIndex = userPosition.positions.findIndex(
           position => position.baseMint === (side == 'buy' ? tokenOut.toString() : tokenIn.mint.toBase58())
         );
         // console.log('existingPositionIndex', existingPositionIndex);
         if (userPosition.positions[existingPositionIndex]) {
-          console.log('userPosition.positions[existingPositionIndex]', userPosition.positions[existingPositionIndex])
           oldPositionSol = userPosition.positions[existingPositionIndex].amountIn
           oldPositionToken = userPosition.positions[existingPositionIndex].amountOut!
-          console.log('oldPositionSol at first', oldPositionSol)
-          console.log('oldPositionToken at first', oldPositionToken)
+
         }
       }
       if (side == 'buy') {
@@ -180,22 +165,20 @@ export async function handle_radyum_swap(
           ctx.session.latestCommand = 'jupiter_swap'
         }
       }
-
       await ctx.api.sendMessage(ctx.session.chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
-      if (side == 'sell' && ctx.session.pnlcard) {
-        const shitBalance = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection);
-        if (shitBalance.userTokenBalance == 0) {
-          const tokenforRay = ctx.session.AmmPoolKeys.mintA.address;
-          console.log('tokenforRay', tokenforRay)
-          await createTradeImage(_symbol, tokenforRay, ctx.session.userProfit).then((buffer) => {
-            console.log('ctx.session.userProfit', ctx.session.userProfit)
-            console.log('tokenIn', tokenIn)
-            fs.writeFileSync('trade.png', buffer);
-            console.log('Image created successfully');
-          });
-          await ctx.replyWithPhoto(new InputFile('trade.png'));
-        }
-      }
+      // if (side == 'sell' && ctx.session.pnlcard) {
+      //   const shitBalance = await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection);
+      //   if (shitBalance.userTokenBalance == 0) {
+      //     const tokenforRay = ctx.session.AmmPoolKeys.mintA.address;
+      //     await createTradeImage(_symbol, tokenforRay, ctx.session.userProfit).then((buffer) => {
+      //       // console.log('ctx.session.userProfit', ctx.session.userProfit)
+      //       console.log('tokenIn', tokenIn)
+      //       fs.writeFileSync('trade.png', buffer);
+      //       console.log('Image created successfully');
+      //     });
+      //     await ctx.replyWithPhoto(new InputFile('trade.png'));
+      //   }
+      // }
       if (side == 'buy') {
         if (!ctx.session.autoBuy) {
           ctx.session.latestCommand = 'jupiter_swap';
@@ -203,7 +186,6 @@ export async function handle_radyum_swap(
           await display_jupSwapDetails(ctx, false);
         }
       }
-
     }
     )
   } catch (e: any) {

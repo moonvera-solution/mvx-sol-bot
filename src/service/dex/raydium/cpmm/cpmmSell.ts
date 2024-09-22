@@ -1,42 +1,40 @@
 import {  PublicKey } from '@solana/web3.js';
-import { getTokenMetadata, getuserShitBalance, getUserTokenBalanceAndDetails } from '../../service/feeds';
+import { getUserTokenBalanceAndDetails } from '../../../../service/feeds';
 
-import { formatNumberToKOrM, getSolBalance, getSwapAmountOutPump, updatePositions } from '../../service/util';
+import {  getSolBalance, getSwapAmountOutPump } from '../../../../service/util';
 import { Keypair } from '@solana/web3.js';
 export const DEFAULT_PUBLIC_KEY = new PublicKey('11111111111111111111111111111111');
-import { getTokenDataFromBirdEyePositions } from '../../api/priceFeeds/birdEye';
-import { getSwapDetails, soltracker_swap } from '../../service/dex/pumpfun';
-import { UserPositions } from '../../db/mongo/schema';
-import { MVXBOT_FEES, SOL_ADDRESS,CONNECTION } from '../../config';
+import {  soltracker_swap } from '../../../../service/dex/pumpfun';
+import { UserPositions } from '../../../../db/mongo/schema';
+import {  SOL_ADDRESS,CONNECTION } from '../../../../config';
 import bs58 from "bs58";
-import BigNumber from 'bignumber.js';
-import { saveUserPosition } from '../../service/portfolio/positions';
-import { createTradeImage } from '../util/image';
+import { saveUserPosition } from '../../../../service/portfolio/positions';
+import { createTradeImage } from '../../../../views/util/image';
 import { InputFile } from 'grammy';
-import { display_jupSwapDetails } from '../jupiter/swapView';
+import { display_jupSwapDetails } from '../../../../views/jupiter/swapView';
 const fs = require('fs');
 
 
-export async function swap_pump_fun(ctx: any) {
+export async function swap_cpmm_sell(ctx: any) {
   try {
     const chatId = ctx.chat.id;
     const connection = CONNECTION;
     const activeWalletIndexIdx: number = ctx.session.portfolio.activeWalletIndex;
     const payerKeypair = Keypair.fromSecretKey(bs58.decode(ctx.session.portfolio.wallets[activeWalletIndexIdx].secretKey));
-    const tradeSide = ctx.session.pump_side;
-    const tokenIn = tradeSide == 'buy' ? SOL_ADDRESS : ctx.session.pumpToken;
-    const tokenOut = tradeSide == 'buy' ? ctx.session.pumpToken : SOL_ADDRESS;
+    const tradeSide = ctx.session.cpmm_side;
+    const tokenIn = tradeSide == 'buy' ? SOL_ADDRESS : ctx.session.jupSwap_token;
+    const tokenOut = tradeSide == 'buy' ? ctx.session.jupSwap_token : SOL_ADDRESS;
     const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
     const userTokenBalanceAndDetails = tradeSide == 'buy' ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
     
     const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
-    const amountToSell = (ctx.session.pump_amountIn / 100) * userTokenBalanceAndDetails.userTokenBalance;
+    const amountToSell = (  ctx.session.cpmm_amountIn / 100) * userTokenBalanceAndDetails.userTokenBalance;
     const userSolBalance = await getSolBalance(userWallet.publicKey, connection);
-    const amountIn = tradeSide == 'buy' ? ctx.session.pump_amountIn : amountToSell;
+    const amountIn = tradeSide == 'buy' ?   ctx.session.cpmm_amountIn : amountToSell;
 
     // console.log('amountIn:', amountIn);
-    // console.log('tx.session.pump_amountIn:', ctx.session.pump_amountIn);
-    if (tradeSide == 'buy' && userSolBalance < ctx.session.pump_amountIn) {
+    // console.log('tx.session.pump_amountIn:',   ctx.session.cpmm_amountIn);
+    if (tradeSide == 'buy' && userSolBalance <   ctx.session.cpmm_amountIn) {
       await ctx.api.sendMessage(chatId, `❌ Insufficient SOL balance.`);
       return;
     }
@@ -73,7 +71,7 @@ export async function swap_pump_fun(ctx: any) {
       let extractAmount = await getSwapAmountOutPump(connection, txSigs, tradeSide);
       const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
       tradeSide == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
-      confirmedMsg = `✅ <b>${tradeSide.toUpperCase()} tx confirmed</b> ${tradeSide == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${ctx.session.pump_amountIn} SOL</b>` : `You sold <b>${amountToSell}</b> <b>${_symbol}</b> and received <b>${(solFromSell / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txSigs}">View Details</a>.`;
+      confirmedMsg = `✅ <b>${tradeSide.toUpperCase()} tx confirmed</b> ${tradeSide == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${  ctx.session.cpmm_amountIn} SOL</b>` : `You sold <b>${amountToSell}</b> <b>${_symbol}</b> and received <b>${(solFromSell / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txSigs}">View Details</a>.`;
       await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
 
       // ------- check user balanace in DB --------
@@ -103,11 +101,11 @@ export async function swap_pump_fun(ctx: any) {
          saveUserPosition( // to display portfolio positions
      
           userWallet.publicKey.toString(), {
-          baseMint: ctx.session.pumpToken,
+          baseMint: ctx.session.jupSwap_token,
           name: userTokenBalanceAndDetails.userTokenName,
           symbol: _symbol,
-          tradeType: `pump_swap`,
-          amountIn: oldPositionSol ? oldPositionSol + ctx.session.pump_amountIn * 1e9 : ctx.session.pump_amountIn * 1e9,
+          tradeType: `cpmm_swap`,
+          amountIn: oldPositionSol ? oldPositionSol +   ctx.session.cpmm_amountIn * 1e9 :   ctx.session.cpmm_amountIn * 1e9,
           amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
         });
         if(!ctx.session.autobuy){
@@ -134,7 +132,7 @@ export async function swap_pump_fun(ctx: any) {
             baseMint: tokenIn,
             name: userTokenBalanceAndDetails.userTokenName,
             symbol: _symbol,
-            tradeType: `pump_swap`,
+            tradeType: `cpmm_swap`,
             amountIn: newAmountIn,
             amountOut: newAmountOut,
           });
