@@ -37,7 +37,7 @@ export async function jupiterSwap(ctx: any) {
   const tokenOut = isBuySide ? ctx.session.jupSwap_token : SOL_ADDRESS;
 
   const userTokenBalanceAndDetails = isBuySide ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
-  console.log('userTokenBalanceAndDetails::::::', userTokenBalanceAndDetails)
+  // console.log('userTokenBalanceAndDetails::::::', userTokenBalanceAndDetails)
   const amountToSell = Math.floor((ctx.session.jupSwap_amount / 100) * userTokenBalanceAndDetails.userTokenBalance * Math.pow(10, userTokenBalanceAndDetails.decimals));
   const amountIn = isBuySide ? ctx.session.jupSwap_amount * 1e9 : amountToSell;
 
@@ -104,7 +104,7 @@ export async function jupiterSwap(ctx: any) {
       }
 
       if (tradeType == 'buy') {
-        console.log('extractAmount:', extractAmount)
+        // console.log('extractAmount:', extractAmount)
         saveUserPosition(
           userWallet.publicKey.toString(), {
           baseMint: tokenOut,

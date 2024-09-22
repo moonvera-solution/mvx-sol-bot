@@ -1131,9 +1131,9 @@ bot.on("callback_query", async (ctx: any) => {
       const parts = data.split("_");
       const newPositionIndex = parseInt(parts[2]); // New position index
       ctx.session.positionIndex = newPositionIndex;
-      console.log('positionIndex', ctx.session.positionIndex)
+      // console.log('positionIndex', ctx.session.positionIndex)
       ctx.session.positionToken = ctx.session.positionPool[ctx.session.positionIndex];
-      console.log('ctx.session.positionToken', ctx.session.positionToken)
+      // console.log('ctx.session.positionToken', ctx.session.positionToken)
       await display_single_position(ctx, true);
 
     } else if (matchOrderNavigate) {

@@ -259,7 +259,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       const token = String(pos.baseMint);
 
       let shitBalance = await getuserShitBalance(userWallet, new PublicKey(token), connection);
-      console.log('shitBalance', shitBalance);
+      // console.log('shitBalance', shitBalance);
       if (
         pos.amountIn == 0
         || pos.amountOut == 0
