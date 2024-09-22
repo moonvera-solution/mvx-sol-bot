@@ -90,7 +90,7 @@ export async function ray_cpmm_swap(ctx: any) {
           baseMint: tokenOut,
           name: userTokenBalanceAndDetails.userTokenName,
           symbol: _symbol,
-          tradeType: `cpmm_swap`,
+          // tradeType: `cpmm_swap`,
           amountIn: oldPositionSol ? oldPositionSol + ( ctx.session.cpmm_amountIn  * 1e9) : ( ctx.session.cpmm_amountIn  * 1e9),
           amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
 
@@ -114,7 +114,7 @@ export async function ray_cpmm_swap(ctx: any) {
             baseMint: tokenIn,
             name: userTokenBalanceAndDetails.userTokenName,
             symbol: _symbol,
-            tradeType: `cpmm_swap`,
+            // tradeType: `cpmm_swap`,
             amountIn: newAmountIn,
             amountOut: newAmountOut,
           });

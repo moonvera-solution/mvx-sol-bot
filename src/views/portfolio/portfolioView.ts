@@ -257,8 +257,6 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       let pos = userPosition[0].positions[currentIndex];
 
       const token = String(pos.baseMint);
-      const tradeDex = String(pos.tradeType);
-      ctx.session.swaptypeDex = pos.tradeType;
 
       let shitBalance = await getuserShitBalance(userWallet, new PublicKey(token), connection);
       console.log('shitBalance', shitBalance);

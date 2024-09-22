@@ -110,7 +110,7 @@ export async function jupiterSwap(ctx: any) {
           baseMint: tokenOut,
           name: userTokenBalanceAndDetails.userTokenName,
           symbol: _symbol,
-          tradeType: `jup_swap`,
+          // tradeType: `jup_swap`,
           amountIn: oldPositionSol ? oldPositionSol + (ctx.session.jupSwap_amount * 1e9) : (ctx.session.jupSwap_amount * 1e9),
           amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
         });
@@ -135,7 +135,7 @@ export async function jupiterSwap(ctx: any) {
             baseMint: tokenIn,
             name: userTokenBalanceAndDetails.userTokenName,
             symbol: _symbol,
-            tradeType: `jup_swap`,
+            // tradeType: `jup_swap`,
             amountIn: newAmountIn,
             amountOut: newAmountOut,
           });

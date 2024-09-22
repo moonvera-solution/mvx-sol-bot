@@ -7,7 +7,6 @@ export interface Position {
   baseMint: string;
   name: string;
   symbol: string;
-  tradeType: string;
   amountIn: number;
   amountOut: number | undefined;
 }

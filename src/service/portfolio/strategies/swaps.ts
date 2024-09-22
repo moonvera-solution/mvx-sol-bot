@@ -127,7 +127,7 @@ export async function handle_radyum_swap(
           baseMint: tokenOut,
           name: userTokenBalanceAndDetails.userTokenName,
           symbol: _symbol,
-          tradeType: 'ray_swap',
+          // tradeType: 'ray_swap',
           amountIn: oldPositionSol ? oldPositionSol + (amountIn) : (amountIn),
           amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
 
@@ -156,7 +156,7 @@ export async function handle_radyum_swap(
             baseMint: tokenOut,
             name: userTokenBalanceAndDetails.userTokenName,
             symbol: _symbol,
-            tradeType: `ray_swap`,
+            // tradeType: `ray_swap`,
             amountIn: newAmountIn,
             amountOut: newAmountOut,
           });

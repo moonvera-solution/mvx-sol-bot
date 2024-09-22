@@ -278,7 +278,6 @@ export type USERPOSITION_TYPE = {
       baseMint: string;
       name: string;
       symbol: string;
-      tradeType: string;
       amountIn: number;
       amountOut: number | undefined;
     }

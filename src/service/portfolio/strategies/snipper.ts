@@ -408,7 +408,6 @@ export async function startSnippeSimulation(
                     baseMint: ctx.session.snipeToken,
                     name: tokenData.name,
                     symbol: tokenData.symbol,
-                    tradeType: isCpmmPool ? `cpmm_swap` : `ray_swap`,
                     amountIn: oldPositionSol ? oldPositionSol + amountIn.toNumber() : amountIn.toNumber(),
                     amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount)
                 });

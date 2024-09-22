@@ -71,7 +71,6 @@ const UserPositionSchema = new Schema<USERPOSITION_TYPE>({
       baseMint: { type: String, required: true },
       name: { type: String, required: true },
       symbol: { type: String, required: true },
-      tradeType: { type: String, required: true },
       amountIn: { type: Number, required: true },
       amountOut: { type: Number, default: 0 },
     }

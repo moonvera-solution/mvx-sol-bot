@@ -723,78 +723,11 @@ bot.on("message", async (ctx) => {
           if (isNumeric) {
             const amt = Number(msgTxt);
             if (!isNaN(amt)) {
-              if (ctx.session.positionToken && ctx.session.swaptypeDex == "ray_swap") {
-                const isOnJup = await verify_position_dex(ctx,ctx.session.positionToken)
-                console.log('isOnJup', isOnJup);
-                if(isOnJup){
-                  ctx.session.jupSwap_token = ctx.session.positionToken;
-                  ctx.session.jupSwap_amount = amt;
-                  ctx.session.jupSwap_side = "buy";
-                  await jupiterSwap(ctx);
-                  return;
-                }
-                const poolkey = await getRayPoolKeys(
-                  ctx,
-                  ctx.session.positionToken
-                );
-                ctx.session.activeTradingPoolId = poolkey ;
-                await handle_radyum_swap(
-                  ctx,
-                  "buy",
-                  Number(msgTxt)
-                );
-              } else if (ctx.session.positionToken && ctx.session.swaptypeDex == "jup_swap") {
-                ctx.session.jupSwap_amount = amt;
-                ctx.session.jupSwap_side = "buy";
-                ctx.session.jupSwap_token = ctx.session.positionToken;
-                await jupiterSwap(ctx);
-              } else if(ctx.session.positionToken &&  ctx.session.swaptypeDex == "cpmm_swap"){
-                const isOnJup = await verify_position_dex(ctx,ctx.session.positionToken)
-                console.log('isOnJup', isOnJup);
-                if(isOnJup){
-                  ctx.session.jupSwap_token = ctx.session.positionToken;
-                  ctx.session.jupSwap_amount = amt;
-                  ctx.session.jupSwap_side = "buy";
-                  await jupiterSwap(ctx);
-                  return;
-                }
-                ctx.session.cpmm_amountIn = amt;
-                ctx.session.cpmm_side = "buy";
-                ctx.session.jupSwap_token = ctx.session.positionToken;
-                await ray_cpmm_swap(
-                  ctx
-                );
-              }  else {
-                const poolKeys = await getRayPoolKeys(
-                  ctx,
-                  ctx.session.positionToken
-                );
-                if (poolKeys) {
-                  const isOnJup = await verify_position_dex(ctx,ctx.session.positionToken)
-                  console.log('isOnJup', isOnJup);
-                  if(isOnJup){
-                    ctx.session.jupSwap_token = ctx.session.positionToken;
-                    ctx.session.jupSwap_amount = amt;
-                    ctx.session.jupSwap_side = "buy";
-                    await jupiterSwap(ctx);
-                    return;
-                  }
-                  ctx.session.activeTradingPoolId = poolKeys ;
-                  await handle_radyum_swap(
-                    ctx,
-                    "buy",
-                    Number(msgTxt)
-                  );
-                } else {
-                  ctx.session.pumpToken = new PublicKey(
-                    ctx.session.positionToken
-                  );
-                  ctx.session.pump_amountIn = amt;
-                  ctx.session.pump_side = "buy";
-                  await swap_pump_fun(ctx);
-                }
-              }
-
+              ctx.session.jupSwap_token = ctx.session.positionToken;
+              ctx.session.jupSwap_amount = amt;
+              ctx.session.jupSwap_side = "buy";
+              console.log('route buy_X_SOL_IN_POSITION')
+              handle_buy_swap_routing(ctx);
               break;
             } else {
               return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
@@ -1175,69 +1108,10 @@ bot.on("callback_query", async (ctx: any) => {
       const parts = data.split("_");
       const sellPercentage = parts[1]; // '25', '50', '75', or '100'
       const positionIndex = parts[2]; // Position index
-      if (ctx.session.swaptypeDex == "ray_swap") {
-        // console.log('ctx.session.positionPool[positionIndex]', ctx.session.positionPool[positionIndex]);
-        const isOnJup = await verify_position_dex(ctx,ctx.session.positionPool[positionIndex])
-        // console.log('isOnJup', isOnJup);
-        if(isOnJup){
-          ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
-          ctx.session.jupSwap_amount = sellPercentage;
-          ctx.session.jupSwap_side = "sell";
-          await jupiterSwap(ctx);
-          return;
-        }
-        const poolKeysID = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
-        ctx.session.activeTradingPoolId = poolKeysID;
-        await getAmmV4PoolKeys(ctx);
-        await handle_radyum_swap(ctx,  "sell", Number(sellPercentage));
-        return;
-      } else if (ctx.session.swaptypeDex == "jup_swap") {
-        ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
-        // ctx.session.latestCommand = "sell_100_JUP";
-        ctx.session.jupSwap_amount = sellPercentage;
-        ctx.session.jupSwap_side = "sell";
-        await jupiterSwap(ctx);
-
-      } else if (ctx.session.swaptypeDex == "cpmm_swap") {
-        console.log('ctx.session.positionPool[positionIndex]', ctx.session.positionPool[positionIndex]);
-        const isOnJup = await verify_position_dex(ctx,ctx.session.positionPool[positionIndex])
-        console.log('isOnJup', isOnJup);
-        if(isOnJup){
-          ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
-          ctx.session.jupSwap_amount = sellPercentage;
-          ctx.session.jupSwap_side = "sell";
-          await jupiterSwap(ctx);
-          return;
-        }
-        ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
-        const poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
-        ctx.session.cpmmPoolId = poolKeys;
-        ctx.session.cpmm_amountIn = sellPercentage;
-        ctx.session.cpmm_side = "sell";
-        ctx.session.jupSwap_token = new PublicKey(ctx.session.positionPool[positionIndex]);
-        await swap_cpmm_sell(ctx);
-      } else {
-        const poolKeys = await getRayPoolKeys(ctx, ctx.session.positionPool[positionIndex]);
-        if (poolKeys) {
-          const isOnJup = await verify_position_dex(ctx,ctx.session.positionPool[positionIndex])
-          console.log('isOnJup', isOnJup);
-          if(isOnJup){
-            ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
-            ctx.session.jupSwap_amount = sellPercentage;
-            ctx.session.jupSwap_side = "sell";
-            await jupiterSwap(ctx);
-            return;
-          }
-          ctx.session.activeTradingPoolId = poolKeys ;
-          await handle_radyum_swap(ctx, "sell", sellPercentage);
-        } else {
-          ctx.session.pumpToken = new PublicKey(ctx.session.positionPool[positionIndex]);
-          ctx.session.pump_amountIn = sellPercentage;
-          ctx.session.pump_side = "sell";
-          await swap_pump_fun(ctx);
-        }
-      }
-      return;
+      ctx.session.jupSwap_token = ctx.session.positionPool[positionIndex];
+      ctx.session.jupSwap_amount = sellPercentage;
+      ctx.session.jupSwap_side = "sell";
+      await handle_sell_swap_routing(ctx);
     } else if (matchBuy) {
       const parts = data.split("_");
       const positionIndex = parts[2]; // Position index
