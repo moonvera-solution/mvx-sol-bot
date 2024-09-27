@@ -9,7 +9,7 @@ import { SecretsManagerClient, GetSecretValueCommand, } from "@aws-sdk/client-se
 const user = encodeURIComponent(process.env.DB_USER!);
 const password = encodeURIComponent(process.env.DB_PASSWORD!);
 const isProd = process.env.NODE_ENV == 'PROD'
-const local_url = `mongodb+srv://admin:aaBBccDD@cluster0.vqqpl.mongodb.net/mini_app?retryWrites=true&w=majority&appName=Cluster0`;
+const local_url = `mongodb://127.0.0.1:27017/test`;
 
 // https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/getting-started.html
 export async function anon(): Promise<any> {
