@@ -903,10 +903,11 @@ export async function catchSimulationErrors( simulationResult: any){
     const SLIPPAGE_ERROR2 = /Program Error: "Instruction #3 Failed - custom program error: exceeds desired slippage limit"/
     const SLIPPAGE_ERROR3 = /Program Error: "Instruction #1 Failed - custom program error: slippage: Too little SOL received to sell the given amount of tokens"/;
     const SLIPPAGE_ERROR4 = /Program Error: "Instruction #4 Failed - custom program error: exceeds desired slippage limit"/;
+    const SLIPPAGE_ERROR5 = /Program Error: "Instruction #7 Failed - custom program error: Slippage tolerance exceeded"/
     const SLIPPAGE_ERROR_ANCHOR = /Program Error: "Instruction #5 Failed - custom program error: Slippage tolerance exceeded"/;
     const SLIPPAGE_TOLERANCE = /Program Error: "Instruction #2 Failed - custom program error: slippage: Too much SOL required to buy the given amount of tokens"/;
     const SLIPPAGE_REQUIRED = /Error: slippage: Too much SOL required to buy the given amount of tokens/;
-    console.log("simulationResult is it catching!!! ")
+    console.log("simulationResult is it catching!!! ",simulationResult)
     // console.log("simulationResult", simulationResult.value.err)
 
     if (simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR.test(logMsg)) ||
@@ -915,15 +916,18 @@ export async function catchSimulationErrors( simulationResult: any){
     simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_REQUIRED.test(logMsg)) ||
     simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR2.test(logMsg)) ||
     simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR3.test(logMsg)) ||
-    simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR4.test(logMsg))) {
+    simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR4.test(logMsg))|| 
+    simulationResult.value.logs.find((logMsg: any) => SLIPPAGE_ERROR5.test(logMsg))) {
  
     throw new Error (`🔴 Slippage error, try increasing your slippage %.`);
     }
     
     const BALANCE_ERROR = /Transfer: insufficient lamports/;
     const BALANCE_ERROR2 = /Program Error: "Instruction #5 Failed - custom program error: insufficient funds"/;
+    const BALANCE_ERROR3 = /Program Error: "Instruction #3 Failed - custom program error: insufficient funds"/;
     if (simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR.test(logMsg)) ||
-    simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR2.test(logMsg))) {
+    simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR2.test(logMsg)) || 
+    simulationResult.value.logs.find((logMsg: any) => BALANCE_ERROR3.test(logMsg))) {
         
         throw new Error(`🔴 Insufficient balance for transaction.`);
     }

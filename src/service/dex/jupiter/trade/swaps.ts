@@ -49,7 +49,7 @@ export async function jupiter_inx_swap(
           })
         })
       ).json();
-      // console.log("instructions:: ",instructions);
+      console.log("instructions:: ",instructions);
       if (instructions.error) {
         console.error("Failed to get swap instructions: " + instructions.error);
         throw new Error("Transaction failed, please try again");

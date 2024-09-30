@@ -17,6 +17,7 @@ import { saveUserPosition } from "../../service/portfolio/positions";
 
 import { createTradeImage } from '../util/image';
 import { InputFile } from 'grammy';
+import axios from 'axios';
 const fs = require('fs');
 
 
@@ -192,32 +193,30 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const dexscreenerURL = `https://dexscreener.com/solana/${token}`;
       const connection = new Connection(rpcUrl);
       // check if the token is tradable on jupiter
-      const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
+
+      const headers = { 'x-api-key': `${process.env.SOL_TRACKER_API_DATA_KEY}` };
+      const urlTrack = `https://data.solanatracker.io/price?token=${token}`;
 
       const [
         shitBalance,
         tokenMetadataResult,
         getSolBalanceData,
-        // jupTokenRate,
         userPosition,
         jupSolPrice,
-        solTrackerData
-
+        solTrackerData,
       ] = await Promise.all([
         getuserShitBalance(publicKeyString,token, connection),
         getTokenMetadata(ctx, token),
         getSolBalance(publicKeyString, connection),
-        // fetch( `https://api.jup.ag/price/v2?ids=${token}&showExtraInfo=true`).then((response) => response.json()),
         UserPositions.find({ walletId: publicKeyString }, { positions: { $slice: -15 } }),
         fetch(swapUrlSol).then(res => res.json()),
-        fetch(`${process.env.SOL_TRACKER_API_URL}/rate?from=${token}&to=So11111111111111111111111111111111111111112&amount=1&slippage=0`, { headers }).then((response) => response.json())
+        fetch(urlTrack,{headers}).then((response) => response.json())
       ]);
       let tokenPrice = 0;
       const {
         tokenData,
       } = tokenMetadataResult;
       let solPrice = 0 ;
-      
       if(jupSolPrice && jupSolPrice.outAmount){
         solPrice = Number(jupSolPrice.outAmount / 1e6);
       } else {
@@ -225,21 +224,20 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
           solPrice = data;
         });
       }
-  
-      if (solTrackerData && solTrackerData.currentPrice) {
-        tokenPrice = solTrackerData.currentPrice * solPrice; ;
+
+      
+      if (solTrackerData) {
+        tokenPrice = solTrackerData.price; ;
       } else {
         await memeTokenPrice(token).then((data) => {
           tokenPrice = data;
         })
       }
-      console.log('tokenPrice:', tokenPrice);
       const tokenPriceUSD =  Number(tokenPrice) ;
       const tokenPriceSOL = tokenPriceUSD / solPrice;
       const baseDecimals = shitBalance?.decimals;
       const totalSupply = new BigNumber(shitBalance.shitSupply);
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(tokenPriceUSD)));
-      console.log('Mcap:', Mcap); 
       let specificPosition;
   
       if (userPosition[0] && userPosition[0].positions && userPosition[0].positions != undefined) {

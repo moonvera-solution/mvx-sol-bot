@@ -96,6 +96,12 @@ export interface ISESSION_DATA {
   mevProtectionAmount: number,
   key_buy_option_1: Number,
   key_buy_option_2: Number,
+  dca_token: string,
+  dca_amount: number,
+  dca_cycle_number: number,
+  dca_amount_per_cycle: number,
+  dca_start_time: number,
+  dca_interval: number,
   poolSchedule: {
     status: String,
     baseDecimals: Number,
@@ -153,6 +159,12 @@ export const DefaultSessionData: ISESSION_DATA = {
     positions: [],
     activeWalletIndex: 0
   },
+  dca_start_time: 0,
+  dca_amount_per_cycle: 0,
+  dca_cycle_number: 0,
+  dca_amount: 0,
+  dca_token: '',
+  dca_interval: 0,
   key_buy_option_1: 0.5,
   key_buy_option_2: 1,
   mevProtection: false,
@@ -207,7 +219,6 @@ export const DefaultSessionData: ISESSION_DATA = {
   snipeSlippage: 80,
   poolTime: 0,
   positionPool: [],
-  // priorityFees: PriotitizationFeeLevels.LOW,
   positionIndex: 0,
   allowedReferral:'', // tg Username
   limitOrders_token: DEFAULT_PUBLIC_KEY,

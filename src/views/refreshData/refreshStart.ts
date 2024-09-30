@@ -75,7 +75,7 @@ export async function handleRefreshStart(ctx: any) {
           { text: "⬇️ Import Wallet", callback_data: "import_wallet" },
           { text: "💼 Wallets & Settings⚙️", callback_data: "show_wallets" },
         ],
-        [{text: '📊 DCA', callback_data: "dca_jupiter"},{ text: "☑️ Rug Check", callback_data: "rug_check" }],
+        [{ text: "☑️ Rug Check", callback_data: "rug_check" }],
         [
           { text: "💱 Trade", callback_data: "jupiter_swap" },
           { text: "🎯 Turbo Snipe", callback_data: "snipe" },

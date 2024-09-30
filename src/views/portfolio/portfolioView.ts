@@ -59,14 +59,14 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
       const mint = pos.baseMint.toString();
       const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
       let swapUrlSol = `${rpcUrl}/jupiter/quote?inputMint=${'So11111111111111111111111111111111111111112'}&outputMint=${'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}&amount=${1000000000}&slippageBps=${0}`.trim();
-      const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
-
+      const headers = { 'x-api-key': `${process.env.SOL_TRACKER_API_DATA_KEY}` };
+      const urlTrack = `https://data.solanatracker.io/price?token=${mint}`;
       const [ jupRate,tokenMetadataResult,jupSolPrice, shitBalance,solTrackerData] = await Promise.all([
         fetch( `https://api.jup.ag/price/v2?ids=${mint}&showExtraInfo=true`).then((response) => response.json()),
         getTokenMetadata(ctx, mint),
         fetch(swapUrlSol).then(res => res.json()),
         getuserShitBalance(userWallet,new PublicKey(mint), connection),
-        fetch(`${process.env.SOL_TRACKER_API_URL}/rate?from=${mint}&to=So11111111111111111111111111111111111111112&amount=1`, { headers }).then((response) => response.json())
+        fetch(urlTrack,{headers}).then((response) => response.json())
 
       ]);
       return formatPositionMessage(ctx,userWallet,pos, jupRate,tokenMetadataResult,jupSolPrice,shitBalance, solTrackerData);
@@ -99,10 +99,9 @@ async function formatPositionMessage(
     });
   }
 
-const jupTokenValue: any =  Object.values(jupRate.data);
 let tokenPrice = 0;
- if (solTrackerData && solTrackerData.currentPrice) {
-        tokenPrice = solTrackerData.currentPrice * solPrice; ;
+ if (solTrackerData) {
+        tokenPrice = solTrackerData.price; ;
       } else {
         await memeTokenPrice(pos.baseMint).then((data) => {
           tokenPrice = data;
@@ -115,6 +114,7 @@ let tokenPrice = 0;
   const baseDecimals = tokenData.mint.decimals;
   const totalSupply = new BigNumber(tokenData.mint.supply.basisPoints);
   const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(tokenPrice)));
+
   let initialInUSD = 0;
       let initialInSOL = 0;
       let valueInUSD: any;
@@ -279,14 +279,14 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       }
       const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
       let swapUrlSol = `${rpcUrl}/jupiter/quote?inputMint=${'So11111111111111111111111111111111111111112'}&outputMint=${'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}&amount=${1000000000}&slippageBps=${0}`.trim();
-      const headers = { 'x-api-key': process.env.SOL_TRACKER_API_KEY! };
-
+      const headers = { 'x-api-key': `${process.env.SOL_TRACKER_API_DATA_KEY}` };
+      const urlTrack = `https://data.solanatracker.io/price?token=${token}`;
       const [balanceInSOL, userShitbalance,tokenMetadataResult, jupSolPrice,solTrackerData] = await Promise.all([
         getSolBalance(userWallet, connection),
         getuserShitBalance(new PublicKey(userWallet), new PublicKey(token), connection),
         getTokenMetadata(ctx, token),
         fetch(swapUrlSol).then(res => res.json()),
-        fetch(`${process.env.SOL_TRACKER_API_URL}/rate?from=${token}&to=So11111111111111111111111111111111111111112&amount=1`, { headers }).then((response) => response.json())
+        fetch(urlTrack,{headers}).then((response) => response.json())
 
 
 
@@ -303,8 +303,8 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
         console.log('solPrice from birdeye:')
       }      
       let tokenPrice = 0;
-      if (solTrackerData && solTrackerData.currentPrice) {
-        tokenPrice = solTrackerData.currentPrice * solPrice; ;
+      if (solTrackerData) {
+        tokenPrice = solTrackerData.price; ;
       } else {
         await memeTokenPrice(token).then((data) => {
           tokenPrice = data;
@@ -335,9 +335,6 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
     initialInUSD = initialInSOL * Number(solPrice);
     valueInUSD = pos.amountOut   ? (pos.amountOut / Math.pow(10,baseDecimals)) * Number(tokenPrice) : NaN;
     valueInSOL = pos.amountOut   ? (pos.amountOut / Math.pow(10,baseDecimals)) * tokenPriceSOL : NaN;
-    console.log('valueInSOL:', valueInSOL);
-    console.log('valueInUSD:', valueInUSD);
-    console.log('pos.amountOut:', (pos.amountOut / Math.pow(10,baseDecimals)));
     profitPercentage = valueInSOL  ? (Number(valueInSOL) - (Number(pos.amountIn) / 1e9)) / (Number(pos.amountIn) / 1e9) * 100 : NaN;
     profitInUSD = valueInUSD  ? Number(valueInUSD)  - initialInUSD : NaN;
     profitInSol = valueInSOL  ? Number(valueInSOL) - initialInSOL : NaN;

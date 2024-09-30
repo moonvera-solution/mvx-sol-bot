@@ -74,6 +74,8 @@ import { handle_autoBuy } from "./service/autobuy/autobuy";
 import { handle_buy_swap_routing, handle_sell_swap_routing } from "./service/routing/swaprouting";
 import { set_mevProtection, stop_mevProtection } from "./service/MEV/mevProtection";
 import { swap_cpmm_sell } from "./service/dex/raydium/cpmm/cpmmSell";
+import { dca_review, display_dca_details } from "./service/dex/jupiter/dca/dcaView";
+import { create_dca } from "./service/dex/jupiter/dca/dca";
 // import { review_limitOrder_details_sell } from "./views/jupiter/limitOrderView";
 // import { br } from "@raydium-io/raydium-sdk-v2/lib/type-9fe71e3c";
 const express = require("express");
@@ -247,7 +249,7 @@ bot.command("start", async (ctx: any) => {
             { text: "⬇️ Import Wallet", callback_data: "import_wallet" },
             { text: "💼 Wallets & Settings⚙️", callback_data: "show_wallets" },
           ],
-          [{text: '📊 DCA', callback_data: "dca_jupiter"},{ text: "☑️ Rug Check", callback_data: "rug_check" }],
+          [{ text: "☑️ Rug Check", callback_data: "rug_check" }],
           [
             { text: "💱 Trade", callback_data: "jupiter_swap" },
             { text: "🎯 Turbo Snipe", callback_data: "snipe" },
@@ -428,6 +430,9 @@ const commandNumbers = [
   'auto_buy_active',
   'set_key_one',
   'set_key_two',
+  'dca_jupiter',
+  'set_MEV_protection_amount',
+
   // 'display_single_position',
 
 
@@ -539,11 +544,11 @@ bot.on("message", async (ctx) => {
         break;
       }
       case "set_slippage": {
-        ctx.session.latestSlippage = Number(msgTxt);
+        // ctx.session.latestSlippage = Number(msgTxt);
         if (msgTxt) {
           const isNumeric = /^[0-9]*.?[0-9]+$/.test(msgTxt);
           if (isNumeric) {
-          ctx.session.key_buy_option_2 = Number(msgTxt);
+          ctx.session.latestSlippage = Number(msgTxt);
           ctx.api.sendMessage(chatId, '✅ Slippage is set to ' + msgTxt + ' %');
           if(ctx.session.jupSwap_token){
             await display_jupSwapDetails(ctx, false);
@@ -921,6 +926,100 @@ bot.on("message", async (ctx) => {
         }
         break;
       }
+      case "dca_jupiter":{
+        if(msgTxt){
+          try{
+          if ((msgTxt && PublicKey.isOnCurve(msgTxt)) || (msgTxt && !PublicKey.isOnCurve(msgTxt))) {
+          const isTOken = await checkAccountType(ctx, msgTxt);
+          if (!isTOken) {
+            ctx.api.sendMessage(chatId, "Invalid address");
+            return;
+          }
+          ctx.session.latestCommand = "dca_jupiter";
+          // let limitOrderToken = new PublicKey(msgTxt);
+           ctx.session.dca_token = (msgTxt);
+          await display_dca_details(ctx, false);
+          break;
+          }
+            } catch (error: any) {
+              ctx.api.sendMessage(chatId, "Invalid address");
+            }
+        }
+        break;      
+      }
+      case "dca_amount": {
+        if(msgTxt){
+          const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
+          if(isNumeric){
+            const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+            const connection = CONNECTION;
+            const userTokenBalance = await getuserShitBalance(new PublicKey(userWallet.publicKey),new PublicKey(ctx.session.dca_token), connection);
+            if (userTokenBalance <= 0) {
+              await ctx.api.sendMessage(chatId, `🔴 Insufficient balance. Your balance is ${userTokenBalance} SOL`);
+               return;
+            }
+            ctx.session.dca_amount = Number(msgTxt);
+            await ctx.api.sendMessage(chatId, "Enter the number of cycles so that the amount will be divided equally");
+            ctx.session.latestCommand = "dca_cycle_number";
+            break;
+          } else {
+            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+          }
+        }
+        break;
+      }
+      case "dca_cycle_number": {
+        if(msgTxt){
+          const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
+          if(isNumeric){
+            ctx.session.dca_cycle_number = Number(msgTxt);
+            ctx.session.dca_amount_per_cycle = ctx.session.dca_amount / ctx.session.dca_cycle_number;
+            ctx.api.sendMessage(chatId, `Please enter the start time for the DCA in the format: DAYS:HR:MIN - ie: 01:23:10 | or type 'No' to start immediately`);
+            ctx.session.latestCommand = 'cycle_start_time';
+            break;
+          } else {
+            return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+          }
+        }
+        break;
+      }
+
+      case "cycle_start_time": {
+        if(msgTxt){
+          const time = getTargetDate(msgTxt!);
+          const NoTime = /^(No|no|NO)$/.test(msgTxt);
+          if (NoTime){
+            ctx.session.dca_start_time = 0;
+            await ctx.api.sendMessage(chatId, "Enter the number of days between each cycle");
+            ctx.session.latestCommand = "dca_interval_time";
+            break;
+          } else if (time) {
+            ctx.session.dca_start_time = Number(time);
+            await ctx.api.sendMessage(chatId, "Enter the number of days between each cycle");
+            ctx.session.latestCommand = "dca_interval_time";
+            break;
+          } else {
+            await ctx.api.sendMessage(chatId, "Invalid time format");
+            return;
+          }
+      }
+    }
+    case "dca_interval_time": {
+      if(msgTxt){
+        const isNumeric = /^[0-9]*\.?[0-9]+$/.test(msgTxt);
+        if(isNumeric){
+          ctx.session.dca_interval = Number(msgTxt);
+          ctx.session.dca_amount_per_cycle = ctx.session.dca_amount / ctx.session.dca_cycle_number;
+          await dca_review(ctx, false);
+          break;
+        } else {
+          return await ctx.api.sendMessage(chatId, "🔴 Invalid amount");
+        }
+      }
+
+    }
+    
+
       case "limitOrders": {
         console.log("limitOrders here");
  
@@ -1335,6 +1434,15 @@ bot.on("callback_query", async (ctx: any) => {
           await display_snipe_amm_options(ctx, true);
         } 
         break;
+      
+        case "refresh_dca_review": {
+          await dca_review(ctx, false);
+          break;
+        }
+        case "dca_submit": {
+          await create_dca(ctx)
+          break;
+        }
       case "import_wallet": {
         ctx.session.latestCommand = "import_wallet";
         const allowed = await checkWalletsLength(ctx);
@@ -1378,11 +1486,6 @@ bot.on("callback_query", async (ctx: any) => {
       case "confirm_send_sol": {
         const recipientAddress = ctx.session.recipientAddress;
         const solAmount = ctx.session.solAmount
-        // (
-        //   ctx.session.solAmount + 
-        //   ctx.session.solAmount.multipliedBy(MVXBOT_FEES).toNumber() +
-        //   ctx.session.customPriorityFee.multipliedBy(1e9).toNumber()
-        // ).toNumber();
         if (!await hasEnoughSol(ctx, solAmount)) break;
         await ctx.api.sendMessage(chatId, `Sending ${solAmount} SOL to ${recipientAddress}...`);
         await sendSol(ctx, recipientAddress, solAmount);
@@ -1394,6 +1497,20 @@ bot.on("callback_query", async (ctx: any) => {
           chatId,
           "Please provide the token address for a rug pull analysis."
         );
+        break;
+      }
+      case 'dca_jupiter':{
+        ctx.session.latestCommand = "dca_jupiter";
+        await ctx.api.sendMessage(chatId, "Please provide the token address for DCA");
+        break;        
+      }
+      case 'dca_amount':{
+        ctx.session.latestCommand = "dca_amount";
+        await ctx.api.sendMessage(chatId, "Please enter the amount of SOL to DCA");
+        break;
+      }
+      case "refresh_dca": {
+        await display_dca_details(ctx, true);
         break;
       }
       case "jupiter_swap": {

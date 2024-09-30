@@ -82,13 +82,13 @@ export async function importWallet(ctx: any, secretKey: string): Promise<any> {
           secretKey: bs58.encode(newKeypair.secretKey)
         });
         await wallet.save();
-        return { status: "success", wallet: wallet };
+      ctx.api.sendMessage(chatId, "Wallet imported successfully.");
       } else {
-        return { status: "wallet_exists" };
+        ctx.api.sendMessage(chatId, "Wallet already exists.");
       }
     }
   } catch (err: any) {
-    return { status: "error", message: err.message };
+   ctx.api.sendMessage(chatId, "Error importing wallet. Please try again.");
   }
 }
 
