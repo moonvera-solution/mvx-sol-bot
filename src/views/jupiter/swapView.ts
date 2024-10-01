@@ -225,9 +225,10 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         });
       }
 
-      
-      if (solTrackerData) {
-        tokenPrice = solTrackerData.price; ;
+      console.log('solTrackerData', solTrackerData);
+      if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined)) {
+        tokenPrice = solTrackerData.price; 
+        console.log('tokenPrice from soltracker:')
       } else {
         await memeTokenPrice(token).then((data) => {
           tokenPrice = data;

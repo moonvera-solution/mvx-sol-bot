@@ -161,7 +161,7 @@ export async function review_limitOrder_details(ctx: any, isRefresh: boolean) {
   let tokenPrice = 0;
 
 
-  if (solTrackerData) {
+  if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined)) {
     tokenPrice = solTrackerData.price; ;
   } else {
     await memeTokenPrice(baseMint).then((data) => {
@@ -235,8 +235,8 @@ export async function review_limitOrder_details_sell(ctx: any, isRefresh: boolea
     console.log('solPrice from birdeye:')
   }   
   let tokenPrice = 0;
-      if (solTrackerData) {
-        tokenPrice = solTrackerData.price; ;
+  if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined)) {
+    tokenPrice = solTrackerData.price; ;
       } else {
         await memeTokenPrice(baseMint).then((data) => {
           tokenPrice = data;
@@ -342,8 +342,8 @@ export async function display_limitOrder_token_details(ctx: any, isRefresh: bool
     }    
     // TOken price from jup
     let tokenPrice = 0;
-      if (solTrackerData) {
-        tokenPrice = solTrackerData.price; ;
+    if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined)) {
+      tokenPrice = solTrackerData.price; ;
       } else {
         await memeTokenPrice(tokenAddress).then((data) => {
           tokenPrice = data;
@@ -440,7 +440,7 @@ export async function display_open_orders(ctx: any, isRefresh: boolean) {
       console.log('solPrice from birdeye:')
     }    
        let tokenPrice = 0;
-      if (solTrackerData) {
+       if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined)) {
         tokenPrice = solTrackerData.price; ;
       } else {
         await memeTokenPrice(TokenTocheck).then((data) => {
@@ -528,8 +528,8 @@ export async function display_single_order(ctx: any, isRefresh: boolean) {
       console.log('solPrice from birdeye:')
     }   
     let tokenPrice = 0;
-      if (solTrackerData) {
-        tokenPrice = solTrackerData.price; ;
+    if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined)) {
+      tokenPrice = solTrackerData.price; ;
       } else {
         await memeTokenPrice(tokenAddress).then((data) => {
           tokenPrice = data;

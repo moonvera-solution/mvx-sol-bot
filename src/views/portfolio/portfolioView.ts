@@ -100,8 +100,8 @@ async function formatPositionMessage(
   }
 
 let tokenPrice = 0;
- if (solTrackerData) {
-        tokenPrice = solTrackerData.price; ;
+if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined)) {
+  tokenPrice = solTrackerData.price; ;
       } else {
         await memeTokenPrice(pos.baseMint).then((data) => {
           tokenPrice = data;
@@ -287,9 +287,6 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
         getTokenMetadata(ctx, token),
         fetch(swapUrlSol).then(res => res.json()),
         fetch(urlTrack,{headers}).then((response) => response.json())
-
-
-
       ]);
       let solPrice = 0 ;
       
@@ -303,7 +300,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
         console.log('solPrice from birdeye:')
       }      
       let tokenPrice = 0;
-      if (solTrackerData) {
+      if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined)) {
         tokenPrice = solTrackerData.price; ;
       } else {
         await memeTokenPrice(token).then((data) => {
