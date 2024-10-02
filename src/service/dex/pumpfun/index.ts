@@ -37,6 +37,7 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
     // console.log(" ${process.env.SOL_TRACKER_API_URL}/swap:: ",`${process.env.SOL_TRACKER_API_URL}/swap`);
     const swapInx = await fetch(`${process.env.SOL_TRACKER_API_URL}/swap?${params.toString()}`, { headers }).then((response) => response.json());
     console.log("== SWAP INX ==", swapInx);
+    
     if (!swapInx) return null;
     let swapResponse = swapInx;
     swapResponse.rate.fee = 0;

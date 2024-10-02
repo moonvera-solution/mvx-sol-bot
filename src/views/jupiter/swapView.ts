@@ -226,7 +226,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       }
 
       console.log('solTrackerData', solTrackerData);
-      if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined)) {
+      if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined) && solTrackerData.price != null) {
         tokenPrice = solTrackerData.price; 
         console.log('tokenPrice from soltracker:')
       } else {

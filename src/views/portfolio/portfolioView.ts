@@ -100,7 +100,7 @@ async function formatPositionMessage(
   }
 
 let tokenPrice = 0;
-if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined)) {
+if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined) && solTrackerData.price != null) {
   tokenPrice = solTrackerData.price; ;
       } else {
         await memeTokenPrice(pos.baseMint).then((data) => {
@@ -300,7 +300,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
         console.log('solPrice from birdeye:')
       }      
       let tokenPrice = 0;
-      if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined)) {
+      if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined) && solTrackerData.price != null) {
         tokenPrice = solTrackerData.price; ;
       } else {
         await memeTokenPrice(token).then((data) => {
