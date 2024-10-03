@@ -4,6 +4,8 @@ import SolanaTracker from "./solTrackerUtils";
 import { sendTx, add_mvx_and_ref_inx_fees, addMvxFeesInx, wrapLegacyTx, optimizedSendAndConfirmTransaction } from '../../../../src/service/util';
 import { Keypair, Connection, Transaction, AddressLookupTableAccount, VersionedTransaction, TransactionMessage } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
+import { ComputeBudgetInstruction } from '@solana/web3.js';
+import { ComputeBudgetProgram } from '@solana/web3.js';
 
 const TX_RETRY_INTERVAL = 50;
 
@@ -59,9 +61,9 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
                     state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data)),
                 })
             }));
-
         var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
         message.instructions.push(...mvxInxs)
+        message.instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 100000 }));
         transaction.message = message.compileToV0Message(addressLookupTableAccounts);
         transaction.sign([payerKeypair]);
         
