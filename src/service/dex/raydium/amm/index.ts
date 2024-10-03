@@ -133,7 +133,8 @@ export async function raydium_amm_swap(ctx: any, input: TxInputInfo): Promise<st
       )
     );
     let maxPriorityFee = Math.ceil(Number.parseFloat(String(input.customPriorityFee)) * 1e9);
-    innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee }));
+    innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: maxPriorityFee * 10 }));
+    innerTransactions[0].instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 100000 }));
     const blockhash = await connection.getLatestBlockhash();
 
     if (input.useJito) {
@@ -145,7 +146,7 @@ export async function raydium_amm_swap(ctx: any, input: TxInputInfo): Promise<st
       const vTxx = new VersionedTransaction(wrapLegacyTx(innerTransactions[0].instructions, input.wallet, (await connection.getLatestBlockhash()).blockhash));
       vTxx.message.recentBlockhash = blockhash.blockhash;
       vTxx.sign([input.wallet]);
-      txSig = await optimizedSendAndConfirmTransaction(vTxx, connection, blockhash.lastValidBlockHeight, 50);
+      txSig = await optimizedSendAndConfirmTransaction(vTxx, connection, blockhash.lastValidBlockHeight, 25);
       return txSig;
     }
   } catch (e: any) {

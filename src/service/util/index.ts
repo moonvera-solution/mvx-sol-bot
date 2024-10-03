@@ -25,6 +25,7 @@ import {
     Commitment,
     SystemProgram,
     MessageV0,
+    ComputeBudgetInstruction,
 } from '@solana/web3.js';
 
 import {
@@ -831,12 +832,11 @@ export async function optimizedSendAndConfirmTransaction(
 
     let txSignature;
     let confirmTransactionPromise = null;
-    let confirmedTx = null;
+    let confirmedTx: any = null;
 
     try {
         // Simulating the transaction
         const simulationResult = await connection.simulateTransaction(tx, { commitment: "confirmed" }).catch((e) => console.error("Error on optimizedSendAndConfirmTransaction", e.message));   
-        
         await catchSimulationErrors( simulationResult);
 
         const signatureRaw: any = tx.signatures[0];
@@ -853,7 +853,7 @@ export async function optimizedSendAndConfirmTransaction(
             blockhash: blockhash.blockhash,
             lastValidBlockHeight: blockhash.lastValidBlockHeight,
         }, "confirmed");
-
+     
         console.log(`${new Date().toISOString()} Sending Transaction ${txSignature}`);
 
         // send before starting retry while loop
@@ -869,7 +869,7 @@ export async function optimizedSendAndConfirmTransaction(
                 new Promise((resolve) =>
                     setTimeout(() => {
                         resolve(null);
-                    }, 50)
+                    }, 30)
                 ),
             ]);
 
@@ -877,8 +877,9 @@ export async function optimizedSendAndConfirmTransaction(
 
             // confirmed => break loop
             if (confirmedTx) { console.log(`Tx ${txId} confirmed ,${txRetryInterval * txSendAttempts}`, confirmedTx); break; }
-            // retry
+           
             console.log(`Resending tx id ${txId} ${txRetryInterval * txSendAttempts++}ms`);
+
             await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0 });
 
         } // end loop

@@ -6,8 +6,7 @@ import { Keypair, Connection, Transaction, AddressLookupTableAccount, VersionedT
 import BigNumber from 'bignumber.js';
 import { ComputeBudgetInstruction } from '@solana/web3.js';
 import { ComputeBudgetProgram } from '@solana/web3.js';
-
-const TX_RETRY_INTERVAL = 50;
+const TX_RETRY_INTERVAL = 25;
 
 /**
  * @notice Quotes from solTracker API then sends swap tx adding mvx&ref fees
@@ -39,7 +38,10 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
     // console.log(" ${process.env.SOL_TRACKER_API_URL}/swap:: ",`${process.env.SOL_TRACKER_API_URL}/swap`);
     const swapInx = await fetch(`${process.env.SOL_TRACKER_API_URL}/swap?${params.toString()}`, { headers }).then((response) => response.json());
     console.log("== SWAP INX ==", swapInx);
-    
+    if(swapInx.error) {
+        ctx.api.sendMessage(ctx.session.chatId, `❌ Transaction failed!`);
+        return null;
+    }
     if (!swapInx) return null;
     let swapResponse = swapInx;
     swapResponse.rate.fee = 0;
@@ -62,8 +64,8 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
                 })
             }));
         var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
-        message.instructions.push(...mvxInxs)
-        // message.instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 100000 }));
+        message.instructions.push(...mvxInxs);
+        message.instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 100000 }));
         transaction.message = message.compileToV0Message(addressLookupTableAccounts);
         transaction.sign([payerKeypair]);
         
@@ -79,7 +81,9 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
         let txx: Transaction = new Transaction({blockhash: blockhash.blockhash,lastValidBlockHeight:blockhash.lastValidBlockHeight});
         let pumpInx = Transaction.from(serializedTransactionBuffer); if (!pumpInx) return null;
         txx.add(pumpInx); // add pump inx
-        mvxInxs.forEach((inx: any) => txx.add(inx));  // add mvx, ref inx
+        txx.add(ComputeBudgetProgram.setComputeUnitLimit({ units: 100000 }));
+        mvxInxs.forEach((inx: any) => txx.add(inx)); 
+         // add mvx, ref inx
         const vTxx = new VersionedTransaction(wrapLegacyTx(txx.instructions, payerKeypair, blockhash.blockhash));
 
         const addressLookupTableAccounts = await Promise.all(
@@ -92,6 +96,7 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
 
         var message = TransactionMessage.decompile(vTxx.message, { addressLookupTableAccounts: addressLookupTableAccounts })
         vTxx.message = message.compileToV0Message(addressLookupTableAccounts);
+   
         vTxx.sign([payerKeypair]);
         txSig = await optimizedSendAndConfirmTransaction(vTxx,connection, blockhash, TX_RETRY_INTERVAL);
         console.log("== LEGACY TX ==", txSig);

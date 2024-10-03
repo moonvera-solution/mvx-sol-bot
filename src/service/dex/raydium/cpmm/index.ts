@@ -1,7 +1,7 @@
 import {  CurveCalculator, CREATE_CPMM_POOL_PROGRAM, DEV_CREATE_CPMM_POOL_PROGRAM, CpmmPoolInfoLayout, CpmmConfigInfoInterface, InstructionType, CpmmComputeData } from '@raydium-io/raydium-sdk-v2';
 import { Raydium, TxVersion, parseTokenAccountResp, CpmmKeys } from '@raydium-io/raydium-sdk-v2'
 import { optimizedSendAndConfirmTransaction, wrapLegacyTx, add_mvx_and_ref_inx_fees, addMvxFeesInx } from '../../../util';
-import { Connection, Keypair, PublicKey, VersionedTransaction, Transaction, TransactionMessage, AddressLookupTableAccount } from '@solana/web3.js'
+import { Connection, Keypair, PublicKey, VersionedTransaction, Transaction, TransactionMessage, AddressLookupTableAccount, ComputeBudgetProgram } from '@solana/web3.js'
 import BigNumber from 'bignumber.js';
 import dotenv from 'dotenv'; dotenv.config();
 import bs58 from 'bs58'
@@ -45,6 +45,8 @@ export async function raydium_cpmm_swap(
   slippage: number,
   ctx: any
 ): Promise<string | null> {
+  try{
+
   let poolKeys: CpmmKeys | undefined
   const raydium = await initSdk( connection);
   raydium.setOwner(wallet)
@@ -61,15 +63,16 @@ export async function raydium_cpmm_swap(
 
   const inputMint = tradeSide == 'buy' ? buyAddress : sellAddress;
   const baseIn = inputMint === poolInfo.mintA.address;
-  if (!isValidCpmm(poolInfo.programId)) throw new Error('target pool is not CPMM pool');
-  
+  if (!isValidCpmm(poolInfo.programId)) throw new Error('Swap not supported for this pool');
+  console.log('before cpmm swap');
+
   const swapResult = CurveCalculator.swap(
     new BN(inputAmount),
     baseIn ? rpcData.baseReserve : rpcData.quoteReserve,
     baseIn ? rpcData.quoteReserve : rpcData.baseReserve,
     rpcData.configInfo!.tradeFeeRate
   );
-
+  console.log('swapResult: ', swapResult);
 
 
     poolInfo.config.tradeFeeRate = 0
@@ -93,7 +96,7 @@ export async function raydium_cpmm_swap(
     },
     
     computeBudgetConfig: {
-      microLamports: ctx.session.customPriorityFee * 1e9,
+      microLamports: ctx.session.customPriorityFee * 1e10,
       
     }
   }).catch((e) => {
@@ -110,18 +113,26 @@ export async function raydium_cpmm_swap(
   if (transaction instanceof Transaction) {
 
     transaction.instructions.push(...addMvxFeesInx(wallet, solAmount));
+    transaction.instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 100000 }));
     const tx = new VersionedTransaction(wrapLegacyTx(transaction.instructions, wallet, (await connection.getLatestBlockhash()).blockhash));
     tx.sign([wallet]);
     if(ctx.session.mevProtection){
       txSig = await sendJitoBundleRPC(connection, wallet, (ctx.session.mevProtectionAmount * 1e9).toString(), transaction)
     }else{
       txSig = await optimizedSendAndConfirmTransaction(
-        tx, connection, (await connection.getLatestBlockhash()).blockhash, 50
+        tx, connection, (await connection.getLatestBlockhash()).blockhash, 25
       );
     }
   
   } 
   return txSig;
+}
+catch(e: any){
+
+  console.log(e);
+  ctx.api.sendMessage(ctx.session.chatId, `Transaction failed!`);
+  return null;
+}
 }
 
 export async function getRayCpmmPoolKeys({ t1, t2, connection }: { t1: string, t2: string, connection: Connection }): Promise<PublicKey | undefined> {

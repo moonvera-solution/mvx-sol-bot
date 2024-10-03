@@ -6,6 +6,7 @@ import {SOL_ADDRESS} from '../../../../config';
 import BigNumber from 'bignumber.js';
 import {optimizedSendAndConfirmTransaction,addMvxFeesInx} from '../../../util';
 import {sendJitoBundleRPC,getRandomTipAccount} from '../../../jito';
+import { ComputeBudgetProgram } from '@solana/web3.js';
 const TX_RETRY_INTERVAL = 5;
 
 type REFERRAL_INFO = {
@@ -122,6 +123,7 @@ export async function jupiter_inx_swap(
         payerKey: wallet.publicKey,
         recentBlockhash: blockhash.blockhash,
         instructions: [
+
         ...computeBudgetInstructions.map(deserializeInstruction),
         ...txInxs,
         ...setupInstructions.map(deserializeInstruction),

@@ -52,7 +52,7 @@ export async function swap_cpmm_sell(ctx: any) {
       amount: amountIn,
       slippage: ctx.session.latestSlippage,
       payerKeypair: payerKeypair,
-      priorityFee: ctx.session.customPriorityFee,
+      priorityFee: (ctx.session.customPriorityFee * 10),
       forceLegacy: true
     }).then(async (txSigs) => {
       if (!txSigs) return;
