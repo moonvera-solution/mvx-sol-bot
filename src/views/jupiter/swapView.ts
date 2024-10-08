@@ -195,14 +195,14 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       // check if the token is tradable on jupiter
 
       const headers = { 'x-api-key': `${process.env.SOL_TRACKER_API_DATA_KEY}` };
-      const urlTrack = `https://data.solanatracker.io/price?token=${token}`;
+      const urlTrack = `https://data.solanatracker.io/price?token=${SOL_ADDRESS}`;
 
       const [
         shitBalance,
         tokenMetadataResult,
         getSolBalanceData,
         userPosition,
-        jupSolPrice,
+        SolPriceTrack,
         // solTrackerData,
         birdTemp
       ] = await Promise.all([
@@ -210,7 +210,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         getTokenMetadata(ctx, token),
         getSolBalance(publicKeyString, connection),
         UserPositions.find({ walletId: publicKeyString }, { positions: { $slice: -15 } }),
-        fetch(swapUrlSol).then(res => res.json()),
+        fetch(urlTrack,{headers}).then((response) => response.json()),
         // fetch(urlTrack,{headers}).then((response) => response.json()),
         memeTokenPrice(token).then((data) => data)
       ]);
@@ -219,14 +219,14 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         tokenData,
       } = tokenMetadataResult;
       let solPrice = 0 ;
-      if(jupSolPrice && jupSolPrice.outAmount){
-        solPrice = Number(jupSolPrice.outAmount / 1e6);
+      if(SolPriceTrack &&  (SolPriceTrack.error == null || SolPriceTrack.error == undefined) && SolPriceTrack.price != null){
+        solPrice = Number(SolPriceTrack.price);
       } else {
         await getSolanaDetails().then((data) => {
           solPrice = data;
         });
       }
-
+      console.log('solPrice:', solPrice);
       // console.log('solTrackerData', solTrackerData);
       // if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined) && solTrackerData.price != null) {
       //   tokenPrice = solTrackerData.price; 

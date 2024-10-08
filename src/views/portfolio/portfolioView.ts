@@ -7,7 +7,7 @@ import { formatNumberToKOrM, getSolBalance } from '../../service/util';
 import BigNumber from 'bignumber.js';
 import { Position, UserPosition } from '../../service/portfolio/positions';
 import { getTokenMetadata, getuserShitBalance, getUserTokenBalanceAndDetails } from '../../service/feeds';
-import { CONNECTION} from '../../config';
+import { CONNECTION, SOL_ADDRESS} from '../../config';
 import { getSolanaDetails } from '../../api';
 
 export async function display_all_positions(ctx: any, isRefresh: boolean) {
@@ -61,15 +61,17 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
       let swapUrlSol = `${rpcUrl}/jupiter/quote?inputMint=${'So11111111111111111111111111111111111111112'}&outputMint=${'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}&amount=${1000000000}&slippageBps=${0}`.trim();
       const headers = { 'x-api-key': `${process.env.SOL_TRACKER_API_DATA_KEY}` };
       const urlTrack = `https://data.solanatracker.io/price?token=${mint}`;
-      const [ jupRate,tokenMetadataResult,jupSolPrice, shitBalance,solTrackerData] = await Promise.all([
+      const solTrack = `https://data.solanatracker.io/price?token=${SOL_ADDRESS}`;
+
+      const [ jupRate,tokenMetadataResult,SolPriceTrack, shitBalance,solTrackerData] = await Promise.all([
         fetch( `https://api.jup.ag/price/v2?ids=${mint}&showExtraInfo=true`).then((response) => response.json()),
         getTokenMetadata(ctx, mint),
-        fetch(swapUrlSol).then(res => res.json()),
+        fetch(solTrack,{headers}).then((response) => response.json()),
         getuserShitBalance(userWallet,new PublicKey(mint), connection),
         fetch(urlTrack,{headers}).then((response) => response.json())
 
       ]);
-      return formatPositionMessage(ctx,userWallet,pos, jupRate,tokenMetadataResult,jupSolPrice,shitBalance, solTrackerData);
+      return formatPositionMessage(ctx,userWallet,pos, jupRate,tokenMetadataResult,SolPriceTrack,shitBalance, solTrackerData);
     });
 
 
@@ -85,14 +87,14 @@ async function formatPositionMessage(
   pos: Position,
   jupRate: any,
   tokenMetadataResult: any,
-  jupSolPrice: any,
+  SolPriceTrack: any,
   shitBalance:any,
   solTrackerData: any
 ): Promise<string> {
   let solPrice = 0; ;
 
-  if(jupSolPrice && jupSolPrice.outAmount){
-    solPrice = Number(jupSolPrice.outAmount / 1e6);
+  if(SolPriceTrack &&  (SolPriceTrack.error == null || SolPriceTrack.error == undefined) && SolPriceTrack.price != null){
+    solPrice = Number(SolPriceTrack.price);
   } else {
     await getSolanaDetails().then((data) => {
       solPrice = data;
@@ -281,17 +283,19 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       let swapUrlSol = `${rpcUrl}/jupiter/quote?inputMint=${'So11111111111111111111111111111111111111112'}&outputMint=${'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}&amount=${1000000000}&slippageBps=${0}`.trim();
       const headers = { 'x-api-key': `${process.env.SOL_TRACKER_API_DATA_KEY}` };
       const urlTrack = `https://data.solanatracker.io/price?token=${token}`;
-      const [balanceInSOL, userShitbalance,tokenMetadataResult, jupSolPrice,solTrackerData] = await Promise.all([
+      const solTrack = `https://data.solanatracker.io/price?token=${SOL_ADDRESS}`;
+
+      const [balanceInSOL, userShitbalance,tokenMetadataResult, SolPriceTrack,solTrackerData] = await Promise.all([
         getSolBalance(userWallet, connection),
         getuserShitBalance(new PublicKey(userWallet), new PublicKey(token), connection),
         getTokenMetadata(ctx, token),
-        fetch(swapUrlSol).then(res => res.json()),
+        fetch(solTrack,{headers}).then((response) => response.json()),
         fetch(urlTrack,{headers}).then((response) => response.json())
       ]);
       let solPrice = 0 ;
       
-      if(jupSolPrice && jupSolPrice.outAmount){
-        solPrice = Number(jupSolPrice.outAmount / 1e6);
+      if(SolPriceTrack &&  (SolPriceTrack.error == null || SolPriceTrack.error == undefined) && SolPriceTrack.price != null){
+        solPrice = Number(SolPriceTrack.price);
         console.log('solPrice from jup:')
       } else {
         await getSolanaDetails().then((data) => {
