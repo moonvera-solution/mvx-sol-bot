@@ -1,4 +1,4 @@
-import { PublicKey } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js';
 import { getLiquityFromOwner, getTokenMetadata } from '../../service/feeds';
 import { quoteToken } from '../util/dataCalculation';
 import { formatNumberToKOrM } from '../../service/util';
@@ -6,6 +6,7 @@ import { getTokenDataFromBirdEye } from '../../api/priceFeeds/birdEye';
 import BigNumber from 'bignumber.js';
 import {CONNECTION, SOL_ADDRESS} from '../../config';
 import { getAmmV4PoolKeys } from '../../service/dex/raydium/utils/formatAmmKeysById';
+import { connect } from 'http2';
 
 
 export async function display_rugCheck(ctx: any, isRefresh: boolean) {
@@ -21,6 +22,10 @@ export async function display_rugCheck(ctx: any, isRefresh: boolean) {
     let quoteDecimals: number = 0;
     let baseMint = new PublicKey(SOL_ADDRESS);
     let lpMint = new PublicKey(SOL_ADDRESS);
+    const headers = { 'x-api-key': `${process.env.SOL_TRACKER_API_DATA_KEY}` };
+
+ 
+
     if(ctx.session.isCpmmPool){
       rugPool = ctx.session.cpmmPoolInfo;
       if(rugPool.mintA.address != SOL_ADDRESS){

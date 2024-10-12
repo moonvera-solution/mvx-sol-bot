@@ -1,10 +1,8 @@
-import axios from 'axios';
 import dotenv from "dotenv"; dotenv.config();
 import SolanaTracker from "./solTrackerUtils";
-import { sendTx, add_mvx_and_ref_inx_fees, addMvxFeesInx, wrapLegacyTx, optimizedSendAndConfirmTransaction } from '../../../../src/service/util';
+import {  addMvxFeesInx, wrapLegacyTx, optimizedSendAndConfirmTransaction } from '../../../../src/service/util';
 import { Keypair, Connection, Transaction, AddressLookupTableAccount, VersionedTransaction, TransactionMessage } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
-import { ComputeBudgetInstruction } from '@solana/web3.js';
 import { ComputeBudgetProgram } from '@solana/web3.js';
 const TX_RETRY_INTERVAL = 25;
 
@@ -24,7 +22,7 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
     forceLegacy,
 }: SOL_TRACKER_SWAP_PARAMS): Promise<string | null> {
     try{
-
+    console.log('slippage', slippage);
     const params = new URLSearchParams({
         from, to, fromAmount: amount.toString(),
         slippage: slippage.toString(),
@@ -54,13 +52,13 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
         
     let txSig = null;
     if (swapResponse.isJupiter && !swapResponse.forceLegacy) {
-        const transaction = VersionedTransaction.deserialize(serializedTransactionBuffer); if (!transaction) return null;
+        const transaction = VersionedTransaction.deserialize(serializedTransactionBuffer as any); if (!transaction) return null;
         
         const addressLookupTableAccounts = await Promise.all(
             transaction.message.addressTableLookups.map(async (lookup) => {
                 return new AddressLookupTableAccount({
                     key: lookup.accountKey,
-                    state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data)),
+                    state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data) as any),
                 })
             }));
         var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
@@ -90,7 +88,7 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
             vTxx.message.addressTableLookups.map(async (lookup) => {
                 return new AddressLookupTableAccount({
                     key: lookup.accountKey,
-                    state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data)),
+                    state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data) as any),
                 })
             }));
 

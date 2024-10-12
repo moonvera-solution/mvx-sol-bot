@@ -10,8 +10,7 @@ export async function verify_position_dex(ctx: any, token: string) {
       ctx.session.latestSlippage
     }${feeAccount ? "&platformFeeBps=08" : ""}`.trim();
     const optionsBird = {method: 'GET', headers: {'X-API-KEY': '2036bb1a097a4414a86ba8e3a8bdafbf'}};
-
-  const [jupTokenRate, quoteResponse,tokenMarketData] = await Promise.all([
+    const [jupTokenRate, quoteResponse,tokenMarketData] = await Promise.all([
     fetch(
       `https://price.jup.ag/v6/price?ids=${token}&vsToken=So11111111111111111111111111111111111111112`
     ).then((response) => response.json()),
@@ -19,7 +18,6 @@ export async function verify_position_dex(ctx: any, token: string) {
     fetch(`https://public-api.birdeye.so/defi/v2/markets?address=${token}&sort_by=liquidity&sort_type=desc`,optionsBird).then(response => response.json()).catch((error) => {
       console.error('Error:', error);
     }),
-
   ]);
   const items = tokenMarketData?.data?.items;
   const exists = items.map((item: any) => ({

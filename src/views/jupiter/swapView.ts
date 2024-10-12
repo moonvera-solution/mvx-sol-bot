@@ -18,6 +18,7 @@ import { saveUserPosition } from "../../service/portfolio/positions";
 import { createTradeImage } from '../util/image';
 import { InputFile } from 'grammy';
 import axios from 'axios';
+import { sol } from '@metaplex-foundation/js';
 const fs = require('fs');
 
 
@@ -126,9 +127,11 @@ export async function jupiterSwap(ctx: any) {
           newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
         }
 
-        if (newAmountIn <= 0 || newAmountOut <= 0) {
+        if (newAmountOut <= 0) {
+          // newAmountIn = newAmountIn <= 0 ? 0 : newAmountIn;
+          // newAmountOut = newAmountOut <= 0 ? 0 : newAmountOut;
           await UserPositions.updateOne({ walletId: userWallet.publicKey.toString() }, { $pull: { positions: { baseMint: tokenIn } } });
-          ctx.session.positionIndex = 0;
+       
 
         } else {
           saveUserPosition(
@@ -196,6 +199,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
 
       const headers = { 'x-api-key': `${process.env.SOL_TRACKER_API_DATA_KEY}` };
       const urlTrack = `https://data.solanatracker.io/price?token=${SOL_ADDRESS}`;
+      const urlTrackToken = `https://data.solanatracker.io/price?token=${token}`;
 
       const [
         shitBalance,
@@ -211,10 +215,10 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         getSolBalance(publicKeyString, connection),
         UserPositions.find({ walletId: publicKeyString }, { positions: { $slice: -15 } }),
         fetch(urlTrack,{headers}).then((response) => response.json()),
-        // fetch(urlTrack,{headers}).then((response) => response.json()),
-        memeTokenPrice(token).then((data) => data)
-      ]);
+        memeTokenPrice(token).then((data) => data),     
+       ]);
       let tokenPrice = birdTemp;
+      console.log('tokenPrice', tokenPrice);
       const {
         tokenData,
       } = tokenMetadataResult;
@@ -226,12 +230,8 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
           solPrice = data;
         });
       }
-      console.log('solPrice:', solPrice);
       // console.log('solTrackerData', solTrackerData);
-      // if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined) && solTrackerData.price != null) {
-      //   tokenPrice = solTrackerData.price; 
-      //   console.log('tokenPrice from soltracker:')
-      // } else {
+ 
         // await memeTokenPrice(token).then((data) => {
         //   tokenPrice = data;
         // })
@@ -241,6 +241,8 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const baseDecimals = shitBalance?.decimals;
       const totalSupply = new BigNumber(shitBalance.shitSupply);
       const Mcap = await formatNumberToKOrM(Number(totalSupply.dividedBy(Math.pow(10, baseDecimals)).times(tokenPriceUSD)));
+      // console.log('mcapsol', solTrackerData.marketCap);
+
       let specificPosition;
   
       if (userPosition[0] && userPosition[0].positions && userPosition[0].positions != undefined) {

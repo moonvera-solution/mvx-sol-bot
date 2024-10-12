@@ -31,6 +31,7 @@ export async function swap_pump_fun(ctx: any) {
     
     const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
     const amountToSell = (ctx.session.pump_amountIn / 100) * userTokenBalanceAndDetails.userTokenBalance;
+    // console.log('amountToSell:', amountToSell);
     const userSolBalance = await getSolBalance(userWallet.publicKey, connection);
     const amountIn = tradeSide == 'buy' ? ctx.session.pump_amountIn : amountToSell;
 
@@ -40,7 +41,7 @@ export async function swap_pump_fun(ctx: any) {
       await ctx.api.sendMessage(chatId, `❌ Insufficient SOL balance.`);
       return;
     }
-    console.log('amountIn:', amountIn);
+    // console.log('amountIn:', amountIn);
     if(Number(amountIn) <= 0) throw new Error('Not enough token balance');
 
     let msg = `🟢 <b>Transaction ${tradeSide.toUpperCase()}:</b> Processing... Please wait for confirmation.`
@@ -52,7 +53,7 @@ export async function swap_pump_fun(ctx: any) {
       from: tokenIn,
       to: tokenOut,
       amount: amountIn,
-      slippage: ctx.session.latestSlippage,
+      slippage: ctx.session.latestSlippage + 2,
       payerKeypair: payerKeypair,
       priorityFee: (ctx.session.customPriorityFee * 10),
       forceLegacy: true
@@ -126,9 +127,24 @@ export async function swap_pump_fun(ctx: any) {
           newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn *(Math.pow(10,userTokenBalanceAndDetails.decimals))) : oldPositionToken;
         }
 
-        if (newAmountIn <= 0 || newAmountOut <= 0) {
+        if ( newAmountOut <= 0) {
+          // newAmountIn = newAmountIn <= 0 ? 0 : newAmountIn;
+          // newAmountOut = newAmountOut <= 0 ? 0 : newAmountOut;
           await UserPositions.updateOne({ walletId: userWallet.publicKey.toString() }, { $pull: { positions: { baseMint: tokenIn } } });
-        } else {
+          // saveUserPosition(
+          //   userWallet.publicKey.toString(), {
+          //   baseMint: tokenIn,
+          //   name: userTokenBalanceAndDetails.userTokenName,
+          //   symbol: _symbol,
+          //   // tradeType: `pump_swap`,
+          //   amountIn: newAmountIn,
+          //   amountOut: newAmountOut,
+          // }
+          // );
+          ctx.session.positionIndex = 0;
+     
+
+        }  else {
            saveUserPosition(
             userWallet.publicKey.toString(), {
             baseMint: tokenIn,

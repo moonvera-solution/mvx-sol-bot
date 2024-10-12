@@ -39,7 +39,7 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
 
     const messagePartsPromises = userPosition[0].positions.map(async (pos, i) => {
     const userBalance = new BigNumber(tokenBalances[i].userTokenBalance|| 0);
-    if (pos.amountIn == 0 || pos.amountOut == 0  || pos.amountIn < 0 || userBalance.toNumber() == 0) {
+    if ( pos.amountOut == 0   || userBalance.toNumber() == 0) {
       await UserPositions.updateOne({ walletId: userWallet }, { $pull: { positions: { baseMint: pos.baseMint } } })
         .then(() => { ctx.session.positionIndex = 0; });
       return null;
@@ -104,7 +104,7 @@ async function formatPositionMessage(
 let tokenPrice = 0;
 if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined) && solTrackerData.price != null) {
   tokenPrice = solTrackerData.price; ;
-      } else {
+   } else {
         await memeTokenPrice(pos.baseMint).then((data) => {
           tokenPrice = data;
         })
@@ -215,12 +215,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
     token = String(pos.baseMint);
 
     let userBalance = await getuserShitBalance(userWallet, new PublicKey(token), connection);
-    if (
-      pos.amountIn == 0
-      || pos.amountOut == 0
-      || pos.amountOut < 0
-      || pos.amountIn < 0
-      || userBalance.userTokenBalance == 0
+    if ( pos.amountOut <= 0 || userBalance.userTokenBalance == 0
     ) {
       await UserPositions.updateOne(
         { walletId: userWallet },
@@ -262,12 +257,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
 
       let shitBalance = await getuserShitBalance(userWallet, new PublicKey(token), connection);
       // console.log('shitBalance', shitBalance);
-      if (
-        pos.amountIn == 0
-        || pos.amountOut == 0
-        || pos.amountOut < 0
-        || pos.amountIn < 0
-        || shitBalance.userTokenBalance == 0
+      if (pos.amountOut <= 0 || shitBalance.userTokenBalance == 0
       ) {
         await UserPositions.updateOne({ walletId: userWallet }, { $pull: { positions: { baseMint: pos.baseMint } } })
           .then(() => { ctx.session.positionIndex = 0; currentIndex = 0; });
