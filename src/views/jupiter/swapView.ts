@@ -207,7 +207,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         getSolBalanceData,
         userPosition,
         SolPriceTrack,
-        // solTrackerData,
+        solTrackerData,
         birdTemp
       ] = await Promise.all([
         getuserShitBalance(publicKeyString,token, connection),
@@ -215,9 +215,14 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         getSolBalance(publicKeyString, connection),
         UserPositions.find({ walletId: publicKeyString }, { positions: { $slice: -15 } }),
         fetch(urlTrack,{headers}).then((response) => response.json()),
+        fetch(urlTrackToken,{headers}).then((response) => response.json()),
+
         memeTokenPrice(token).then((data) => data),     
        ]);
-      let tokenPrice = birdTemp;
+       console.log('solTrackerData', solTrackerData);
+      let tokenPrice = birdTemp? birdTemp : solTrackerData.price;
+
+
       console.log('tokenPrice', tokenPrice);
       const {
         tokenData,

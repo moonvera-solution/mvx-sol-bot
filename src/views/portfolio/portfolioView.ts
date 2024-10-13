@@ -63,15 +63,16 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
       const urlTrack = `https://data.solanatracker.io/price?token=${mint}`;
       const solTrack = `https://data.solanatracker.io/price?token=${SOL_ADDRESS}`;
 
-      const [ jupRate,tokenMetadataResult,SolPriceTrack, shitBalance,solTrackerData] = await Promise.all([
+      const [ jupRate,tokenMetadataResult,SolPriceTrack, shitBalance,solTrackerData, birdprice] = await Promise.all([
         fetch( `https://api.jup.ag/price/v2?ids=${mint}&showExtraInfo=true`).then((response) => response.json()),
         getTokenMetadata(ctx, mint),
         fetch(solTrack,{headers}).then((response) => response.json()),
         getuserShitBalance(userWallet,new PublicKey(mint), connection),
-        fetch(urlTrack,{headers}).then((response) => response.json())
+        fetch(urlTrack,{headers}).then((response) => response.json()),
+        memeTokenPrice(mint).then((data) => data),     
 
       ]);
-      return formatPositionMessage(ctx,userWallet,pos, jupRate,tokenMetadataResult,SolPriceTrack,shitBalance, solTrackerData);
+      return formatPositionMessage(ctx,userWallet,pos, jupRate,tokenMetadataResult,SolPriceTrack,shitBalance, solTrackerData, birdprice);
     });
 
 
@@ -89,7 +90,8 @@ async function formatPositionMessage(
   tokenMetadataResult: any,
   SolPriceTrack: any,
   shitBalance:any,
-  solTrackerData: any
+  solTrackerData: any,
+  birdprice: any
 ): Promise<string> {
   let solPrice = 0; ;
 
@@ -101,14 +103,8 @@ async function formatPositionMessage(
     });
   }
 
-let tokenPrice = 0;
-if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined) && solTrackerData.price != null) {
-  tokenPrice = solTrackerData.price; ;
-   } else {
-        await memeTokenPrice(pos.baseMint).then((data) => {
-          tokenPrice = data;
-        })
-      }
+  let tokenPrice = birdprice? birdprice : solTrackerData.price;
+
   const tokenPriceSOL = tokenPrice / solPrice;
   const {
     tokenData,
@@ -275,12 +271,14 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       const urlTrack = `https://data.solanatracker.io/price?token=${token}`;
       const solTrack = `https://data.solanatracker.io/price?token=${SOL_ADDRESS}`;
 
-      const [balanceInSOL, userShitbalance,tokenMetadataResult, SolPriceTrack,solTrackerData] = await Promise.all([
+      const [balanceInSOL, userShitbalance,tokenMetadataResult, SolPriceTrack,solTrackerData, birdprice] = await Promise.all([
         getSolBalance(userWallet, connection),
         getuserShitBalance(new PublicKey(userWallet), new PublicKey(token), connection),
         getTokenMetadata(ctx, token),
         fetch(solTrack,{headers}).then((response) => response.json()),
-        fetch(urlTrack,{headers}).then((response) => response.json())
+        fetch(urlTrack,{headers}).then((response) => response.json()),
+        memeTokenPrice(token).then((data) => data),     
+
       ]);
       let solPrice = 0 ;
       
@@ -293,14 +291,8 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
         });
         console.log('solPrice from birdeye:')
       }      
-      let tokenPrice = 0;
-      if (solTrackerData && (solTrackerData.error == null || solTrackerData.error == undefined) && solTrackerData.price != null) {
-        tokenPrice = solTrackerData.price; ;
-      } else {
-        await memeTokenPrice(token).then((data) => {
-          tokenPrice = data;
-        })
-      }
+      let tokenPrice = birdprice? birdprice : solTrackerData.price;
+
       
     
      
