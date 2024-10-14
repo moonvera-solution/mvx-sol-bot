@@ -58,21 +58,27 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
       if (!positionlKeys.some(pk => pk.baseMint === pos.baseMint)) positionlKeys.push(pos.baseMint);
       const mint = pos.baseMint.toString();
       const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
-      let swapUrlSol = `${rpcUrl}/jupiter/quote?inputMint=${'So11111111111111111111111111111111111111112'}&outputMint=${'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}&amount=${1000000000}&slippageBps=${0}`.trim();
       const headers = { 'x-api-key': `${process.env.SOL_TRACKER_API_DATA_KEY}` };
-      const urlTrack = `https://data.solanatracker.io/price?token=${mint}`;
       const solTrack = `https://data.solanatracker.io/price?token=${SOL_ADDRESS}`;
-
-      const [ jupRate,tokenMetadataResult,SolPriceTrack, shitBalance,solTrackerData] = await Promise.all([
+      const timeout = (ms: any) =>
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), ms)
+        );
+      const [ jupRate,tokenMetadataResult,SolPriceTrack, shitBalance,birdTemp] = await Promise.all([
         fetch( `https://api.jup.ag/price/v2?ids=${mint}&showExtraInfo=true`).then((response) => response.json()),
         getTokenMetadata(ctx, mint),
         fetch(solTrack,{headers}).then((response) => response.json()),
         getuserShitBalance(userWallet,new PublicKey(mint), connection),
-        fetch(urlTrack,{headers}).then((response) => response.json()),
-        // memeTokenPrice(mint).then((data) => data),     
+        Promise.race([
+          memeTokenPrice(mint).then((data) => data),
+          timeout(500) //  500ms
+        ]).catch((err) => {
+          console.warn('birdTemp call skipped:', err.message);
+          return null; 
+        })              // memeTokenPrice(mint).then((data) => data),     
 
       ]);
-      return formatPositionMessage(ctx,userWallet,pos, jupRate,tokenMetadataResult,SolPriceTrack,shitBalance, solTrackerData);
+      return formatPositionMessage(ctx,userWallet,pos, jupRate,tokenMetadataResult,SolPriceTrack,shitBalance, birdTemp);
     });
 
 
@@ -90,10 +96,12 @@ async function formatPositionMessage(
   tokenMetadataResult: any,
   SolPriceTrack: any,
   shitBalance:any,
-  solTrackerData: any,
+  birdTemp: any,
 ): Promise<string> {
   let solPrice = 0; ;
-  let tokenPrice = 0;
+  let tokenPrice ;
+  const urlTrack = `https://data.solanatracker.io/price?token=${pos.baseMint}`;
+  const headers = { 'x-api-key': `${process.env.SOL_TRACKER_API_DATA_KEY}` };
   if(SolPriceTrack &&  (SolPriceTrack.error == null || SolPriceTrack.error == undefined) && SolPriceTrack.price != null){
     solPrice = Number(SolPriceTrack.price);
   } else {
@@ -101,12 +109,19 @@ async function formatPositionMessage(
       solPrice = data;
     });
   }
-  if(solTrackerData &&  (solTrackerData.error == null || solTrackerData.error == undefined) && solTrackerData.price != null){
-    tokenPrice = Number(solTrackerData.price);
+  if(birdTemp != undefined && birdTemp != null && birdTemp != 0){
+    tokenPrice = birdTemp;
   } else {
-         await memeTokenPrice(pos.baseMint).then((data) => 
-          tokenPrice = data);
-         
+    
+    await fetch(urlTrack,{headers}).then((response) => response.json()).then((data) => {
+      tokenPrice = data.price;
+    });
+  }
+  if(tokenPrice == 0 || tokenPrice == undefined){
+    await fetch(`https://api.jup.ag/price/v2?ids=${pos.baseMint}&showExtraInfo=true`).then((response) => response.json()).then((data) => {
+      console.log('bckup jup pricing')
+      tokenPrice = data.data[pos.baseMint].price;
+    });
   }
 
   const tokenPriceSOL = tokenPrice / solPrice;
@@ -274,18 +289,25 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
       const headers = { 'x-api-key': `${process.env.SOL_TRACKER_API_DATA_KEY}` };
       const urlTrack = `https://data.solanatracker.io/price?token=${token}`;
       const solTrack = `https://data.solanatracker.io/price?token=${SOL_ADDRESS}`;
-
-      const [balanceInSOL, userShitbalance,tokenMetadataResult, SolPriceTrack,solTrackerData] = await Promise.all([
+      const timeout = (ms: any) =>
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), ms)
+        );
+      const [balanceInSOL, userShitbalance,tokenMetadataResult, SolPriceTrack,birdTemp] = await Promise.all([
         getSolBalance(userWallet, connection),
         getuserShitBalance(new PublicKey(userWallet), new PublicKey(token), connection),
         getTokenMetadata(ctx, token),
         fetch(solTrack,{headers}).then((response) => response.json()),
-        fetch(urlTrack,{headers}).then((response) => response.json()),
-        // memeTokenPrice(token).then((data) => data),     
-
+        Promise.race([
+          memeTokenPrice(token).then((data) => data),
+          timeout(500) //  500ms
+        ]).catch((err) => {
+          console.warn('birdTemp call skipped:', err.message);
+          return null; 
+        })      
       ]);
       let solPrice = 0 ;
-      let tokenPrice = 0;
+      let tokenPrice ;
       if(SolPriceTrack &&  (SolPriceTrack.error == null || SolPriceTrack.error == undefined) && SolPriceTrack.price != null){
         solPrice = Number(SolPriceTrack.price);
         console.log('solPrice from jup:')
@@ -295,12 +317,18 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
         });
         console.log('solPrice from birdeye:')
       }      
-      if(solTrackerData &&  (solTrackerData.error == null || solTrackerData.error == undefined) && solTrackerData.price != null){
-        tokenPrice = Number(solTrackerData.price);
+      if(birdTemp != undefined && birdTemp != null && birdTemp != 0){
+        tokenPrice = birdTemp;
       } else {
-             await memeTokenPrice(token).then((data) => 
-              tokenPrice = data);
-             
+        await fetch(urlTrack,{headers}).then((response) => response.json()).then((data) => {
+          tokenPrice = data.price;
+        });
+      }
+      if(tokenPrice == 0 || tokenPrice == undefined){
+        await fetch(`https://api.jup.ag/price/v2?ids=${token}&showExtraInfo=true`).then((response) => response.json()).then((data) => {
+          console.log('bckup jup pricing')
+          tokenPrice = data.data[token].price;
+        });
       }
       
     

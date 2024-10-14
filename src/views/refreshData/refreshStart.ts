@@ -78,7 +78,7 @@ export async function handleRefreshStart(ctx: any) {
         [{ text: "☑️ Rug Check", callback_data: "rug_check" }],
         [
           { text: "💱 Trade", callback_data: "jupiter_swap" },
-          { text: "🎯 Turbo Snipe", callback_data: "snipe" },
+          // { text: "🎯 Turbo Snipe", callback_data: "snipe" },
         ],
         [{ text: "⌚️ Set Limit Orders", callback_data: "limitOrders" },
         { text: "⏳ Open Orders", callback_data: "display_open_orders" }],

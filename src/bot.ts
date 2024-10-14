@@ -252,7 +252,7 @@ bot.command("start", async (ctx: any) => {
           [{ text: "☑️ Rug Check", callback_data: "rug_check" }],
           [
             { text: "💱 Trade", callback_data: "jupiter_swap" },
-            { text: "🎯 Turbo Snipe", callback_data: "snipe" },
+            // { text: "🎯 Turbo Snipe", callback_data: "snipe" },
           ],
           [{ text: "⌚️ Set Limit Orders", callback_data: "limitOrders" },
           { text: "⏳ Open Orders", callback_data: "display_open_orders" }],
@@ -344,25 +344,25 @@ bot.command("trade", async (ctx) => {
     console.log("bot on sell cmd", error);
   }
 });
-bot.command("snipe", async (ctx) => {
-  const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
-  if(!userWallet){
-    await ctx.api.sendMessage(ctx.chat.id, 'Bot got updated. Please /start again');
-    return;
-  }
-  try {
-    const chatId = ctx.chat.id;
-    ctx.session.snipeStatus = true;
+// bot.command("snipe", async (ctx) => {
+//   const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
+//   if(!userWallet){
+//     await ctx.api.sendMessage(ctx.chat.id, 'Bot got updated. Please /start again');
+//     return;
+//   }
+//   try {
+//     const chatId = ctx.chat.id;
+//     ctx.session.snipeStatus = true;
 
-    ctx.session.latestCommand = "snipe";
-    await ctx.api.sendMessage(
-      ctx.chat.id,
-      "Enter the token Address you would like to snipe."
-    );
-  } catch (error: any) {
-    console.log("bot on snipe cmd", error);
-  }
-});
+//     ctx.session.latestCommand = "snipe";
+//     await ctx.api.sendMessage(
+//       ctx.chat.id,
+//       "Enter the token Address you would like to snipe."
+//     );
+//   } catch (error: any) {
+//     console.log("bot on snipe cmd", error);
+//   }
+// });
 bot.command("limitorders", async (ctx) => {
   const userWallet = ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex];
   if(!userWallet){

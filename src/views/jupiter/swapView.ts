@@ -204,28 +204,48 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
       const headers = { 'x-api-key': `${process.env.SOL_TRACKER_API_DATA_KEY}` };
       const urlTrack = `https://data.solanatracker.io/price?token=${SOL_ADDRESS}`;
       const urlTrackToken = `https://data.solanatracker.io/price?token=${token}`;
-
+      const timeout = (ms: any) =>
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), ms)
+        );
       const [
         shitBalance,
         tokenMetadataResult,
         getSolBalanceData,
         userPosition,
         SolPriceTrack,
-        solTrackerData,
-        // birdTemp
+        // solTrackerData,
+        birdTemp
       ] = await Promise.all([
         getuserShitBalance(publicKeyString,token, connection),
         getTokenMetadata(ctx, token),
         getSolBalance(publicKeyString, connection),
         UserPositions.find({ walletId: publicKeyString }, { positions: { $slice: -15 } }),
         fetch(urlTrack,{headers}).then((response) => response.json()),
-        fetch(urlTrackToken,{headers}).then((response) => response.json()),
-
-        // memeTokenPrice(token).then((data) => data),     
-       ]);
-      let tokenPrice = 0;
-
-
+        // fetch(urlTrackToken,{headers}).then((response) => response.json()),
+        Promise.race([
+          memeTokenPrice(token).then((data) => data),
+          timeout(500) //  500ms
+        ]).catch((err) => {
+          console.warn('birdTemp call skipped:', err.message);
+          return null; 
+        })      
+      
+      ]);
+      let tokenPrice ;
+      if(birdTemp != undefined && birdTemp != null && birdTemp != 0){
+        tokenPrice = birdTemp;
+      } else {
+        await fetch(urlTrackToken,{headers}).then((response) => response.json()).then((data) => {
+          tokenPrice = data.price;
+        });
+      }
+      if(tokenPrice == 0 || tokenPrice == undefined){
+        await fetch(`https://api.jup.ag/price/v2?ids=${token}&showExtraInfo=true`).then((response) => response.json()).then((data) => {
+          console.log('bckup jup pricing')
+          tokenPrice = data.data[token].price;
+        });
+      }
       const {
         tokenData,
       } = tokenMetadataResult;
@@ -237,17 +257,17 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
           solPrice = data;
         });
       }
-      console.log('tokenPrice', tokenPrice);
+      // console.log('tokenPrice', tokenPrice);
 
       // console.log('solTrackerData', solTrackerData);
       
-      if(solTrackerData &&  (solTrackerData.error == null || solTrackerData.error == undefined) && solTrackerData.price != null){
-        tokenPrice = Number(solTrackerData.price);
-      } else {
-             await memeTokenPrice(token).then((data) => 
-              tokenPrice = data);
+      // if(solTrackerData &&  (solTrackerData.error == null || solTrackerData.error == undefined) && solTrackerData.price != null){
+      //   tokenPrice = Number(solTrackerData.price);
+      // } else {
+      //        await memeTokenPrice(token).then((data) => 
+      //         tokenPrice = data);
              
-      }
+      // }
         // await memeTokenPrice(token).then((data) => {
         //   tokenPrice = data;
         // })
