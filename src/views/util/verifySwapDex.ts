@@ -22,7 +22,7 @@ export async function verify_position_dex(ctx: any, token: string) {
    ( jupTokenValue[0] &&
     jupTokenValue[0].price &&
     quoteResponse?.errorCode !== "TOKEN_NOT_TRADABLE" 
-    && quoteResponse?.errorCode !== 'COULD_NOT_FIND_ANY_ROUTE'
+    // && quoteResponse?.errorCode !== 'COULD_NOT_FIND_ANY_ROUTE'
     ) 
   ) {
     isOnJupiter = true;
