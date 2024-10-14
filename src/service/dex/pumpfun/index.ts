@@ -63,7 +63,7 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
             }));
         var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
         message.instructions.push(...mvxInxs);
-        message.instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 100000 }));
+        // message.instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 150000 }));
         transaction.message = message.compileToV0Message(addressLookupTableAccounts);
         transaction.sign([payerKeypair]);
         
@@ -79,7 +79,7 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
         let txx: Transaction = new Transaction({blockhash: blockhash.blockhash,lastValidBlockHeight:blockhash.lastValidBlockHeight});
         let pumpInx = Transaction.from(serializedTransactionBuffer); if (!pumpInx) return null;
         txx.add(pumpInx); // add pump inx
-        txx.add(ComputeBudgetProgram.setComputeUnitLimit({ units: 100000 }));
+        // txx.add(ComputeBudgetProgram.setComputeUnitLimit({ units: 150000 }));
         mvxInxs.forEach((inx: any) => txx.add(inx)); 
          // add mvx, ref inx
         const vTxx = new VersionedTransaction(wrapLegacyTx(txx.instructions, payerKeypair, blockhash.blockhash));
