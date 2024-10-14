@@ -225,7 +225,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         // fetch(urlTrackToken,{headers}).then((response) => response.json()),
         Promise.race([
           memeTokenPrice(token).then((data) => data),
-          timeout(500) //  500ms
+          timeout(1000) //  500ms
         ]).catch((err) => {
           console.warn('birdTemp call skipped:', err.message);
           return null; 
