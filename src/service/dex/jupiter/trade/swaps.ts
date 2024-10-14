@@ -138,7 +138,7 @@ export async function jupiter_inx_swap(
       
       if(mevProtection){
         strTx = await sendJitoBundleRPC(connection,wallet,mevProtectionAmount.toString(),transaction);
-      }else{mevProtectionAmount
+      }else{
         strTx = await optimizedSendAndConfirmTransaction(transaction,connection,blockhash,TX_RETRY_INTERVAL);
       }
   } catch (error:any) {
