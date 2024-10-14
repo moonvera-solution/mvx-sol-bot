@@ -212,7 +212,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         userPosition,
         SolPriceTrack,
         solTrackerData,
-        birdTemp
+        // birdTemp
       ] = await Promise.all([
         getuserShitBalance(publicKeyString,token, connection),
         getTokenMetadata(ctx, token),
@@ -221,13 +221,11 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
         fetch(urlTrack,{headers}).then((response) => response.json()),
         fetch(urlTrackToken,{headers}).then((response) => response.json()),
 
-        memeTokenPrice(token).then((data) => data),     
+        // memeTokenPrice(token).then((data) => data),     
        ]);
-       console.log('solTrackerData', solTrackerData);
-      let tokenPrice = birdTemp? birdTemp : solTrackerData.price;
+      let tokenPrice = 0;
 
 
-      console.log('tokenPrice', tokenPrice);
       const {
         tokenData,
       } = tokenMetadataResult;
@@ -239,8 +237,17 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
           solPrice = data;
         });
       }
+      console.log('tokenPrice', tokenPrice);
+
       // console.log('solTrackerData', solTrackerData);
- 
+      
+      if(solTrackerData &&  (solTrackerData.error == null || solTrackerData.error == undefined) && solTrackerData.price != null){
+        tokenPrice = Number(solTrackerData.price);
+      } else {
+             await memeTokenPrice(token).then((data) => 
+              tokenPrice = data);
+             
+      }
         // await memeTokenPrice(token).then((data) => {
         //   tokenPrice = data;
         // })
