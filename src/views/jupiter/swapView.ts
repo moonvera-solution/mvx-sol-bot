@@ -119,13 +119,17 @@ export async function jupiterSwap(ctx: any) {
       } else if (tradeType == 'sell') {
         let newAmountIn, newAmountOut;
 
-        if (Number(amountIn) === oldPositionToken || oldPositionSol <= extractAmount) {
-          newAmountIn = 0;
+        if (Number(amountIn) === oldPositionToken) {
           newAmountOut = 0;
         } else {
-          newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
           newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
         }
+        if (oldPositionSol <= extractAmount) {
+          newAmountIn = 0;
+        } else {
+          newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
+        }
+        
 
         if (newAmountOut <= 0) {
           // newAmountIn = newAmountIn <= 0 ? 0 : newAmountIn;
