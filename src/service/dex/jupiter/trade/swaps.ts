@@ -7,7 +7,7 @@ import BigNumber from 'bignumber.js';
 import {optimizedSendAndConfirmTransaction,addMvxFeesInx} from '../../../util';
 import {sendJitoBundleRPC,getRandomTipAccount} from '../../../jito';
 import { ComputeBudgetProgram } from '@solana/web3.js';
-const TX_RETRY_INTERVAL = 5;
+const TX_RETRY_INTERVAL = 25;
 
 type REFERRAL_INFO = {
   referralWallet: string | null,
@@ -63,7 +63,7 @@ export async function jupiter_inx_swap(
         cleanupInstruction, // Unwrap the SOL if `wrapAndUnwrapSol = true`.
         addressLookupTableAddresses, // The lookup table addresses that you can use if you are using versioned transaction.
       } = instructions;
-
+      console.log('computeBudgetInstructions', computeBudgetInstructions);
       const deserializeInstruction = (instruction:any) => {
         return new TransactionInstruction({
           programId: new PublicKey(instruction.programId),
