@@ -117,12 +117,12 @@ async function formatPositionMessage(
       tokenPrice = data.price;
     });
   }
-  if(tokenPrice == 0 || tokenPrice == undefined){
-    await fetch(`https://api.jup.ag/price/v2?ids=${pos.baseMint}&showExtraInfo=true`).then((response) => response.json()).then((data) => {
-      console.log('bckup jup pricing')
-      tokenPrice = data.data[pos.baseMint].price;
-    });
-  }
+  // if(tokenPrice == 0 || tokenPrice == undefined){
+  //   await fetch(`https://api.jup.ag/price/v2?ids=${pos.baseMint}&showExtraInfo=true`).then((response) => response.json()).then((data) => {
+  //     console.log('bckup jup pricing')
+  //     tokenPrice = data.data[pos.baseMint].price;
+  //   });
+  // }
 
   const tokenPriceSOL = tokenPrice / solPrice;
   const {
@@ -324,12 +324,12 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
           tokenPrice = data.price;
         });
       }
-      if(tokenPrice == 0 || tokenPrice == undefined){
-        await fetch(`https://api.jup.ag/price/v2?ids=${token}&showExtraInfo=true`).then((response) => response.json()).then((data) => {
-          console.log('bckup jup pricing')
-          tokenPrice = data.data[token].price;
-        });
-      }
+      // if(tokenPrice == 0 || tokenPrice == undefined){
+      //   await fetch(`https://api.jup.ag/price/v2?ids=${token}&showExtraInfo=true`).then((response) => response.json()).then((data) => {
+      //     console.log('bckup jup pricing')
+      //     tokenPrice = data.data[token].price;
+      //   });
+      // }
       
     
      

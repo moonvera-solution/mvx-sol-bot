@@ -240,12 +240,12 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
           tokenPrice = data.price;
         });
       }
-      if(tokenPrice == 0 || tokenPrice == undefined){
-        await fetch(`https://api.jup.ag/price/v2?ids=${token}&showExtraInfo=true`).then((response) => response.json()).then((data) => {
-          console.log('bckup jup pricing')
-          tokenPrice = data.data[token].price;
-        });
-      }
+      // if(tokenPrice == 0 || tokenPrice == undefined){
+      //   await fetch(`https://api.jup.ag/price/v2?ids=${token}&showExtraInfo=true`).then((response) => response.json()).then((data) => {
+      //     console.log('bckup jup pricing')
+      //     tokenPrice = data.data[token].price;
+      //   });
+      // }
       const {
         tokenData,
       } = tokenMetadataResult;
@@ -257,21 +257,7 @@ export async function display_jupSwapDetails(ctx: any, isRefresh: boolean) {
           solPrice = data;
         });
       }
-      // console.log('tokenPrice', tokenPrice);
-
-      // console.log('solTrackerData', solTrackerData);
-      
-      // if(solTrackerData &&  (solTrackerData.error == null || solTrackerData.error == undefined) && solTrackerData.price != null){
-      //   tokenPrice = Number(solTrackerData.price);
-      // } else {
-      //        await memeTokenPrice(token).then((data) => 
-      //         tokenPrice = data);
-             
-      // }
-        // await memeTokenPrice(token).then((data) => {
-        //   tokenPrice = data;
-        // })
-      // }
+  
       const tokenPriceUSD =  Number(tokenPrice) ;
       const tokenPriceSOL = tokenPriceUSD / solPrice;
       const baseDecimals = shitBalance?.decimals;
