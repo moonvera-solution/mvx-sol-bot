@@ -137,6 +137,11 @@ export async function jupiter_inx_swap(
       transaction.sign([wallet]);
       
       if(mevProtection){
+        const transactionSim = await connection.simulateTransaction(transaction, { commitment: "confirmed" });
+       
+        if (transactionSim.value.err) {
+          throw new Error("Transaction failed, please try again");
+        }
         strTx = await sendJitoBundleRPC(connection,wallet,mevProtectionAmount.toString(),transaction);
       }else{
         strTx = await optimizedSendAndConfirmTransaction(transaction,connection,blockhash,TX_RETRY_INTERVAL);

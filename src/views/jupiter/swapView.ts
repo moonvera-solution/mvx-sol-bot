@@ -117,6 +117,8 @@ export async function jupiterSwap(ctx: any) {
           amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
         });
       } else if (tradeType == 'sell') {
+        const balanceAfterSell = await  getuserShitBalance(new PublicKey(userWallet.publicKey),tokenOut, connection)
+        console.log('balanceAfterSell', balanceAfterSell.userTokenBalance)
         let newAmountIn, newAmountOut;
 
         if (Number(amountIn) === oldPositionToken) {
@@ -131,7 +133,7 @@ export async function jupiterSwap(ctx: any) {
         }
         
 
-        if (extractAmount <0 || newAmountOut <= 0) {
+        if (balanceAfterSell.userTokenBalance == 0 || newAmountOut <= 0) {
           // newAmountIn = newAmountIn <= 0 ? 0 : newAmountIn;
           // newAmountOut = newAmountOut <= 0 ? 0 : newAmountOut;
           await UserPositions.updateOne({ walletId: userWallet.publicKey.toString() }, { $pull: { positions: { baseMint: tokenIn } } });

@@ -118,18 +118,19 @@ export async function swap_pump_fun(ctx: any) {
         }
       } else {
         let newAmountIn, newAmountOut;
-     
+        const balanceAfterSell = await  getuserShitBalance(new PublicKey(userWallet.publicKey),tokenOut, connection)
+
         if (Number(amountIn * Math.pow(10,decimalToken)) === oldPositionToken || oldPositionSol <= extractAmount) {
           newAmountIn = 0;
           newAmountOut = 0;
         } else {
 
-          newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
+          newAmountIn = oldPositionSol > 0 ? oldPositionSol - (extractAmount) : oldPositionSol;
           newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn * Math.pow(10,decimalToken)) : oldPositionToken;
 
         }
 
-        if (extractAmount <0 || newAmountOut <= 0) {
+        if (balanceAfterSell.userTokenBalance == 0 || newAmountOut <= 0) {
           console.log('delete position');
           // newAmountIn = newAmountIn <= 0 ? 0 : newAmountIn;
           // newAmountOut = newAmountOut <= 0 ? 0 : newAmountOut;
