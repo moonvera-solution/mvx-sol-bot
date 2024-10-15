@@ -59,7 +59,7 @@ export async function jupiterSwap(ctx: any) {
     tokenOut,
     amountIn,
     (ctx.session.latestSlippage * 100),
-    (ctx.session.customPriorityFee * 1e6), // here is it for jupiter its allways the default set by users
+    (ctx.session.customPriorityFee * 1e9), // here is it for jupiter its allways the default set by users
     ctx.session.mevProtection,
     ctx.session.mevProtectionAmount * 1e9,
   ).then(async (txSig: any) => {

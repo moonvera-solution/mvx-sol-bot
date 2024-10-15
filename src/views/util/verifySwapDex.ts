@@ -18,6 +18,7 @@ export async function verify_position_dex(ctx: any, token: string) {
 
   const jupTokenValue: any = Object.values(jupTokenRate.data);
   let isOnJupiter = false;
+  console.log("quoteResponse", quoteResponse);
   if (
    ( jupTokenValue[0] &&
     jupTokenValue[0].price &&

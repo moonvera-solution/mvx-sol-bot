@@ -715,7 +715,10 @@ export async function getSwapAmountOutPump(
 
                         extractAmount = tx.parsed.info.amount ? tx.parsed.info.amount : tx.parsed.info.tokenAmount.amount;
                     } else if (tradeSide == 'sell' && txxs && txxs.meta && txxs.meta.postBalances && txxs.meta.preBalances) {
+                        // extractAmount = tx.parsed.info.amount ? tx.parsed.info.amount : tx.parsed.info.tokenAmount.amount;
+    
                         extractAmount = txxs.meta.postBalances[0] - txxs.meta.preBalances[0];
+                    
                     }
 
                 });

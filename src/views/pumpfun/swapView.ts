@@ -118,10 +118,7 @@ export async function swap_pump_fun(ctx: any) {
         }
       } else {
         let newAmountIn, newAmountOut;
-        console.log('amountIn:', amountIn);
-        console.log('oldPositionToken:', oldPositionToken);
-        console.log('oldPositionSol:', oldPositionSol);
-        console.log('extractAmount:', extractAmount);
+     
         if (Number(amountIn * Math.pow(10,decimalToken)) === oldPositionToken || oldPositionSol <= extractAmount) {
           newAmountIn = 0;
           newAmountOut = 0;
@@ -132,7 +129,7 @@ export async function swap_pump_fun(ctx: any) {
 
         }
 
-        if ( newAmountOut <= 0) {
+        if (extractAmount <0 || newAmountOut <= 0) {
           console.log('delete position');
           // newAmountIn = newAmountIn <= 0 ? 0 : newAmountIn;
           // newAmountOut = newAmountOut <= 0 ? 0 : newAmountOut;

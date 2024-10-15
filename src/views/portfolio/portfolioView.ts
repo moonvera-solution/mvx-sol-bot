@@ -71,7 +71,7 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
         getuserShitBalance(userWallet,new PublicKey(mint), connection),
         Promise.race([
           memeTokenPrice(mint).then((data) => data),
-          timeout(1000) //  500ms
+          timeout(2000) //  500ms
         ]).catch((err) => {
           console.warn('birdTemp call skipped:', err.message);
           return null; 
