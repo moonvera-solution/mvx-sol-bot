@@ -63,7 +63,7 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
             }));
         var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
         message.instructions.push(...mvxInxs);
-        // message.instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 150000 }));
+        message.instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 150000 }));
         transaction.message = message.compileToV0Message(addressLookupTableAccounts);
         transaction.sign([payerKeypair]);
         

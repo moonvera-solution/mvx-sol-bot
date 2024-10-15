@@ -53,9 +53,9 @@ export async function swap_pump_fun(ctx: any) {
       from: tokenIn,
       to: tokenOut,
       amount: amountIn,
-      slippage: ctx.session.latestSlippage + 2,
+      slippage: `${ctx.session.latestSlippage + 5}`,
       payerKeypair: payerKeypair,
-      priorityFee: (ctx.session.customPriorityFee * 10),
+      priorityFee: (ctx.session.customPriorityFee ),
       forceLegacy: true
     }).then(async (txSigs) => {
       if (!txSigs) return;
