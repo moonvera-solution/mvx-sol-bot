@@ -131,7 +131,7 @@ export async function jupiterSwap(ctx: any) {
         }
         
 
-        if (newAmountOut <= 0) {
+        if (extractAmount <0 || newAmountOut <= 0) {
           // newAmountIn = newAmountIn <= 0 ? 0 : newAmountIn;
           // newAmountOut = newAmountOut <= 0 ? 0 : newAmountOut;
           await UserPositions.updateOne({ walletId: userWallet.publicKey.toString() }, { $pull: { positions: { baseMint: tokenIn } } });
