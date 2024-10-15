@@ -30,6 +30,7 @@ export async function swap_pump_fun(ctx: any) {
     const userTokenBalanceAndDetails = tradeSide == 'buy' ? await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenOut), connection) : await getUserTokenBalanceAndDetails(new PublicKey(userWallet.publicKey), new PublicKey(tokenIn), connection);
     
     const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
+    const decimalToken = userTokenBalanceAndDetails.decimals;
     const amountToSell = (ctx.session.pump_amountIn / 100) * userTokenBalanceAndDetails.userTokenBalance;
     // console.log('amountToSell:', amountToSell);
     const userSolBalance = await getSolBalance(userWallet.publicKey, connection);
@@ -53,9 +54,9 @@ export async function swap_pump_fun(ctx: any) {
       from: tokenIn,
       to: tokenOut,
       amount: amountIn,
-      slippage: `${ctx.session.latestSlippage + 5}`,
+      slippage: `${ctx.session.latestSlippage}`,
       payerKeypair: payerKeypair,
-      priorityFee: (ctx.session.customPriorityFee ),
+      priorityFee: (ctx.session.customPriorityFee * 5 ),
       forceLegacy: true
     }).then(async (txSigs) => {
       if (!txSigs) return;
@@ -117,19 +118,22 @@ export async function swap_pump_fun(ctx: any) {
         }
       } else {
         let newAmountIn, newAmountOut;
-
-        if (Number(amountIn) === oldPositionToken) {
+        console.log('amountIn:', amountIn);
+        console.log('oldPositionToken:', oldPositionToken);
+        console.log('oldPositionSol:', oldPositionSol);
+        console.log('extractAmount:', extractAmount);
+        if (Number(amountIn * Math.pow(10,decimalToken)) === oldPositionToken || oldPositionSol <= extractAmount) {
+          newAmountIn = 0;
           newAmountOut = 0;
         } else {
-          newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
-        }
-        if (oldPositionSol <= extractAmount) {
-          newAmountIn = 0;
-        } else {
+
           newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
+          newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn * Math.pow(10,decimalToken)) : oldPositionToken;
+
         }
 
         if ( newAmountOut <= 0) {
+          console.log('delete position');
           // newAmountIn = newAmountIn <= 0 ? 0 : newAmountIn;
           // newAmountOut = newAmountOut <= 0 ? 0 : newAmountOut;
           await UserPositions.updateOne({ walletId: userWallet.publicKey.toString() }, { $pull: { positions: { baseMint: tokenIn } } });

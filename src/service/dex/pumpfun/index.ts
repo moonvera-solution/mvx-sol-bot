@@ -25,7 +25,7 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
     console.log('slippage', slippage);
     const params = new URLSearchParams({
         from, to, fromAmount: amount.toString(),
-        slippage: slippage.toString(),
+        slippage: slippage,
         payer: payerKeypair.publicKey.toBase58(),
         priorityFee: Number.parseFloat(String(priorityFee)).toString(),
         forceLegacy: forceLegacy ? "true" : "false",
@@ -42,9 +42,7 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
     }
     if (!swapInx) return null;
     let swapResponse = swapInx;
-    swapResponse.rate.fee = 0;
-    swapResponse.rate.platformFee = 0;
-    swapResponse.rate.platformFeeUI = 0;
+
     console.log("== SWAP RESPONSE ==", swapResponse);
     const serializedTransactionBuffer = Buffer.from(swapResponse.txn, "base64");
     let solAmount: BigNumber = side == 'buy' ? new BigNumber(swapResponse.rate.amountIn) : new BigNumber(swapResponse.rate.amountOut);
@@ -53,7 +51,6 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
     let txSig = null;
     if (swapResponse.isJupiter && !swapResponse.forceLegacy) {
         const transaction = VersionedTransaction.deserialize(serializedTransactionBuffer as any); if (!transaction) return null;
-        
         const addressLookupTableAccounts = await Promise.all(
             transaction.message.addressTableLookups.map(async (lookup) => {
                 return new AddressLookupTableAccount({
@@ -63,9 +60,10 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
             }));
         var message = TransactionMessage.decompile(transaction.message, { addressLookupTableAccounts: addressLookupTableAccounts })
         message.instructions.push(...mvxInxs);
-        message.instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 150000 }));
+        // message.instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 150000 }));
         transaction.message = message.compileToV0Message(addressLookupTableAccounts);
         transaction.sign([payerKeypair]);
+        // const simulationResult = await connection.simulateTransaction(new VersionedTransaction(transaction.message), { commitment: "confirmed" }).catch((e) => console.error("Error on optimizedSendAndConfirmTransaction", e.message));   
         
         txSig =  await optimizedSendAndConfirmTransaction(
             new VersionedTransaction(transaction.message),
@@ -78,12 +76,10 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
         console.log('pump going in here')
         let txx: Transaction = new Transaction({blockhash: blockhash.blockhash,lastValidBlockHeight:blockhash.lastValidBlockHeight});
         let pumpInx = Transaction.from(serializedTransactionBuffer); if (!pumpInx) return null;
+        txx.add(ComputeBudgetProgram.setComputeUnitLimit({ units: 200000 }));
         txx.add(pumpInx); // add pump inx
-        // txx.add(ComputeBudgetProgram.setComputeUnitLimit({ units: 150000 }));
         mvxInxs.forEach((inx: any) => txx.add(inx)); 
-         // add mvx, ref inx
         const vTxx = new VersionedTransaction(wrapLegacyTx(txx.instructions, payerKeypair, blockhash.blockhash));
-
         const addressLookupTableAccounts = await Promise.all(
             vTxx.message.addressTableLookups.map(async (lookup) => {
                 return new AddressLookupTableAccount({
@@ -91,13 +87,12 @@ export async function soltracker_swap(ctx: any,connection: Connection, {
                     state: AddressLookupTableAccount.deserialize(await connection.getAccountInfo(lookup.accountKey).then((res) => res!.data) as any),
                 })
             }));
-
         var message = TransactionMessage.decompile(vTxx.message, { addressLookupTableAccounts: addressLookupTableAccounts })
         vTxx.message = message.compileToV0Message(addressLookupTableAccounts);
-   
+        const simulationResult = await connection.simulateTransaction(vTxx, { commitment: "confirmed" }).catch((e) => console.error("Error on optimizedSendAndConfirmTransaction", e.message));   
         vTxx.sign([payerKeypair]);
+        console.log("== SIMULATION RESULT ==", simulationResult?.value.unitsConsumed);
         txSig = await optimizedSendAndConfirmTransaction(vTxx,connection, blockhash, TX_RETRY_INTERVAL);
-        console.log("== LEGACY TX ==", txSig);
     }
     return txSig;
 } catch (e: any) {
