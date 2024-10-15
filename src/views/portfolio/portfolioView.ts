@@ -71,7 +71,7 @@ export async function display_all_positions(ctx: any, isRefresh: boolean) {
         getuserShitBalance(userWallet,new PublicKey(mint), connection),
         Promise.race([
           memeTokenPrice(mint).then((data) => data),
-          timeout(2000) //  500ms
+          timeout(5000) //  500ms
         ]).catch((err) => {
           console.warn('birdTemp call skipped:', err.message);
           return null; 
@@ -300,7 +300,7 @@ export async function display_single_position(ctx: any, isRefresh: boolean) {
         fetch(solTrack,{headers}).then((response) => response.json()),
         Promise.race([
           memeTokenPrice(token).then((data) => data),
-          timeout(1000) //  500ms
+          timeout(5000) //  500ms
         ]).catch((err) => {
           console.warn('birdTemp call skipped:', err.message);
           return null; 
