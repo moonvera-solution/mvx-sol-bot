@@ -73,8 +73,8 @@ export async function swap_pump_fun(ctx: any) {
       let solFromSell = 0;
 
       let extractAmount = await getSwapAmountOutPump(connection, txSigs, tradeSide);
-      const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
-      tradeSide == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
+      const amountFormatted = Number(extractAmount.extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
+      tradeSide == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount.extractAmount;
       confirmedMsg = `✅ <b>${tradeSide.toUpperCase()} tx confirmed</b> ${tradeSide == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${ctx.session.pump_amountIn} SOL</b>` : `You sold <b>${amountToSell}</b> <b>${_symbol}</b> and received <b>${(solFromSell / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txSigs}">View Details</a>.`;
       await ctx.api.sendMessage(chatId, confirmedMsg, { parse_mode: 'HTML', disable_web_page_preview: true });
 
@@ -109,25 +109,26 @@ export async function swap_pump_fun(ctx: any) {
           name: userTokenBalanceAndDetails.userTokenName,
           symbol: _symbol,
           // tradeType: `pump_swap`,
-          amountIn: oldPositionSol ? oldPositionSol + ctx.session.pump_amountIn * 1e9 : ctx.session.pump_amountIn * 1e9,
-          amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
-        });
+          amountIn: oldPositionSol ? oldPositionSol + (Math.abs(extractAmount.extractAmountIn) ) : (Math.abs(extractAmount.extractAmountIn) ),
+          amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount.extractAmount) : Number(extractAmount.extractAmount),
+       });
         if(!ctx.session.autobuy){
           ctx.session.latestCommand = 'jupiter_swap';
           await display_jupSwapDetails(ctx, false);
         }
       } else {
         let newAmountIn, newAmountOut;
-        const balanceAfterSell = await  getuserShitBalance(new PublicKey(userWallet.publicKey),tokenOut, connection)
+        const balanceAfterSell = await  getuserShitBalance(new PublicKey(userWallet.publicKey),new PublicKey(tokenIn), connection)
 
-        if (Number(amountIn * Math.pow(10,decimalToken)) === oldPositionToken || oldPositionSol <= extractAmount) {
-          newAmountIn = 0;
+        if (Number(amountIn) === oldPositionToken) {
           newAmountOut = 0;
         } else {
-
-          newAmountIn = oldPositionSol > 0 ? oldPositionSol - (extractAmount) : oldPositionSol;
-          newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn * Math.pow(10,decimalToken)) : oldPositionToken;
-
+          newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
+        }
+        if (oldPositionSol <= Math.abs(extractAmount.extractAmount)) {
+          newAmountIn = 0;
+        } else {
+          newAmountIn = oldPositionSol > 0 ? oldPositionSol - Math.abs(extractAmount.extractAmount) : oldPositionSol;
         }
 
         if (balanceAfterSell.userTokenBalance == 0 || newAmountOut <= 0) {

@@ -79,15 +79,16 @@ export async function jupiterSwap(ctx: any) {
       let solFromSell = 0;
       const _symbol = userTokenBalanceAndDetails.userTokenSymbol;
       let extractAmount = await getSwapAmountOutPump(connection, txSig, tradeType)
-      const amountFormatted = Number(extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
-      tradeType == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount;
+      const amountFormatted = Number(extractAmount.extractAmount / Math.pow(10, userTokenBalanceAndDetails.decimals)).toFixed(4);
+      tradeType == 'buy' ? tokenAmount = extractAmount : solFromSell = extractAmount.extractAmount;
       confirmedMsg = `✅ <b>${tradeType.toUpperCase()} tx confirmed</b> ${tradeType == 'buy' ? `You bought <b>${amountFormatted}</b> <b>${_symbol}</b> for <b>${ctx.session.jupSwap_amount} SOL</b>` : `You sold <b>${amountToSell / Math.pow(10, userTokenBalanceAndDetails.decimals)}</b> <b>${_symbol}</b> and received <b>${(solFromSell / 1e9).toFixed(4)} SOL</b>`}. <a href="https://solscan.io/tx/${txSig}">View Details</a>.`;
       UserPositions.collection.listIndexes().toArray().then((indexes: any) => {
         if (indexes.some((index: any) => index.name === 'positionChatId_1')) {
           console.log('Index already exists');
           UserPositions.collection.dropIndex('positionChatId_1').catch((e: any) => console.error(e));
         }
-      });      const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
+      });     
+       const userPosition = await UserPositions.findOne({  walletId: userWallet.publicKey.toString() });
       let oldPositionSol: number = 0;
       let oldPositionToken: number = 0;
       // console.log('userPosition', userPosition);
@@ -113,26 +114,28 @@ export async function jupiterSwap(ctx: any) {
           name: userTokenBalanceAndDetails.userTokenName,
           symbol: _symbol,
           // tradeType: `jup_swap`,
-          amountIn: oldPositionSol ? oldPositionSol + (ctx.session.jupSwap_amount * 1e9) : (ctx.session.jupSwap_amount * 1e9),
-          amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount) : Number(extractAmount),
+          amountIn: oldPositionSol ? oldPositionSol + (Math.abs(extractAmount.extractAmountIn) ) : (Math.abs(extractAmount.extractAmountIn) ),
+          amountOut: oldPositionToken ? oldPositionToken + Number(extractAmount.extractAmount) : Number(extractAmount.extractAmount),
         });
       } else if (tradeType == 'sell') {
-        const balanceAfterSell = await  getuserShitBalance(new PublicKey(userWallet.publicKey),tokenOut, connection)
+        console.log('tokenOut', tokenOut)
+        console.log('tokenIn', tokenIn)
+        const balanceAfterSell = await  getuserShitBalance(new PublicKey(userWallet.publicKey),new PublicKey(tokenIn), connection)
         console.log('balanceAfterSell', balanceAfterSell.userTokenBalance)
         let newAmountIn, newAmountOut;
 
-        if (Number(amountIn) === oldPositionToken) {
+        if (Number(amountIn) === oldPositionToken ) {
           newAmountOut = 0;
         } else {
           newAmountOut = oldPositionToken > 0 ? oldPositionToken - Number(amountIn) : oldPositionToken;
         }
-        if (oldPositionSol <= extractAmount) {
+        if (oldPositionSol <= Math.abs(extractAmount.extractAmount)) {
           newAmountIn = 0;
         } else {
-          newAmountIn = oldPositionSol > 0 ? oldPositionSol - extractAmount : oldPositionSol;
+          newAmountIn = oldPositionSol > 0 ? oldPositionSol - Math.abs(extractAmount.extractAmount) : oldPositionSol;
         }
         
-
+        console.log('newAmountOut', newAmountOut)
         if (balanceAfterSell.userTokenBalance == 0 || newAmountOut <= 0) {
           // newAmountIn = newAmountIn <= 0 ? 0 : newAmountIn;
           // newAmountOut = newAmountOut <= 0 ? 0 : newAmountOut;

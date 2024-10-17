@@ -701,6 +701,7 @@ export async function getSwapAmountOutPump(
 ) {
     let extractAmount: number = 0;
     let counter = 0;
+    let extractAmountIn: number = 0;
 
     while (extractAmount == 0 && counter < 30) { // it has to find it since its a transfer tx
         counter++;
@@ -712,7 +713,10 @@ export async function getSwapAmountOutPump(
                 txAmount = !Array.isArray(txAmount) ? [txAmount] : txAmount;
                 txAmount.forEach((tx) => {
                     if (tradeSide == 'buy' && tx.parsed && tx.parsed?.info && (tx.parsed.info.amount || tx.parsed.info.tokenAmount)) {
-
+                        if (txxs && txxs.meta && txxs.meta.postBalances && txxs.meta.preBalances){
+                            extractAmountIn = txxs.meta.postBalances[0] - txxs.meta.preBalances[0];
+                            console.log("extractAmountIn", extractAmountIn)
+                        }
                         extractAmount = tx.parsed.info.amount ? tx.parsed.info.amount : tx.parsed.info.tokenAmount.amount;
                     } else if (tradeSide == 'sell' && txxs && txxs.meta && txxs.meta.postBalances && txxs.meta.preBalances) {
                         // extractAmount = tx.parsed.info.amount ? tx.parsed.info.amount : tx.parsed.info.tokenAmount.amount;
@@ -725,7 +729,7 @@ export async function getSwapAmountOutPump(
             })
         }
     }
-    return extractAmount;
+    return {extractAmount, extractAmountIn};
 }
 export async function getSwapAmountOutCpmm(
     connection: Connection,
