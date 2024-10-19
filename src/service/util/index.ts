@@ -835,7 +835,7 @@ export async function optimizedSendAndConfirmTransaction(
     blockhash: any,
     txRetryInterval: number
 ): Promise<string | null > {
-    txRetryInterval = 2000;
+    txRetryInterval = 30;
     console.log(`optimizedSendAndConfirmTransaction...`);
 
     let txSignature;
