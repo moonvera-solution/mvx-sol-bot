@@ -843,7 +843,7 @@ export async function optimizedSendAndConfirmTransaction(
 
     try {
         // Simulating the transaction
-        const simulationResult = await connection.simulateTransaction(tx, { commitment: "confirmed" }).catch((e) => console.error("Error on optimizedSendAndConfirmTransaction", e.message));   
+        const simulationResult = await connection.simulateTransaction(tx, { commitment: "processed" }).catch((e) => console.error("Error on optimizedSendAndConfirmTransaction", e.message));   
         await catchSimulationErrors( simulationResult);
 
         const signatureRaw: any = tx.signatures[0];
@@ -864,7 +864,7 @@ export async function optimizedSendAndConfirmTransaction(
         console.log(`${new Date().toISOString()} Sending Transaction ${txSignature}`);
 
         // send before starting retry while loop
-        await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0, });
+        await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0,  preflightCommitment: "processed" });
         confirmedTx = null;
         const txId = txSignature.substring(0, 6);
 
@@ -887,7 +887,7 @@ export async function optimizedSendAndConfirmTransaction(
            
             console.log(`Resending tx id ${txId} ${txRetryInterval * txSendAttempts++}ms`);
 
-            await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0 });
+            await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0, preflightCommitment: "processed"   });
 
         } // end loop
 
