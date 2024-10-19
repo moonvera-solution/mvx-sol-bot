@@ -409,7 +409,7 @@ export async function buildTransaction({
     signers: Keypair[];
     instructions: TransactionInstruction[];
 }): Promise<VersionedTransaction> {
-    let blockhash = await connection.getLatestBlockhash().then(res => res.blockhash);
+    let blockhash = await connection.getLatestBlockhash({ commitment: "confirmed" }).then(res => res.blockhash);
 
     const messageV0 = new TransactionMessage({
         payerKey: payer,
@@ -864,7 +864,7 @@ export async function optimizedSendAndConfirmTransaction(
         console.log(`${new Date().toISOString()} Sending Transaction ${txSignature}`);
 
         // send before starting retry while loop
-        await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0 });
+        await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0,  preflightCommitment: "confirmed" });
         confirmedTx = null;
         const txId = txSignature.substring(0, 6);
 
@@ -887,7 +887,7 @@ export async function optimizedSendAndConfirmTransaction(
            
             console.log(`Resending tx id ${txId} ${txRetryInterval * txSendAttempts++}ms`);
 
-            await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0 });
+            await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0, preflightCommitment: "confirmed"   });
 
         } // end loop
 
