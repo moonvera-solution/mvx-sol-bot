@@ -63,7 +63,6 @@ export async function jupiter_inx_swap(
         cleanupInstruction, // Unwrap the SOL if `wrapAndUnwrapSol = true`.
         addressLookupTableAddresses, // The lookup table addresses that you can use if you are using versioned transaction.
       } = instructions;
-      console.log('computeBudgetInstructions', computeBudgetInstructions);
       const deserializeInstruction = (instruction:any) => {
         return new TransactionInstruction({
           programId: new PublicKey(instruction.programId),
