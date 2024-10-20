@@ -141,8 +141,8 @@ async function _validateSession(ctx: any) {
     const restoredSession = await UserSession.findOne({ chatId: ctx.chat.id });
     if (restoredSession) {
       // NOTE: update db manually, if schema changes! avoid stopping the bot
-      ctx.session = JSON.parse(JSON.stringify(restoredSession));
-      console.log("Session restored.");
+      // ctx.session = JSON.parse(JSON.stringify(restoredSession));
+      // console.log("Session restored.");
 
     }
   }
