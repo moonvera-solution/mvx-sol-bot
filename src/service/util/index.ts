@@ -853,7 +853,6 @@ export async function optimizedSendAndConfirmTransaction(
         let txSendAttempts = 1;
 
         console.log(`${new Date().toISOString()} Subscribing to transaction confirmation`);
-        let blockhash = await connection.getLatestBlockhash();
 
         // confirmTransaction throws error, handle it
         confirmTransactionPromise = connection.confirmTransaction({
@@ -864,8 +863,9 @@ export async function optimizedSendAndConfirmTransaction(
      
         console.log(`${new Date().toISOString()} Sending Transaction ${txSignature}`);
 
-        // send before starting retry while loop
-        await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0,});
+        // send before starting retry while loopj
+        await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0, preflightCommitment: "confirmed" });
+
         confirmedTx = null;
         const txId = txSignature.substring(0, 6);
 
@@ -888,11 +888,9 @@ export async function optimizedSendAndConfirmTransaction(
            
             console.log(`Resending tx id ${txId} ${txRetryInterval * txSendAttempts++}ms`);
 
-            await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0  });
+            await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0 , preflightCommitment: "confirmed" });
 
         } // end loop
-
-  
 
   
     // loop ends, no error, transaction confirmed return link
