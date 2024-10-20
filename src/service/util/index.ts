@@ -886,7 +886,7 @@ export async function optimizedSendAndConfirmTransaction(
             // confirmed => break loop
             if (confirmedTx) { console.log(`Tx ${txId} confirmed ,${txRetryInterval * txSendAttempts}`, confirmedTx); break; }
            
-            console.log(`Resending tx id ${txId} ${txRetryInterval * txSendAttempts++}ms`);
+            // console.log(`Resending tx id ${txId} ${txRetryInterval * txSendAttempts++}ms`);
 
             await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0 , preflightCommitment: "confirmed" });
 
