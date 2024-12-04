@@ -194,13 +194,15 @@ bot.command("start", async (ctx: any) => {
       ? userWallet.publicKey
       : ctx.session.portfolio.wallets[ctx.session.portfolio.activeWalletIndex].publicKey;
 
+      console.log('publicKeyString', publicKeyString);
     // Retrieve the current SOL details
     const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`
     let swapUrlSol = `${rpcUrl}/jupiter/quote?inputMint=${'So11111111111111111111111111111111111111112'}&outputMint=${'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}&amount=${1000000000}&slippageBps=${0}`.trim();
+    const jupSolPriceUrl = `https://api.jup.ag/price/v2?ids=Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB,So11111111111111111111111111111111111111112`;
 
     const [balanceInSOL,jupSolPrice, networth] = await Promise.all([
-      getSolBalance(publicKeyString, connection),
-      fetch(swapUrlSol).then(res => res.json()),
+      getSolBalance(publicKeyString, connection).catch((error) => { console.error("Error fetching wallet balance: ", error); return null; }),
+      fetch(jupSolPriceUrl).then(res =>{ console.log('res', res); return res.json() }).catch((error) => { console.error("Error fetching jup sol price: ", error); return null; }),
       getWalletNetWorth(publicKeyString as string).catch((error) => { console.error("Error fetching net worth: ", error); return null; })
   ]);  
     // Fetch SOL balance

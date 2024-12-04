@@ -36,8 +36,12 @@ export async function jupiter_inx_swap(
   let strTx : string | null= '';
   try{
     console.log('slippage', slippage);
-      let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}`.trim();
-      let quoteResponse : any = await fetch(swapUrl).then(res => res.json());
+      let swapUrl = `https://quote-api.jup.ag/v6/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}`.trim();
+      
+      let quoteResponse : any = await fetch(swapUrl).then(res => {
+        console.log("quoteResponse:: >> ",res);
+        return res.json()
+      }).catch((error) => { console.error("Error fetching jupiter swap quote: ", error);});
 
       const solAmount = tokenIn === SOL_ADDRESS ? new BigNumber(quoteResponse.inAmount) : new BigNumber(quoteResponse.outAmount);
       const instructions = await (

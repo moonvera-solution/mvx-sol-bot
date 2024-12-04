@@ -5,12 +5,13 @@ export async function verify_position_dex(ctx: any, token: string) {
   const rpcUrl = `${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`;
 
   const feeAccount = null;
-  let swapUrl =`${rpcUrl}/jupiter/quote?inputMint=${SOL_ADDRESS}&outputMint=${token}&amount=${1}&slippageBps=${ctx.session.latestSlippage}${feeAccount ? "&platformFeeBps=08" : ""}`.trim();
+  let swapUrl = `https://api.jup.ag/price/v2?ids=${token},So11111111111111111111111111111111111111112`
+  //`${rpcUrl}/jupiter/price/v2?ids=${token},So11111111111111111111111111111111111111112`
     const [jupTokenRate, quoteResponse] = await Promise.all([
     fetch(
-      `https://price.jup.ag/v6/price?ids=${token}&vsToken=So11111111111111111111111111111111111111112`
-    ).then((response) => response.json()),
-    fetch(swapUrl).then((response) => response.json()),
+      `https://api.jup.ag/price/v2?ids=${token},So11111111111111111111111111111111111111112`
+    ).then((response) => response.json()).catch((error) => { console.error("Error fetching jup token rate: ", error); return null; }),
+    fetch(swapUrl).then((response) => response.json()).catch((error) => { console.error("Error fetching jupiter swap quote: ", error); return null; }),
   
   ]);
 

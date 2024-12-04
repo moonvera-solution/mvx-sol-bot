@@ -7,7 +7,6 @@ import { raydium_amm_swap } from '../../dex';
 import BigNumber from 'bignumber.js';
 import bs58 from 'bs58';
 import { display_jupSwapDetails } from '../../../views/jupiter/swapView';
-import { createTradeImage } from "../../../views/util/image";
 import { UserPositions } from '../../../db';
 import { saveUserPosition } from '../positions';
 import { InputFile } from 'grammy';

@@ -9,7 +9,7 @@ import { UserPositions } from '../../db/mongo/schema';
 import {  SOL_ADDRESS } from '../../config';
 import bs58 from "bs58";
 import { saveUserPosition } from '../../service/portfolio/positions';
-import { createTradeImage } from "../util/image";
+
 import { InputFile } from "grammy";
 import { display_jupSwapDetails } from "../jupiter/swapView";
 const fs = require('fs');

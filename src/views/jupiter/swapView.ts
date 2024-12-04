@@ -15,7 +15,6 @@ import { saveUserPosition } from "../../service/portfolio/positions";
 
 
 
-import { createTradeImage } from '../util/image';
 import { InputFile } from 'grammy';
 import axios from 'axios';
 import { sol } from '@metaplex-foundation/js';

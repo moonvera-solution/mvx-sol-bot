@@ -11,7 +11,6 @@ import { MVXBOT_FEES, SOL_ADDRESS,CONNECTION } from '../../config';
 import bs58 from "bs58";
 import BigNumber from 'bignumber.js';
 import { saveUserPosition } from '../../service/portfolio/positions';
-import { createTradeImage } from '../util/image';
 import { InputFile } from 'grammy';
 import { display_jupSwapDetails } from '../jupiter/swapView';
 const fs = require('fs');
