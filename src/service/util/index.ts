@@ -943,7 +943,7 @@ export async function catchSimulationErrors( simulationResult: any){
         throw new Error(`🔴 Swap failed! Please try again.`);
     }
     if (simulationResult.value.err) {
-        throw new Error(`🔴 Transaction failed`);
+        throw new Error(`🔴 Transaction failed ${simulationResult.value.err}`);
     }
 }
 

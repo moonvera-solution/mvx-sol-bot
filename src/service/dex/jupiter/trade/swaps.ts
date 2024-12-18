@@ -36,8 +36,9 @@ export async function jupiter_inx_swap(
   let strTx : string | null= '';
   try{
     console.log('slippage', slippage);
-      let swapUrl = `https://quote-api.jup.ag/v6/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}`.trim();
-      
+      // let swapUrl = `https://quote-api.jup.ag/v6/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}`.trim();
+      let swapUrl = `${rpcUrl}/jupiter/quote?inputMint=${tokenIn}&outputMint=${tokenOut}&amount=${amountIn}&slippageBps=${slippage}`.trim();
+
       let quoteResponse : any = await fetch(swapUrl).then(res => {
         console.log("quoteResponse:: >> ",res);
         return res.json()
@@ -45,12 +46,17 @@ export async function jupiter_inx_swap(
 
       const solAmount = tokenIn === SOL_ADDRESS ? new BigNumber(quoteResponse.inAmount) : new BigNumber(quoteResponse.outAmount);
       const instructions = await (
-        await fetch('https://quote-api.jup.ag/v6/swap-instructions', {
+        // await fetch('https://quote-api.jup.ag/v6/swap-instructions', {
+          await fetch(`${rpcUrl}/jupiter/swap-instructions`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({quoteResponse,userPublicKey: wallet.publicKey.toBase58(), dynamicComputeUnitLimit: true, prioritizationFeeLamports: priorityFeeLevel
+          body: JSON.stringify({
+            quoteResponse,
+            userPublicKey: wallet.publicKey.toBase58(), 
+            dynamicComputeUnitLimit: true, 
+            prioritizationFeeLamports: priorityFeeLevel
           })
         })
       ).json();

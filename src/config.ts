@@ -31,7 +31,8 @@ export const DEFAULT_PUBLIC_KEY = new PublicKey("1111111111111111111111111111111
 export const MVX_JUP_REFERRAL = "HH2UqSLMJZ9VP9jnneixYKe3oW8873S9MLUuMF3xvjLH";
 export const JUP_REF_PROGRAM = "45ruCyfdRkWpRNGEqWzjCiXRHkZs8WXCLQ67Pnpye7Hp";  
 export const JUP_AGGREGATOR_V6 = "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4";
-export const WALLET_MVX = 'MvXfSe3TeEwsEi731Udae7ecReLQPgrNuKWZzX6RB41';
+export const WALLET_MVX = 'dRbyndUyDADvvN5RbAnHrVjypeNHB5xrejLmAYkj3SF'
+//'MvXfSe3TeEwsEi731Udae7ecReLQPgrNuKWZzX6RB41';
 
 export const CONNECTION = new Connection(`${process.env.TRITON_RPC_URL}${process.env.TRITON_RPC_TOKEN}`);
 
